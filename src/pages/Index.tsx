@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
+import TradeVault from '@/pages/TradeVault';
 import {
   BarChart3, BookOpen, Brain, CalendarDays, CheckCircle2,
   ChevronLeft, ChevronRight, CircleDollarSign, Clock3,
@@ -476,46 +477,7 @@ export default function TradingDashboard() {
             </motion.div>
           )}
 
-          {active === 'trades' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-              <SectionTitle title="Trade Vault" subtitle="Import, review, and manage all trades" />
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {[
-                  { icon: Upload, title: 'CSV Import', desc: 'Upload broker exports and normalize trades.', action: 'Import trades' },
-                  { icon: LineChart, title: 'Broker Sync', desc: 'Connect platforms in future SaaS phase.', action: 'Coming soon' },
-                  { icon: FileBarChart, title: 'Review Queue', desc: '7 trades pending notes and grading.', action: 'Open queue' },
-                ].map((c) => (
-                  <Card key={c.title} className="border-0 shadow-sm">
-                    <CardContent className="pt-6 text-center space-y-3">
-                      <c.icon className="h-8 w-8 text-primary mx-auto" />
-                      <p className="font-heading font-semibold text-foreground">{c.title}</p>
-                      <p className="text-xs text-muted-foreground">{c.desc}</p>
-                      <Button variant="outline" size="sm" className="rounded-xl">{c.action}</Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-              <Card className="border-0 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="font-heading">Trade Log</CardTitle>
-                  <CardDescription>Designed for later database connection</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {trades.map((trade) => (
-                    <div key={trade.pair} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                      <div>
-                        <p className="font-medium text-sm text-foreground">{trade.pair}</p>
-                        <p className="text-xs text-muted-foreground">Setup: {trade.setup}</p>
-                      </div>
-                      <p className="text-xs text-muted-foreground">{trade.status}</p>
-                      <Badge variant="outline">{trade.grade}</Badge>
-                      <p className={cx('text-sm font-semibold', trade.result.startsWith('+') ? 'text-emerald-500' : 'text-red-500')}>{trade.result}</p>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
+          {active === 'trades' && <TradeVault />}
 
           {active === 'journal' && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
