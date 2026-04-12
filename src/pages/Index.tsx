@@ -1,9 +1,11 @@
 import React, { useMemo, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   BarChart3, BookOpen, Brain, CalendarDays, CheckCircle2,
   ChevronLeft, ChevronRight, CircleDollarSign, Clock3,
-  FileBarChart, LayoutDashboard, LineChart, Moon, PlayCircle,
+  FileBarChart, LayoutDashboard, LineChart, LogOut, Moon, PlayCircle,
   Settings, ShieldCheck, Sun, Target, TrendingUp, Upload, Zap,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -184,6 +186,13 @@ export default function TradingDashboard() {
   const [search, setSearch] = useState('');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const dark = theme === 'dark';
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/login');
+  };
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark);
@@ -270,6 +279,9 @@ export default function TradingDashboard() {
               {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
             <Button className="rounded-xl">+ New Trade</Button>
+            <Button variant="ghost" size="icon" onClick={handleLogout} className="rounded-xl" title="Sign out">
+              <LogOut className="h-4 w-4" />
+            </Button>
           </div>
         </header>
 
