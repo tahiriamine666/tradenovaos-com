@@ -56,19 +56,6 @@ const resources = [
   'Risk model for funded account challenges',
 ];
 
-const calendarDays = [
-  { date: 1, pnl: -217, trades: 2 }, { date: 4, pnl: 552, trades: 5 },
-  { date: 5, pnl: -122, trades: 5 }, { date: 6, pnl: 400, trades: 1 },
-  { date: 7, pnl: 288, trades: 4 }, { date: 8, pnl: 589, trades: 3 },
-  { date: 11, pnl: -313, trades: 4 }, { date: 12, pnl: 348, trades: 1 },
-  { date: 13, pnl: 168, trades: 5 }, { date: 14, pnl: 432, trades: 3 },
-  { date: 15, pnl: -116, trades: 2 }, { date: 18, pnl: 104, trades: 4 },
-  { date: 19, pnl: 362, trades: 4 }, { date: 20, pnl: -203, trades: 2 },
-  { date: 21, pnl: 282, trades: 4 }, { date: 22, pnl: 739, trades: 3 },
-  { date: 25, pnl: -376, trades: 1 }, { date: 26, pnl: 552, trades: 2 },
-  { date: 27, pnl: 185, trades: 4 }, { date: 28, pnl: -280, trades: 1 },
-  { date: 29, pnl: -114, trades: 1 },
-];
 
 const sidebarItems = [
   { id: 'dashboard', label: 'Command Center', icon: LayoutDashboard },
@@ -119,11 +106,47 @@ function SectionTitle({ title, subtitle }: { title: string; subtitle: string }) 
 }
 
 function TradingCalendar({ dark }: { dark: boolean }) {
-  const cells = Array.from({ length: 35 }, (_, i) => {
-    const dayNumber = i - 3;
-    const entry = calendarDays.find((d) => d.date === dayNumber);
-    return { dayNumber, entry };
-  });
+  const { user } = useAuth();
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [dayMap, setDayMap] = useState<Record<number, { pnl: number; trades: number }>>({});
+  const [loading, setLoading] = useState(true);
+
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const firstDayOfWeek = new Date(year, month, 1).getDay();
+  const monthLabel = new Date(year, month).toLocaleString('default', { month: 'long', year: 'numeric' });
+
+  const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
+  const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchCalendarData = async () => {
+      setLoading(true);
+      const monthStart = `${year}-${String(month + 1).padStart(2, '0')}-01`;
+      const monthEnd = `${year}-${String(month + 1).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
+      const { data } = await supabase
+        .from('trades')
+        .select('trade_date, result')
+        .eq('user_id', user.id)
+        .gte('trade_date', monthStart)
+        .lte('trade_date', monthEnd);
+
+      const grouped: Record<number, { pnl: number; trades: number }> = {};
+      (data ?? []).forEach((t) => {
+        const day = new Date(t.trade_date).getDate();
+        if (!grouped[day]) grouped[day] = { pnl: 0, trades: 0 };
+        grouped[day].pnl += t.result ?? 0;
+        grouped[day].trades += 1;
+      });
+      setDayMap(grouped);
+      setLoading(false);
+    };
+    fetchCalendarData();
+  }, [user, year, month, daysInMonth]);
+
+  const totalCells = Math.ceil((firstDayOfWeek + daysInMonth) / 7) * 7;
 
   return (
     <Card className="border-0 shadow-sm">
@@ -134,9 +157,9 @@ function TradingCalendar({ dark }: { dark: boolean }) {
             <CardDescription>Monthly P&L and trade activity</CardDescription>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon"><ChevronLeft className="h-4 w-4" /></Button>
-            <span className="text-sm font-medium text-foreground">March 2024</span>
-            <Button variant="ghost" size="icon"><ChevronRight className="h-4 w-4" /></Button>
+            <Button variant="ghost" size="icon" onClick={prevMonth}><ChevronLeft className="h-4 w-4" /></Button>
+            <span className="text-sm font-medium text-foreground">{monthLabel}</span>
+            <Button variant="ghost" size="icon" onClick={nextMonth}><ChevronRight className="h-4 w-4" /></Button>
           </div>
         </div>
       </CardHeader>
@@ -146,38 +169,47 @@ function TradingCalendar({ dark }: { dark: boolean }) {
             <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">{day}</div>
           ))}
         </div>
-        <div className="grid grid-cols-7 gap-1">
-          {cells.map(({ dayNumber, entry }, index) => {
-            const inMonth = dayNumber >= 1 && dayNumber <= 31;
-            const positive = (entry?.pnl ?? 0) > 0;
-            const negative = (entry?.pnl ?? 0) < 0;
-            return (
-              <div key={index} className={cx(
-                'rounded-lg p-2 min-h-[70px] text-xs transition-colors',
-                !inMonth && 'opacity-30',
-                entry && positive && (dark ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-emerald-50 border border-emerald-200'),
-                entry && negative && (dark ? 'bg-red-500/10 border border-red-500/20' : 'bg-red-50 border border-red-200'),
-                !entry && 'bg-muted/30',
-              )}>
-                <p className="font-medium text-muted-foreground">
-                  {inMonth ? dayNumber : dayNumber <= 0 ? 31 + dayNumber : dayNumber - 31}
-                </p>
-                {entry && (
-                  <div className="mt-1">
-                    <p className={cx('font-semibold text-[11px]', positive ? 'text-emerald-500' : 'text-red-500')}>
-                      {entry.pnl > 0 ? '+' : ''}${entry.pnl}
-                    </p>
-                    <p className="text-muted-foreground text-[10px]">{entry.trades} trades</p>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+        {loading ? (
+          <div className="grid grid-cols-7 gap-1">
+            {Array.from({ length: 35 }).map((_, i) => <Skeleton key={i} className="h-[70px] rounded-lg" />)}
+          </div>
+        ) : (
+          <div className="grid grid-cols-7 gap-1">
+            {Array.from({ length: totalCells }, (_, i) => {
+              const dayNumber = i - firstDayOfWeek + 1;
+              const inMonth = dayNumber >= 1 && dayNumber <= daysInMonth;
+              const entry = inMonth ? dayMap[dayNumber] : undefined;
+              const positive = (entry?.pnl ?? 0) > 0;
+              const negative = (entry?.pnl ?? 0) < 0;
+              return (
+                <div key={i} className={cx(
+                  'rounded-lg p-2 min-h-[70px] text-xs transition-colors',
+                  !inMonth && 'opacity-0',
+                  entry && positive && (dark ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-emerald-50 border border-emerald-200'),
+                  entry && negative && (dark ? 'bg-red-500/10 border border-red-500/20' : 'bg-red-50 border border-red-200'),
+                  inMonth && !entry && 'bg-muted/30',
+                )}>
+                  {inMonth && (
+                    <>
+                      <p className="font-medium text-muted-foreground">{dayNumber}</p>
+                      {entry && (
+                        <div className="mt-1">
+                          <p className={cx('font-semibold text-[11px]', positive ? 'text-emerald-500' : 'text-red-500')}>
+                            {entry.pnl > 0 ? '+' : ''}${entry.pnl}
+                          </p>
+                          <p className="text-muted-foreground text-[10px]">{entry.trades} trades</p>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
         <div className="flex items-center gap-4 mt-4 text-xs text-muted-foreground">
           <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-emerald-500/20 border border-emerald-500/30" /> Profit Day</span>
           <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-500/20 border border-red-500/30" /> Loss Day</span>
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-primary/20 border border-primary/30" /> Highlighted Theme</span>
         </div>
       </CardContent>
     </Card>
