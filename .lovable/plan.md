@@ -1,36 +1,36 @@
 
 
-## Plan: Connect Trading Calendar to Real Supabase Data
+## Plan: Connect Edge Analytics to Real Supabase Data
 
 ### What changes
 
-The `TradingCalendar` component in `src/pages/Index.tsx` currently uses a hardcoded `calendarDays` array. We'll replace it with live data from the `trades` table, grouped by `trade_date`.
+Replace the hardcoded analytics section (lines 587-614) with a data-driven view that fetches trades from Supabase and computes all requested metrics for the logged-in user.
 
 ### Steps
 
-1. **Update `TradingCalendar` component** to accept and use real trade data:
-   - Add `useState` for current month/year navigation
-   - Fetch trades for the displayed month from Supabase, filtered by `user_id`
-   - Group trades by `trade_date`, calculating `sum(result)` and `count` per day
-   - Dynamically compute the calendar grid based on the actual month (first day offset, days in month)
-   - Display the real month/year label instead of hardcoded "March 2024"
-   - Wire up the chevron buttons to navigate months
+1. **Fetch trades when analytics tab is active** — query all trades for the user (reuse existing fetch pattern from dashboard). Store in local state with loading flag.
 
-2. **Remove the static `calendarDays` array** from the top of the file.
+2. **Compute metrics client-side** from the fetched trades array:
+   - Total P&L, Win Rate, Average Win, Average Loss, Best Trade, Worst Trade
+   - Winning/Losing trade counts
+   - Performance grouped by `side` (long/short) — count + total P&L per side
+   - Performance grouped by `setup` — count + total P&L, filtering out empty/null setups
 
-3. **Handle states**:
-   - Loading: show skeleton/spinner while fetching
-   - Empty: days with no trades remain neutral (existing behavior)
-   - Re-fetch when month changes or when trades are modified (pass a refresh trigger or use the existing pattern)
+3. **Replace the 4 static MetricCards** with 8 metric cards (Total P&L, Win Rate, Avg Win, Avg Loss, Best Trade, Worst Trade, Winning Count, Losing Count).
+
+4. **Replace the static "What works / What hurts" cards** with two new sections:
+   - **Performance by Side** — a small table or card list showing Long vs Short stats
+   - **Performance by Setup** — a table/card list showing each setup's count and P&L
+
+5. **Add loading state** (Skeleton components) and **empty state** ("No trades yet" message).
+
+6. **Format money** with `$` sign, commas, and `+`/`-` prefix based on value.
 
 ### Technical details
 
-- Query: `supabase.from('trades').select('trade_date, result').eq('user_id', user.id).gte('trade_date', monthStart).lte('trade_date', monthEnd)`
-- Group client-side by `trade_date` to compute daily P&L and trade count
-- Calendar grid: compute `new Date(year, month, 1).getDay()` for offset, `new Date(year, month+1, 0).getDate()` for days in month
-- Pass `useAuth()` user into the component or use it directly inside
-- Keep all existing styling (green/red borders, dark mode classes)
-
-### No database changes needed
-RLS policies already exist on `trades` table scoping to `auth.uid() = user_id`.
+- Query: `supabase.from('trades').select('*').eq('user_id', user.id)` — fetch all trades once, compute everything client-side
+- Trigger fetch via `useEffect` when `active === 'analytics'` changes or user changes
+- Group-by logic uses `reduce()` to bucket by `side` and `setup`
+- Keep existing `MetricCard` component and card styling
+- No database changes needed
 
