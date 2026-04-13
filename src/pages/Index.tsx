@@ -421,18 +421,26 @@ export default function TradingDashboard() {
                     <CardDescription>Execution log preview</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {trades.map((trade) => (
-                      <div key={trade.pair} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                        <div>
-                          <p className="font-medium text-sm text-foreground">{trade.pair}</p>
-                          <p className="text-xs text-muted-foreground">{trade.setup} · {trade.status}</p>
-                        </div>
-                        <div className="text-right flex items-center gap-2">
-                          <p className={cx('text-sm font-semibold', trade.result.startsWith('+') ? 'text-emerald-500' : 'text-red-500')}>{trade.result}</p>
-                          <Badge variant="outline" className="text-xs">{trade.grade}</Badge>
-                        </div>
-                      </div>
-                    ))}
+                    {dashLoading ? (
+                      <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-10 rounded" />)}</div>
+                    ) : recentTrades.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-6">No trades yet. Add your first trade in Trade Vault.</p>
+                    ) : (
+                      recentTrades.map((trade) => {
+                        const res = trade.result ?? 0;
+                        return (
+                          <div key={trade.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                            <div>
+                              <p className="font-medium text-sm text-foreground">{trade.pair}</p>
+                              <p className="text-xs text-muted-foreground">{trade.side ?? '—'} · {trade.trade_date}</p>
+                            </div>
+                            <p className={cx('text-sm font-semibold', res >= 0 ? 'text-emerald-500' : 'text-red-500')}>
+                              {res >= 0 ? '+' : ''}${res}
+                            </p>
+                          </div>
+                        );
+                      })
+                    )}
                   </CardContent>
                 </Card>
 
