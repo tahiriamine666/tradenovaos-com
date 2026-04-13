@@ -1,7 +1,8 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import TradeVault from '@/pages/TradeVault';
 import {
   BarChart3, BookOpen, Brain, CalendarDays, CheckCircle2,
@@ -10,6 +11,7 @@ import {
   Settings, ShieldCheck, Sun, Target, TrendingUp, Upload, Zap,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
@@ -187,8 +189,38 @@ export default function TradingDashboard() {
   const [search, setSearch] = useState('');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const dark = theme === 'dark';
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const navigate = useNavigate();
+
+  const [dashLoading, setDashLoading] = useState(true);
+  const [totalPnl, setTotalPnl] = useState(0);
+  const [tradesCount, setTradesCount] = useState(0);
+  const [winRate, setWinRate] = useState(0);
+  const [recentTrades, setRecentTrades] = useState<any[]>([]);
+
+  const fetchDashboardData = useCallback(async () => {
+    if (!user) return;
+    setDashLoading(true);
+    const { data, error } = await supabase
+      .from('trades')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('trade_date', { ascending: false });
+
+    if (!error && data) {
+      const pnl = data.reduce((sum, t) => sum + (t.result ?? 0), 0);
+      const wins = data.filter((t) => (t.result ?? 0) > 0).length;
+      setTotalPnl(pnl);
+      setTradesCount(data.length);
+      setWinRate(data.length > 0 ? Math.round((wins / data.length) * 100) : 0);
+      setRecentTrades(data.slice(0, 5));
+    }
+    setDashLoading(false);
+  }, [user]);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   const handleLogout = async () => {
     await signOut();
@@ -291,10 +323,18 @@ export default function TradingDashboard() {
           {active === 'dashboard' && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <MetricCard title="Total P&L" value="+$3,246" hint="↑ 18% vs last month" icon={TrendingUp} dark={dark} />
-                <MetricCard title="Win Rate" value="62%" hint="34 of 55 trades" icon={Target} dark={dark} />
-                <MetricCard title="Avg RR" value="1.8:1" hint="Above target of 1.5" icon={LineChart} dark={dark} />
-                <MetricCard title="Trades" value="55" hint="This month" icon={FileBarChart} dark={dark} />
+                {dashLoading ? (
+                  <>
+                    {[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-xl" />)}
+                  </>
+                ) : (
+                  <>
+                    <MetricCard title="Total P&L" value={`${totalPnl >= 0 ? '+' : ''}$${totalPnl.toLocaleString()}`} hint={`From ${tradesCount} trades`} icon={TrendingUp} dark={dark} />
+                    <MetricCard title="Win Rate" value={`${winRate}%`} hint={`${Math.round(tradesCount * winRate / 100)} of ${tradesCount} trades`} icon={Target} dark={dark} />
+                    <MetricCard title="Avg RR" value="—" hint="No RR field yet" icon={LineChart} dark={dark} />
+                    <MetricCard title="Trades" value={`${tradesCount}`} hint="Total trades" icon={FileBarChart} dark={dark} />
+                  </>
+                )}
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -381,18 +421,26 @@ export default function TradingDashboard() {
                     <CardDescription>Execution log preview</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    {trades.map((trade) => (
-                      <div key={trade.pair} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                        <div>
-                          <p className="font-medium text-sm text-foreground">{trade.pair}</p>
-                          <p className="text-xs text-muted-foreground">{trade.setup} · {trade.status}</p>
-                        </div>
-                        <div className="text-right flex items-center gap-2">
-                          <p className={cx('text-sm font-semibold', trade.result.startsWith('+') ? 'text-emerald-500' : 'text-red-500')}>{trade.result}</p>
-                          <Badge variant="outline" className="text-xs">{trade.grade}</Badge>
-                        </div>
-                      </div>
-                    ))}
+                    {dashLoading ? (
+                      <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-10 rounded" />)}</div>
+                    ) : recentTrades.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-6">No trades yet. Add your first trade in Trade Vault.</p>
+                    ) : (
+                      recentTrades.map((trade) => {
+                        const res = trade.result ?? 0;
+                        return (
+                          <div key={trade.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
+                            <div>
+                              <p className="font-medium text-sm text-foreground">{trade.pair}</p>
+                              <p className="text-xs text-muted-foreground">{trade.side ?? '—'} · {trade.trade_date}</p>
+                            </div>
+                            <p className={cx('text-sm font-semibold', res >= 0 ? 'text-emerald-500' : 'text-red-500')}>
+                              {res >= 0 ? '+' : ''}${res}
+                            </p>
+                          </div>
+                        );
+                      })
+                    )}
                   </CardContent>
                 </Card>
 
