@@ -189,8 +189,38 @@ export default function TradingDashboard() {
   const [search, setSearch] = useState('');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const dark = theme === 'dark';
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const navigate = useNavigate();
+
+  const [dashLoading, setDashLoading] = useState(true);
+  const [totalPnl, setTotalPnl] = useState(0);
+  const [tradesCount, setTradesCount] = useState(0);
+  const [winRate, setWinRate] = useState(0);
+  const [recentTrades, setRecentTrades] = useState<any[]>([]);
+
+  const fetchDashboardData = useCallback(async () => {
+    if (!user) return;
+    setDashLoading(true);
+    const { data, error } = await supabase
+      .from('trades')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('trade_date', { ascending: false });
+
+    if (!error && data) {
+      const pnl = data.reduce((sum, t) => sum + (t.result ?? 0), 0);
+      const wins = data.filter((t) => (t.result ?? 0) > 0).length;
+      setTotalPnl(pnl);
+      setTradesCount(data.length);
+      setWinRate(data.length > 0 ? Math.round((wins / data.length) * 100) : 0);
+      setRecentTrades(data.slice(0, 5));
+    }
+    setDashLoading(false);
+  }, [user]);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
 
   const handleLogout = async () => {
     await signOut();
