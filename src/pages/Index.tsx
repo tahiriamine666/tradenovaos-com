@@ -323,10 +323,18 @@ export default function TradingDashboard() {
           {active === 'dashboard' && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <MetricCard title="Total P&L" value="+$3,246" hint="↑ 18% vs last month" icon={TrendingUp} dark={dark} />
-                <MetricCard title="Win Rate" value="62%" hint="34 of 55 trades" icon={Target} dark={dark} />
-                <MetricCard title="Avg RR" value="1.8:1" hint="Above target of 1.5" icon={LineChart} dark={dark} />
-                <MetricCard title="Trades" value="55" hint="This month" icon={FileBarChart} dark={dark} />
+                {dashLoading ? (
+                  <>
+                    {[1,2,3,4].map(i => <Skeleton key={i} className="h-24 rounded-xl" />)}
+                  </>
+                ) : (
+                  <>
+                    <MetricCard title="Total P&L" value={`${totalPnl >= 0 ? '+' : ''}$${totalPnl.toLocaleString()}`} hint={`From ${tradesCount} trades`} icon={TrendingUp} dark={dark} />
+                    <MetricCard title="Win Rate" value={`${winRate}%`} hint={`${Math.round(tradesCount * winRate / 100)} of ${tradesCount} trades`} icon={Target} dark={dark} />
+                    <MetricCard title="Avg RR" value="—" hint="No RR field yet" icon={LineChart} dark={dark} />
+                    <MetricCard title="Trades" value={`${tradesCount}`} hint="Total trades" icon={FileBarChart} dark={dark} />
+                  </>
+                )}
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
