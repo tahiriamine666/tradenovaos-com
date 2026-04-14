@@ -56,6 +56,140 @@ const resources = [
   'Risk model for funded account challenges',
 ];
 
+function formatMoney(val: number): string {
+  const prefix = val >= 0 ? '+' : '';
+  return `${prefix}$${Math.abs(val).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function EdgeAnalytics({ dark, user }: { dark: boolean; user: any }) {
+  const [trades, setTrades] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+    const fetch = async () => {
+      setLoading(true);
+      const { data } = await supabase
+        .from('trades')
+        .select('*')
+        .eq('user_id', user.id);
+      setTrades(data ?? []);
+      setLoading(false);
+    };
+    fetch();
+  }, [user]);
+
+  const metrics = useMemo(() => {
+    const wins = trades.filter(t => (t.result ?? 0) > 0);
+    const losses = trades.filter(t => (t.result ?? 0) < 0);
+    const totalPnl = trades.reduce((s, t) => s + (t.result ?? 0), 0);
+    const winRate = trades.length > 0 ? Math.round((wins.length / trades.length) * 100) : 0;
+    const avgWin = wins.length > 0 ? wins.reduce((s, t) => s + (t.result ?? 0), 0) / wins.length : 0;
+    const avgLoss = losses.length > 0 ? losses.reduce((s, t) => s + (t.result ?? 0), 0) / losses.length : 0;
+    const best = trades.length > 0 ? Math.max(...trades.map(t => t.result ?? 0)) : 0;
+    const worst = trades.length > 0 ? Math.min(...trades.map(t => t.result ?? 0)) : 0;
+
+    const bySide: Record<string, { count: number; pnl: number }> = {};
+    const bySetup: Record<string, { count: number; pnl: number }> = {};
+    trades.forEach(t => {
+      const side = (t.side || 'Unknown').toLowerCase();
+      if (!bySide[side]) bySide[side] = { count: 0, pnl: 0 };
+      bySide[side].count++;
+      bySide[side].pnl += t.result ?? 0;
+
+      const setup = t.setup?.trim();
+      if (setup) {
+        if (!bySetup[setup]) bySetup[setup] = { count: 0, pnl: 0 };
+        bySetup[setup].count++;
+        bySetup[setup].pnl += t.result ?? 0;
+      }
+    });
+
+    return { totalPnl, winRate, avgWin, avgLoss, best, worst, winsCount: wins.length, lossesCount: losses.length, bySide, bySetup };
+  }, [trades]);
+
+  if (loading) {
+    return (
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+        <SectionTitle title="Edge Analytics" subtitle="Discover what's working and what's not" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1,2,3,4,5,6,7,8].map(i => <Skeleton key={i} className="h-24 rounded-xl" />)}
+        </div>
+      </motion.div>
+    );
+  }
+
+  if (trades.length === 0) {
+    return (
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+        <SectionTitle title="Edge Analytics" subtitle="Discover what's working and what's not" />
+        <Card className="border-0 shadow-sm">
+          <CardContent className="pt-6 text-center py-12">
+            <BarChart3 className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+            <p className="text-muted-foreground">No trades yet. Add trades in Trade Vault to see analytics.</p>
+          </CardContent>
+        </Card>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+      <SectionTitle title="Edge Analytics" subtitle="Discover what's working and what's not" />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <MetricCard title="Total P&L" value={formatMoney(metrics.totalPnl)} hint={`From ${trades.length} trades`} icon={TrendingUp} dark={dark} />
+        <MetricCard title="Win Rate" value={`${metrics.winRate}%`} hint={`${metrics.winsCount} winning trades`} icon={Target} dark={dark} />
+        <MetricCard title="Average Win" value={formatMoney(metrics.avgWin)} hint={`${metrics.winsCount} trades`} icon={CheckCircle2} dark={dark} />
+        <MetricCard title="Average Loss" value={formatMoney(metrics.avgLoss)} hint={`${metrics.lossesCount} trades`} icon={Clock3} dark={dark} />
+        <MetricCard title="Best Trade" value={formatMoney(metrics.best)} hint="Highest result" icon={TrendingUp} dark={dark} />
+        <MetricCard title="Worst Trade" value={formatMoney(metrics.worst)} hint="Lowest result" icon={LineChart} dark={dark} />
+        <MetricCard title="Winning Trades" value={`${metrics.winsCount}`} hint={`of ${trades.length} total`} icon={CheckCircle2} dark={dark} />
+        <MetricCard title="Losing Trades" value={`${metrics.lossesCount}`} hint={`of ${trades.length} total`} icon={ShieldCheck} dark={dark} />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="border-0 shadow-sm">
+          <CardHeader><CardTitle className="font-heading">Performance by Side</CardTitle><CardDescription>Long vs Short breakdown</CardDescription></CardHeader>
+          <CardContent className="space-y-3">
+            {Object.entries(metrics.bySide).map(([side, data]) => (
+              <div key={side} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                <div>
+                  <p className="text-sm font-medium text-foreground capitalize">{side}</p>
+                  <p className="text-xs text-muted-foreground">{data.count} trades</p>
+                </div>
+                <p className={cx('text-sm font-semibold', data.pnl >= 0 ? 'text-emerald-500' : 'text-red-500')}>
+                  {formatMoney(data.pnl)}
+                </p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-sm">
+          <CardHeader><CardTitle className="font-heading">Performance by Setup</CardTitle><CardDescription>P&L grouped by setup type</CardDescription></CardHeader>
+          <CardContent className="space-y-3">
+            {Object.keys(metrics.bySetup).length === 0 ? (
+              <p className="text-sm text-muted-foreground">No setup data available. Tag your trades with setups to see this breakdown.</p>
+            ) : (
+              Object.entries(metrics.bySetup).map(([setup, data]) => (
+                <div key={setup} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{setup}</p>
+                    <p className="text-xs text-muted-foreground">{data.count} trades</p>
+                  </div>
+                  <p className={cx('text-sm font-semibold', data.pnl >= 0 ? 'text-emerald-500' : 'text-red-500')}>
+                    {formatMoney(data.pnl)}
+                  </p>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </motion.div>
+  );
+}
+
 
 const sidebarItems = [
   { id: 'dashboard', label: 'Command Center', icon: LayoutDashboard },
@@ -584,35 +718,7 @@ export default function TradingDashboard() {
             </motion.div>
           )}
 
-          {active === 'analytics' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-              <SectionTitle title="Edge Analytics" subtitle="Discover what's working and what's not" />
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <MetricCard title="Total P&L" value="+$3,246" hint="This month" icon={TrendingUp} dark={dark} />
-                <MetricCard title="Best Setup" value="Pullback" hint="81% win rate" icon={Target} dark={dark} />
-                <MetricCard title="Worst Session" value="Monday AM" hint="-$430 avg" icon={Clock3} dark={dark} />
-                <MetricCard title="Discipline" value="85%" hint="Rule adherence" icon={ShieldCheck} dark={dark} />
-              </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card className="border-0 shadow-sm">
-                  <CardHeader><CardTitle className="font-heading text-emerald-500">What works</CardTitle></CardHeader>
-                  <CardContent className="space-y-2">
-                    {['Pullback setups have highest win rate', 'NASDAQ outperforms FX pairs', 'Trades after 10:00 AM are more consistent'].map((item) => (
-                      <p key={item} className="text-sm text-foreground flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-500" />{item}</p>
-                    ))}
-                  </CardContent>
-                </Card>
-                <Card className="border-0 shadow-sm">
-                  <CardHeader><CardTitle className="font-heading text-red-500">What hurts</CardTitle></CardHeader>
-                  <CardContent className="space-y-2">
-                    {['Impulsive breakouts reduce consistency', 'Overtrading after first loss damages P&L', 'Low-quality C-grade setups drag results'].map((item) => (
-                      <p key={item} className="text-sm text-foreground flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-red-500" />{item}</p>
-                    ))}
-                  </CardContent>
-                </Card>
-              </div>
-            </motion.div>
-          )}
+          {active === 'analytics' && <EdgeAnalytics dark={dark} user={user} />}
 
           {active === 'playbooks' && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
