@@ -29,7 +29,7 @@ type Trade = {
   user_id: string;
 };
 
-const emptyForm = { pair: '', side: 'long', result: '', trade_date: new Date().toISOString().split('T')[0], notes: '' };
+const emptyForm = { pair: '', side: 'long', result: '', trade_date: new Date().toISOString().split('T')[0], notes: '', setup: '' };
 
 export default function TradeVault() {
   const { user } = useAuth();
@@ -38,6 +38,14 @@ export default function TradeVault() {
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [playbooks, setPlaybooks] = useState<{ title: string }[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from('playbooks').select('title').eq('user_id', user.id).then(({ data }) => {
+      setPlaybooks(data ?? []);
+    });
+  }, [user]);
 
   const fetchTrades = async () => {
     if (!user) return;
@@ -65,6 +73,7 @@ export default function TradeVault() {
       result: form.result ? parseFloat(form.result) : null,
       trade_date: form.trade_date,
       notes: form.notes || null,
+      setup: form.setup || null,
       user_id: user.id,
     };
 
@@ -91,6 +100,7 @@ export default function TradeVault() {
       result: trade.result?.toString() || '',
       trade_date: trade.trade_date,
       notes: trade.notes || '',
+      setup: trade.setup || '',
     });
     setEditingId(trade.id);
     setDialogOpen(true);
@@ -152,6 +162,22 @@ export default function TradeVault() {
                 </div>
               </div>
               <div className="space-y-2">
+                <Label>Setup</Label>
+                {playbooks.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">No playbooks yet. Create one in Playbook Lab first.</p>
+                ) : (
+                  <Select value={form.setup} onValueChange={(v) => setForm({ ...form, setup: v === '__none__' ? '' : v })}>
+                    <SelectTrigger><SelectValue placeholder="Select setup..." /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">None</SelectItem>
+                      {playbooks.map((p) => (
+                        <SelectItem key={p.title} value={p.title}>{p.title}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              </div>
+              <div className="space-y-2">
                 <Label>Notes</Label>
                 <Textarea placeholder="Trade notes..." value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
               </div>
@@ -177,6 +203,7 @@ export default function TradeVault() {
                   <TableHead>Date</TableHead>
                   <TableHead>Pair</TableHead>
                   <TableHead>Side</TableHead>
+                  <TableHead>Setup</TableHead>
                   <TableHead>Result</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
