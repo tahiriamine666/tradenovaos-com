@@ -221,6 +221,7 @@ export default function TradeVault() {
                           {trade.side || '—'}
                         </Badge>
                       </TableCell>
+                      <TableCell className="text-sm">{trade.setup || '—'}</TableCell>
                       <TableCell className={positive ? 'text-emerald-500 font-semibold' : negative ? 'text-red-500 font-semibold' : ''}>
                         {trade.result != null ? `${trade.result > 0 ? '+' : ''}$${trade.result}` : '—'}
                       </TableCell>
