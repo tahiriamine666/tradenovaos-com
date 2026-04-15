@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import TradeVault from '@/pages/TradeVault';
+import PlaybookLab from '@/pages/PlaybookLab';
 import {
   BarChart3, BookOpen, Brain, CalendarDays, CheckCircle2,
   ChevronLeft, ChevronRight, CircleDollarSign, Clock3,
@@ -43,11 +44,6 @@ const trades = [
   { pair: 'BTCUSD', setup: 'Scalp', result: '+$75', grade: 'B', status: 'Fast session' },
 ];
 
-const playbooks = [
-  { title: 'Momentum Pulse', description: 'Breakout continuation after clean range expansion.', accuracy: 74, risk: '1R max', tag: 'Momentum' },
-  { title: 'Trend Pullback', description: 'Enter on retracement inside higher timeframe trend.', accuracy: 81, risk: '0.75R', tag: 'A+ setup' },
-  { title: 'Liquidity Reclaim', description: 'Fade failed breakout near strong liquidity zone.', accuracy: 67, risk: '1R max', tag: 'Advanced' },
-];
 
 const resources = [
   'How to build a daily trading plan',
@@ -720,27 +716,7 @@ export default function TradingDashboard() {
 
           {active === 'analytics' && <EdgeAnalytics dark={dark} user={user} />}
 
-          {active === 'playbooks' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-              <SectionTitle title="Playbook Lab" subtitle="Your refined trading setups" />
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {playbooks.map((item) => (
-                  <Card key={item.title} className="border-0 shadow-sm">
-                    <CardContent className="pt-6 space-y-3">
-                      <Badge className="bg-primary/10 text-primary border-0">{item.tag}</Badge>
-                      <p className="font-heading font-bold text-foreground">{item.title}</p>
-                      <p className="text-xs text-muted-foreground">{item.description}</p>
-                      <Separator />
-                      <div className="flex justify-between text-xs"><span className="text-muted-foreground">Accuracy</span><span className="font-medium text-foreground">{item.accuracy}%</span></div>
-                      <Progress value={item.accuracy} className="h-2" />
-                      <div className="flex justify-between text-xs"><span className="text-muted-foreground">Risk</span><span className="font-medium text-foreground">{item.risk}</span></div>
-                      <Button variant="outline" size="sm" className="w-full rounded-xl">Open playbook</Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </motion.div>
-          )}
+          {active === 'playbooks' && <PlaybookLab />}
 
           {active === 'replay' && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
