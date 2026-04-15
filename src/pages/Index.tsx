@@ -86,7 +86,7 @@ function EdgeAnalytics({ dark, user }: { dark: boolean; user: any }) {
     const worst = trades.length > 0 ? Math.min(...trades.map(t => t.result ?? 0)) : 0;
 
     const bySide: Record<string, { count: number; pnl: number }> = {};
-    const bySetup: Record<string, { count: number; pnl: number }> = {};
+    const bySetup: Record<string, { count: number; pnl: number; wins: number }> = {};
     trades.forEach(t => {
       const side = (t.side || 'Unknown').toLowerCase();
       if (!bySide[side]) bySide[side] = { count: 0, pnl: 0 };
@@ -95,9 +95,10 @@ function EdgeAnalytics({ dark, user }: { dark: boolean; user: any }) {
 
       const setup = t.setup?.trim();
       if (setup) {
-        if (!bySetup[setup]) bySetup[setup] = { count: 0, pnl: 0 };
+        if (!bySetup[setup]) bySetup[setup] = { count: 0, pnl: 0, wins: 0 };
         bySetup[setup].count++;
         bySetup[setup].pnl += t.result ?? 0;
+        if ((t.result ?? 0) > 0) bySetup[setup].wins++;
       }
     });
 
@@ -171,7 +172,7 @@ function EdgeAnalytics({ dark, user }: { dark: boolean; user: any }) {
                 <div key={setup} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
                   <div>
                     <p className="text-sm font-medium text-foreground">{setup}</p>
-                    <p className="text-xs text-muted-foreground">{data.count} trades</p>
+                    <p className="text-xs text-muted-foreground">{data.count} trades · {Math.round((data.wins / data.count) * 100)}% win rate</p>
                   </div>
                   <p className={cx('text-sm font-semibold', data.pnl >= 0 ? 'text-emerald-500' : 'text-red-500')}>
                     {formatMoney(data.pnl)}
