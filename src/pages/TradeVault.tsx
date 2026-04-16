@@ -40,6 +40,7 @@ export default function TradeVault() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [playbooks, setPlaybooks] = useState<{ title: string }[]>([]);
+  const [csvOpen, setCsvOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
