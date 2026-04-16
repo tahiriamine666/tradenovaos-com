@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Pencil, Trash2, Plus, Upload } from 'lucide-react';
+import { Pencil, Trash2, Plus, Upload, Search, X } from 'lucide-react';
 import CsvImportDialog from '@/components/CsvImportDialog';
 
 type Trade = {
@@ -42,6 +42,13 @@ export default function TradeVault() {
   const [playbooks, setPlaybooks] = useState<{ title: string }[]>([]);
   const [csvOpen, setCsvOpen] = useState(false);
 
+  // Filters
+  const [searchPair, setSearchPair] = useState('');
+  const [filterSide, setFilterSide] = useState('all');
+  const [filterSetup, setFilterSetup] = useState('all');
+  const [filterDateFrom, setFilterDateFrom] = useState('');
+  const [filterDateTo, setFilterDateTo] = useState('');
+
   useEffect(() => {
     if (!user) return;
     supabase.from('playbooks').select('title').eq('user_id', user.id).then(({ data }) => {
@@ -64,6 +71,27 @@ export default function TradeVault() {
   };
 
   useEffect(() => { fetchTrades(); }, [user]);
+
+  const filteredTrades = useMemo(() => {
+    return trades.filter(t => {
+      if (searchPair && !t.pair.toLowerCase().includes(searchPair.toLowerCase())) return false;
+      if (filterSide !== 'all' && (t.side || '').toLowerCase() !== filterSide) return false;
+      if (filterSetup !== 'all' && (t.setup || '') !== filterSetup) return false;
+      if (filterDateFrom && t.trade_date < filterDateFrom) return false;
+      if (filterDateTo && t.trade_date > filterDateTo) return false;
+      return true;
+    });
+  }, [trades, searchPair, filterSide, filterSetup, filterDateFrom, filterDateTo]);
+
+  const hasFilters = searchPair || filterSide !== 'all' || filterSetup !== 'all' || filterDateFrom || filterDateTo;
+
+  const resetFilters = () => {
+    setSearchPair('');
+    setFilterSide('all');
+    setFilterSetup('all');
+    setFilterDateFrom('');
+    setFilterDateTo('');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -195,15 +223,71 @@ export default function TradeVault() {
         {user && <CsvImportDialog open={csvOpen} onOpenChange={setCsvOpen} userId={user.id} onImportComplete={fetchTrades} />}
       </div>
 
+      {/* Filters */}
+      <Card className="border-0 shadow-sm">
+        <CardContent className="pt-5 pb-4">
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="flex-1 min-w-[180px]">
+              <Label className="text-xs text-muted-foreground mb-1 block">Search Pair</Label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="e.g. EURUSD" value={searchPair} onChange={e => setSearchPair(e.target.value)} className="pl-9" />
+              </div>
+            </div>
+            <div className="min-w-[130px]">
+              <Label className="text-xs text-muted-foreground mb-1 block">Side</Label>
+              <Select value={filterSide} onValueChange={setFilterSide}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Sides</SelectItem>
+                  <SelectItem value="long">Long</SelectItem>
+                  <SelectItem value="short">Short</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="min-w-[150px]">
+              <Label className="text-xs text-muted-foreground mb-1 block">Setup</Label>
+              <Select value={filterSetup} onValueChange={setFilterSetup}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Setups</SelectItem>
+                  {playbooks.map(p => (
+                    <SelectItem key={p.title} value={p.title}>{p.title}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="min-w-[140px]">
+              <Label className="text-xs text-muted-foreground mb-1 block">From</Label>
+              <Input type="date" value={filterDateFrom} onChange={e => setFilterDateFrom(e.target.value)} />
+            </div>
+            <div className="min-w-[140px]">
+              <Label className="text-xs text-muted-foreground mb-1 block">To</Label>
+              <Input type="date" value={filterDateTo} onChange={e => setFilterDateTo(e.target.value)} />
+            </div>
+            {hasFilters && (
+              <Button variant="ghost" size="sm" onClick={resetFilters} className="rounded-xl text-muted-foreground">
+                <X className="h-4 w-4 mr-1" /> Clear
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       <Card className="border-0 shadow-sm">
         <CardHeader>
-          <CardTitle className="font-heading text-lg">All Trades</CardTitle>
+          <CardTitle className="font-heading text-lg">
+            All Trades
+            {hasFilters && <span className="text-sm font-normal text-muted-foreground ml-2">({filteredTrades.length} of {trades.length})</span>}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
             <p className="text-sm text-muted-foreground">Loading trades...</p>
-          ) : trades.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No trades yet. Add your first trade above.</p>
+          ) : filteredTrades.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">
+              {hasFilters ? 'No trades match your filters.' : 'No trades yet. Add your first trade above.'}
+            </p>
           ) : (
             <Table>
               <TableHeader>
@@ -217,7 +301,7 @@ export default function TradeVault() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {trades.map((trade) => {
+                {filteredTrades.map((trade) => {
                   const positive = (trade.result ?? 0) > 0;
                   const negative = (trade.result ?? 0) < 0;
                   return (
