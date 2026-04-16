@@ -130,29 +130,7 @@ function EdgeAnalytics({ dark, user }: { dark: boolean; user: any }) {
   }, [trades]);
 
   if (loading) {
-    return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-        <SectionTitle title="Edge Analytics" subtitle="Discover what's working and what's not" />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[1,2,3,4,5,6,7,8].map(i => <Skeleton key={i} className="h-24 rounded-xl" />)}
-        </div>
-      </motion.div>
-    );
-  }
-
-  if (trades.length === 0) {
-    return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-        <SectionTitle title="Edge Analytics" subtitle="Discover what's working and what's not" />
-        <Card className="border-0 shadow-sm">
-          <CardContent className="pt-6 text-center py-12">
-            <BarChart3 className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-            <p className="text-muted-foreground">No trades yet. Add trades in Trade Vault to see analytics.</p>
-          </CardContent>
-        </Card>
-      </motion.div>
-    );
-  }
+  const chartPrimary = '#7c3aed';
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
@@ -160,13 +138,33 @@ function EdgeAnalytics({ dark, user }: { dark: boolean; user: any }) {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard title="Total P&L" value={formatMoney(metrics.totalPnl)} hint={`From ${trades.length} trades`} icon={TrendingUp} dark={dark} />
         <MetricCard title="Win Rate" value={`${metrics.winRate}%`} hint={`${metrics.winsCount} winning trades`} icon={Target} dark={dark} />
-        <MetricCard title="Average Win" value={formatMoney(metrics.avgWin)} hint={`${metrics.winsCount} trades`} icon={CheckCircle2} dark={dark} />
-        <MetricCard title="Average Loss" value={formatMoney(metrics.avgLoss)} hint={`${metrics.lossesCount} trades`} icon={Clock3} dark={dark} />
+        <MetricCard title="Profit Factor" value={metrics.profitFactor === Infinity ? '∞' : metrics.profitFactor.toFixed(2)} hint="Total profit / total loss" icon={BarChart3} dark={dark} />
+        <MetricCard title="Expectancy" value={formatMoney(metrics.expectancy)} hint="Average result per trade" icon={Zap} dark={dark} />
+        <MetricCard title="Average Trade" value={formatMoney(metrics.avgTrade)} hint="Mean of all results" icon={LineChart} dark={dark} />
         <MetricCard title="Best Trade" value={formatMoney(metrics.best)} hint="Highest result" icon={TrendingUp} dark={dark} />
-        <MetricCard title="Worst Trade" value={formatMoney(metrics.worst)} hint="Lowest result" icon={LineChart} dark={dark} />
-        <MetricCard title="Winning Trades" value={`${metrics.winsCount}`} hint={`of ${trades.length} total`} icon={CheckCircle2} dark={dark} />
-        <MetricCard title="Losing Trades" value={`${metrics.lossesCount}`} hint={`of ${trades.length} total`} icon={ShieldCheck} dark={dark} />
+        <MetricCard title="Win Streak" value={`${metrics.winStreak}`} hint="Longest consecutive wins" icon={CheckCircle2} dark={dark} />
+        <MetricCard title="Loss Streak" value={`${metrics.lossStreak}`} hint="Longest consecutive losses" icon={ShieldCheck} dark={dark} />
       </div>
+
+      {metrics.dailyPerformance.length > 0 && (
+        <Card className="border-0 shadow-sm">
+          <CardHeader>
+            <CardTitle className="font-heading">Daily Performance Trend</CardTitle>
+            <CardDescription>Total P&L per day</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={metrics.dailyPerformance}>
+                <CartesianGrid strokeDasharray="3 3" stroke={dark ? '#ffffff10' : '#00000010'} />
+                <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke={dark ? '#ffffff30' : '#00000030'} />
+                <YAxis tick={{ fontSize: 11 }} stroke={dark ? '#ffffff30' : '#00000030'} />
+                <Tooltip formatter={(value: number) => [formatMoney(value), 'P&L']} />
+                <Bar dataKey="pnl" radius={[4, 4, 0, 0]} fill={chartPrimary} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="border-0 shadow-sm">
