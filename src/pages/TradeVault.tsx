@@ -12,7 +12,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-import { Pencil, Trash2, Plus } from 'lucide-react';
+import { Pencil, Trash2, Plus, Upload } from 'lucide-react';
+import CsvImportDialog from '@/components/CsvImportDialog';
 
 type Trade = {
   id: string;
@@ -39,6 +40,7 @@ export default function TradeVault() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [playbooks, setPlaybooks] = useState<{ title: string }[]>([]);
+  const [csvOpen, setCsvOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -126,12 +128,16 @@ export default function TradeVault() {
           <h2 className="text-2xl font-bold font-heading text-foreground">Trade Vault</h2>
           <p className="text-sm text-muted-foreground">Log, review, and manage all your trades</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="rounded-xl" onClick={openNew}>
-              <Plus className="h-4 w-4 mr-1" /> New Trade
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Button variant="outline" className="rounded-xl" onClick={() => setCsvOpen(true)}>
+            <Upload className="h-4 w-4 mr-1" /> Import CSV
+          </Button>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="rounded-xl" onClick={openNew}>
+                <Plus className="h-4 w-4 mr-1" /> New Trade
+              </Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle className="font-heading">{editingId ? 'Edit Trade' : 'Add Trade'}</DialogTitle>
@@ -185,6 +191,8 @@ export default function TradeVault() {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
+        {user && <CsvImportDialog open={csvOpen} onOpenChange={setCsvOpen} userId={user.id} onImportComplete={fetchTrades} />}
       </div>
 
       <Card className="border-0 shadow-sm">
