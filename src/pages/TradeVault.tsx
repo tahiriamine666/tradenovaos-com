@@ -191,6 +191,8 @@ export default function TradeVault() {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
+        {user && <CsvImportDialog open={csvOpen} onOpenChange={setCsvOpen} userId={user.id} onImportComplete={fetchTrades} />}
       </div>
 
       <Card className="border-0 shadow-sm">
