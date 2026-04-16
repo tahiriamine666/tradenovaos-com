@@ -85,6 +85,30 @@ function EdgeAnalytics({ dark, user }: { dark: boolean; user: any }) {
     const best = trades.length > 0 ? Math.max(...trades.map(t => t.result ?? 0)) : 0;
     const worst = trades.length > 0 ? Math.min(...trades.map(t => t.result ?? 0)) : 0;
 
+    const totalProfit = wins.reduce((s, t) => s + (t.result ?? 0), 0);
+    const totalLoss = Math.abs(losses.reduce((s, t) => s + (t.result ?? 0), 0));
+    const profitFactor = totalLoss > 0 ? totalProfit / totalLoss : totalProfit > 0 ? Infinity : 0;
+    const expectancy = trades.length > 0 ? totalPnl / trades.length : 0;
+    const avgTrade = expectancy;
+
+    // Streaks (sorted by date ascending)
+    const sorted = [...trades].sort((a, b) => a.trade_date.localeCompare(b.trade_date));
+    let winStreak = 0, lossStreak = 0, curWin = 0, curLoss = 0;
+    sorted.forEach(t => {
+      if ((t.result ?? 0) > 0) { curWin++; curLoss = 0; winStreak = Math.max(winStreak, curWin); }
+      else if ((t.result ?? 0) < 0) { curLoss++; curWin = 0; lossStreak = Math.max(lossStreak, curLoss); }
+      else { curWin = 0; curLoss = 0; }
+    });
+
+    // Daily performance
+    const byDay: Record<string, number> = {};
+    trades.forEach(t => {
+      byDay[t.trade_date] = (byDay[t.trade_date] ?? 0) + (t.result ?? 0);
+    });
+    const dailyPerformance = Object.entries(byDay)
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([date, pnl]) => ({ date, pnl }));
+
     const bySide: Record<string, { count: number; pnl: number }> = {};
     const bySetup: Record<string, { count: number; pnl: number; wins: number }> = {};
     trades.forEach(t => {
@@ -102,7 +126,7 @@ function EdgeAnalytics({ dark, user }: { dark: boolean; user: any }) {
       }
     });
 
-    return { totalPnl, winRate, avgWin, avgLoss, best, worst, winsCount: wins.length, lossesCount: losses.length, bySide, bySetup };
+    return { totalPnl, winRate, avgWin, avgLoss, best, worst, winsCount: wins.length, lossesCount: losses.length, bySide, bySetup, profitFactor, expectancy, avgTrade, winStreak, lossStreak, dailyPerformance };
   }, [trades]);
 
   if (loading) {
