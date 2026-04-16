@@ -128,12 +128,16 @@ export default function TradeVault() {
           <h2 className="text-2xl font-bold font-heading text-foreground">Trade Vault</h2>
           <p className="text-sm text-muted-foreground">Log, review, and manage all your trades</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="rounded-xl" onClick={openNew}>
-              <Plus className="h-4 w-4 mr-1" /> New Trade
-            </Button>
-          </DialogTrigger>
+        <div className="flex gap-2">
+          <Button variant="outline" className="rounded-xl" onClick={() => setCsvOpen(true)}>
+            <Upload className="h-4 w-4 mr-1" /> Import CSV
+          </Button>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="rounded-xl" onClick={openNew}>
+                <Plus className="h-4 w-4 mr-1" /> New Trade
+              </Button>
+            </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle className="font-heading">{editingId ? 'Edit Trade' : 'Add Trade'}</DialogTitle>
