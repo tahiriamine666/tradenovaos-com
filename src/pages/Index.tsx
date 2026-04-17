@@ -129,8 +129,18 @@ function EdgeAnalytics({ dark, user }: { dark: boolean; user: any }) {
     return { totalPnl, winRate, avgWin, avgLoss, best, worst, winsCount: wins.length, lossesCount: losses.length, bySide, bySetup, profitFactor, expectancy, avgTrade, winStreak, lossStreak, dailyPerformance };
   }, [trades]);
 
-  if (loading) {
   const chartPrimary = '#7c3aed';
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <SectionTitle title="Edge Analytics" subtitle="Discover what's working and what's not" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
