@@ -16,57 +16,93 @@ export type Database = {
     Tables: {
       journal_entries: {
         Row: {
+          bias: string | null
+          confidence_level: number | null
           created_at: string | null
+          energy_level: number | null
           entry_date: string
           id: string
           lesson: string | null
           mistakes: string | null
           mood: string | null
+          rule_adherence: number | null
+          summary: string | null
+          updated_at: string | null
           user_id: string
         }
         Insert: {
+          bias?: string | null
+          confidence_level?: number | null
           created_at?: string | null
+          energy_level?: number | null
           entry_date?: string
           id?: string
           lesson?: string | null
           mistakes?: string | null
           mood?: string | null
+          rule_adherence?: number | null
+          summary?: string | null
+          updated_at?: string | null
           user_id: string
         }
         Update: {
+          bias?: string | null
+          confidence_level?: number | null
           created_at?: string | null
+          energy_level?: number | null
           entry_date?: string
           id?: string
           lesson?: string | null
           mistakes?: string | null
           mood?: string | null
+          rule_adherence?: number | null
+          summary?: string | null
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
       }
       playbooks: {
         Row: {
+          checklist: string | null
           created_at: string | null
           description: string | null
+          entry_rules: string | null
+          exit_rules: string | null
           id: string
+          risk_rules: string | null
           rules: string | null
+          status: string | null
           title: string
+          updated_at: string | null
           user_id: string
         }
         Insert: {
+          checklist?: string | null
           created_at?: string | null
           description?: string | null
+          entry_rules?: string | null
+          exit_rules?: string | null
           id?: string
+          risk_rules?: string | null
           rules?: string | null
+          status?: string | null
           title: string
+          updated_at?: string | null
           user_id: string
         }
         Update: {
+          checklist?: string | null
           created_at?: string | null
           description?: string | null
+          entry_rules?: string | null
+          exit_rules?: string | null
           id?: string
+          risk_rules?: string | null
           rules?: string | null
+          status?: string | null
           title?: string
+          updated_at?: string | null
           user_id?: string
         }
         Relationships: []
@@ -78,6 +114,7 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          updated_at: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -85,6 +122,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
+          updated_at?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -92,6 +130,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -101,13 +140,24 @@ export type Database = {
           entry_price: number | null
           exit_price: number | null
           id: string
+          market: string | null
           notes: string | null
           pair: string
+          playbook_id: string | null
+          pnl: number | null
+          pnl_percent: number | null
           quantity: number | null
           result: number | null
+          rr: number | null
+          screenshot_url: string | null
+          session: string | null
           setup: string | null
           side: string | null
+          status: string | null
+          stop_loss: number | null
+          take_profit: number | null
           trade_date: string
+          updated_at: string | null
           user_id: string
         }
         Insert: {
@@ -115,13 +165,24 @@ export type Database = {
           entry_price?: number | null
           exit_price?: number | null
           id?: string
+          market?: string | null
           notes?: string | null
           pair: string
+          playbook_id?: string | null
+          pnl?: number | null
+          pnl_percent?: number | null
           quantity?: number | null
           result?: number | null
+          rr?: number | null
+          screenshot_url?: string | null
+          session?: string | null
           setup?: string | null
           side?: string | null
+          status?: string | null
+          stop_loss?: number | null
+          take_profit?: number | null
           trade_date?: string
+          updated_at?: string | null
           user_id: string
         }
         Update: {
@@ -129,16 +190,35 @@ export type Database = {
           entry_price?: number | null
           exit_price?: number | null
           id?: string
+          market?: string | null
           notes?: string | null
           pair?: string
+          playbook_id?: string | null
+          pnl?: number | null
+          pnl_percent?: number | null
           quantity?: number | null
           result?: number | null
+          rr?: number | null
+          screenshot_url?: string | null
+          session?: string | null
           setup?: string | null
           side?: string | null
+          status?: string | null
+          stop_loss?: number | null
+          take_profit?: number | null
           trade_date?: string
+          updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "trades_playbook_id_fkey"
+            columns: ["playbook_id"]
+            isOneToOne: false
+            referencedRelation: "playbooks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
