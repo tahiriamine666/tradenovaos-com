@@ -630,18 +630,27 @@ export default function TradingDashboard() {
                 <Card className="border-0 shadow-sm">
                   <CardHeader>
                     <CardTitle className="font-heading">Best Performing Setups</CardTitle>
-                    <CardDescription>By frequency this month</CardDescription>
+                    <CardDescription>Total P&L grouped by setup</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <ResponsiveContainer width="100%" height={200}>
-                      <BarChart data={setupData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke={dark ? '#ffffff10' : '#00000010'} />
-                        <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke={dark ? '#ffffff30' : '#00000030'} />
-                        <YAxis tick={{ fontSize: 12 }} stroke={dark ? '#ffffff30' : '#00000030'} />
-                        <Tooltip />
-                        <Bar dataKey="value" fill={chartPrimary} radius={[6, 6, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
+                    {dashLoading ? (
+                      <Skeleton className="h-[200px] w-full rounded-lg" />
+                    ) : setupData.length === 0 ? (
+                      <div className="h-[200px] flex flex-col items-center justify-center text-center">
+                        <BarChart3 className="h-8 w-8 text-muted-foreground mb-2" />
+                        <p className="text-sm text-muted-foreground">No setup data yet — tag your trades to see this.</p>
+                      </div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height={200}>
+                        <BarChart data={setupData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke={dark ? '#ffffff10' : '#00000010'} />
+                          <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke={dark ? '#ffffff30' : '#00000030'} />
+                          <YAxis tick={{ fontSize: 12 }} stroke={dark ? '#ffffff30' : '#00000030'} />
+                          <Tooltip />
+                          <Bar dataKey="value" fill={chartPrimary} radius={[6, 6, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
                   </CardContent>
                 </Card>
               </div>
