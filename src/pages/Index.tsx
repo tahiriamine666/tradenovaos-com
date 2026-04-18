@@ -515,24 +515,33 @@ export default function TradingDashboard() {
                 <Card className="border-0 shadow-sm">
                   <CardHeader>
                     <CardTitle className="font-heading">Equity Curve</CardTitle>
-                    <CardDescription>Weekly growth snapshot</CardDescription>
+                    <CardDescription>Cumulative P&L over time</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <ResponsiveContainer width="100%" height={220}>
-                      <AreaChart data={equityData}>
-                        <defs>
-                          <linearGradient id="eqGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor={chartPrimary} stopOpacity={0.3} />
-                            <stop offset="100%" stopColor={chartPrimary} stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke={dark ? '#ffffff10' : '#00000010'} />
-                        <XAxis dataKey="day" tick={{ fontSize: 12 }} stroke={dark ? '#ffffff30' : '#00000030'} />
-                        <YAxis tick={{ fontSize: 12 }} stroke={dark ? '#ffffff30' : '#00000030'} />
-                        <Tooltip />
-                        <Area type="monotone" dataKey="value" stroke={chartPrimary} fill="url(#eqGrad)" strokeWidth={2} />
-                      </AreaChart>
-                    </ResponsiveContainer>
+                    {dashLoading ? (
+                      <Skeleton className="h-[220px] w-full rounded-lg" />
+                    ) : equityData.length === 0 ? (
+                      <div className="h-[220px] flex flex-col items-center justify-center text-center">
+                        <LineChart className="h-8 w-8 text-muted-foreground mb-2" />
+                        <p className="text-sm text-muted-foreground">No trades yet — your equity curve will appear here.</p>
+                      </div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height={220}>
+                        <AreaChart data={equityData}>
+                          <defs>
+                            <linearGradient id="eqGrad" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor={chartPrimary} stopOpacity={0.3} />
+                              <stop offset="100%" stopColor={chartPrimary} stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke={dark ? '#ffffff10' : '#00000010'} />
+                          <XAxis dataKey="day" tick={{ fontSize: 12 }} stroke={dark ? '#ffffff30' : '#00000030'} />
+                          <YAxis tick={{ fontSize: 12 }} stroke={dark ? '#ffffff30' : '#00000030'} />
+                          <Tooltip />
+                          <Area type="monotone" dataKey="value" stroke={chartPrimary} fill="url(#eqGrad)" strokeWidth={2} />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    )}
                   </CardContent>
                 </Card>
 
