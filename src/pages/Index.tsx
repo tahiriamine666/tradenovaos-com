@@ -25,26 +25,6 @@ import {
   XAxis, YAxis, Tooltip, BarChart, Bar,
 } from 'recharts';
 
-const equityData = [
-  { day: 'Mon', value: 120 }, { day: 'Tue', value: 180 },
-  { day: 'Wed', value: 160 }, { day: 'Thu', value: 260 },
-  { day: 'Fri', value: 320 }, { day: 'Sat', value: 300 },
-  { day: 'Sun', value: 380 },
-];
-
-const setupData = [
-  { name: 'Breakout', value: 8 }, { name: 'Pullback', value: 14 },
-  { name: 'Reversal', value: 5 }, { name: 'Scalp', value: 7 },
-];
-
-const trades = [
-  { pair: 'NASDAQ', setup: 'Pullback', result: '+$320', grade: 'A', status: 'Followed plan' },
-  { pair: 'EURUSD', setup: 'Breakout', result: '-$90', grade: 'C', status: 'Early entry' },
-  { pair: 'XAUUSD', setup: 'Reversal', result: '+$180', grade: 'B', status: 'Good execution' },
-  { pair: 'BTCUSD', setup: 'Scalp', result: '+$75', grade: 'B', status: 'Fast session' },
-];
-
-
 const resources = [
   'How to build a daily trading plan',
   'Top 7 mistakes killing your consistency',
