@@ -14,6 +14,86 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_insights: {
+        Row: {
+          content: string | null
+          created_at: string | null
+          id: string
+          trade_id: string | null
+          type: string | null
+          user_id: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          trade_id?: string | null
+          type?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string | null
+          id?: string
+          trade_id?: string | null
+          type?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_insights_trade_id_fkey"
+            columns: ["trade_id"]
+            isOneToOne: false
+            referencedRelation: "trades"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ai_insights_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      import_batches: {
+        Row: {
+          created_at: string | null
+          file_name: string | null
+          id: string
+          imported_rows: number | null
+          status: string | null
+          total_rows: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          file_name?: string | null
+          id?: string
+          imported_rows?: number | null
+          status?: string | null
+          total_rows?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          file_name?: string | null
+          id?: string
+          imported_rows?: number | null
+          status?: string | null
+          total_rows?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_batches_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       journal_entries: {
         Row: {
           bias: string | null
@@ -133,6 +213,92 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      subscriptions: {
+        Row: {
+          created_at: string | null
+          current_period_end: string | null
+          id: string
+          plan: string | null
+          status: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          current_period_end?: string | null
+          id?: string
+          plan?: string | null
+          status?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          current_period_end?: string | null
+          id?: string
+          plan?: string | null
+          status?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trade_playbooks: {
+        Row: {
+          created_at: string | null
+          id: string
+          notes: string | null
+          playbook_id: string
+          score: number | null
+          trade_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          playbook_id: string
+          score?: number | null
+          trade_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          playbook_id?: string
+          score?: number | null
+          trade_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trade_playbooks_playbook_id_fkey"
+            columns: ["playbook_id"]
+            isOneToOne: false
+            referencedRelation: "playbooks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trade_playbooks_trade_id_fkey"
+            columns: ["trade_id"]
+            isOneToOne: false
+            referencedRelation: "trades"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       trades: {
         Row: {

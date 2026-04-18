@@ -25,26 +25,6 @@ import {
   XAxis, YAxis, Tooltip, BarChart, Bar,
 } from 'recharts';
 
-const equityData = [
-  { day: 'Mon', value: 120 }, { day: 'Tue', value: 180 },
-  { day: 'Wed', value: 160 }, { day: 'Thu', value: 260 },
-  { day: 'Fri', value: 320 }, { day: 'Sat', value: 300 },
-  { day: 'Sun', value: 380 },
-];
-
-const setupData = [
-  { name: 'Breakout', value: 8 }, { name: 'Pullback', value: 14 },
-  { name: 'Reversal', value: 5 }, { name: 'Scalp', value: 7 },
-];
-
-const trades = [
-  { pair: 'NASDAQ', setup: 'Pullback', result: '+$320', grade: 'A', status: 'Followed plan' },
-  { pair: 'EURUSD', setup: 'Breakout', result: '-$90', grade: 'C', status: 'Early entry' },
-  { pair: 'XAUUSD', setup: 'Reversal', result: '+$180', grade: 'B', status: 'Good execution' },
-  { pair: 'BTCUSD', setup: 'Scalp', result: '+$75', grade: 'B', status: 'Fast session' },
-];
-
-
 const resources = [
   'How to build a daily trading plan',
   'Top 7 mistakes killing your consistency',
@@ -356,10 +336,7 @@ export default function TradingDashboard() {
   const navigate = useNavigate();
 
   const [dashLoading, setDashLoading] = useState(true);
-  const [totalPnl, setTotalPnl] = useState(0);
-  const [tradesCount, setTradesCount] = useState(0);
-  const [winRate, setWinRate] = useState(0);
-  const [recentTrades, setRecentTrades] = useState<any[]>([]);
+  const [allTrades, setAllTrades] = useState<any[]>([]);
 
   const fetchDashboardData = useCallback(async () => {
     if (!user) return;
@@ -370,16 +347,50 @@ export default function TradingDashboard() {
       .eq('user_id', user.id)
       .order('trade_date', { ascending: false });
 
-    if (!error && data) {
-      const pnl = data.reduce((sum, t) => sum + (t.result ?? 0), 0);
-      const wins = data.filter((t) => (t.result ?? 0) > 0).length;
-      setTotalPnl(pnl);
-      setTradesCount(data.length);
-      setWinRate(data.length > 0 ? Math.round((wins / data.length) * 100) : 0);
-      setRecentTrades(data.slice(0, 5));
-    }
+    if (!error && data) setAllTrades(data);
     setDashLoading(false);
   }, [user]);
+
+  const { totalPnl, tradesCount, winRate, recentTrades, equityData, setupData } = useMemo(() => {
+    const pnl = allTrades.reduce((sum, t) => sum + (t.result ?? 0), 0);
+    const wins = allTrades.filter((t) => (t.result ?? 0) > 0).length;
+    const wr = allTrades.length > 0 ? Math.round((wins / allTrades.length) * 100) : 0;
+
+    // Equity curve: ascending by trade_date, cumulative result
+    const ascending = [...allTrades].sort((a, b) => {
+      const da = new Date(a.trade_date).getTime();
+      const db = new Date(b.trade_date).getTime();
+      return da - db;
+    });
+    let cum = 0;
+    const equity = ascending.map((t) => {
+      cum += t.result ?? 0;
+      const d = new Date(t.trade_date);
+      const day = isNaN(d.getTime())
+        ? String(t.trade_date)
+        : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+      return { day, value: Number(cum.toFixed(2)) };
+    });
+
+    // Setup aggregation: total result per setup
+    const setupMap: Record<string, number> = {};
+    allTrades.forEach((t) => {
+      const name = (t.setup && String(t.setup).trim()) || 'Unknown';
+      setupMap[name] = (setupMap[name] ?? 0) + (t.result ?? 0);
+    });
+    const setups = Object.entries(setupMap)
+      .map(([name, value]) => ({ name, value: Number(value.toFixed(2)) }))
+      .sort((a, b) => b.value - a.value);
+
+    return {
+      totalPnl: pnl,
+      tradesCount: allTrades.length,
+      winRate: wr,
+      recentTrades: allTrades.slice(0, 5),
+      equityData: equity,
+      setupData: setups,
+    };
+  }, [allTrades]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -504,24 +515,33 @@ export default function TradingDashboard() {
                 <Card className="border-0 shadow-sm">
                   <CardHeader>
                     <CardTitle className="font-heading">Equity Curve</CardTitle>
-                    <CardDescription>Weekly growth snapshot</CardDescription>
+                    <CardDescription>Cumulative P&L over time</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <ResponsiveContainer width="100%" height={220}>
-                      <AreaChart data={equityData}>
-                        <defs>
-                          <linearGradient id="eqGrad" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor={chartPrimary} stopOpacity={0.3} />
-                            <stop offset="100%" stopColor={chartPrimary} stopOpacity={0} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke={dark ? '#ffffff10' : '#00000010'} />
-                        <XAxis dataKey="day" tick={{ fontSize: 12 }} stroke={dark ? '#ffffff30' : '#00000030'} />
-                        <YAxis tick={{ fontSize: 12 }} stroke={dark ? '#ffffff30' : '#00000030'} />
-                        <Tooltip />
-                        <Area type="monotone" dataKey="value" stroke={chartPrimary} fill="url(#eqGrad)" strokeWidth={2} />
-                      </AreaChart>
-                    </ResponsiveContainer>
+                    {dashLoading ? (
+                      <Skeleton className="h-[220px] w-full rounded-lg" />
+                    ) : equityData.length === 0 ? (
+                      <div className="h-[220px] flex flex-col items-center justify-center text-center">
+                        <LineChart className="h-8 w-8 text-muted-foreground mb-2" />
+                        <p className="text-sm text-muted-foreground">No trades yet — your equity curve will appear here.</p>
+                      </div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height={220}>
+                        <AreaChart data={equityData}>
+                          <defs>
+                            <linearGradient id="eqGrad" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor={chartPrimary} stopOpacity={0.3} />
+                              <stop offset="100%" stopColor={chartPrimary} stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke={dark ? '#ffffff10' : '#00000010'} />
+                          <XAxis dataKey="day" tick={{ fontSize: 12 }} stroke={dark ? '#ffffff30' : '#00000030'} />
+                          <YAxis tick={{ fontSize: 12 }} stroke={dark ? '#ffffff30' : '#00000030'} />
+                          <Tooltip />
+                          <Area type="monotone" dataKey="value" stroke={chartPrimary} fill="url(#eqGrad)" strokeWidth={2} />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -610,18 +630,27 @@ export default function TradingDashboard() {
                 <Card className="border-0 shadow-sm">
                   <CardHeader>
                     <CardTitle className="font-heading">Best Performing Setups</CardTitle>
-                    <CardDescription>By frequency this month</CardDescription>
+                    <CardDescription>Total P&L grouped by setup</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <ResponsiveContainer width="100%" height={200}>
-                      <BarChart data={setupData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke={dark ? '#ffffff10' : '#00000010'} />
-                        <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke={dark ? '#ffffff30' : '#00000030'} />
-                        <YAxis tick={{ fontSize: 12 }} stroke={dark ? '#ffffff30' : '#00000030'} />
-                        <Tooltip />
-                        <Bar dataKey="value" fill={chartPrimary} radius={[6, 6, 0, 0]} />
-                      </BarChart>
-                    </ResponsiveContainer>
+                    {dashLoading ? (
+                      <Skeleton className="h-[200px] w-full rounded-lg" />
+                    ) : setupData.length === 0 ? (
+                      <div className="h-[200px] flex flex-col items-center justify-center text-center">
+                        <BarChart3 className="h-8 w-8 text-muted-foreground mb-2" />
+                        <p className="text-sm text-muted-foreground">No setup data yet — tag your trades to see this.</p>
+                      </div>
+                    ) : (
+                      <ResponsiveContainer width="100%" height={200}>
+                        <BarChart data={setupData}>
+                          <CartesianGrid strokeDasharray="3 3" stroke={dark ? '#ffffff10' : '#00000010'} />
+                          <XAxis dataKey="name" tick={{ fontSize: 12 }} stroke={dark ? '#ffffff30' : '#00000030'} />
+                          <YAxis tick={{ fontSize: 12 }} stroke={dark ? '#ffffff30' : '#00000030'} />
+                          <Tooltip />
+                          <Bar dataKey="value" fill={chartPrimary} radius={[6, 6, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    )}
                   </CardContent>
                 </Card>
               </div>
