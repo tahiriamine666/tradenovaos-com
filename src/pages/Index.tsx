@@ -336,10 +336,7 @@ export default function TradingDashboard() {
   const navigate = useNavigate();
 
   const [dashLoading, setDashLoading] = useState(true);
-  const [totalPnl, setTotalPnl] = useState(0);
-  const [tradesCount, setTradesCount] = useState(0);
-  const [winRate, setWinRate] = useState(0);
-  const [recentTrades, setRecentTrades] = useState<any[]>([]);
+  const [allTrades, setAllTrades] = useState<any[]>([]);
 
   const fetchDashboardData = useCallback(async () => {
     if (!user) return;
@@ -350,16 +347,50 @@ export default function TradingDashboard() {
       .eq('user_id', user.id)
       .order('trade_date', { ascending: false });
 
-    if (!error && data) {
-      const pnl = data.reduce((sum, t) => sum + (t.result ?? 0), 0);
-      const wins = data.filter((t) => (t.result ?? 0) > 0).length;
-      setTotalPnl(pnl);
-      setTradesCount(data.length);
-      setWinRate(data.length > 0 ? Math.round((wins / data.length) * 100) : 0);
-      setRecentTrades(data.slice(0, 5));
-    }
+    if (!error && data) setAllTrades(data);
     setDashLoading(false);
   }, [user]);
+
+  const { totalPnl, tradesCount, winRate, recentTrades, equityData, setupData } = useMemo(() => {
+    const pnl = allTrades.reduce((sum, t) => sum + (t.result ?? 0), 0);
+    const wins = allTrades.filter((t) => (t.result ?? 0) > 0).length;
+    const wr = allTrades.length > 0 ? Math.round((wins / allTrades.length) * 100) : 0;
+
+    // Equity curve: ascending by trade_date, cumulative result
+    const ascending = [...allTrades].sort((a, b) => {
+      const da = new Date(a.trade_date).getTime();
+      const db = new Date(b.trade_date).getTime();
+      return da - db;
+    });
+    let cum = 0;
+    const equity = ascending.map((t) => {
+      cum += t.result ?? 0;
+      const d = new Date(t.trade_date);
+      const day = isNaN(d.getTime())
+        ? String(t.trade_date)
+        : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+      return { day, value: Number(cum.toFixed(2)) };
+    });
+
+    // Setup aggregation: total result per setup
+    const setupMap: Record<string, number> = {};
+    allTrades.forEach((t) => {
+      const name = (t.setup && String(t.setup).trim()) || 'Unknown';
+      setupMap[name] = (setupMap[name] ?? 0) + (t.result ?? 0);
+    });
+    const setups = Object.entries(setupMap)
+      .map(([name, value]) => ({ name, value: Number(value.toFixed(2)) }))
+      .sort((a, b) => b.value - a.value);
+
+    return {
+      totalPnl: pnl,
+      tradesCount: allTrades.length,
+      winRate: wr,
+      recentTrades: allTrades.slice(0, 5),
+      equityData: equity,
+      setupData: setups,
+    };
+  }, [allTrades]);
 
   useEffect(() => {
     fetchDashboardData();
