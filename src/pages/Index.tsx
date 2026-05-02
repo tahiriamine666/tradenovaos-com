@@ -509,7 +509,7 @@ function TradingDashboardInner() {
             >
               {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
-            <Button className="rounded-xl">+ New Trade</Button>
+            <Button className="rounded-xl" onClick={openNewTrade}>+ New Trade</Button>
             <Button variant="ghost" size="icon" onClick={handleLogout} className="rounded-xl" title="Sign out">
               <LogOut className="h-4 w-4" />
             </Button>
