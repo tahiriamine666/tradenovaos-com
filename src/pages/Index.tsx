@@ -743,59 +743,13 @@ function TradingDashboardInner() {
 
           {active === 'trades' && <TradeVault />}
 
-          {active === 'journal' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-              <SectionTitle title="Mind Journal" subtitle="Capture emotions, mistakes, and lessons" />
-              <Card className="border-0 shadow-sm">
-                <CardContent className="pt-6 space-y-4">
-                  <div><p className="text-xs font-medium text-muted-foreground">Mood</p><p className="text-sm text-foreground">Focused before session, slightly impatient after first loss.</p></div>
-                  <div><p className="text-xs font-medium text-muted-foreground">Mistakes</p><p className="text-sm text-foreground">Entered one breakout before candle close confirmation.</p></div>
-                  <div><p className="text-xs font-medium text-muted-foreground">Lesson</p><p className="text-sm text-foreground">Wait for retest on momentum setups when volatility is high.</p></div>
-                </CardContent>
-              </Card>
-              <Card className="border-0 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="font-heading">AI Review Summary</CardTitle>
-                  <CardDescription>Future premium workflow</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <p className="text-sm text-muted-foreground bg-muted/50 rounded-lg p-4">
-                    Your best trade came when you respected your pullback playbook and sized correctly. Your weakest trade came from rushing the breakout.
-                  </p>
-                  <div><p className="text-xs font-medium text-muted-foreground">Suggested action</p><p className="text-sm text-foreground">Reduce breakout frequency by 30% this week and focus on pullbacks only.</p></div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
+          {active === 'journal' && <MindJournal />}
 
           {active === 'analytics' && <EdgeAnalytics dark={dark} user={user} />}
 
           {active === 'playbooks' && <PlaybookLab />}
 
-          {active === 'replay' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-              <SectionTitle title="Replay Studio" subtitle="Manual simulation concept" />
-              <Card className="border-0 shadow-sm">
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-4 p-6 rounded-xl bg-muted/50">
-                    <PlayCircle className="h-10 w-10 text-primary" />
-                    <div>
-                      <p className="font-heading font-semibold text-foreground">Chart playback module</p>
-                      <p className="text-sm text-muted-foreground">Future phase: candle-by-candle replay, simulated entries, notes, and scorecard exports.</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="border-0 shadow-sm">
-                <CardHeader><CardTitle className="font-heading">Session Goals</CardTitle></CardHeader>
-                <CardContent className="space-y-2">
-                  {['Practice only opening range breakouts', 'Record each simulated trade', 'Score execution after each session'].map((item) => (
-                    <p key={item} className="text-sm text-foreground flex items-center gap-2"><Target className="h-4 w-4 text-primary" />{item}</p>
-                  ))}
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
+          {active === 'replay' && <ReplayStudio />}
 
           {active === 'resources' && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
@@ -806,49 +760,51 @@ function TradingDashboardInner() {
                 placeholder="Search lessons, drills, and guides..."
                 className="rounded-xl max-w-md"
               />
-              <div className="space-y-3">
-                {filteredResources.map((item) => (
-                  <Card key={item} className="border-0 shadow-sm">
-                    <CardContent className="py-4 flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-sm text-foreground">{item}</p>
-                        <p className="text-xs text-muted-foreground">Structured learning content for traders who want better process and discipline.</p>
-                      </div>
-                      <Button variant="ghost" size="sm"><ChevronRight className="h-4 w-4" /></Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              {filteredResources.length === 0 ? (
+                <Card className="border-0 shadow-sm">
+                  <CardContent className="py-12 text-center">
+                    <Brain className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                    <p className="text-sm text-muted-foreground">No lessons match your search.</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-3">
+                  {filteredResources.map((item) => (
+                    <Card key={item.title} className="border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveResource(item)}>
+                      <CardContent className="py-4 flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-sm text-foreground">{item.title}</p>
+                          <p className="text-xs text-muted-foreground">{item.summary}</p>
+                        </div>
+                        <Button variant="ghost" size="sm"><ChevronRight className="h-4 w-4" /></Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+              <Dialog open={!!activeResource} onOpenChange={(o) => !o && setActiveResource(null)}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle className="font-heading">{activeResource?.title}</DialogTitle>
+                    <DialogDescription>{activeResource?.summary}</DialogDescription>
+                  </DialogHeader>
+                  <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{activeResource?.body}</p>
+                </DialogContent>
+              </Dialog>
             </motion.div>
           )}
 
-          {active === 'settings' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-              <SectionTitle title="Studio Settings" subtitle="Your workspace profile" />
-              <Card className="border-0 shadow-sm">
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-16 w-16">
-                      <AvatarFallback className="bg-primary text-primary-foreground font-heading text-xl">AT</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-heading font-bold text-foreground text-lg">Amine Trader</p>
-                      <p className="text-sm text-muted-foreground">Pro plan preview</p>
-                    </div>
-                  </div>
-                  <Separator className="my-6" />
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div><p className="text-muted-foreground text-xs">Timezone</p><p className="text-foreground">UTC+1</p></div>
-                    <div><p className="text-muted-foreground text-xs">Default Risk</p><p className="text-foreground">0.5% per trade</p></div>
-                    <div><p className="text-muted-foreground text-xs">Preferred Market</p><p className="text-foreground">NASDAQ, XAUUSD</p></div>
-                    <div><p className="text-muted-foreground text-xs">Account Type</p><p className="text-foreground">Funded Challenge</p></div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
+          {active === 'settings' && <StudioSettings />}
         </div>
       </main>
     </div>
+  );
+}
+
+export default function TradingDashboard() {
+  return (
+    <TradeDialogProvider>
+      <TradingDashboardInner />
+    </TradeDialogProvider>
   );
 }
