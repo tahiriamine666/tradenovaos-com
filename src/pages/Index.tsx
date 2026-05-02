@@ -5,12 +5,17 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import TradeVault from '@/pages/TradeVault';
 import PlaybookLab from '@/pages/PlaybookLab';
+import MindJournal from '@/pages/MindJournal';
+import StudioSettings from '@/pages/StudioSettings';
+import ReplayStudio from '@/pages/ReplayStudio';
+import { TradeDialogProvider, useTradeDialog, useTradesChanged } from '@/contexts/TradeDialogContext';
 import {
   BarChart3, BookOpen, Brain, CalendarDays, CheckCircle2,
   ChevronLeft, ChevronRight, CircleDollarSign, Clock3,
   FileBarChart, LayoutDashboard, LineChart, LogOut, Moon, PlayCircle,
   Settings, ShieldCheck, Sun, Target, TrendingUp, Upload, Zap,
 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
