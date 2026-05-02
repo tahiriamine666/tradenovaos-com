@@ -14,7 +14,222 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      journal_entries: {
+        Row: {
+          bias: string | null
+          confidence_level: number | null
+          created_at: string
+          energy_level: number | null
+          entry_date: string
+          id: string
+          lesson: string | null
+          mistakes: string | null
+          mood: string | null
+          notes: string | null
+          rule_adherence: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bias?: string | null
+          confidence_level?: number | null
+          created_at?: string
+          energy_level?: number | null
+          entry_date?: string
+          id?: string
+          lesson?: string | null
+          mistakes?: string | null
+          mood?: string | null
+          notes?: string | null
+          rule_adherence?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bias?: string | null
+          confidence_level?: number | null
+          created_at?: string
+          energy_level?: number | null
+          entry_date?: string
+          id?: string
+          lesson?: string | null
+          mistakes?: string | null
+          mood?: string | null
+          notes?: string | null
+          rule_adherence?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      playbooks: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          rules: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          rules?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          rules?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          default_account_type: string
+          display_name: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          preferred_market: string | null
+          risk_per_trade: number | null
+          subscription_plan: string
+          timezone: string
+          trading_style: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          default_account_type?: string
+          display_name?: string | null
+          email?: string | null
+          full_name?: string | null
+          id: string
+          preferred_market?: string | null
+          risk_per_trade?: number | null
+          subscription_plan?: string
+          timezone?: string
+          trading_style?: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          default_account_type?: string
+          display_name?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          preferred_market?: string | null
+          risk_per_trade?: number | null
+          subscription_plan?: string
+          timezone?: string
+          trading_style?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      replay_sessions: {
+        Row: {
+          created_at: string
+          execution_score: number | null
+          id: string
+          notes: string | null
+          pair: string
+          replay_date: string
+          result: number | null
+          setup: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          execution_score?: number | null
+          id?: string
+          notes?: string | null
+          pair: string
+          replay_date?: string
+          result?: number | null
+          setup?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          execution_score?: number | null
+          id?: string
+          notes?: string | null
+          pair?: string
+          replay_date?: string
+          result?: number | null
+          setup?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      trades: {
+        Row: {
+          created_at: string
+          entry_price: number | null
+          exit_price: number | null
+          id: string
+          notes: string | null
+          pair: string
+          quantity: number | null
+          result: number | null
+          setup: string | null
+          side: string | null
+          trade_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          entry_price?: number | null
+          exit_price?: number | null
+          id?: string
+          notes?: string | null
+          pair: string
+          quantity?: number | null
+          result?: number | null
+          setup?: string | null
+          side?: string | null
+          trade_date?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          entry_price?: number | null
+          exit_price?: number | null
+          id?: string
+          notes?: string | null
+          pair?: string
+          quantity?: number | null
+          result?: number | null
+          setup?: string | null
+          side?: string | null
+          trade_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

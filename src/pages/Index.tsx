@@ -5,12 +5,17 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import TradeVault from '@/pages/TradeVault';
 import PlaybookLab from '@/pages/PlaybookLab';
+import MindJournal from '@/pages/MindJournal';
+import StudioSettings from '@/pages/StudioSettings';
+import ReplayStudio from '@/pages/ReplayStudio';
+import { TradeDialogProvider, useTradeDialog, useTradesChanged } from '@/contexts/TradeDialogContext';
 import {
   BarChart3, BookOpen, Brain, CalendarDays, CheckCircle2,
   ChevronLeft, ChevronRight, CircleDollarSign, Clock3,
   FileBarChart, LayoutDashboard, LineChart, LogOut, Moon, PlayCircle,
   Settings, ShieldCheck, Sun, Target, TrendingUp, Upload, Zap,
 } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -26,10 +31,26 @@ import {
 } from 'recharts';
 
 const resources = [
-  'How to build a daily trading plan',
-  'Top 7 mistakes killing your consistency',
-  'Replay drills for breakout traders',
-  'Risk model for funded account challenges',
+  {
+    title: 'How to build a daily trading plan',
+    summary: 'Structured learning content for traders who want better process and discipline.',
+    body: 'A solid daily plan starts the night before. Define market bias, identify 2-3 key levels, choose your top setups, and set hard risk limits. During the session, review the plan every hour. After the session, score yourself on plan adherence — not P&L.',
+  },
+  {
+    title: 'Top 7 mistakes killing your consistency',
+    summary: 'Recognize the patterns that quietly destroy edge.',
+    body: '1) Trading without a plan. 2) Revenge trading after a loss. 3) Moving stops further away. 4) Risking too much per trade. 5) Skipping journaling. 6) Switching strategies weekly. 7) No defined daily max loss. Address these and your equity curve smooths out fast.',
+  },
+  {
+    title: 'Replay drills for breakout traders',
+    summary: 'Train your eyes to wait for confirmation.',
+    body: 'Pick 30 historical breakouts. For each, mark the breakout candle, the retest, and the continuation move. Practice waiting for the retest before entering. Score every replay 1-10 on patience and execution. Repeat daily for two weeks.',
+  },
+  {
+    title: 'Risk model for funded account challenges',
+    summary: 'Survive first, profit second.',
+    body: 'Use 0.25%-0.5% risk per trade. Cap daily loss at 1.5%. Never risk more than 30% of your distance to drawdown. Take 2 trades max per session early on. Funded accounts reward consistency, not heroics.',
+  },
 ];
 
 function formatMoney(val: number): string {
@@ -327,7 +348,7 @@ function TradingCalendar({ dark }: { dark: boolean }) {
   );
 }
 
-export default function TradingDashboard() {
+function TradingDashboardInner() {
   const [active, setActive] = useState('dashboard');
   const [search, setSearch] = useState('');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
@@ -406,9 +427,12 @@ export default function TradingDashboard() {
   }, [dark]);
 
   const filteredResources = useMemo(
-    () => resources.filter((r) => r.toLowerCase().includes(search.toLowerCase())),
+    () => resources.filter((r) => r.title.toLowerCase().includes(search.toLowerCase())),
     [search]
   );
+  const [activeResource, setActiveResource] = useState<typeof resources[number] | null>(null);
+  const { openNew: openNewTrade } = useTradeDialog();
+  useTradesChanged(fetchDashboardData);
 
   const chartPrimary = '#7c3aed';
   const chartSuccess = '#22c55e';
@@ -485,7 +509,7 @@ export default function TradingDashboard() {
             >
               {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </Button>
-            <Button className="rounded-xl">+ New Trade</Button>
+            <Button className="rounded-xl" onClick={openNewTrade}>+ New Trade</Button>
             <Button variant="ghost" size="icon" onClick={handleLogout} className="rounded-xl" title="Sign out">
               <LogOut className="h-4 w-4" />
             </Button>
@@ -719,59 +743,13 @@ export default function TradingDashboard() {
 
           {active === 'trades' && <TradeVault />}
 
-          {active === 'journal' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-              <SectionTitle title="Mind Journal" subtitle="Capture emotions, mistakes, and lessons" />
-              <Card className="border-0 shadow-sm">
-                <CardContent className="pt-6 space-y-4">
-                  <div><p className="text-xs font-medium text-muted-foreground">Mood</p><p className="text-sm text-foreground">Focused before session, slightly impatient after first loss.</p></div>
-                  <div><p className="text-xs font-medium text-muted-foreground">Mistakes</p><p className="text-sm text-foreground">Entered one breakout before candle close confirmation.</p></div>
-                  <div><p className="text-xs font-medium text-muted-foreground">Lesson</p><p className="text-sm text-foreground">Wait for retest on momentum setups when volatility is high.</p></div>
-                </CardContent>
-              </Card>
-              <Card className="border-0 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="font-heading">AI Review Summary</CardTitle>
-                  <CardDescription>Future premium workflow</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <p className="text-sm text-muted-foreground bg-muted/50 rounded-lg p-4">
-                    Your best trade came when you respected your pullback playbook and sized correctly. Your weakest trade came from rushing the breakout.
-                  </p>
-                  <div><p className="text-xs font-medium text-muted-foreground">Suggested action</p><p className="text-sm text-foreground">Reduce breakout frequency by 30% this week and focus on pullbacks only.</p></div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
+          {active === 'journal' && <MindJournal />}
 
           {active === 'analytics' && <EdgeAnalytics dark={dark} user={user} />}
 
           {active === 'playbooks' && <PlaybookLab />}
 
-          {active === 'replay' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-              <SectionTitle title="Replay Studio" subtitle="Manual simulation concept" />
-              <Card className="border-0 shadow-sm">
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-4 p-6 rounded-xl bg-muted/50">
-                    <PlayCircle className="h-10 w-10 text-primary" />
-                    <div>
-                      <p className="font-heading font-semibold text-foreground">Chart playback module</p>
-                      <p className="text-sm text-muted-foreground">Future phase: candle-by-candle replay, simulated entries, notes, and scorecard exports.</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card className="border-0 shadow-sm">
-                <CardHeader><CardTitle className="font-heading">Session Goals</CardTitle></CardHeader>
-                <CardContent className="space-y-2">
-                  {['Practice only opening range breakouts', 'Record each simulated trade', 'Score execution after each session'].map((item) => (
-                    <p key={item} className="text-sm text-foreground flex items-center gap-2"><Target className="h-4 w-4 text-primary" />{item}</p>
-                  ))}
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
+          {active === 'replay' && <ReplayStudio />}
 
           {active === 'resources' && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
@@ -782,49 +760,51 @@ export default function TradingDashboard() {
                 placeholder="Search lessons, drills, and guides..."
                 className="rounded-xl max-w-md"
               />
-              <div className="space-y-3">
-                {filteredResources.map((item) => (
-                  <Card key={item} className="border-0 shadow-sm">
-                    <CardContent className="py-4 flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-sm text-foreground">{item}</p>
-                        <p className="text-xs text-muted-foreground">Structured learning content for traders who want better process and discipline.</p>
-                      </div>
-                      <Button variant="ghost" size="sm"><ChevronRight className="h-4 w-4" /></Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+              {filteredResources.length === 0 ? (
+                <Card className="border-0 shadow-sm">
+                  <CardContent className="py-12 text-center">
+                    <Brain className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                    <p className="text-sm text-muted-foreground">No lessons match your search.</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-3">
+                  {filteredResources.map((item) => (
+                    <Card key={item.title} className="border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveResource(item)}>
+                      <CardContent className="py-4 flex items-center justify-between">
+                        <div>
+                          <p className="font-medium text-sm text-foreground">{item.title}</p>
+                          <p className="text-xs text-muted-foreground">{item.summary}</p>
+                        </div>
+                        <Button variant="ghost" size="sm"><ChevronRight className="h-4 w-4" /></Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+              <Dialog open={!!activeResource} onOpenChange={(o) => !o && setActiveResource(null)}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle className="font-heading">{activeResource?.title}</DialogTitle>
+                    <DialogDescription>{activeResource?.summary}</DialogDescription>
+                  </DialogHeader>
+                  <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{activeResource?.body}</p>
+                </DialogContent>
+              </Dialog>
             </motion.div>
           )}
 
-          {active === 'settings' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-              <SectionTitle title="Studio Settings" subtitle="Your workspace profile" />
-              <Card className="border-0 shadow-sm">
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-4">
-                    <Avatar className="h-16 w-16">
-                      <AvatarFallback className="bg-primary text-primary-foreground font-heading text-xl">AT</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="font-heading font-bold text-foreground text-lg">Amine Trader</p>
-                      <p className="text-sm text-muted-foreground">Pro plan preview</p>
-                    </div>
-                  </div>
-                  <Separator className="my-6" />
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div><p className="text-muted-foreground text-xs">Timezone</p><p className="text-foreground">UTC+1</p></div>
-                    <div><p className="text-muted-foreground text-xs">Default Risk</p><p className="text-foreground">0.5% per trade</p></div>
-                    <div><p className="text-muted-foreground text-xs">Preferred Market</p><p className="text-foreground">NASDAQ, XAUUSD</p></div>
-                    <div><p className="text-muted-foreground text-xs">Account Type</p><p className="text-foreground">Funded Challenge</p></div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
+          {active === 'settings' && <StudioSettings />}
         </div>
       </main>
     </div>
+  );
+}
+
+export default function TradingDashboard() {
+  return (
+    <TradeDialogProvider>
+      <TradingDashboardInner />
+    </TradeDialogProvider>
   );
 }
