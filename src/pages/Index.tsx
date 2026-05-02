@@ -427,9 +427,12 @@ function TradingDashboardInner() {
   }, [dark]);
 
   const filteredResources = useMemo(
-    () => resources.filter((r) => r.toLowerCase().includes(search.toLowerCase())),
+    () => resources.filter((r) => r.title.toLowerCase().includes(search.toLowerCase())),
     [search]
   );
+  const [activeResource, setActiveResource] = useState<typeof resources[number] | null>(null);
+  const { openNew: openNewTrade } = useTradeDialog();
+  useTradesChanged(fetchDashboardData);
 
   const chartPrimary = '#7c3aed';
   const chartSuccess = '#22c55e';
