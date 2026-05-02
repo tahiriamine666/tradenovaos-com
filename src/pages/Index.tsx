@@ -31,10 +31,26 @@ import {
 } from 'recharts';
 
 const resources = [
-  'How to build a daily trading plan',
-  'Top 7 mistakes killing your consistency',
-  'Replay drills for breakout traders',
-  'Risk model for funded account challenges',
+  {
+    title: 'How to build a daily trading plan',
+    summary: 'Structured learning content for traders who want better process and discipline.',
+    body: 'A solid daily plan starts the night before. Define market bias, identify 2-3 key levels, choose your top setups, and set hard risk limits. During the session, review the plan every hour. After the session, score yourself on plan adherence — not P&L.',
+  },
+  {
+    title: 'Top 7 mistakes killing your consistency',
+    summary: 'Recognize the patterns that quietly destroy edge.',
+    body: '1) Trading without a plan. 2) Revenge trading after a loss. 3) Moving stops further away. 4) Risking too much per trade. 5) Skipping journaling. 6) Switching strategies weekly. 7) No defined daily max loss. Address these and your equity curve smooths out fast.',
+  },
+  {
+    title: 'Replay drills for breakout traders',
+    summary: 'Train your eyes to wait for confirmation.',
+    body: 'Pick 30 historical breakouts. For each, mark the breakout candle, the retest, and the continuation move. Practice waiting for the retest before entering. Score every replay 1-10 on patience and execution. Repeat daily for two weeks.',
+  },
+  {
+    title: 'Risk model for funded account challenges',
+    summary: 'Survive first, profit second.',
+    body: 'Use 0.25%-0.5% risk per trade. Cap daily loss at 1.5%. Never risk more than 30% of your distance to drawdown. Take 2 trades max per session early on. Funded accounts reward consistency, not heroics.',
+  },
 ];
 
 function formatMoney(val: number): string {
