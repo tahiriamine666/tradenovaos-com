@@ -348,7 +348,7 @@ function TradingCalendar({ dark }: { dark: boolean }) {
   );
 }
 
-export default function TradingDashboard() {
+function TradingDashboardInner() {
   const [active, setActive] = useState('dashboard');
   const [search, setSearch] = useState('');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
