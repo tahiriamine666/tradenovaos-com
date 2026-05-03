@@ -104,6 +104,7 @@ interface AppLayoutProps {
   dark: boolean;
   onToggleTheme: () => void;
   onLogout: () => void;
+  onNewTrade?: () => void;
   children: React.ReactNode;
   pageTitle?: string;
 }
@@ -114,6 +115,7 @@ export default function AppLayout({
   dark,
   onToggleTheme,
   onLogout,
+  onNewTrade,
   children,
   pageTitle,
 }: AppLayoutProps) {
