@@ -274,7 +274,7 @@ export default function CSVImport({ onImportComplete }: { onImportComplete?: () 
 
     for (let i = 0; i < validRows.length; i += CHUNK) {
       const chunk = validRows.slice(i, i + CHUNK);
-      const records = chunk.map(r => ({ ...r.mapped, user_id: user.id }));
+      const records = chunk.map(r => ({ ...(r.mapped as any), user_id: user.id })) as any;
 
       const { error: insertErr } = await supabase.from('trades').insert(records);
 
