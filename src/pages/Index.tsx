@@ -9,6 +9,7 @@ import MindJournal from '@/pages/MindJournal';
 import StudioSettings from '@/pages/StudioSettings';
 import ReplayStudio from '@/pages/ReplayStudio';
 import { TradeDialogProvider, useTradeDialog, useTradesChanged } from '@/contexts/TradeDialogContext';
+import TraderScore from '@/components/TraderScore';
 import {
   BarChart3, BookOpen, Brain, CalendarDays, CheckCircle2,
   ChevronLeft, ChevronRight, CircleDollarSign, Clock3,
@@ -596,28 +597,7 @@ function TradingDashboardInner() {
                 </Card>
               </div>
 
-              <Card className="border-0 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="font-heading">Trader Score</CardTitle>
-                  <CardDescription>Overall performance</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-5 gap-4">
-                    {[
-                      { label: 'Win %', value: 62 },
-                      { label: 'RR', value: 78 },
-                      { label: 'Discipline', value: 85 },
-                      { label: 'Execution', value: 72 },
-                      { label: 'Consistency', value: 68 },
-                    ].map((item) => (
-                      <div key={item.label} className="text-center">
-                        <p className="text-xs text-muted-foreground mb-2">{item.label}</p>
-                        <p className="text-2xl font-bold font-heading text-primary">{item.value}</p>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              <TraderScore />
 
               <TradingCalendar dark={dark} />
 
