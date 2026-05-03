@@ -696,6 +696,12 @@ function TradingDashboardInner() {
           )}
 
           {active === 'settings' && <StudioSettings />}
+
+          {active === 'import' && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <CSVImport onImportComplete={fetchDashboardData} />
+            </motion.div>
+          )}
       </div>
     </AppLayout>
   );
