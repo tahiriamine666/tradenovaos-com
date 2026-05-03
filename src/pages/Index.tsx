@@ -192,17 +192,7 @@ function EdgeAnalytics({ dark, user }: { dark: boolean; user: any }) {
 }
 
 
-const sidebarItems = [
-  { id: 'dashboard', label: 'Command Center', icon: LayoutDashboard },
-  { id: 'plan', label: 'Trade Plan', icon: CalendarDays },
-  { id: 'trades', label: 'Trade Vault', icon: CircleDollarSign },
-  { id: 'journal', label: 'Mind Journal', icon: BookOpen },
-  { id: 'analytics', label: 'Edge Analytics', icon: BarChart3 },
-  { id: 'playbooks', label: 'Playbook Lab', icon: Target },
-  { id: 'replay', label: 'Replay Studio', icon: PlayCircle },
-  { id: 'resources', label: 'Learning Hub', icon: Brain },
-  { id: 'settings', label: 'Studio Settings', icon: Settings },
-];
+// sidebarItems now provided by AppLayout
 
 function cx(...values: (string | boolean | undefined | null)[]) {
   return values.filter(Boolean).join(' ');
