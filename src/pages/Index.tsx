@@ -10,6 +10,8 @@ import StudioSettings from '@/pages/StudioSettings';
 import ReplayStudio from '@/pages/ReplayStudio';
 import { TradeDialogProvider, useTradeDialog, useTradesChanged } from '@/contexts/TradeDialogContext';
 import TraderScore from '@/components/TraderScore';
+import CSVImport from '@/components/CSVImport';
+import AppLayout from '@/components/AppLayout';
 import {
   BarChart3, BookOpen, Brain, CalendarDays, CheckCircle2,
   ChevronLeft, ChevronRight, CircleDollarSign, Clock3,
