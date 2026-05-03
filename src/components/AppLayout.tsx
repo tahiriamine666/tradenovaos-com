@@ -228,7 +228,7 @@ export default function AppLayout({
             </Button>
 
             {/* New trade — hidden on small mobile */}
-            <Button className="hidden sm:inline-flex rounded-xl h-9 text-sm px-4">
+            <Button onClick={onNewTrade} className="hidden sm:inline-flex rounded-xl h-9 text-sm px-4">
               + New Trade
             </Button>
 
