@@ -10,6 +10,8 @@ import StudioSettings from '@/pages/StudioSettings';
 import ReplayStudio from '@/pages/ReplayStudio';
 import { TradeDialogProvider, useTradeDialog, useTradesChanged } from '@/contexts/TradeDialogContext';
 import TraderScore from '@/components/TraderScore';
+import CSVImport from '@/components/CSVImport';
+import AppLayout from '@/components/AppLayout';
 import {
   BarChart3, BookOpen, Brain, CalendarDays, CheckCircle2,
   ChevronLeft, ChevronRight, CircleDollarSign, Clock3,
@@ -190,17 +192,7 @@ function EdgeAnalytics({ dark, user }: { dark: boolean; user: any }) {
 }
 
 
-const sidebarItems = [
-  { id: 'dashboard', label: 'Command Center', icon: LayoutDashboard },
-  { id: 'plan', label: 'Trade Plan', icon: CalendarDays },
-  { id: 'trades', label: 'Trade Vault', icon: CircleDollarSign },
-  { id: 'journal', label: 'Mind Journal', icon: BookOpen },
-  { id: 'analytics', label: 'Edge Analytics', icon: BarChart3 },
-  { id: 'playbooks', label: 'Playbook Lab', icon: Target },
-  { id: 'replay', label: 'Replay Studio', icon: PlayCircle },
-  { id: 'resources', label: 'Learning Hub', icon: Brain },
-  { id: 'settings', label: 'Studio Settings', icon: Settings },
-];
+// sidebarItems now provided by AppLayout
 
 function cx(...values: (string | boolean | undefined | null)[]) {
   return values.filter(Boolean).join(' ');
@@ -439,86 +431,15 @@ function TradingDashboardInner() {
   const chartSuccess = '#22c55e';
 
   return (
-    <div className={cx('flex h-screen overflow-hidden font-body', dark ? 'dark' : '')}>
-      {/* Sidebar */}
-      <aside className={cx(
-        'w-72 flex-shrink-0 flex flex-col border-r overflow-y-auto',
-        dark ? 'bg-sidebar border-border' : 'bg-sidebar border-border'
-      )}>
-        <div className="p-6">
-          <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-              <Zap className="h-5 w-5 text-primary-foreground" />
-            </div>
-            <div>
-              <p className="font-heading font-bold text-foreground">TradeNova</p>
-              <p className="text-xs text-muted-foreground">Focused trading workspace</p>
-            </div>
-          </div>
-
-          <nav className="space-y-1">
-            {sidebarItems.map((item) => {
-              const Icon = item.icon;
-              const selected = active === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setActive(item.id)}
-                  className={cx(
-                    'flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium transition-all',
-                    selected && 'bg-primary text-primary-foreground shadow-lg shadow-primary/20',
-                    !selected && 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                  )}
-                >
-                  <Icon className="h-4 w-4" />
-                  {item.label}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
-
-        <div className="mt-auto p-6">
-          <div className="rounded-xl bg-primary/10 p-4">
-            <p className="font-heading font-semibold text-sm text-foreground">Upgrade to Pro</p>
-            <p className="text-xs text-muted-foreground mt-1">Unlock replay, AI insights, and imports</p>
-            <Button size="sm" className="mt-3 w-full rounded-xl">Start 14-day trial</Button>
-          </div>
-        </div>
-      </aside>
-
-      {/* Main content */}
-      <main className="flex-1 flex flex-col overflow-hidden">
-        {/* Top bar */}
-        <header className="flex items-center justify-between px-8 py-4 border-b">
-          <div className="flex items-center gap-3">
-            <h1 className="text-lg font-heading font-bold text-foreground">Dashboard</h1>
-            <Badge className="bg-primary/10 text-primary border-0">Pro</Badge>
-          </div>
-          <div className="flex items-center gap-3">
-            <Badge variant="outline" className="rounded-lg font-normal">
-              <Clock3 className="h-3 w-3 mr-1" /> Mar 1 - Mar 31
-            </Badge>
-            <Badge variant="outline" className="rounded-lg font-normal">
-              <ShieldCheck className="h-3 w-3 mr-1" /> Main Account
-            </Badge>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setTheme(dark ? 'light' : 'dark')}
-              className="rounded-xl"
-            >
-              {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </Button>
-            <Button className="rounded-xl" onClick={openNewTrade}>+ New Trade</Button>
-            <Button variant="ghost" size="icon" onClick={handleLogout} className="rounded-xl" title="Sign out">
-              <LogOut className="h-4 w-4" />
-            </Button>
-          </div>
-        </header>
-
-        {/* Scrollable content */}
-        <div className="flex-1 overflow-y-auto p-8 space-y-8">
+    <AppLayout
+      active={active}
+      onNavigate={setActive}
+      dark={dark}
+      onToggleTheme={() => setTheme(dark ? 'light' : 'dark')}
+      onLogout={handleLogout}
+      onNewTrade={openNewTrade}
+    >
+      <div className="space-y-8">
           {active === 'dashboard' && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -775,9 +696,14 @@ function TradingDashboardInner() {
           )}
 
           {active === 'settings' && <StudioSettings />}
-        </div>
-      </main>
-    </div>
+
+          {active === 'import' && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <CSVImport onImportComplete={fetchDashboardData} />
+            </motion.div>
+          )}
+      </div>
+    </AppLayout>
   );
 }
 
