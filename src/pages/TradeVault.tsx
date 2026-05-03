@@ -8,7 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Pencil, Trash2, Plus, Upload } from 'lucide-react';
-import CsvImportDialog from '@/components/CsvImportDialog';
+import CSVImport from '@/components/CSVImport';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useTradeDialog, useTradesChanged, emitTradesChanged } from '@/contexts/TradeDialogContext';
 
 type Trade = {
@@ -65,7 +66,14 @@ export default function TradeVault() {
             <Plus className="h-4 w-4 mr-1" /> New Trade
           </Button>
         </div>
-        {user && <CsvImportDialog open={csvOpen} onOpenChange={setCsvOpen} userId={user.id} onImportComplete={() => { fetchTrades(); emitTradesChanged(); }} />}
+        {user && (
+          <Dialog open={csvOpen} onOpenChange={setCsvOpen}>
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader><DialogTitle>Import Trades</DialogTitle></DialogHeader>
+              <CSVImport onImportComplete={() => { fetchTrades(); emitTradesChanged(); setCsvOpen(false); }} />
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       <Card className="border-0 shadow-sm">
