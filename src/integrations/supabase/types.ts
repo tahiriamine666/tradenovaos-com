@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      import_batches: {
+        Row: {
+          created_at: string
+          error_log: Json | null
+          failed_rows: number
+          file_name: string
+          id: string
+          imported_rows: number
+          status: string
+          total_rows: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_log?: Json | null
+          failed_rows?: number
+          file_name: string
+          id?: string
+          imported_rows?: number
+          status?: string
+          total_rows?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error_log?: Json | null
+          failed_rows?: number
+          file_name?: string
+          id?: string
+          imported_rows?: number
+          status?: string
+          total_rows?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       journal_entries: {
         Row: {
           bias: string | null
@@ -185,45 +224,66 @@ export type Database = {
       trades: {
         Row: {
           created_at: string
+          discipline_score: number | null
           entry_price: number | null
+          execution_score: number | null
           exit_price: number | null
           id: string
           notes: string | null
+          outcome: string | null
           pair: string
           quantity: number | null
           result: number | null
+          rr: number | null
+          session: string | null
           setup: string | null
           side: string | null
+          stop_loss: number | null
+          take_profit: number | null
           trade_date: string
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          discipline_score?: number | null
           entry_price?: number | null
+          execution_score?: number | null
           exit_price?: number | null
           id?: string
           notes?: string | null
+          outcome?: string | null
           pair: string
           quantity?: number | null
           result?: number | null
+          rr?: number | null
+          session?: string | null
           setup?: string | null
           side?: string | null
+          stop_loss?: number | null
+          take_profit?: number | null
           trade_date?: string
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
+          discipline_score?: number | null
           entry_price?: number | null
+          execution_score?: number | null
           exit_price?: number | null
           id?: string
           notes?: string | null
+          outcome?: string | null
           pair?: string
           quantity?: number | null
           result?: number | null
+          rr?: number | null
+          session?: string | null
           setup?: string | null
           side?: string | null
+          stop_loss?: number | null
+          take_profit?: number | null
           trade_date?: string
           updated_at?: string
           user_id?: string
