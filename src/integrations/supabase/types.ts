@@ -103,28 +103,49 @@ export type Database = {
       }
       playbooks: {
         Row: {
+          best_market_conditions: string | null
+          checklist: string | null
           created_at: string
           description: string | null
+          entry_rules: string | null
+          exit_rules: string | null
           id: string
+          risk_rules: string | null
           rules: string | null
+          rules_array: string[]
+          status: string
           title: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          best_market_conditions?: string | null
+          checklist?: string | null
           created_at?: string
           description?: string | null
+          entry_rules?: string | null
+          exit_rules?: string | null
           id?: string
+          risk_rules?: string | null
           rules?: string | null
+          rules_array?: string[]
+          status?: string
           title: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          best_market_conditions?: string | null
+          checklist?: string | null
           created_at?: string
           description?: string | null
+          entry_rules?: string | null
+          exit_rules?: string | null
           id?: string
+          risk_rules?: string | null
           rules?: string | null
+          rules_array?: string[]
+          status?: string
           title?: string
           updated_at?: string
           user_id?: string
