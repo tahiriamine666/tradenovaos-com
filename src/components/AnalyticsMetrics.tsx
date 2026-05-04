@@ -114,8 +114,6 @@ export default function AnalyticsMetrics() {
         } else {
           setError('No trade data available.');
         }
-      } else {
-        setData(rows as Analytics);
       }
       setLoading(false);
     };
