@@ -8,6 +8,7 @@ import PlaybookLab from '@/pages/PlaybookLab';
 import MindJournal from '@/pages/MindJournal';
 import StudioSettings from '@/pages/StudioSettings';
 import ReplayStudio from '@/pages/ReplayStudio';
+import TradePlan from '@/pages/TradePlan';
 import { TradeDialogProvider, useTradeDialog, useTradesChanged } from '@/contexts/TradeDialogContext';
 import TraderScore from '@/components/TraderScore';
 import CSVImport from '@/components/CSVImport';
@@ -575,65 +576,7 @@ function TradingDashboardInner() {
             </motion.div>
           )}
 
-          {active === 'plan' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-              <SectionTitle title="Trade Plan" subtitle="Pre-market structure before execution" />
-              <Card className="border-0 shadow-sm">
-                <CardContent className="pt-6">
-                  <Tabs defaultValue="focus">
-                    <TabsList className="mb-4">
-                      <TabsTrigger value="focus">Focus</TabsTrigger>
-                      <TabsTrigger value="risk">Risk</TabsTrigger>
-                      <TabsTrigger value="review">Review</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="focus" className="space-y-4">
-                      <div><p className="text-xs font-medium text-muted-foreground">Market Bias</p><p className="text-sm text-foreground">Bullish continuation on tech indices</p></div>
-                      <div><p className="text-xs font-medium text-muted-foreground">Watchlist</p><p className="text-sm text-foreground">NASDAQ, EURUSD, XAUUSD</p></div>
-                      <div><p className="text-xs font-medium text-muted-foreground">Setups to Trade</p>
-                        <div className="flex gap-2 mt-1">
-                          <Badge variant="outline">Pullback</Badge>
-                          <Badge variant="outline">Opening Range</Badge>
-                          <Badge variant="outline">Liquidity Sweep</Badge>
-                        </div>
-                      </div>
-                    </TabsContent>
-                    <TabsContent value="risk" className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div><p className="text-xs text-muted-foreground">Daily max loss</p><p className="font-semibold text-foreground">-$250</p></div>
-                        <div><p className="text-xs text-muted-foreground">Risk per trade</p><p className="font-semibold text-foreground">0.5%</p></div>
-                      </div>
-                      <div><p className="text-xs font-medium text-muted-foreground">Execution Rules</p>
-                        <ul className="text-sm text-foreground mt-1 space-y-1 list-disc list-inside">
-                          <li>Only take A and B setups</li>
-                          <li>No trades in first 5 minutes</li>
-                          <li>Stop after 2 consecutive losses</li>
-                        </ul>
-                      </div>
-                    </TabsContent>
-                    <TabsContent value="review" className="space-y-4">
-                      <div><p className="text-xs font-medium text-muted-foreground">Plan vs Actual</p><p className="text-sm text-foreground">3 of 4 trades matched your predefined setups.</p></div>
-                      <div><p className="text-xs font-medium text-muted-foreground">Next Improvement</p><p className="text-sm text-foreground">Wait for retest confirmation before breakouts.</p></div>
-                    </TabsContent>
-                  </Tabs>
-                </CardContent>
-              </Card>
-
-              <Card className="border-0 shadow-sm">
-                <CardHeader>
-                  <CardTitle className="font-heading">Session Checklist</CardTitle>
-                  <CardDescription>Keep discipline visible</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {['Define bias', 'Set max loss', 'Mark key levels', 'Choose top 2 setups', 'Review yesterday mistakes'].map((item) => (
-                    <div key={item} className="flex items-center gap-3">
-                      <CheckCircle2 className="h-4 w-4 text-primary" />
-                      <span className="text-sm text-foreground">{item}</span>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
+          {active === 'plan' && <TradePlan />}
 
           {active === 'trades' && <TradeVault />}
 

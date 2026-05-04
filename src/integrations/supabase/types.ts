@@ -242,6 +242,48 @@ export type Database = {
         }
         Relationships: []
       }
+      trade_plans: {
+        Row: {
+          created_at: string
+          focus: string | null
+          id: string
+          market_bias: string
+          max_daily_loss: number | null
+          max_risk_per_trade: number | null
+          notes: string | null
+          plan_date: string
+          setups_to_trade: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          focus?: string | null
+          id?: string
+          market_bias?: string
+          max_daily_loss?: number | null
+          max_risk_per_trade?: number | null
+          notes?: string | null
+          plan_date?: string
+          setups_to_trade?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          focus?: string | null
+          id?: string
+          market_bias?: string
+          max_daily_loss?: number | null
+          max_risk_per_trade?: number | null
+          notes?: string | null
+          plan_date?: string
+          setups_to_trade?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       trades: {
         Row: {
           created_at: string
