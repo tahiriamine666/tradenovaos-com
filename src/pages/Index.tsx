@@ -12,6 +12,8 @@ import { TradeDialogProvider, useTradeDialog, useTradesChanged } from '@/context
 import TraderScore from '@/components/TraderScore';
 import CSVImport from '@/components/CSVImport';
 import AppLayout from '@/components/AppLayout';
+import AnalyticsMetrics from '@/components/AnalyticsMetrics';
+import { getTradeDateDay } from '@/lib/dateUtils';
 import {
   BarChart3, BookOpen, Brain, CalendarDays, CheckCircle2,
   ChevronLeft, ChevronRight, CircleDollarSign, Clock3,
@@ -137,16 +139,7 @@ function EdgeAnalytics({ dark, user }: { dark: boolean; user: any }) {
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
       <SectionTitle title="Edge Analytics" subtitle="Discover what's working and what's not" />
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <MetricCard title="Total P&L" value={formatMoney(metrics.totalPnl)} hint={`From ${trades.length} trades`} icon={TrendingUp} dark={dark} />
-        <MetricCard title="Win Rate" value={`${metrics.winRate}%`} hint={`${metrics.winsCount} winning trades`} icon={Target} dark={dark} />
-        <MetricCard title="Average Win" value={formatMoney(metrics.avgWin)} hint={`${metrics.winsCount} trades`} icon={CheckCircle2} dark={dark} />
-        <MetricCard title="Average Loss" value={formatMoney(metrics.avgLoss)} hint={`${metrics.lossesCount} trades`} icon={Clock3} dark={dark} />
-        <MetricCard title="Best Trade" value={formatMoney(metrics.best)} hint="Highest result" icon={TrendingUp} dark={dark} />
-        <MetricCard title="Worst Trade" value={formatMoney(metrics.worst)} hint="Lowest result" icon={LineChart} dark={dark} />
-        <MetricCard title="Winning Trades" value={`${metrics.winsCount}`} hint={`of ${trades.length} total`} icon={CheckCircle2} dark={dark} />
-        <MetricCard title="Losing Trades" value={`${metrics.lossesCount}`} hint={`of ${trades.length} total`} icon={ShieldCheck} dark={dark} />
-      </div>
+      <AnalyticsMetrics />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="border-0 shadow-sm">
@@ -260,7 +253,7 @@ function TradingCalendar({ dark }: { dark: boolean }) {
 
       const grouped: Record<number, { pnl: number; trades: number }> = {};
       (data ?? []).forEach((t) => {
-        const day = new Date(t.trade_date).getDate();
+        const day = getTradeDateDay(t.trade_date);
         if (!grouped[day]) grouped[day] = { pnl: 0, trades: 0 };
         grouped[day].pnl += t.result ?? 0;
         grouped[day].trades += 1;
