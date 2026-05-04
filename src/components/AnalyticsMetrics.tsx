@@ -76,15 +76,7 @@ export default function AnalyticsMetrics() {
     if (!user) return;
     const load = async () => {
       setLoading(true);
-      // Use the DB view directly — filtered by RLS / security definer function
-      const { data: rows, error: err } = await supabase
-        .from('user_analytics')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (err || !rows) {
-        // Fallback: compute from raw trades if view fails
+      {
         const { data: trades } = await supabase
           .from('trades')
           .select('result, rr')
