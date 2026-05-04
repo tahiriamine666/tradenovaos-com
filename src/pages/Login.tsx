@@ -6,11 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Zap } from 'lucide-react';
 import { toast } from 'sonner';
+import ForgotPassword from '@/components/ForgotPassword';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showForgot, setShowForgot] = useState(false);
   const { signIn } = useAuth();
   const navigate = useNavigate();
 
@@ -25,6 +27,14 @@ export default function Login() {
       navigate('/dashboard');
     }
   };
+
+  if (showForgot) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <ForgotPassword onBack={() => setShowForgot(false)} />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
@@ -51,7 +61,16 @@ export default function Login() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Password</label>
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-foreground">Password</label>
+                <button
+                  type="button"
+                  onClick={() => setShowForgot(true)}
+                  className="text-xs text-primary hover:underline"
+                >
+                  Forgot password?
+                </button>
+              </div>
               <Input
                 type="password"
                 placeholder="••••••••"
