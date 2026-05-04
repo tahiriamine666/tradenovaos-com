@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Zap } from 'lucide-react';
 import { toast } from 'sonner';
+import PasswordStrength, { checkPasswordStrength } from '@/components/PasswordStrength';
 
 export default function Signup() {
   const [email, setEmail] = useState('');
@@ -16,6 +17,10 @@ export default function Signup() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (checkPasswordStrength(password).score < 2) {
+      toast.error('Please choose a stronger password.');
+      return;
+    }
     setLoading(true);
     const { error } = await signUp(email, password);
     setLoading(false);
@@ -61,6 +66,7 @@ export default function Signup() {
                 required
                 minLength={6}
               />
+              <PasswordStrength password={password} />
             </div>
             <Button type="submit" className="w-full rounded-xl" disabled={loading}>
               {loading ? 'Creating account…' : 'Create account'}
