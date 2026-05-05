@@ -9,6 +9,7 @@ import MindJournal from '@/pages/MindJournal';
 import StudioSettings from '@/pages/StudioSettings';
 import ReplayStudio from '@/pages/ReplayStudio';
 import TradePlan from '@/pages/TradePlan';
+import AIInsights from '@/pages/AIInsights';
 import { TradeDialogProvider, useTradeDialog, useTradesChanged } from '@/contexts/TradeDialogContext';
 import TraderScore from '@/components/TraderScore';
 import CSVImport from '@/components/CSVImport';
@@ -585,6 +586,8 @@ function TradingDashboardInner() {
           {active === 'analytics' && <EdgeAnalytics dark={dark} user={user} />}
 
           {active === 'playbooks' && <PlaybookLab />}
+
+          {active === 'ai' && <AIInsights />}
 
           {active === 'replay' && <ReplayStudio />}
 
