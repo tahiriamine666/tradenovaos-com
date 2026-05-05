@@ -20,6 +20,7 @@ export const sidebarItems = [
   { id: 'journal',    label: 'Mind Journal',     icon: BookOpen },
   { id: 'analytics',  label: 'Edge Analytics',   icon: BarChart3 },
   { id: 'playbooks',  label: 'Playbook Lab',     icon: Target },
+  { id: 'ai',         label: 'AI Insights',      icon: Brain },
   { id: 'import',     label: 'Import CSV',       icon: Upload },
   { id: 'replay',     label: 'Replay Studio',    icon: PlayCircle },
   { id: 'resources',  label: 'Learning Hub',     icon: Brain },
