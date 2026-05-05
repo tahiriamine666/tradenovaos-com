@@ -1,5 +1,5 @@
 // usePlan — reads subscription plan from profiles table.
-// Stripe checkout is not yet wired; checkout() shows a friendly message.
+// Stripe billing is stubbed until Stripe is enabled.
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,14 +9,22 @@ export type Plan = 'free' | 'pro' | 'elite';
 
 export interface PlanInfo {
   plan: Plan;
+  status: string;
   isActive: boolean;
   isPro: boolean;
   isElite: boolean;
   isFree: boolean;
+  currentPeriodEnd: string | null;
+  cancelAtPeriodEnd: boolean;
+  trialEnd: string | null;
+  isTrialing: boolean;
 }
 
 const FREE_PLAN: PlanInfo = {
-  plan: 'free', isActive: true, isPro: false, isElite: false, isFree: true,
+  plan: 'free', status: 'active', isActive: true,
+  isPro: false, isElite: false, isFree: true,
+  currentPeriodEnd: null, cancelAtPeriodEnd: false,
+  trialEnd: null, isTrialing: false,
 };
 
 export const PLAN_FEATURES: Record<string, Plan[]> = {
@@ -49,8 +57,8 @@ export function usePlan() {
 
     const plan = ((data?.subscription_plan ?? 'free') as Plan);
     setPlanInfo({
+      ...FREE_PLAN,
       plan,
-      isActive: true,
       isFree: plan === 'free',
       isPro: plan === 'pro',
       isElite: plan === 'elite',
@@ -65,14 +73,21 @@ export function usePlan() {
     return allowed.includes(planInfo.plan) && planInfo.isActive;
   }, [planInfo]);
 
-  const checkout = useCallback(async (plan: 'pro' | 'elite') => {
+  const checkout = useCallback(async (plan: 'pro' | 'elite', _interval: 'monthly' | 'yearly' = 'monthly') => {
     toast({
       title: 'Billing not enabled yet',
-      description: `Stripe checkout for ${plan} will be available soon.`,
+      description: `Stripe checkout for ${plan} will be available once billing is set up.`,
     });
   }, []);
 
-  return { ...planInfo, loading, canAccess, checkout, refresh: fetchPlan };
+  const openPortal = useCallback(async () => {
+    toast({
+      title: 'Billing portal unavailable',
+      description: 'Stripe is not configured yet.',
+    });
+  }, []);
+
+  return { ...planInfo, loading, canAccess, checkout, openPortal, refresh: fetchPlan };
 }
 
 // PlanGate — wraps gated content

@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   BarChart3, BookOpen, Brain, CalendarDays, CircleDollarSign,
   LayoutDashboard, LogOut, Menu, Moon, PlayCircle,
-  Settings, Sun, Target, Upload, X, Zap,
+  Settings, Sparkles, Sun, Target, Upload, X, Zap,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +25,7 @@ export const sidebarItems = [
   { id: 'replay',     label: 'Replay Studio',    icon: PlayCircle },
   { id: 'resources',  label: 'Learning Hub',     icon: Brain },
   { id: 'settings',   label: 'Studio Settings',  icon: Settings },
+  { id: 'pricing',    label: 'Pricing',          icon: Sparkles },
 ];
 
 // Bottom nav items (mobile only — most important 5)
