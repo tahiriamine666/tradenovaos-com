@@ -25,7 +25,6 @@ interface Trade {
   result: number;
   trade_date: string;
   setup: string | null;
-  emotion: string | null;
   discipline_score: number | null;
   execution_score: number | null;
   rr: number | null;
@@ -107,7 +106,6 @@ function buildPrompt(trades: Trade[], insightType: string): string {
     result: t.result,
     date: t.trade_date,
     setup: t.setup || 'unknown',
-    emotion: t.emotion || 'not logged',
     discipline: t.discipline_score,
     execution: t.execution_score,
     rr: t.rr,
@@ -314,22 +312,13 @@ function GeneratePanel({
     try {
       const prompt = buildPrompt(trades, selectedType);
 
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
-          messages: [{ role: 'user', content: prompt }],
-        }),
+      const { data: aiData, error: aiError } = await supabase.functions.invoke('ai-insights', {
+        body: { prompt },
       });
 
-      if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const rawContent = data.content?.[0]?.text ?? '';
+      if (aiError) throw new Error(aiError.message ?? 'AI request failed');
+      if (aiData?.error) throw new Error(aiData.error);
+      const rawContent: string = aiData?.content ?? '';
 
       // Simulate streaming display
       setStreamedText('Analyzing...');
@@ -487,10 +476,10 @@ export default function AIInsights() {
     const load = async () => {
       const { data } = await supabase
         .from('trades')
-        .select('id, pair, side, result, trade_date, setup, emotion, discipline_score, execution_score, rr, notes, outcome')
+        .select('id, pair, side, result, trade_date, setup, discipline_score, execution_score, rr, notes, outcome')
         .eq('user_id', user.id)
         .order('trade_date', { ascending: false });
-      setTrades(data ?? []);
+      setTrades((data ?? []).map((t: any) => ({ ...t, result: t.result ?? 0 })) as Trade[]);
       setLoadingTrades(false);
     };
     load();
