@@ -423,6 +423,7 @@ function TradingDashboardInner() {
   const [activeResource, setActiveResource] = useState<typeof resources[number] | null>(null);
   const { openNew: openNewTrade } = useTradeDialog();
   useTradesChanged(fetchDashboardData);
+  useNavigationEvent(setActive);
 
   const chartPrimary = '#7c3aed';
   const chartSuccess = '#22c55e';
