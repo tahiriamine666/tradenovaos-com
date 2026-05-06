@@ -131,7 +131,7 @@ export default function ReplayStudio() {
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
-    setSessions((data ?? []) as ReplaySession[]);
+    setSessions((data ?? []) as unknown as ReplaySession[]);
     setLoading(false);
   }, [user]);
 
@@ -142,12 +142,12 @@ export default function ReplayStudio() {
     setSaving(true);
     const { data, error } = await supabase
       .from('replay_sessions')
-      .insert({ user_id: user.id, title: newTitle.trim(), instrument: newInstrument.trim() || null, status: 'active', trades: [], notes: '' })
+      .insert({ user_id: user.id, title: newTitle.trim(), instrument: newInstrument.trim() || null, status: 'active', trades: [], notes: '', pair: newInstrument.trim() || newTitle.trim() } as any)
       .select().single();
     if (error) {
       toast({ title: 'Error', description: 'Could not create session.', variant: 'destructive' });
     } else {
-      setActiveSession(data as ReplaySession);
+      setActiveSession(data as unknown as ReplaySession);
       setShowNewForm(false);
       setNewTitle(''); setNewInstrument('');
       fetchSessions();
@@ -160,7 +160,7 @@ export default function ReplayStudio() {
     if (!activeSession) return;
     const newTrade: ReplayTrade = { ...trade, id: crypto.randomUUID(), created_at: new Date().toISOString() };
     const updatedTrades = [...(activeSession.trades ?? []), newTrade];
-    await supabase.from('replay_sessions').update({ trades: updatedTrades, updated_at: new Date().toISOString() }).eq('id', activeSession.id);
+    await supabase.from('replay_sessions').update({ trades: updatedTrades as any, updated_at: new Date().toISOString() }).eq('id', activeSession.id);
     setActiveSession(s => s ? { ...s, trades: updatedTrades } : s);
     setSessions(prev => prev.map(s => s.id === activeSession.id ? { ...s, trades: updatedTrades } : s));
   };
@@ -168,7 +168,7 @@ export default function ReplayStudio() {
   const removeTradeFromSession = async (tradeId: string) => {
     if (!activeSession) return;
     const updatedTrades = activeSession.trades.filter(t => t.id !== tradeId);
-    await supabase.from('replay_sessions').update({ trades: updatedTrades, updated_at: new Date().toISOString() }).eq('id', activeSession.id);
+    await supabase.from('replay_sessions').update({ trades: updatedTrades as any, updated_at: new Date().toISOString() }).eq('id', activeSession.id);
     setActiveSession(s => s ? { ...s, trades: updatedTrades } : s);
   };
 
