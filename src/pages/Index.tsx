@@ -11,7 +11,8 @@ import ReplayStudio from '@/pages/ReplayStudio';
 import TradePlan from '@/pages/TradePlan';
 import AIInsights from '@/pages/AIInsights';
 import PricingPage from '@/pages/PricingPage';
-import { TradeDialogProvider, useTradeDialog, useTradesChanged } from '@/contexts/TradeDialogContext';
+import { TradeDialogProvider, useTradeDialog, useTradesChanged, useNavigationEvent } from '@/contexts/TradeDialogContext';
+import LearningHub from '@/pages/LearningHub';
 import TraderScore from '@/components/TraderScore';
 import CSVImport from '@/components/CSVImport';
 import AppLayout from '@/components/AppLayout';
@@ -422,6 +423,7 @@ function TradingDashboardInner() {
   const [activeResource, setActiveResource] = useState<typeof resources[number] | null>(null);
   const { openNew: openNewTrade } = useTradeDialog();
   useTradesChanged(fetchDashboardData);
+  useNavigationEvent(setActive);
 
   const chartPrimary = '#7c3aed';
   const chartSuccess = '#22c55e';
@@ -592,48 +594,7 @@ function TradingDashboardInner() {
 
           {active === 'replay' && <ReplayStudio />}
 
-          {active === 'resources' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-              <SectionTitle title="Learning Hub" subtitle="Guides, drills, and educational content" />
-              <Input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search lessons, drills, and guides..."
-                className="rounded-xl max-w-md"
-              />
-              {filteredResources.length === 0 ? (
-                <Card className="border-0 shadow-sm">
-                  <CardContent className="py-12 text-center">
-                    <Brain className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                    <p className="text-sm text-muted-foreground">No lessons match your search.</p>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="space-y-3">
-                  {filteredResources.map((item) => (
-                    <Card key={item.title} className="border-0 shadow-sm cursor-pointer hover:shadow-md transition-shadow" onClick={() => setActiveResource(item)}>
-                      <CardContent className="py-4 flex items-center justify-between">
-                        <div>
-                          <p className="font-medium text-sm text-foreground">{item.title}</p>
-                          <p className="text-xs text-muted-foreground">{item.summary}</p>
-                        </div>
-                        <Button variant="ghost" size="sm"><ChevronRight className="h-4 w-4" /></Button>
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-              <Dialog open={!!activeResource} onOpenChange={(o) => !o && setActiveResource(null)}>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle className="font-heading">{activeResource?.title}</DialogTitle>
-                    <DialogDescription>{activeResource?.summary}</DialogDescription>
-                  </DialogHeader>
-                  <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{activeResource?.body}</p>
-                </DialogContent>
-              </Dialog>
-            </motion.div>
-          )}
+          {active === 'resources' && <LearningHub />}
 
           {active === 'settings' && <StudioSettings />}
 
