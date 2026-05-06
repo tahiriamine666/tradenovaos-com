@@ -346,6 +346,7 @@ export type Database = {
           notes: string | null
           outcome: string | null
           pair: string
+          playbook_id: string | null
           quantity: number | null
           result: number | null
           rr: number | null
@@ -368,6 +369,7 @@ export type Database = {
           notes?: string | null
           outcome?: string | null
           pair: string
+          playbook_id?: string | null
           quantity?: number | null
           result?: number | null
           rr?: number | null
@@ -390,6 +392,7 @@ export type Database = {
           notes?: string | null
           outcome?: string | null
           pair?: string
+          playbook_id?: string | null
           quantity?: number | null
           result?: number | null
           rr?: number | null
@@ -402,7 +405,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "trades_playbook_id_fkey"
+            columns: ["playbook_id"]
+            isOneToOne: false
+            referencedRelation: "playbooks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
