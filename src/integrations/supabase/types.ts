@@ -247,11 +247,15 @@ export type Database = {
           created_at: string
           execution_score: number | null
           id: string
+          instrument: string | null
           notes: string | null
-          pair: string
+          pair: string | null
           replay_date: string
           result: number | null
           setup: string | null
+          status: string
+          title: string | null
+          trades: Json
           updated_at: string
           user_id: string
         }
@@ -259,11 +263,15 @@ export type Database = {
           created_at?: string
           execution_score?: number | null
           id?: string
+          instrument?: string | null
           notes?: string | null
-          pair: string
+          pair?: string | null
           replay_date?: string
           result?: number | null
           setup?: string | null
+          status?: string
+          title?: string | null
+          trades?: Json
           updated_at?: string
           user_id: string
         }
@@ -271,11 +279,15 @@ export type Database = {
           created_at?: string
           execution_score?: number | null
           id?: string
+          instrument?: string | null
           notes?: string | null
-          pair?: string
+          pair?: string | null
           replay_date?: string
           result?: number | null
           setup?: string | null
+          status?: string
+          title?: string | null
+          trades?: Json
           updated_at?: string
           user_id?: string
         }
