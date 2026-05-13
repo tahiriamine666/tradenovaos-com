@@ -179,29 +179,29 @@ function Hero({ onSignup }: { onSignup: () => void }) {
           className="relative w-full max-w-[1180px] mx-auto pb-12 sm:pb-20"
         >
           <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-3/4 h-40 bg-violet-600/15 blur-3xl rounded-full pointer-events-none" />
-          <div className="relative rounded-3xl border border-slate-200 bg-[#0a0a14] overflow-hidden shadow-2xl shadow-black/60">
+          <div className="relative rounded-3xl border border-white/[0.06] bg-[#0a0a14] overflow-hidden shadow-2xl shadow-black/60">
             {/* Browser chrome */}
-            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-slate-200 bg-slate-50">
+            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-white/[0.06] bg-white/[0.02]">
               <div className="flex gap-1.5">
                 <div className="w-3 h-3 rounded-full bg-red-500/60" />
                 <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
                 <div className="w-3 h-3 rounded-full bg-green-500/60" />
               </div>
               <div className="flex-1 flex justify-center">
-                <div className="bg-slate-50 border border-slate-200 rounded-lg px-8 py-1 text-[11px] text-slate-500">app.tradenovaos.com/dashboard</div>
+                <div className="bg-white/[0.02] border border-white/[0.06] rounded-lg px-8 py-1 text-[11px] text-white/30">app.tradenovaos.com/dashboard</div>
               </div>
             </div>
 
             {/* Dashboard body */}
             <div className="flex">
               {/* Sidebar */}
-              <div className="hidden sm:flex w-44 lg:w-52 flex-col border-r border-slate-200 p-4 gap-0.5 flex-shrink-0">
+              <div className="hidden sm:flex w-44 lg:w-52 flex-col border-r border-white/[0.06] p-4 gap-0.5 flex-shrink-0">
                 <div className="flex items-center gap-2 mb-5 px-2">
-                  <div className="w-7 h-7 rounded-lg bg-violet-600 flex items-center justify-center"><BarChart3 className="h-3.5 w-3.5 text-slate-900" /></div>
-                  <span className="text-sm font-black text-slate-900">TradeNova</span>
+                  <div className="w-7 h-7 rounded-lg bg-violet-600 flex items-center justify-center"><BarChart3 className="h-3.5 w-3.5 text-white" /></div>
+                  <span className="text-sm font-black text-white">TradeNova</span>
                 </div>
                 {[{l:'Command Center',a:true},{l:'Trade Vault',a:false},{l:'Mind Journal',a:false},{l:'Edge Analytics',a:false},{l:'Playbook Lab',a:false},{l:'AI Insights',a:false},{l:'Replay Studio',a:false},{l:'Learning Hub',a:false}].map(item => (
-                  <div key={item.l} className={`text-[11px] px-3 py-2 rounded-xl font-medium ${item.a ? 'bg-violet-600 text-slate-900' : 'text-slate-500 hover:text-slate-600'}`}>{item.l}</div>
+                  <div key={item.l} className={`text-[11px] px-3 py-2 rounded-xl font-medium ${item.a ? 'bg-violet-600 text-white' : 'text-white/30 hover:text-white/45'}`}>{item.l}</div>
                 ))}
               </div>
 
@@ -210,14 +210,14 @@ function Hero({ onSignup }: { onSignup: () => void }) {
                 {/* Top metrics */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
                   {[
-                    {l:'Total P&L', v:'+$12,480', c:'text-emerald-600', bg:'bg-emerald-500/8 border-emerald-500/20'},
-                    {l:'Win Rate',  v:'68%',      c:'text-slate-900',        bg:''},
-                    {l:'Avg R:R',   v:'1:3.2',    c:'text-blue-600',     bg:''},
-                    {l:'Trades',    v:'143',      c:'text-violet-600',   bg:''},
+                    {l:'Total P&L', v:'+$12,480', c:'text-emerald-400', bg:'bg-emerald-500/8 border-emerald-500/20'},
+                    {l:'Win Rate',  v:'68%',      c:'text-white',        bg:''},
+                    {l:'Avg R:R',   v:'1:3.2',    c:'text-blue-400',     bg:''},
+                    {l:'Trades',    v:'143',      c:'text-violet-400',   bg:''},
                   ].map((m,i) => (
                     <motion.div key={m.l} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} transition={{delay:0.6+i*0.08}}
-                      className={`rounded-xl border border-slate-200 ${m.bg} p-3`}>
-                      <p className="text-[9px] text-slate-500 uppercase tracking-wider mb-1">{m.l}</p>
+                      className={`rounded-xl border border-white/[0.06] ${m.bg} p-3`}>
+                      <p className="text-[9px] text-white/30 uppercase tracking-wider mb-1">{m.l}</p>
                       <p className={`text-lg font-black font-mono ${m.c}`}>{m.v}</p>
                     </motion.div>
                   ))}
@@ -225,10 +225,10 @@ function Hero({ onSignup }: { onSignup: () => void }) {
 
                 {/* Equity + Trader Score */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-                  <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:0.8}} className="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-3">
+                  <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:0.8}} className="lg:col-span-2 rounded-xl border border-white/[0.06] bg-white p-3">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-[11px] font-bold text-slate-900">Equity Curve</p>
-                      <span className="text-[10px] text-emerald-600 font-bold">+$12,480</span>
+                      <p className="text-[11px] font-bold text-white">Equity Curve</p>
+                      <span className="text-[10px] text-emerald-400 font-bold">+$12,480</span>
                     </div>
                     <ResponsiveContainer width="100%" height={92}>
                       <AreaChart data={EQUITY_DATA}>
@@ -237,16 +237,16 @@ function Hero({ onSignup }: { onSignup: () => void }) {
                       </AreaChart>
                     </ResponsiveContainer>
                   </motion.div>
-                  <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:0.9}} className="rounded-xl border border-slate-200 bg-white p-3">
+                  <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:0.9}} className="rounded-xl border border-white/[0.06] bg-white p-3">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-[11px] font-bold text-slate-900">Trader Score</p>
-                      <span className="text-lg font-black text-violet-600 font-mono">82</span>
+                      <p className="text-[11px] font-bold text-white">Trader Score</p>
+                      <span className="text-lg font-black text-violet-400 font-mono">82</span>
                     </div>
                     <div className="space-y-1.5">
                       {SCORE_ITEMS.map((s,i) => (
                         <div key={s.label} className="flex items-center gap-2">
-                          <span className="text-[9px] text-slate-500 w-14">{s.label}</span>
-                          <div className="flex-1 h-1 bg-slate-100 rounded-full overflow-hidden">
+                          <span className="text-[9px] text-white/30 w-14">{s.label}</span>
+                          <div className="flex-1 h-1 bg-white/[0.05] rounded-full overflow-hidden">
                             <motion.div initial={{width:0}} animate={{width:`${s.value}%`}} transition={{duration:0.7,delay:1+i*0.08}} className="h-full rounded-full" style={{background:s.color}}/>
                           </div>
                           <span className="text-[9px] font-bold w-5 text-right" style={{color:s.color}}>{s.value}</span>
@@ -258,10 +258,10 @@ function Hero({ onSignup }: { onSignup: () => void }) {
 
                 {/* Calendar + Best Setups */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-                  <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:1}} className="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-3">
+                  <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:1}} className="lg:col-span-2 rounded-xl border border-white/[0.06] bg-white p-3">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-[11px] font-bold text-slate-900">Trading Calendar</p>
-                      <span className="text-[9px] text-slate-500">May 2026</span>
+                      <p className="text-[11px] font-bold text-white">Trading Calendar</p>
+                      <span className="text-[9px] text-white/30">May 2026</span>
                     </div>
                     <div className="grid grid-cols-7 gap-1">
                       {Array.from({length: 28}).map((_, i) => {
@@ -270,7 +270,7 @@ function Hero({ onSignup }: { onSignup: () => void }) {
                         const win = r > -0.2;
                         return (
                           <div key={i} className={`aspect-square rounded-md flex items-center justify-center text-[8px] font-bold ${
-                            !has ? 'bg-white text-slate-400' :
+                            !has ? 'bg-white text-white/20' :
                             win ? 'bg-emerald-500/15 border border-emerald-500/25 text-emerald-700' :
                                   'bg-red-500/15 border border-red-500/25 text-red-700'
                           }`}>{i+1}</div>
@@ -278,16 +278,16 @@ function Hero({ onSignup }: { onSignup: () => void }) {
                       })}
                     </div>
                   </motion.div>
-                  <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:1.05}} className="rounded-xl border border-slate-200 bg-white p-3">
-                    <p className="text-[11px] font-bold text-slate-900 mb-2">Best Setups</p>
+                  <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:1.05}} className="rounded-xl border border-white/[0.06] bg-white p-3">
+                    <p className="text-[11px] font-bold text-white mb-2">Best Setups</p>
                     <div className="space-y-2">
                       {SETUP_DATA.map((s,i) => (
                         <div key={s.name}>
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-[10px] text-slate-600 font-medium">{s.name}</span>
-                            <span className="text-[10px] font-bold font-mono text-emerald-600">+${s.value.toLocaleString()}</span>
+                            <span className="text-[10px] text-white/45 font-medium">{s.name}</span>
+                            <span className="text-[10px] font-bold font-mono text-emerald-400">+${s.value.toLocaleString()}</span>
                           </div>
-                          <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
+                          <div className="h-1 bg-white/[0.05] rounded-full overflow-hidden">
                             <motion.div initial={{width:0}} animate={{width:`${s.pct}%`}} transition={{duration:0.7,delay:1.15+i*0.08}} className="h-full rounded-full bg-gradient-to-r from-violet-500 to-violet-400"/>
                           </div>
                         </div>
@@ -297,18 +297,18 @@ function Hero({ onSignup }: { onSignup: () => void }) {
                 </div>
 
                 {/* Recent trades */}
-                <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:1.1}} className="rounded-xl border border-slate-200 bg-white p-3">
+                <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:1.1}} className="rounded-xl border border-white/[0.06] bg-white p-3">
                   <div className="flex items-center justify-between mb-2">
-                    <p className="text-[11px] font-bold text-slate-900">Recent Trades</p>
-                    <span className="text-[9px] text-slate-500">Last 5</span>
+                    <p className="text-[11px] font-bold text-white">Recent Trades</p>
+                    <span className="text-[9px] text-white/30">Last 5</span>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                     {RECENT_TRADES.map((t,i) => (
                       <motion.div key={i} initial={{opacity:0,y:4}} animate={{opacity:1,y:0}} transition={{delay:1.2+i*0.05}}
                         className={`rounded-lg p-2 ${t.win ? 'bg-emerald-500/8 border border-emerald-500/15' : 'bg-red-500/8 border border-red-500/15'}`}>
-                        <p className="text-[9px] text-slate-500 truncate">{t.pair}</p>
-                        <p className="text-[8px] text-slate-400 mb-0.5">{t.side} · {t.date}</p>
-                        <p className={`text-xs font-bold font-mono ${t.win ? 'text-emerald-600' : 'text-red-600'}`}>{t.result>0?'+':'-'}${Math.abs(t.result)}</p>
+                        <p className="text-[9px] text-white/30 truncate">{t.pair}</p>
+                        <p className="text-[8px] text-white/20 mb-0.5">{t.side} · {t.date}</p>
+                        <p className={`text-xs font-bold font-mono ${t.win ? 'text-emerald-400' : 'text-red-400'}`}>{t.result>0?'+':'-'}${Math.abs(t.result)}</p>
                       </motion.div>
                     ))}
                   </div>
@@ -449,26 +449,26 @@ function DashboardShowcase({ onSignup }: { onSignup: () => void }) {
         </motion.div>
 
         <motion.div initial={{opacity:0,y:40}} animate={inView?{opacity:1,y:0}:{}} transition={{duration:0.8,ease}}
-          className="rounded-3xl border border-slate-200 bg-[#08080f] overflow-hidden shadow-2xl shadow-violet-900/15">
-          <div className="grid grid-cols-2 lg:grid-cols-4 border-b border-slate-200">
+          className="rounded-3xl border border-white/[0.06] bg-[#08080f] overflow-hidden shadow-2xl shadow-violet-900/15">
+          <div className="grid grid-cols-2 lg:grid-cols-4 border-b border-white/[0.06]">
             {[
-              {l:'Total P&L', v:'+$12,480.75', c:'text-emerald-600'},
-              {l:'Win Rate',  v:'68%',          c:'text-slate-900'},
-              {l:'Avg R:R',   v:'1:3.2',        c:'text-blue-600'},
-              {l:'Trades',    v:'143',           c:'text-violet-600'},
+              {l:'Total P&L', v:'+$12,480.75', c:'text-emerald-400'},
+              {l:'Win Rate',  v:'68%',          c:'text-white'},
+              {l:'Avg R:R',   v:'1:3.2',        c:'text-blue-400'},
+              {l:'Trades',    v:'143',           c:'text-violet-400'},
             ].map((m,i) => (
               <motion.div key={m.l} initial={{opacity:0}} animate={inView?{opacity:1}:{}} transition={{delay:0.1+i*0.07}}
-                className="p-5 sm:p-6 border-r border-slate-200 last:border-0">
-                <p className="text-[11px] text-slate-500 uppercase tracking-wider mb-2">{m.l}</p>
+                className="p-5 sm:p-6 border-r border-white/[0.06] last:border-0">
+                <p className="text-[11px] text-white/30 uppercase tracking-wider mb-2">{m.l}</p>
                 <p className={`text-2xl sm:text-3xl font-black font-mono ${m.c}`}>{m.v}</p>
               </motion.div>
             ))}
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 border-b border-slate-200">
-            <div className="lg:col-span-2 p-5 sm:p-6 border-r border-slate-200">
+          <div className="grid grid-cols-1 lg:grid-cols-3 border-b border-white/[0.06]">
+            <div className="lg:col-span-2 p-5 sm:p-6 border-r border-white/[0.06]">
               <div className="flex items-center justify-between mb-4">
-                <div><p className="text-sm font-bold text-slate-900">Equity Curve</p><p className="text-[11px] text-slate-500">Jan – Dec 2025</p></div>
-                <span className="text-sm font-bold text-emerald-600 bg-emerald-500/10 px-3 py-1 rounded-full">+$12,480.75</span>
+                <div><p className="text-sm font-bold text-white">Equity Curve</p><p className="text-[11px] text-white/30">Jan – Dec 2025</p></div>
+                <span className="text-sm font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full">+$12,480.75</span>
               </div>
               <ResponsiveContainer width="100%" height={180}>
                 <AreaChart data={EQUITY_DATA}>
@@ -483,14 +483,14 @@ function DashboardShowcase({ onSignup }: { onSignup: () => void }) {
             </div>
             <div className="p-5 sm:p-6">
               <div className="flex items-center justify-between mb-5">
-                <p className="text-sm font-bold text-slate-900">Trader Score</p>
-                <div className="flex items-baseline gap-0.5"><span className="text-3xl font-black text-violet-600 font-mono">82</span><span className="text-slate-400 text-sm">/100</span></div>
+                <p className="text-sm font-bold text-white">Trader Score</p>
+                <div className="flex items-baseline gap-0.5"><span className="text-3xl font-black text-violet-400 font-mono">82</span><span className="text-white/20 text-sm">/100</span></div>
               </div>
               <div className="space-y-3">
                 {SCORE_ITEMS.map((s,i) => (
                   <div key={s.label}>
-                    <div className="flex justify-between mb-1.5"><span className="text-xs text-slate-500">{s.label}</span><span className="text-xs font-bold" style={{color:s.color}}>{s.value}</span></div>
-                    <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="flex justify-between mb-1.5"><span className="text-xs text-white/30">{s.label}</span><span className="text-xs font-bold" style={{color:s.color}}>{s.value}</span></div>
+                    <div className="h-1.5 bg-white/[0.05] rounded-full overflow-hidden">
                       <motion.div initial={{width:0}} animate={inView?{width:`${s.value}%`}:{}} transition={{duration:0.9,delay:0.3+i*0.1,ease}} className="h-full rounded-full" style={{background:s.color}}/>
                     </div>
                   </div>
@@ -499,37 +499,37 @@ function DashboardShowcase({ onSignup }: { onSignup: () => void }) {
             </div>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2">
-            <div className="p-5 sm:p-6 border-r border-slate-200">
-              <p className="text-sm font-bold text-slate-900 mb-4">Recent Trades</p>
+            <div className="p-5 sm:p-6 border-r border-white/[0.06]">
+              <p className="text-sm font-bold text-white mb-4">Recent Trades</p>
               <div className="space-y-1">
                 {RECENT_TRADES.map((t,i) => (
                   <motion.div key={i} initial={{opacity:0,x:-6}} animate={inView?{opacity:1,x:0}:{}} transition={{delay:0.15+i*0.07}}
                     className="flex items-center justify-between py-2.5 border-b border-white/[0.04] last:border-0 hover:bg-white rounded-lg px-2 -mx-2 transition-colors">
                     <div className="flex items-center gap-3">
                       <div className={`w-1 h-6 rounded-full ${t.win?'bg-emerald-500':'bg-red-500'}`}/>
-                      <div><p className="text-sm font-semibold text-slate-900">{t.pair}</p><p className="text-[10px] text-slate-500">{t.side} · {t.date}</p></div>
+                      <div><p className="text-sm font-semibold text-white">{t.pair}</p><p className="text-[10px] text-white/30">{t.side} · {t.date}</p></div>
                     </div>
                     <div className="text-right">
-                      <p className={`text-sm font-bold font-mono ${t.win?'text-emerald-600':'text-red-600'}`}>{t.result>0?'+':''}${Math.abs(t.result).toFixed(2)}</p>
-                      <p className={`text-[10px] ${t.win?'text-emerald-600/50':'text-red-600/50'}`}>{t.win?'Win':'Loss'}</p>
+                      <p className={`text-sm font-bold font-mono ${t.win?'text-emerald-400':'text-red-400'}`}>{t.result>0?'+':''}${Math.abs(t.result).toFixed(2)}</p>
+                      <p className={`text-[10px] ${t.win?'text-emerald-400/50':'text-red-400/50'}`}>{t.win?'Win':'Loss'}</p>
                     </div>
                   </motion.div>
                 ))}
               </div>
             </div>
             <div className="p-5 sm:p-6">
-              <p className="text-sm font-bold text-slate-900 mb-4">Best Performing Setups</p>
+              <p className="text-sm font-bold text-white mb-4">Best Performing Setups</p>
               <div className="space-y-4">
                 {SETUP_DATA.map((s,i) => (
                   <motion.div key={s.name} initial={{opacity:0,x:6}} animate={inView?{opacity:1,x:0}:{}} transition={{delay:0.15+i*0.08}}>
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-sm font-semibold text-slate-900">{s.name}</span>
+                      <span className="text-sm font-semibold text-white">{s.name}</span>
                       <div className="flex items-center gap-3">
-                        <span className="text-[10px] text-slate-500">{s.pct}% WR</span>
-                        <span className="text-sm font-bold text-emerald-600">+${s.value.toLocaleString()}</span>
+                        <span className="text-[10px] text-white/30">{s.pct}% WR</span>
+                        <span className="text-sm font-bold text-emerald-400">+${s.value.toLocaleString()}</span>
                       </div>
                     </div>
-                    <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-1.5 bg-white/[0.05] rounded-full overflow-hidden">
                       <motion.div initial={{width:0}} animate={inView?{width:`${s.pct}%`}:{}} transition={{duration:0.8,delay:0.3+i*0.1}} className="h-full rounded-full bg-gradient-to-r from-violet-500 to-violet-400"/>
                     </div>
                   </motion.div>
