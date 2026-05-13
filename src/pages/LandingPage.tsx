@@ -102,7 +102,7 @@ function Navbar({ onLogin, onSignup }: { onLogin: () => void; onSignup: () => vo
         </div>
         <div className="hidden md:flex items-center gap-3">
           <button onClick={onLogin} className="text-sm text-slate-700 hover:text-slate-900 px-4 py-2 transition-colors">Log in</button>
-          <button onClick={onSignup} className="text-sm bg-violet-600 hover:bg-violet-500 text-slate-900 px-5 py-2.5 rounded-xl font-bold transition-all hover:shadow-lg hover:shadow-violet-500/25 hover:-translate-y-px">Start Free</button>
+          <button onClick={onSignup} className="text-sm bg-violet-600 hover:bg-violet-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all hover:shadow-lg hover:shadow-violet-500/25 hover:-translate-y-px">Start Free</button>
         </div>
         <button className="md:hidden text-slate-600 hover:text-slate-900 p-2" onClick={() => setOpen(v => !v)}>
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -117,7 +117,7 @@ function Navbar({ onLogin, onSignup }: { onLogin: () => void; onSignup: () => vo
             ))}
             <div className="flex gap-3 pt-2 border-t border-slate-200">
               <button onClick={onLogin} className="flex-1 text-sm border border-slate-200 text-slate-700 py-2.5 rounded-xl hover:bg-slate-50">Log in</button>
-              <button onClick={onSignup} className="flex-1 text-sm bg-violet-600 text-slate-900 py-2.5 rounded-xl font-bold hover:bg-violet-500">Start Free</button>
+              <button onClick={onSignup} className="flex-1 text-sm bg-violet-600 text-white py-2.5 rounded-xl font-bold hover:bg-violet-500">Start Free</button>
             </div>
           </motion.div>
         )}
@@ -156,7 +156,7 @@ function Hero({ onSignup }: { onSignup: () => void }) {
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.22 }}
           className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-7">
-          <button onClick={onSignup} className="group flex items-center gap-2.5 bg-violet-600 hover:bg-violet-500 text-slate-900 px-8 py-4 rounded-2xl font-black text-sm transition-all hover:shadow-2xl hover:shadow-violet-500/30 hover:-translate-y-0.5 w-full sm:w-auto justify-center">
+          <button onClick={onSignup} className="group flex items-center gap-2.5 bg-violet-600 hover:bg-violet-500 text-white px-8 py-4 rounded-2xl font-black text-sm transition-all hover:shadow-2xl hover:shadow-violet-500/30 hover:-translate-y-0.5 w-full sm:w-auto justify-center">
             Start Free — No credit card <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </button>
           <button className="flex items-center gap-2.5 text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 hover:bg-slate-50 px-7 py-4 rounded-2xl font-semibold text-sm transition-all w-full sm:w-auto justify-center">
@@ -540,7 +540,7 @@ function DashboardShowcase({ onSignup }: { onSignup: () => void }) {
         </motion.div>
 
         <motion.div initial={{opacity:0,y:16}} animate={inView?{opacity:1,y:0}:{}} transition={{delay:0.5}} className="text-center mt-10">
-          <button onClick={onSignup} className="group inline-flex items-center gap-2.5 bg-violet-600 hover:bg-violet-500 text-slate-900 px-8 py-4 rounded-2xl font-black text-sm transition-all hover:shadow-2xl hover:shadow-violet-500/25 hover:-translate-y-0.5">
+          <button onClick={onSignup} className="group inline-flex items-center gap-2.5 bg-violet-600 hover:bg-violet-500 text-white px-8 py-4 rounded-2xl font-black text-sm transition-all hover:shadow-2xl hover:shadow-violet-500/25 hover:-translate-y-0.5">
             Get this dashboard for free <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform"/>
           </button>
           <p className="text-xs text-slate-400 mt-3">No credit card · Free forever plan available</p>
@@ -605,7 +605,7 @@ function Pricing({ onSignup }: { onSignup: () => void }) {
           {plans.map((p,i) => (
             <motion.div key={p.name} initial={{opacity:0,y:20}} animate={inView?{opacity:1,y:0}:{}} transition={{delay:i*0.09,duration:0.5}}
               className={`relative rounded-2xl p-6 border ${p.hi?'border-violet-500/40 bg-violet-600/5 shadow-xl shadow-violet-500/10':'border-slate-200 bg-white'}`}>
-              {p.badge&&<div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-violet-600 text-slate-900 text-[11px] font-bold px-4 py-1 rounded-full">{p.badge}</div>}
+              {p.badge&&<div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-violet-600 text-white text-[11px] font-bold px-4 py-1 rounded-full">{p.badge}</div>}
               <div className="mb-5">
                 <p className="text-sm font-bold text-slate-600 mb-1.5">{p.name}</p>
                 <div className="flex items-end gap-1"><span className="text-4xl font-black text-slate-900">{p.price}</span>{(p as any).per&&<span className="text-slate-500 text-sm mb-1">{(p as any).per}</span>}</div>
@@ -636,7 +636,7 @@ function FinalCTA({ onSignup }: { onSignup: () => void }) {
               Start building your<br/><span className="bg-gradient-to-r from-violet-400 to-purple-300 bg-clip-text text-transparent">trading edge today</span>
             </h2>
             <p className="text-slate-600 text-lg mb-10 max-w-lg mx-auto">Stop trading on gut feeling. Start trading on data. Free forever — upgrade when you're ready.</p>
-            <button onClick={onSignup} className="group inline-flex items-center gap-3 bg-violet-600 hover:bg-violet-500 text-slate-900 px-10 py-4 rounded-2xl font-black text-sm transition-all hover:shadow-2xl hover:shadow-violet-500/25 hover:-translate-y-0.5">
+            <button onClick={onSignup} className="group inline-flex items-center gap-3 bg-violet-600 hover:bg-violet-500 text-white px-10 py-4 rounded-2xl font-black text-sm transition-all hover:shadow-2xl hover:shadow-violet-500/25 hover:-translate-y-0.5">
               Start Free Now <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform"/>
             </button>
             <p className="text-[11px] text-slate-400 mt-5">No credit card required · Free forever plan available</p>

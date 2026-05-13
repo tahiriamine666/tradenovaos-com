@@ -64,7 +64,7 @@ export default function MarketingFooter() {
           </div>
           <button
             onClick={() => nav('/signup')}
-            className="group inline-flex items-center gap-2.5 bg-violet-600 hover:bg-violet-500 text-slate-900 px-7 py-3.5 rounded-2xl font-black text-sm transition-all hover:shadow-2xl hover:shadow-violet-500/40 hover:-translate-y-0.5 whitespace-nowrap"
+            className="group inline-flex items-center gap-2.5 bg-violet-600 hover:bg-violet-500 text-white px-7 py-3.5 rounded-2xl font-black text-sm transition-all hover:shadow-2xl hover:shadow-violet-500/40 hover:-translate-y-0.5 whitespace-nowrap"
           >
             Start Free <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </button>

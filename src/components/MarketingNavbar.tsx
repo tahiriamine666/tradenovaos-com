@@ -207,7 +207,7 @@ export default function MarketingNavbar({ onLogin, onSignup }: MarketingNavbarPr
               Log in
             </button>
             <button onClick={onSignup}
-              className="text-sm bg-violet-600 hover:bg-violet-500 text-slate-900 px-5 py-2.5 rounded-xl font-bold transition-all hover:shadow-lg hover:shadow-violet-500/25 hover:-translate-y-px">
+              className="text-sm bg-violet-600 hover:bg-violet-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all hover:shadow-lg hover:shadow-violet-500/25 hover:-translate-y-px">
               Start Free
             </button>
           </div>
@@ -288,7 +288,7 @@ export default function MarketingNavbar({ onLogin, onSignup }: MarketingNavbarPr
                   Log in
                 </button>
                 <button onClick={() => { onSignup(); setMobileOpen(false); }}
-                  className="flex-1 text-sm bg-violet-600 text-slate-900 py-3 rounded-xl font-bold hover:bg-violet-500 transition-colors">
+                  className="flex-1 text-sm bg-violet-600 text-white py-3 rounded-xl font-bold hover:bg-violet-500 transition-colors">
                   Start Free
                 </button>
               </div>
