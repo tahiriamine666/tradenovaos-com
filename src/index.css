@@ -109,7 +109,7 @@ html:not(.dark) .app-shell {
 }
 
 /* White-opacity surfaces → soft slate-tinted surfaces */
-html:not(.dark) .app-shell [class*="bg-white/"] {
+html:not(.dark) .app-shell [class*="bg-white/"], html:not(.dark) .app-chrome [class*="bg-white/"] {
   background-color: hsl(222 47% 11% / 0.04) !important;
 }
 html:not(.dark) .app-shell [class*="hover\:bg-white/"]:hover {
