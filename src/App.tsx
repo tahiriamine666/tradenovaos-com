@@ -12,6 +12,7 @@ import Login from "./pages/Login.tsx";
 import Signup from "./pages/Signup.tsx";
 import LandingPage from "./pages/LandingPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import SupportChat from "@/components/SupportChat";
 
 const queryClient = new QueryClient();
 
