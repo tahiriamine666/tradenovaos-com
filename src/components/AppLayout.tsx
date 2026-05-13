@@ -171,7 +171,7 @@ export default function AppLayout({ active, onNavigate, dark, children, topBar }
   }, [open]);
 
   return (
-    <div className={cx('flex h-screen overflow-hidden font-body', dark ? 'dark' : '')}>
+    <div className={cx('app-shell flex h-screen overflow-hidden font-body bg-background text-foreground', dark ? 'dark' : '')}>
 
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex w-72 flex-shrink-0 flex-col border-r overflow-hidden bg-sidebar border-border">
