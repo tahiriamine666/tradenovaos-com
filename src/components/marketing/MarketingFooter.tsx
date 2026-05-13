@@ -38,7 +38,7 @@ const COLS: { title: string; links: { label: string; to: string; external?: bool
 
 const SOCIAL = [
   { label: 'X / Twitter', Icon: Twitter, href: 'https://twitter.com' },
-  { label: 'Instagram', Icon: Instagram, href: 'https://instagram.com' },
+  { label: 'Instagram', Icon: Instagram, href: 'https://www.instagram.com/tradenova_app/' },
 ];
 
 export default function MarketingFooter() {
