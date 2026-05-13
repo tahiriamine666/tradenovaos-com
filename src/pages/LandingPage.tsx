@@ -188,7 +188,7 @@ function Hero({ onSignup }: { onSignup: () => void }) {
                 <div className="w-3 h-3 rounded-full bg-green-500/60" />
               </div>
               <div className="flex-1 flex justify-center">
-                <div className="bg-white/[0.04] border border-white/[0.05] rounded-lg px-8 py-1 text-[11px] text-white/25">app.tradenova.io/dashboard</div>
+                <div className="bg-white/[0.04] border border-white/[0.05] rounded-lg px-8 py-1 text-[11px] text-white/25">app.tradenovaos.com/dashboard</div>
               </div>
             </div>
 

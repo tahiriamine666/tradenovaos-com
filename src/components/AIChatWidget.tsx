@@ -17,7 +17,7 @@ import {
 
 // ─── Config ────────────────────────────────────────────────────────────────────
 const WHATSAPP  = '+212XXXXXXXXX'; // ← replace
-const EMAIL     = 'support@tradenova.app';
+const EMAIL     = 'support@tradenovaos.com';
 const BOT_NAME  = 'Nova';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
