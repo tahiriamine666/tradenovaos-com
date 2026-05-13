@@ -21,6 +21,7 @@ const sidebarItems = [...BASE_ITEMS, ADMIN_ITEM];
 import TopBar from '@/components/TopBar';
 import { GlobalFiltersProvider } from '@/contexts/GlobalFiltersContext';
 import AnalyticsMetrics from '@/components/AnalyticsMetrics';
+import CommandCenter from '@/components/CommandCenter';
 import { getTradeDateDay } from '@/lib/dateUtils';
 import {
   BarChart3, BookOpen, Brain, CalendarDays, CheckCircle2,
