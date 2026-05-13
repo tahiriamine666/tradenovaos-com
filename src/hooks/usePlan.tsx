@@ -55,9 +55,10 @@ export function PlanProvider({ children }: { children: ReactNode }) {
     setState(s => ({ ...s, loading: true }));
 
     try {
-      const { data, error } = await supabase.rpc('get_user_plan_info');
+      const { data: raw, error } = await supabase.rpc('get_user_plan_info');
 
-      if (error || !data) throw error;
+      if (error || !raw) throw error;
+      const data = raw as any;
 
       const plan     = (data.plan ?? 'free') as Plan;
       const status   = (data.status ?? 'inactive') as Status;
