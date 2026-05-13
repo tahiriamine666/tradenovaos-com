@@ -534,6 +534,8 @@ export type Database = {
         }
         Returns: undefined
       }
+      get_admin_stats: { Args: never; Returns: Json }
+      get_admin_users_list: { Args: never; Returns: Json }
       get_my_profile: { Args: never; Returns: Json }
       get_user_plan_info: { Args: never; Returns: Json }
       is_admin: { Args: { _uid: string }; Returns: boolean }
