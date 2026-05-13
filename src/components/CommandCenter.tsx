@@ -625,14 +625,14 @@ export default function CommandCenter({ onNavigate, onAddTrade }: CommandCenterP
       value: fmtMoney(metrics.totalPnl),
       sub: `From ${metrics.tradesCount} trades`,
       icon: TrendingUp,
-      color: metrics.totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400',
+      color: metrics.totalPnl >= 0 ? 'text-violet-400' : 'text-red-400',
     },
     {
       title: 'Win Rate',
       value: `${metrics.winRate}%`,
       sub: `${metrics.wins} wins · ${metrics.losses} losses`,
       icon: Target,
-      color: metrics.winRate >= 50 ? 'text-emerald-400' : 'text-amber-400',
+      color: metrics.winRate >= 50 ? 'text-violet-400' : 'text-amber-400',
     },
     {
       title: 'Avg R:R',
