@@ -135,7 +135,7 @@ function MetricCard({
             <p className="text-[11px] text-white/30 mt-1.5">{sub}</p>
           )}
         </div>
-        <div className={`rounded-xl p-2.5 ${color.includes('emerald') ? 'bg-emerald-500/10' : color.includes('red') ? 'bg-red-500/10' : color.includes('blue') ? 'bg-blue-500/10' : 'bg-violet-500/10'}`}>
+        <div className={`rounded-xl p-2.5 ${color.includes('red') ? 'bg-red-500/10' : color.includes('blue') ? 'bg-blue-500/10' : color.includes('amber') ? 'bg-amber-500/10' : 'bg-violet-500/10'}`}>
           <Icon className={`h-5 w-5 ${color}`} />
         </div>
       </div>
