@@ -42,7 +42,7 @@ interface UpgradeReq {
 }
 
 // ─── Utils ────────────────────────────────────────────────────────────────────
-const ease = [0.22, 1, 0.36, 1];
+const ease: any = [0.22, 1, 0.36, 1];
 function fmtRel(d: string) {
   const days = Math.floor((Date.now() - new Date(d).getTime()) / 86400000);
   if (days === 0) return 'Today';
@@ -108,15 +108,15 @@ export default function AdminPanel() {
     setLoading(true); setError(null);
     try {
       const [s, u, m, r] = await Promise.all([
-        supabase.rpc('get_admin_stats'),
-        supabase.rpc('get_admin_users_list'),
+        (supabase.rpc as any)('get_admin_stats'),
+        (supabase.rpc as any)('get_admin_users_list'),
         supabase.from('support_messages').select('*').order('created_at', { ascending: false }).limit(50),
         supabase.from('upgrade_requests').select('*,profiles(email)').order('created_at', { ascending: false }).limit(50),
       ]);
       if (s.error) throw new Error(s.error.message);
       if (u.error) throw new Error(u.error.message);
-      setStats(s.data as AdminStats);
-      setUsers((u.data as AdminUser[]) ?? []);
+      setStats(s.data as unknown as AdminStats);
+      setUsers((u.data as unknown as AdminUser[]) ?? []);
       setMessages((m.data as SupportMsg[]) ?? []);
       setRequests((r.data as any) ?? []);
     } catch (e: any) {
