@@ -7,6 +7,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   BookOpen, BarChart3, PlayCircle, Sparkles, Brain,
   Target, Calendar, Upload, ArrowRight, Check, ArrowLeft,
+  TrendingUp, Building2, Globe, Users,
 } from 'lucide-react';
 import MarketingNavbar from '@/components/MarketingNavbar';
 
