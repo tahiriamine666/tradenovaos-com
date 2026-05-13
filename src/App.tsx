@@ -13,6 +13,9 @@ import Signup from "./pages/Signup.tsx";
 import LandingPage from "./pages/LandingPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import AIChatWidget from "@/components/AIChatWidget";
+import SupportedBrokersPage from "./pages/SupportedBrokersPage.tsx";
+import PublicPricingPage from "./pages/marketing/PublicPricingPage.tsx";
+import MarketingPlaceholder from "./pages/marketing/MarketingPlaceholder.tsx";
 
 const queryClient = new QueryClient();
 
