@@ -1,25 +1,17 @@
 // src/components/AppLayout.tsx
-// Updated layout:
-// - Real TradeNova logo (PNG) in sidebar header
-// - User avatar in sidebar footer (editable)
-// - User avatar in topbar right (like YouTube) — click opens settings
-// - Mobile drawer + bottom nav unchanged
-
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BarChart3, BookOpen, Brain, CalendarDays, CircleDollarSign,
-  LayoutDashboard, LogOut, Menu, PlayCircle,
-  Settings, ShieldCheck, Target, Upload, X, ChevronRight,
+  LayoutDashboard, Menu, PlayCircle, Settings, Target,
+  Upload, X, ChevronRight, Shield,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import UserAvatar from '@/components/UserAvatar';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
+import { useProfile } from '@/hooks/useProfile';
 
-// ─── Sidebar items ────────────────────────────────────────────────────────────
-export const sidebarItems = [
+export const BASE_ITEMS = [
   { id: 'dashboard',  label: 'Command Center',  icon: LayoutDashboard },
   { id: 'plan',       label: 'Trade Plan',       icon: CalendarDays },
   { id: 'trades',     label: 'Trade Vault',      icon: CircleDollarSign },
@@ -30,10 +22,11 @@ export const sidebarItems = [
   { id: 'replay',     label: 'Replay Studio',    icon: PlayCircle },
   { id: 'resources',  label: 'Learning Hub',     icon: Brain },
   { id: 'settings',   label: 'Studio Settings',  icon: Settings },
-  { id: 'admin',      label: 'Admin',            icon: ShieldCheck },
 ];
 
-const bottomNavItems = [
+export const ADMIN_ITEM = { id: 'admin', label: 'Admin Panel', icon: Shield };
+
+const BOTTOM_NAV = [
   { id: 'dashboard', icon: LayoutDashboard, label: 'Home' },
   { id: 'trades',    icon: CircleDollarSign, label: 'Trades' },
   { id: 'journal',   icon: BookOpen,         label: 'Journal' },
@@ -41,139 +34,103 @@ const bottomNavItems = [
   { id: 'settings',  icon: Settings,         label: 'Settings' },
 ];
 
-function cx(...vals: (string | boolean | undefined | null)[]) {
-  return vals.filter(Boolean).join(' ');
-}
+function cx(...v: (string|boolean|undefined|null)[]) { return v.filter(Boolean).join(' '); }
 
-// ─── TradeNova Logo ───────────────────────────────────────────────────────────
-// Uses the uploaded PNG icon + wordmark
-function TradeNovaLogo({ collapsed = false }: { collapsed?: boolean }) {
+function Logo() {
   return (
     <div className="flex items-center gap-3">
-      {/* PNG icon — place tradenova-icon.png in /public/tradenova-icon.png */}
-      <img
-        src="/tradenova-icon.png"
-        alt="TradeNova"
-        className="w-10 h-10 rounded-xl flex-shrink-0"
+      <img src="/tradenova-icon.png" alt="TradeNova" className="w-10 h-10 rounded-xl flex-shrink-0"
         onError={e => {
-          // Fallback to CSS icon if image not found
-          const el = e.target as HTMLImageElement;
-          el.style.display = 'none';
-          el.nextElementSibling?.classList.remove('hidden');
+          (e.target as HTMLImageElement).style.display = 'none';
+          (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
         }}
       />
-      {/* Fallback icon (hidden unless image fails) */}
-      <div className="hidden w-10 h-10 rounded-xl bg-primary flex items-center justify-center flex-shrink-0">
-        <BarChart3 className="h-5 w-5 text-primary-foreground" />
+      <div className="hidden w-10 h-10 rounded-xl bg-primary items-center justify-center flex-shrink-0">
+        <BarChart3 className="h-5 w-5 text-white" />
       </div>
-      {!collapsed && (
-        <div>
-          <p className="font-heading font-bold text-foreground leading-tight">TradeNova</p>
-          <p className="text-[10px] text-muted-foreground">Trading OS</p>
-        </div>
-      )}
+      <div>
+        <p className="font-heading font-bold text-foreground leading-tight">TradeNova</p>
+        <p className="text-[10px] text-muted-foreground">Trading OS</p>
+      </div>
     </div>
   );
 }
 
-// ─── User profile section in sidebar ─────────────────────────────────────────
-interface UserProfile {
-  display_name: string | null;
-  full_name:    string | null;
-  email:        string | null;
-  avatar_url:   string | null;
-  subscription_plan: string;
-}
-
-function SidebarUserSection({
-  profile,
-  onNavigate,
-  onAvatarUpdated,
-}: {
-  profile: UserProfile | null;
-  onNavigate: (id: string) => void;
-  onAvatarUpdated: (url: string) => void;
-}) {
-  const name = profile?.display_name || profile?.full_name || profile?.email?.split('@')[0] || 'Trader';
-  const plan = profile?.subscription_plan ?? 'free';
-
-  const planColor =
-    plan === 'elite' ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
-    plan === 'pro'   ? 'bg-primary/10 text-primary border-primary/20' :
-    'bg-muted text-muted-foreground border-border';
+function SidebarUser({ onNavigate }: { onNavigate: (id: string) => void }) {
+  const { profile, isAdmin, displayName } = useProfile();
+  const plan = profile?.plan_type ?? 'free';
+  const badge = plan === 'elite'
+    ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+    : plan === 'pro'
+    ? 'bg-primary/10 text-primary border-primary/20'
+    : 'bg-muted text-muted-foreground border-border';
 
   return (
-    <div
-      className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors cursor-pointer group"
-      onClick={() => onNavigate('settings')}
-    >
-      <UserAvatar
-        url={profile?.avatar_url ?? null}
+    <button className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/50 transition-colors w-full group text-left"
+      onClick={() => onNavigate('settings')}>
+      <UserAvatar url={profile?.avatar_url ?? null}
         displayName={profile?.display_name || profile?.full_name}
-        email={profile?.email ?? null}
-        size="md"
-        editable
-        onUpdated={onAvatarUpdated}
-      />
+        email={profile?.email ?? null} size="md" editable />
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-foreground truncate">{name}</p>
-        <Badge variant="outline" className={`text-[10px] rounded-full px-2 py-0 h-4 capitalize border ${planColor}`}>
+        <div className="flex items-center gap-1.5">
+          <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
+          {isAdmin && <Shield aria-label="Admin" className="h-3 w-3 text-primary flex-shrink-0" />}
+        </div>
+        <Badge variant="outline" className={`text-[10px] rounded-full px-2 py-0 h-4 border mt-0.5 capitalize ${badge}`}>
           {plan}
         </Badge>
       </div>
       <ChevronRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-    </div>
+    </button>
   );
 }
 
-// ─── Sidebar content ──────────────────────────────────────────────────────────
-function SidebarContent({
-  active,
-  onNavigate,
-  profile,
-  onAvatarUpdated,
-}: {
-  active: string;
-  onNavigate: (id: string) => void;
-  profile: UserProfile | null;
-  onAvatarUpdated: (url: string) => void;
+function SidebarContent({ active, onNavigate, isAdmin }: {
+  active: string; onNavigate: (id: string) => void; isAdmin: boolean;
 }) {
+  const { profile } = useProfile();
+  const items = isAdmin ? [...BASE_ITEMS, ADMIN_ITEM] : BASE_ITEMS;
+
   return (
     <div className="flex flex-col h-full">
-      {/* Logo */}
-      <div className="p-5 pb-4">
-        <TradeNovaLogo />
-      </div>
+      <div className="p-5 pb-4 flex-shrink-0"><Logo /></div>
 
-      {/* Nav */}
       <div className="px-3 flex-1 overflow-y-auto">
         <nav className="space-y-0.5">
-          {sidebarItems.map(item => {
+          {items.map((item, idx) => {
             const Icon = item.icon;
-            const selected = active === item.id;
+            const sel  = active === item.id;
+            const isAd = item.id === 'admin';
+            // Separator before admin item
+            const sep  = isAd && idx > 0;
             return (
-              <button
-                key={item.id}
-                onClick={() => onNavigate(item.id)}
-                className={cx(
-                  'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all',
-                  selected
-                    ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                )}
-              >
-                <Icon className="h-4 w-4 flex-shrink-0" />
-                {item.label}
-              </button>
+              <React.Fragment key={item.id}>
+                {sep && <div className="h-px bg-border my-2" />}
+                <button onClick={() => onNavigate(item.id)}
+                  className={cx(
+                    'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all',
+                    sel && !isAd && 'bg-primary text-primary-foreground shadow-lg shadow-primary/20',
+                    sel && isAd && 'bg-red-500/15 text-red-500',
+                    !sel && !isAd && 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                    !sel && isAd && 'text-muted-foreground hover:bg-red-500/10 hover:text-red-500',
+                  )}>
+                  <Icon className="h-4 w-4 flex-shrink-0" />
+                  {item.label}
+                  {isAd && (
+                    <Badge className="ml-auto bg-red-500/10 text-red-500 border-0 text-[9px] px-1.5 leading-tight">
+                      ADMIN
+                    </Badge>
+                  )}
+                </button>
+              </React.Fragment>
             );
           })}
         </nav>
       </div>
 
-      {/* Upgrade card */}
-      <div className="p-4">
-        {(profile?.subscription_plan ?? 'free') === 'free' && (
-          <div className="rounded-xl bg-primary/10 p-4 mb-3">
+      <div className="p-4 flex-shrink-0 space-y-3">
+        {(profile?.plan_type ?? 'free') === 'free' && (
+          <div className="rounded-xl bg-primary/10 border border-primary/20 p-4">
             <p className="font-heading font-semibold text-sm text-foreground">Upgrade to Pro</p>
             <p className="text-xs text-muted-foreground mt-1 mb-3">Unlock AI, CSV import, playbooks</p>
             <Button size="sm" className="w-full rounded-xl h-8 text-xs" onClick={() => onNavigate('pricing')}>
@@ -181,186 +138,100 @@ function SidebarContent({
             </Button>
           </div>
         )}
-
-        {/* User profile section */}
-        <SidebarUserSection
-          profile={profile}
-          onNavigate={onNavigate}
-          onAvatarUpdated={onAvatarUpdated}
-        />
+        <SidebarUser onNavigate={onNavigate} />
       </div>
     </div>
   );
 }
 
-// ─── Main AppLayout ────────────────────────────────────────────────────────────
 interface AppLayoutProps {
-  active:          string;
-  onNavigate:      (id: string) => void;
-  dark:            boolean;
-  onToggleTheme:   () => void;
-  onLogout:        () => void;
-  children:        React.ReactNode;
-  topBar?:         React.ReactNode; // slot for TopBar component
+  active: string; onNavigate: (id: string) => void;
+  dark: boolean; onToggleTheme: () => void; onLogout: () => void;
+  children: React.ReactNode; topBar?: React.ReactNode;
 }
 
-export default function AppLayout({
-  active, onNavigate, dark, onToggleTheme, onLogout, children, topBar,
-}: AppLayoutProps) {
-  const { user } = useAuth();
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [profile,    setProfile]    = useState<UserProfile | null>(null);
+export default function AppLayout({ active, onNavigate, dark, children, topBar }: AppLayoutProps) {
+  const { isAdmin } = useProfile();
+  const [open, setOpen] = useState(false);
 
-  // Fetch profile
-  const fetchProfile = useCallback(async () => {
-    if (!user) return;
-    const { data } = await supabase
-      .from('profiles')
-      .select('display_name, full_name, email, avatar_url, subscription_plan')
-      .eq('id', user.id)
-      .single();
-    if (data) setProfile(data as UserProfile);
-  }, [user]);
-
-  useEffect(() => { fetchProfile(); }, [fetchProfile]);
-
-  // Close drawer on route change
-  useEffect(() => { setDrawerOpen(false); }, [active]);
-
-  // Keyboard + scroll lock
+  useEffect(() => { setOpen(false); }, [active]);
   useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') setDrawerOpen(false); };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
   }, []);
   useEffect(() => {
-    document.body.style.overflow = drawerOpen ? 'hidden' : '';
+    document.body.style.overflow = open ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
-  }, [drawerOpen]);
-
-  const handleAvatarUpdated = useCallback((url: string) => {
-    setProfile(p => p ? { ...p, avatar_url: url } : p);
-  }, []);
-
-  const currentPage = sidebarItems.find(i => i.id === active)?.label ?? 'Dashboard';
+  }, [open]);
 
   return (
     <div className={cx('flex h-screen overflow-hidden font-body', dark ? 'dark' : '')}>
 
-      {/* ── Desktop sidebar ── */}
+      {/* Desktop sidebar */}
       <aside className="hidden lg:flex w-72 flex-shrink-0 flex-col border-r overflow-hidden bg-sidebar border-border">
-        <SidebarContent
-          active={active}
-          onNavigate={onNavigate}
-          profile={profile}
-          onAvatarUpdated={handleAvatarUpdated}
-        />
+        <SidebarContent active={active} onNavigate={onNavigate} isAdmin={isAdmin} />
       </aside>
 
-      {/* ── Mobile drawer overlay ── */}
+      {/* Mobile drawer */}
       <AnimatePresence>
-        {drawerOpen && (
-          <>
-            <motion.div
-              key="backdrop"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-40 bg-black/60 lg:hidden"
-              onClick={() => setDrawerOpen(false)}
-            />
-            <motion.aside
-              key="drawer"
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed inset-y-0 left-0 z-50 w-72 flex flex-col border-r overflow-hidden bg-sidebar border-border lg:hidden"
-            >
-              <button
-                onClick={() => setDrawerOpen(false)}
-                className="absolute top-4 right-4 rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors z-10"
-              >
-                <X className="h-5 w-5" />
-              </button>
-              <SidebarContent
-                active={active}
-                onNavigate={onNavigate}
-                profile={profile}
-                onAvatarUpdated={handleAvatarUpdated}
-              />
-            </motion.aside>
-          </>
-        )}
+        {open && <>
+          <motion.div key="bd" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40 bg-black/60 lg:hidden" onClick={() => setOpen(false)} />
+          <motion.aside key="dr" initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
+            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            className="fixed inset-y-0 left-0 z-50 w-72 flex flex-col border-r overflow-hidden bg-sidebar border-border lg:hidden">
+            <button onClick={() => setOpen(false)}
+              className="absolute top-4 right-4 rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted z-10">
+              <X className="h-5 w-5" />
+            </button>
+            <SidebarContent active={active} onNavigate={onNavigate} isAdmin={isAdmin} />
+          </motion.aside>
+        </>}
       </AnimatePresence>
 
-      {/* ── Main content ── */}
+      {/* Main */}
       <main className="flex-1 flex flex-col overflow-hidden min-w-0">
-
-        {/* Mobile-only top bar (hamburger + logo + avatar) */}
+        {/* Mobile header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border lg:hidden flex-shrink-0">
           <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="rounded-xl h-9 w-9"
-              onClick={() => setDrawerOpen(true)}
-            >
+            <Button variant="ghost" size="icon" className="rounded-xl h-9 w-9" onClick={() => setOpen(true)}>
               <Menu className="h-5 w-5" />
             </Button>
-            <TradeNovaLogo />
+            <Logo />
           </div>
-
-          {/* Avatar top-right on mobile (like YouTube) */}
-          <div
-            className="cursor-pointer"
-            onClick={() => onNavigate('settings')}
-          >
-            <UserAvatar
-              url={profile?.avatar_url ?? null}
-              displayName={profile?.display_name || profile?.full_name}
-              email={profile?.email ?? null}
-              size="sm"
-            />
-          </div>
+          <button onClick={() => onNavigate('settings')} className="p-1">
+            <UserAvatar url={null} displayName={null} email={null} size="sm" />
+          </button>
         </div>
 
-        {/* Desktop TopBar slot (contains filters + theme + logout + avatar) */}
         {topBar}
 
-        {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 pb-24 lg:pb-8">
           {children}
         </div>
       </main>
 
-      {/* ── Mobile bottom nav ── */}
+      {/* Mobile bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-30 lg:hidden border-t bg-sidebar border-border">
         <div className="flex items-center justify-around px-2 py-1">
-          {bottomNavItems.map(item => {
+          {BOTTOM_NAV.map(item => {
             const Icon = item.icon;
-            const selected = active === item.id;
+            const sel = active === item.id;
             return (
-              <button
-                key={item.id}
-                onClick={() => onNavigate(item.id)}
-                className={cx(
-                  'flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-all',
-                  selected ? 'text-primary' : 'text-muted-foreground'
-                )}
-              >
-                <Icon className={cx('h-5 w-5', selected && 'drop-shadow-[0_0_6px_rgba(124,58,237,0.6)]')} />
+              <button key={item.id} onClick={() => onNavigate(item.id)}
+                className={cx('flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-all',
+                  sel ? 'text-primary' : 'text-muted-foreground')}>
+                <Icon className={cx('h-5 w-5', sel && 'drop-shadow-[0_0_6px_rgba(124,58,237,0.6)]')} />
                 <span className="text-[10px] font-medium">{item.label}</span>
               </button>
             );
           })}
-          <button
-            onClick={() => setDrawerOpen(true)}
-            className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl text-muted-foreground"
-          >
+          <button onClick={() => setOpen(true)}
+            className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl text-muted-foreground relative">
             <Menu className="h-5 w-5" />
             <span className="text-[10px] font-medium">More</span>
+            {isAdmin && <span className="absolute top-1.5 right-2.5 w-2 h-2 rounded-full bg-red-500" />}
           </button>
         </div>
       </nav>

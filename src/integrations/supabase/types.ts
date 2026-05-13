@@ -501,6 +501,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      get_my_profile: { Args: never; Returns: Json }
       get_user_plan_info: { Args: never; Returns: Json }
       is_admin: { Args: { _uid: string }; Returns: boolean }
       request_upgrade: {
