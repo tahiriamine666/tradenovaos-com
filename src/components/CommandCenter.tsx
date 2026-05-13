@@ -559,7 +559,7 @@ export default function CommandCenter({ onNavigate, onAddTrade }: CommandCenterP
     setError(null);
     const { data, error: err } = await supabase
       .from('trades')
-      .select('id,pair,side,result,outcome,trade_date,setup,rr,account_type')
+      .select('id,pair,side,result,outcome,trade_date,setup,rr')
       .eq('user_id', user.id)
       .order('trade_date', { ascending: false });
 
