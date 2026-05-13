@@ -15,6 +15,9 @@ import {
   AreaChart, Area, ResponsiveContainer, XAxis, YAxis,
   Tooltip, CartesianGrid,
 } from 'recharts';
+import MarketingNav from '@/components/marketing/MarketingNav';
+import MarketingFooter from '@/components/marketing/MarketingFooter';
+import BrokersStrip from '@/components/marketing/BrokersStrip';
 
 const EQUITY_DATA = [
   { day: 'Jan', value: 0 }, { day: 'Feb', value: 1240 }, { day: 'Mar', value: 890 },
