@@ -12,7 +12,7 @@ import Login from "./pages/Login.tsx";
 import Signup from "./pages/Signup.tsx";
 import LandingPage from "./pages/LandingPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
-import SupportChat from "@/components/SupportChat";
+import AIChatWidget from "@/components/AIChatWidget";
 
 const queryClient = new QueryClient();
 
@@ -66,7 +66,7 @@ const App = () => (
                 <Route path="/dashboard" element={<Navigate to="/app" replace />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
-              <SupportChat />
+              <AIChatWidget />
             </PlanProvider>
           </ProfileProvider>
         </AuthProvider>
