@@ -11,6 +11,7 @@ import ReplayStudio from '@/pages/ReplayStudio';
 import TradePlan from '@/pages/TradePlan';
 import AIInsights from '@/pages/AIInsights';
 import PricingPage from '@/pages/PricingPage';
+import AdminPanel from '@/pages/AdminPanel';
 import { TradeDialogProvider, useTradeDialog, useTradesChanged, useNavigationEvent } from '@/contexts/TradeDialogContext';
 import LearningHub from '@/pages/LearningHub';
 import TraderScore from '@/components/TraderScore';
@@ -609,6 +610,8 @@ function TradingDashboardInner() {
           {active === 'settings' && <StudioSettings />}
 
           {active === 'pricing' && <PricingPage />}
+
+          {active === 'admin' && <AdminPanel />}
 
           {active === 'import' && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>

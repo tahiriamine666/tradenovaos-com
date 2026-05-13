@@ -14,6 +14,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_users: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          notes?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+        }
+        Relationships: []
+      }
       ai_insights: {
         Row: {
           content: string
@@ -201,12 +219,16 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          plan_type: string
           preferred_market: string | null
           risk_per_trade: number | null
           subscription_plan: string
+          subscription_status: string
           timezone: string
           trading_style: string
+          trial_ends_at: string | null
           updated_at: string
+          upgraded_at: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -217,12 +239,16 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
+          plan_type?: string
           preferred_market?: string | null
           risk_per_trade?: number | null
           subscription_plan?: string
+          subscription_status?: string
           timezone?: string
           trading_style?: string
+          trial_ends_at?: string | null
           updated_at?: string
+          upgraded_at?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -233,12 +259,16 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          plan_type?: string
           preferred_market?: string | null
           risk_per_trade?: number | null
           subscription_plan?: string
+          subscription_status?: string
           timezone?: string
           trading_style?: string
+          trial_ends_at?: string | null
           updated_at?: string
+          upgraded_at?: string | null
         }
         Relationships: []
       }
@@ -415,12 +445,68 @@ export type Database = {
           },
         ]
       }
+      upgrade_requests: {
+        Row: {
+          created_at: string
+          id: string
+          payment_method: string
+          payoneer_ref: string | null
+          requested_plan: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          user_message: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          payment_method?: string
+          payoneer_ref?: string | null
+          requested_plan: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          user_message?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          payment_method?: string
+          payoneer_ref?: string | null
+          requested_plan?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          user_message?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      admin_upgrade_user: {
+        Args: {
+          new_plan: string
+          notes?: string
+          target_user_id: string
+          trial_days?: number
+        }
+        Returns: undefined
+      }
+      get_user_plan_info: { Args: never; Returns: Json }
+      is_admin: { Args: { _uid: string }; Returns: boolean }
+      request_upgrade: {
+        Args: { p_message: string; p_payoneer_ref: string; p_plan: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
