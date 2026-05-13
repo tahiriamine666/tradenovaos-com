@@ -91,7 +91,7 @@ function Navbar({ onLogin, onSignup }: { onLogin: () => void; onSignup: () => vo
       <div className="max-w-7xl mx-auto px-5 sm:px-8 flex items-center justify-between h-16">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-violet-600 flex items-center justify-center">
-            <BarChart3 className="h-[18px] w-[18px] text-slate-900" />
+            <BarChart3 className="h-[18px] w-[18px] text-white" />
           </div>
           <span className="font-black text-slate-900 text-lg tracking-tight">TradeNova</span>
         </div>
@@ -652,7 +652,7 @@ function Footer() {
     <footer className="border-t border-slate-200 py-10">
       <div className="max-w-7xl mx-auto px-5 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2.5">
-          <div className="w-6 h-6 rounded-md bg-violet-600 flex items-center justify-center"><BarChart3 className="h-3.5 w-3.5 text-slate-900"/></div>
+          <div className="w-6 h-6 rounded-md bg-violet-600 flex items-center justify-center"><BarChart3 className="h-3.5 w-3.5 text-white"/></div>
           <span className="text-sm font-black text-slate-600">TradeNova</span>
           <span className="text-slate-400 text-xs">· The Trading Operating System</span>
         </div>

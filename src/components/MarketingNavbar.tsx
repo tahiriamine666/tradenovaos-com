@@ -159,7 +159,7 @@ export default function MarketingNavbar({ onLogin, onSignup }: MarketingNavbarPr
           {/* Logo */}
           <button onClick={() => handleNavigate('/')} className="flex items-center gap-2.5 flex-shrink-0">
             <div className="w-8 h-8 rounded-lg bg-violet-600 flex items-center justify-center">
-              <BarChart3 className="h-[18px] w-[18px] text-slate-900" />
+              <BarChart3 className="h-[18px] w-[18px] text-white" />
             </div>
             <span className="font-black text-slate-900 text-lg tracking-tight">TradeNova</span>
           </button>

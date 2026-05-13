@@ -76,7 +76,7 @@ export default function MarketingFooter() {
         <div className="md:col-span-4 space-y-5">
           <Link to="/" className="flex items-center gap-2.5">
             <div className="w-9 h-9 rounded-xl bg-violet-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
-              <BarChart3 className="h-5 w-5 text-slate-900" />
+              <BarChart3 className="h-5 w-5 text-white" />
             </div>
             <span className="font-black text-slate-900 text-xl tracking-tight">TradeNova</span>
           </Link>
