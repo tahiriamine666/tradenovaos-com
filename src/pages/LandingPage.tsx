@@ -671,7 +671,7 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const go = (path: string) => navigate(path);
   return (
-    <div className="min-h-screen bg-[#06060f] text-white overflow-x-hidden">
+    <div className="landing-light min-h-screen bg-[#f8fafc] text-slate-900 overflow-x-hidden">
       <MarketingNav />
       <Hero onSignup={() => go('/signup')} />
       <BrokersStrip />

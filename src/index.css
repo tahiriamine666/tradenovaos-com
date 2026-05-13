@@ -190,3 +190,97 @@ html:not(.dark) .app-shell .recharts-tooltip-label,
 html:not(.dark) .app-shell .recharts-tooltip-item {
   color: hsl(222 47% 11%) !important;
 }
+
+/* ─────────────────────────────────────────────────────────────
+   Landing page light theme (.landing-light)
+   The marketing landing was originally dark. This block flips
+   the dark-first glass utilities + literal hex backgrounds to a
+   premium light SaaS palette. Scoped so dashboards/marketing
+   shells elsewhere are unaffected.
+   ───────────────────────────────────────────────────────────── */
+.landing-light { background-color: #f8fafc; color: #0f172a; }
+
+/* Literal dark hex backgrounds → light surfaces */
+.landing-light [class*="bg-[#06060f]"],
+.landing-light [class*="bg-[#08080f]"],
+.landing-light [class*="bg-[#0a0a14]"],
+.landing-light [class*="bg-[#0c0c16]"],
+.landing-light [class*="bg-[#0d0d18]"],
+.landing-light [class*="bg-[#0d0d1a]"] {
+  background-color: #ffffff !important;
+  color: #0f172a;
+}
+
+/* White-opacity surfaces → soft slate-tinted surfaces */
+.landing-light [class*="bg-white/"] {
+  background-color: rgba(15, 23, 42, 0.035) !important;
+}
+.landing-light [class*="hover\:bg-white/"]:hover {
+  background-color: rgba(15, 23, 42, 0.06) !important;
+}
+
+/* White-opacity borders → light slate borders */
+.landing-light [class*="border-white/"] {
+  border-color: #e5e7eb !important;
+}
+.landing-light [class*="hover\:border-white/"]:hover {
+  border-color: #cbd5e1 !important;
+}
+
+/* White-opacity text → muted slate */
+.landing-light [class*="text-white/"] {
+  color: #64748b !important;
+}
+/* Pure text-white → foreground (icons/labels not on colored bg) */
+.landing-light .text-white { color: #0f172a; }
+.landing-light [class~="hover:text-white"]:hover { color: #0f172a !important; }
+
+/* Keep text-white legible on solid colored buttons/badges */
+.landing-light
+  :is(
+    [class*="bg-violet-"], [class*="bg-purple-"], [class*="bg-indigo-"],
+    [class*="bg-fuchsia-"], [class*="bg-pink-"], [class*="bg-rose-"],
+    [class*="bg-red-"],     [class*="bg-orange-"], [class*="bg-amber-"],
+    [class*="bg-yellow-"],  [class*="bg-lime-"],   [class*="bg-green-"],
+    [class*="bg-emerald-"], [class*="bg-teal-"],   [class*="bg-cyan-"],
+    [class*="bg-sky-"],     [class*="bg-blue-"],   [class*="bg-gradient"]
+  ) .text-white,
+.landing-light
+  :is(
+    [class*="bg-violet-"], [class*="bg-purple-"], [class*="bg-indigo-"],
+    [class*="bg-fuchsia-"], [class*="bg-pink-"], [class*="bg-rose-"],
+    [class*="bg-red-"],     [class*="bg-orange-"], [class*="bg-amber-"],
+    [class*="bg-yellow-"],  [class*="bg-lime-"],   [class*="bg-green-"],
+    [class*="bg-emerald-"], [class*="bg-teal-"],   [class*="bg-cyan-"],
+    [class*="bg-sky-"],     [class*="bg-blue-"],   [class*="bg-gradient"]
+  ).text-white {
+  color: #ffffff !important;
+}
+
+/* Recharts in light mode */
+.landing-light .recharts-cartesian-grid line { stroke: #e5e7eb !important; }
+.landing-light .recharts-cartesian-axis-tick text { fill: #64748b !important; }
+.landing-light .recharts-default-tooltip,
+.landing-light .recharts-tooltip-wrapper > div {
+  background-color: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  color: #0f172a !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 24px -8px rgba(15, 23, 42, 0.15) !important;
+}
+.landing-light .recharts-tooltip-label { color: #64748b !important; }
+
+/* Soften some neon-on-dark accents that look harsh on white */
+.landing-light .bg-violet-500\/10 { background-color: rgba(139, 92, 246, 0.08) !important; }
+.landing-light .bg-violet-500\/20 { border-color: rgba(139, 92, 246, 0.25) !important; }
+.landing-light .text-violet-300,
+.landing-light .text-violet-400 { color: #7c3aed !important; }
+.landing-light .text-emerald-400 { color: #059669 !important; }
+.landing-light .text-red-400 { color: #dc2626 !important; }
+.landing-light .text-blue-400 { color: #2563eb !important; }
+.landing-light .text-amber-400 { color: #d97706 !important; }
+.landing-light .text-pink-400 { color: #db2777 !important; }
+.landing-light .text-purple-400 { color: #9333ea !important; }
+.landing-light .text-cyan-400 { color: #0891b2 !important; }
+.landing-light .text-green-400 { color: #16a34a !important; }
+
