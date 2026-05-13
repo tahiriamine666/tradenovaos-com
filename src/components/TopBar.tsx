@@ -117,12 +117,13 @@ function FBtn({ icon: Icon, label, active, dot }: { icon: React.ElementType; lab
 
 function Opt({ label, selected, onClick, icon, sub }: { label: string; selected: boolean; onClick: () => void; icon?: string; sub?: string }) {
   return (
-    <button onClick={onClick} className={`flex items-center justify-between w-full px-3.5 py-2.5 text-sm transition-colors hover:bg-muted/50 text-left ${selected ? 'text-primary bg-primary/5' : 'text-foreground'}`}>
-      <span className="flex items-center gap-2.5">
-        {icon && <span className="text-base leading-none">{icon}</span>}
-        <span>{label}{sub && <span className="block text-xs text-muted-foreground">{sub}</span>}</span>
+    <button onClick={onClick} className={`flex items-center justify-between w-full px-3 py-2 mx-1 rounded-lg text-sm transition-colors text-left ${selected ? 'text-primary bg-primary/10' : 'text-foreground hover:bg-muted'}`}
+      style={{ width: 'calc(100% - 8px)' }}>
+      <span className="flex items-center gap-2.5 min-w-0">
+        {icon && <span className="text-base leading-none flex-shrink-0">{icon}</span>}
+        <span className="truncate">{label}{sub && <span className="block text-xs text-muted-foreground">{sub}</span>}</span>
       </span>
-      {selected && <Check className="h-3.5 w-3.5 text-primary flex-shrink-0" />}
+      {selected && <Check className="h-4 w-4 text-primary flex-shrink-0 ml-2" />}
     </button>
   );
 }
