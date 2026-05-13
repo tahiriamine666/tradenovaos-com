@@ -403,10 +403,6 @@ function Hero({ onSignup }: { onSignup: () => void }) {
                       {item.l}
                     </div>
                   ))}
-                  <div className="text-[11px] px-3 py-1.5 rounded-lg font-medium text-rose-500 flex items-center justify-between mt-1">
-                    <span className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-current opacity-60" /> Admin Panel</span>
-                    <span className="text-[7px] font-bold bg-rose-100 text-rose-600 px-1.5 py-0.5 rounded">ADMIN</span>
-                  </div>
                 </div>
 
                 <div className="mt-3 rounded-xl border border-violet-200 bg-gradient-to-br from-violet-50 to-white p-2.5">
