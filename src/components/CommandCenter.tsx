@@ -297,7 +297,7 @@ function TraderScoreCard({ trades, loading }: { trades: Trade[]; loading: boolea
               transition={{ delay: 0.1 + i * 0.07 }}>
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-xs text-white/40">{item.label}</span>
-                <span className={`text-xs font-bold ${item.value >= 70 ? 'text-emerald-400' : item.value >= 50 ? 'text-violet-400' : 'text-amber-400'}`}>
+                <span className={`text-xs font-bold ${item.value >= 70 ? 'text-violet-400' : item.value >= 50 ? 'text-violet-300' : 'text-amber-400'}`}>
                   {item.value}
                 </span>
               </div>
@@ -306,7 +306,7 @@ function TraderScoreCard({ trades, loading }: { trades: Trade[]; loading: boolea
                   initial={{ width: 0 }}
                   animate={{ width: `${item.value}%` }}
                   transition={{ duration: 0.8, delay: 0.3 + i * 0.08, ease: [0.22, 1, 0.36, 1] }}
-                  className={`h-full rounded-full ${item.value >= 70 ? 'bg-emerald-500' : item.value >= 50 ? 'bg-violet-500' : 'bg-amber-500'}`}
+                  className={`h-full rounded-full ${item.value >= 70 ? 'bg-violet-500' : item.value >= 50 ? 'bg-violet-400' : 'bg-amber-500'}`}
                 />
               </div>
             </motion.div>
