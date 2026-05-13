@@ -4,16 +4,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   BarChart3, BookOpen, Brain, CalendarDays, CircleDollarSign,
   LayoutDashboard, Menu, PlayCircle, Settings, Target,
-  Upload, X, ChevronRight, Shield,
+  Upload, X, ChevronRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import UserAvatar from '@/components/UserAvatar';
 import { useProfile } from '@/hooks/useProfile';
-import { useAuth } from '@/contexts/AuthContext';
 import SupportChat from '@/components/SupportChat';
 
-const ADMIN_EMAILS = ['tahiria740@gmail.com', 'tahiriamine889@gmail.com'];
 
 export const BASE_ITEMS = [
   { id: 'dashboard',  label: 'Command Center',  icon: LayoutDashboard },
@@ -28,7 +26,7 @@ export const BASE_ITEMS = [
   { id: 'settings',   label: 'Studio Settings',  icon: Settings },
 ];
 
-export const ADMIN_ITEM = { id: 'admin', label: 'Admin Panel', icon: Shield };
+
 
 const BOTTOM_NAV = [
   { id: 'dashboard', icon: LayoutDashboard, label: 'Home' },
