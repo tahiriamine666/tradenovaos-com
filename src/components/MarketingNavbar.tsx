@@ -47,7 +47,7 @@ const NAV_ITEMS = [
   { label: 'Pricing',           path: '/pricing' },
 ];
 
-const ease = [0.22, 1, 0.36, 1];
+const ease: any = [0.22, 1, 0.36, 1];
 
 // ─── Dropdown panel ───────────────────────────────────────────────────────────
 function DropdownPanel({
