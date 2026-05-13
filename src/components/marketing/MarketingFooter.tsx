@@ -39,9 +39,6 @@ const COLS: { title: string; links: { label: string; to: string; external?: bool
 const SOCIAL = [
   { label: 'X / Twitter', Icon: Twitter, href: 'https://twitter.com' },
   { label: 'Instagram', Icon: Instagram, href: 'https://instagram.com' },
-  { label: 'LinkedIn', Icon: Linkedin, href: 'https://linkedin.com' },
-  { label: 'Discord', Icon: MessageCircle, href: 'https://discord.com' },
-  { label: 'Facebook', Icon: Facebook, href: 'https://facebook.com' },
 ];
 
 export default function MarketingFooter() {
