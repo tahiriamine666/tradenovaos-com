@@ -346,7 +346,11 @@ function TradingCalendar({ dark }: { dark: boolean }) {
 function TradingDashboardInner() {
   const [active, setActive] = useState('dashboard');
   const [search, setSearch] = useState('');
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    if (typeof window === 'undefined') return 'dark';
+    const saved = window.localStorage.getItem('tn-theme');
+    return saved === 'light' || saved === 'dark' ? saved : 'dark';
+  });
   const dark = theme === 'dark';
   const { signOut, user } = useAuth();
   const navigate = useNavigate();
