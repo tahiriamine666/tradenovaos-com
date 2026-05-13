@@ -43,18 +43,22 @@ function cx(...v: (string|boolean|undefined|null)[]) { return v.filter(Boolean).
 function Logo() {
   return (
     <div className="flex items-center gap-3">
-      <img src="/tradenova-icon.png" alt="TradeNova" className="w-10 h-10 rounded-xl flex-shrink-0"
-        onError={e => {
-          (e.target as HTMLImageElement).style.display = 'none';
-          (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
+      <div
+        className="relative w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary/30 ring-1 ring-white/15"
+        style={{
+          backgroundImage:
+            'linear-gradient(135deg, hsl(263 80% 65%) 0%, hsl(263 70% 50%) 55%, hsl(255 65% 40%) 100%)',
         }}
-      />
-      <div className="hidden w-10 h-10 rounded-xl bg-primary items-center justify-center flex-shrink-0">
-        <BarChart3 className="h-5 w-5 text-white" />
+      >
+        <svg viewBox="0 0 24 24" className="w-6 h-6 text-white" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M4 17 L10 11 L14 15 L20 7" />
+          <path d="M15 7 L20 7 L20 12" />
+        </svg>
+        <span className="pointer-events-none absolute inset-0 rounded-xl bg-gradient-to-b from-white/20 to-transparent opacity-60" />
       </div>
-      <div>
-        <p className="font-heading font-bold text-foreground leading-tight">TradeNova</p>
-        <p className="text-[10px] text-muted-foreground">Trading OS</p>
+      <div className="leading-tight">
+        <p className="font-heading font-bold text-foreground tracking-tight text-[15px]">TradeNova</p>
+        <p className="text-[10px] text-muted-foreground tracking-wide uppercase">Trading OS</p>
       </div>
     </div>
   );
