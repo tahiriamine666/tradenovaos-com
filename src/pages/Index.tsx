@@ -423,6 +423,7 @@ function TradingDashboardInner() {
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', dark);
+    try { window.localStorage.setItem('tn-theme', dark ? 'dark' : 'light'); } catch {}
   }, [dark]);
 
   const filteredResources = useMemo(
