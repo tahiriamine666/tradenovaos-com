@@ -87,36 +87,36 @@ function Navbar({ onLogin, onSignup }: { onLogin: () => void; onSignup: () => vo
   }, []);
 
   return (
-    <nav className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${scrolled ? 'bg-[#06060f]/95 backdrop-blur-xl border-b border-white/[0.06]' : ''}`}>
+    <nav className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${scrolled ? 'bg-white/95 backdrop-blur-xl border-b border-slate-200' : ''}`}>
       <div className="max-w-7xl mx-auto px-5 sm:px-8 flex items-center justify-between h-16">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-violet-600 flex items-center justify-center">
             <BarChart3 className="h-[18px] w-[18px] text-white" />
           </div>
-          <span className="font-black text-white text-lg tracking-tight">TradeNova</span>
+          <span className="font-black text-slate-900 text-lg tracking-tight">TradeNova</span>
         </div>
-        <div className="hidden md:flex items-center gap-8 text-sm text-white/45">
+        <div className="hidden md:flex items-center gap-8 text-sm text-slate-600">
           {['Features', 'How it Works', 'Pricing'].map(l => (
-            <a key={l} href={`#${l.toLowerCase().replace(/\s+/g, '-')}`} className="hover:text-white transition-colors">{l}</a>
+            <a key={l} href={`#${l.toLowerCase().replace(/\s+/g, '-')}`} className="hover:text-slate-900 transition-colors">{l}</a>
           ))}
         </div>
         <div className="hidden md:flex items-center gap-3">
-          <button onClick={onLogin} className="text-sm text-white/55 hover:text-white px-4 py-2 transition-colors">Log in</button>
+          <button onClick={onLogin} className="text-sm text-slate-700 hover:text-slate-900 px-4 py-2 transition-colors">Log in</button>
           <button onClick={onSignup} className="text-sm bg-violet-600 hover:bg-violet-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all hover:shadow-lg hover:shadow-violet-500/25 hover:-translate-y-px">Start Free</button>
         </div>
-        <button className="md:hidden text-white/50 hover:text-white p-2" onClick={() => setOpen(v => !v)}>
+        <button className="md:hidden text-slate-600 hover:text-slate-900 p-2" onClick={() => setOpen(v => !v)}>
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </div>
       <AnimatePresence>
         {open && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-            className="md:hidden overflow-hidden bg-[#0a0a14] border-b border-white/[0.06] px-5 py-4 space-y-3">
+            className="md:hidden overflow-hidden bg-white border-b border-slate-200 px-5 py-4 space-y-3">
             {['Features', 'How it Works', 'Pricing'].map(l => (
-              <a key={l} href={`#${l.toLowerCase().replace(/\s+/g,'-')}`} className="block text-sm text-white/45 hover:text-white py-1" onClick={() => setOpen(false)}>{l}</a>
+              <a key={l} href={`#${l.toLowerCase().replace(/\s+/g,'-')}`} className="block text-sm text-slate-600 hover:text-slate-900 py-1" onClick={() => setOpen(false)}>{l}</a>
             ))}
-            <div className="flex gap-3 pt-2 border-t border-white/[0.06]">
-              <button onClick={onLogin} className="flex-1 text-sm border border-white/10 text-white/55 py-2.5 rounded-xl hover:bg-white/5">Log in</button>
+            <div className="flex gap-3 pt-2 border-t border-slate-200">
+              <button onClick={onLogin} className="flex-1 text-sm border border-slate-200 text-slate-700 py-2.5 rounded-xl hover:bg-slate-50">Log in</button>
               <button onClick={onSignup} className="flex-1 text-sm bg-violet-600 text-white py-2.5 rounded-xl font-bold hover:bg-violet-500">Start Free</button>
             </div>
           </motion.div>
@@ -138,18 +138,18 @@ function Hero({ onSignup }: { onSignup: () => void }) {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="flex justify-center mb-8">
           <div className="inline-flex items-center gap-2 bg-violet-500/10 border border-violet-500/20 rounded-full px-4 py-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-violet-400 animate-pulse" />
-            <span className="text-xs font-semibold text-violet-300">AI-powered trading journal · Now in beta</span>
+            <span className="text-xs font-semibold text-violet-700">AI-powered trading journal · Now in beta</span>
           </div>
         </motion.div>
 
         <motion.h1 initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.08, ease }}
-          className="text-center text-5xl sm:text-6xl lg:text-[76px] font-black text-white leading-[1.02] tracking-[-0.03em] mb-6">
+          className="text-center text-5xl sm:text-6xl lg:text-[76px] font-black text-slate-900 leading-[1.02] tracking-[-0.03em] mb-6">
           The Trading OS<br />
           <span className="bg-gradient-to-r from-violet-400 via-purple-300 to-indigo-400 bg-clip-text text-transparent">Built For Serious Traders</span>
         </motion.h1>
 
         <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.15 }}
-          className="text-center text-lg sm:text-xl text-white/45 max-w-2xl mx-auto mb-10 leading-relaxed">
+          className="text-center text-lg sm:text-xl text-slate-600 max-w-2xl mx-auto mb-10 leading-relaxed">
           Plan your trades, journal your execution, analyze your edge,<br className="hidden sm:block" />
           and improve with data — all in one place.
         </motion.p>
@@ -159,13 +159,13 @@ function Hero({ onSignup }: { onSignup: () => void }) {
           <button onClick={onSignup} className="group flex items-center gap-2.5 bg-violet-600 hover:bg-violet-500 text-white px-8 py-4 rounded-2xl font-black text-sm transition-all hover:shadow-2xl hover:shadow-violet-500/30 hover:-translate-y-0.5 w-full sm:w-auto justify-center">
             Start Free — No credit card <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </button>
-          <button className="flex items-center gap-2.5 text-white/50 hover:text-white border border-white/10 hover:border-white/20 hover:bg-white/[0.04] px-7 py-4 rounded-2xl font-semibold text-sm transition-all w-full sm:w-auto justify-center">
+          <button className="flex items-center gap-2.5 text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 hover:bg-slate-50 px-7 py-4 rounded-2xl font-semibold text-sm transition-all w-full sm:w-auto justify-center">
             <PlayCircle className="h-4 w-4" /> Watch Demo
           </button>
         </motion.div>
 
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }}
-          className="flex flex-wrap justify-center gap-4 sm:gap-6 text-xs text-white/25 mb-16">
+          className="flex flex-wrap justify-center gap-4 sm:gap-6 text-xs text-slate-500 mb-16">
           {['Free forever plan', 'No credit card required', 'Setup in 2 minutes', '143 traders trust TradeNova'].map(t => (
             <span key={t} className="flex items-center gap-1.5"><Check className="h-3 w-3 text-emerald-500" />{t}</span>
           ))}
@@ -179,29 +179,29 @@ function Hero({ onSignup }: { onSignup: () => void }) {
           className="relative w-full max-w-[1180px] mx-auto pb-12 sm:pb-20"
         >
           <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-3/4 h-40 bg-violet-600/15 blur-3xl rounded-full pointer-events-none" />
-          <div className="relative rounded-3xl border border-white/[0.09] bg-[#0a0a14] overflow-hidden shadow-2xl shadow-black/60">
+          <div className="relative rounded-3xl border border-white/[0.06] bg-[#0a0a14] overflow-hidden shadow-2xl shadow-black/60">
             {/* Browser chrome */}
-            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-white/[0.05] bg-white/[0.01]">
+            <div className="flex items-center gap-3 px-5 py-3.5 border-b border-white/[0.06] bg-white/[0.02]">
               <div className="flex gap-1.5">
                 <div className="w-3 h-3 rounded-full bg-red-500/60" />
                 <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
                 <div className="w-3 h-3 rounded-full bg-green-500/60" />
               </div>
               <div className="flex-1 flex justify-center">
-                <div className="bg-white/[0.04] border border-white/[0.05] rounded-lg px-8 py-1 text-[11px] text-white/25">app.tradenovaos.com/dashboard</div>
+                <div className="bg-white/[0.02] border border-white/[0.06] rounded-lg px-8 py-1 text-[11px] text-white/30">app.tradenovaos.com/dashboard</div>
               </div>
             </div>
 
             {/* Dashboard body */}
             <div className="flex">
               {/* Sidebar */}
-              <div className="hidden sm:flex w-44 lg:w-52 flex-col border-r border-white/[0.05] p-4 gap-0.5 flex-shrink-0">
+              <div className="hidden sm:flex w-44 lg:w-52 flex-col border-r border-white/[0.06] p-4 gap-0.5 flex-shrink-0">
                 <div className="flex items-center gap-2 mb-5 px-2">
                   <div className="w-7 h-7 rounded-lg bg-violet-600 flex items-center justify-center"><BarChart3 className="h-3.5 w-3.5 text-white" /></div>
                   <span className="text-sm font-black text-white">TradeNova</span>
                 </div>
                 {[{l:'Command Center',a:true},{l:'Trade Vault',a:false},{l:'Mind Journal',a:false},{l:'Edge Analytics',a:false},{l:'Playbook Lab',a:false},{l:'AI Insights',a:false},{l:'Replay Studio',a:false},{l:'Learning Hub',a:false}].map(item => (
-                  <div key={item.l} className={`text-[11px] px-3 py-2 rounded-xl font-medium ${item.a ? 'bg-violet-600 text-white' : 'text-white/25 hover:text-white/40'}`}>{item.l}</div>
+                  <div key={item.l} className={`text-[11px] px-3 py-2 rounded-xl font-medium ${item.a ? 'bg-violet-600 text-white' : 'text-white/30 hover:text-white/45'}`}>{item.l}</div>
                 ))}
               </div>
 
@@ -225,7 +225,7 @@ function Hero({ onSignup }: { onSignup: () => void }) {
 
                 {/* Equity + Trader Score */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-                  <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:0.8}} className="lg:col-span-2 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
+                  <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:0.8}} className="lg:col-span-2 rounded-xl border border-white/[0.06] bg-white p-3">
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-[11px] font-bold text-white">Equity Curve</p>
                       <span className="text-[10px] text-emerald-400 font-bold">+$12,480</span>
@@ -237,7 +237,7 @@ function Hero({ onSignup }: { onSignup: () => void }) {
                       </AreaChart>
                     </ResponsiveContainer>
                   </motion.div>
-                  <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:0.9}} className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
+                  <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:0.9}} className="rounded-xl border border-white/[0.06] bg-white p-3">
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-[11px] font-bold text-white">Trader Score</p>
                       <span className="text-lg font-black text-violet-400 font-mono">82</span>
@@ -245,8 +245,8 @@ function Hero({ onSignup }: { onSignup: () => void }) {
                     <div className="space-y-1.5">
                       {SCORE_ITEMS.map((s,i) => (
                         <div key={s.label} className="flex items-center gap-2">
-                          <span className="text-[9px] text-white/25 w-14">{s.label}</span>
-                          <div className="flex-1 h-1 bg-white/[0.06] rounded-full overflow-hidden">
+                          <span className="text-[9px] text-white/30 w-14">{s.label}</span>
+                          <div className="flex-1 h-1 bg-white/[0.05] rounded-full overflow-hidden">
                             <motion.div initial={{width:0}} animate={{width:`${s.value}%`}} transition={{duration:0.7,delay:1+i*0.08}} className="h-full rounded-full" style={{background:s.color}}/>
                           </div>
                           <span className="text-[9px] font-bold w-5 text-right" style={{color:s.color}}>{s.value}</span>
@@ -258,7 +258,7 @@ function Hero({ onSignup }: { onSignup: () => void }) {
 
                 {/* Calendar + Best Setups */}
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-                  <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:1}} className="lg:col-span-2 rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
+                  <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:1}} className="lg:col-span-2 rounded-xl border border-white/[0.06] bg-white p-3">
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-[11px] font-bold text-white">Trading Calendar</p>
                       <span className="text-[9px] text-white/30">May 2026</span>
@@ -270,24 +270,24 @@ function Hero({ onSignup }: { onSignup: () => void }) {
                         const win = r > -0.2;
                         return (
                           <div key={i} className={`aspect-square rounded-md flex items-center justify-center text-[8px] font-bold ${
-                            !has ? 'bg-white/[0.02] text-white/15' :
-                            win ? 'bg-emerald-500/15 border border-emerald-500/25 text-emerald-300' :
-                                  'bg-red-500/15 border border-red-500/25 text-red-300'
+                            !has ? 'bg-white text-white/20' :
+                            win ? 'bg-emerald-500/15 border border-emerald-500/25 text-emerald-700' :
+                                  'bg-red-500/15 border border-red-500/25 text-red-700'
                           }`}>{i+1}</div>
                         );
                       })}
                     </div>
                   </motion.div>
-                  <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:1.05}} className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
+                  <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:1.05}} className="rounded-xl border border-white/[0.06] bg-white p-3">
                     <p className="text-[11px] font-bold text-white mb-2">Best Setups</p>
                     <div className="space-y-2">
                       {SETUP_DATA.map((s,i) => (
                         <div key={s.name}>
                           <div className="flex items-center justify-between mb-1">
-                            <span className="text-[10px] text-white/40 font-medium">{s.name}</span>
+                            <span className="text-[10px] text-white/45 font-medium">{s.name}</span>
                             <span className="text-[10px] font-bold font-mono text-emerald-400">+${s.value.toLocaleString()}</span>
                           </div>
-                          <div className="h-1 bg-white/[0.06] rounded-full overflow-hidden">
+                          <div className="h-1 bg-white/[0.05] rounded-full overflow-hidden">
                             <motion.div initial={{width:0}} animate={{width:`${s.pct}%`}} transition={{duration:0.7,delay:1.15+i*0.08}} className="h-full rounded-full bg-gradient-to-r from-violet-500 to-violet-400"/>
                           </div>
                         </div>
@@ -297,7 +297,7 @@ function Hero({ onSignup }: { onSignup: () => void }) {
                 </div>
 
                 {/* Recent trades */}
-                <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:1.1}} className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-3">
+                <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:1.1}} className="rounded-xl border border-white/[0.06] bg-white p-3">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-[11px] font-bold text-white">Recent Trades</p>
                     <span className="text-[9px] text-white/30">Last 5</span>
@@ -325,12 +325,12 @@ function Hero({ onSignup }: { onSignup: () => void }) {
 function StatsBar() {
   const { ref, inView } = useReveal();
   return (
-    <section ref={ref} className="py-12 border-y border-white/[0.05] bg-white/[0.01]">
+    <section ref={ref} className="py-12 border-y border-slate-200 bg-slate-50">
       <div className="max-w-7xl mx-auto px-5 sm:px-8 grid grid-cols-2 lg:grid-cols-4 gap-8">
         {[{l:'Avg P&L improvement',to:34,suf:'%',pre:'+'},{l:'Trades analyzed',to:48000,suf:'+'},{l:'Win rate increase',to:18,suf:'%',pre:'+'},{l:'Active traders',to:143,suf:'+'}].map((s,i) => (
           <motion.div key={s.l} initial={{opacity:0,y:12}} animate={inView?{opacity:1,y:0}:{}} transition={{delay:i*0.08}} className="text-center">
-            <p className="text-3xl sm:text-4xl font-black text-white mb-1 font-mono">{inView && <CountUp to={s.to} prefix={s.pre??''} suffix={s.suf} duration={1.6}/>}</p>
-            <p className="text-xs text-white/30">{s.l}</p>
+            <p className="text-3xl sm:text-4xl font-black text-slate-900 mb-1 font-mono">{inView && <CountUp to={s.to} prefix={s.pre??''} suffix={s.suf} duration={1.6}/>}</p>
+            <p className="text-xs text-slate-500">{s.l}</p>
           </motion.div>
         ))}
       </div>
@@ -350,14 +350,14 @@ const FEATURES = [
 ];
 
 const CM: Record<string,any> = {
-  violet: {bg:'bg-violet-500/8',  b:'border-violet-500/20',  t:'text-violet-400',  bd:'bg-violet-500/15 text-violet-300'},
-  blue:   {bg:'bg-blue-500/8',    b:'border-blue-500/20',    t:'text-blue-400',    bd:'bg-blue-500/15 text-blue-300'},
-  pink:   {bg:'bg-pink-500/8',    b:'border-pink-500/20',    t:'text-pink-400',    bd:'bg-pink-500/15 text-pink-300'},
-  emerald:{bg:'bg-emerald-500/8', b:'border-emerald-500/20', t:'text-emerald-400', bd:'bg-emerald-500/15 text-emerald-300'},
-  amber:  {bg:'bg-amber-500/8',   b:'border-amber-500/20',   t:'text-amber-400',   bd:'bg-amber-500/15 text-amber-300'},
-  purple: {bg:'bg-purple-500/8',  b:'border-purple-500/20',  t:'text-purple-400',  bd:'bg-purple-500/15 text-purple-300'},
-  cyan:   {bg:'bg-cyan-500/8',    b:'border-cyan-500/20',    t:'text-cyan-400',    bd:'bg-cyan-500/15 text-cyan-300'},
-  green:  {bg:'bg-green-500/8',   b:'border-green-500/20',   t:'text-green-400',   bd:'bg-green-500/15 text-green-300'},
+  violet: {bg:'bg-violet-500/8',  b:'border-violet-500/20',  t:'text-violet-600',  bd:'bg-violet-500/15 text-violet-700'},
+  blue:   {bg:'bg-blue-500/8',    b:'border-blue-500/20',    t:'text-blue-600',    bd:'bg-blue-500/15 text-blue-700'},
+  pink:   {bg:'bg-pink-500/8',    b:'border-pink-500/20',    t:'text-pink-600',    bd:'bg-pink-500/15 text-pink-700'},
+  emerald:{bg:'bg-emerald-500/8', b:'border-emerald-500/20', t:'text-emerald-600', bd:'bg-emerald-500/15 text-emerald-700'},
+  amber:  {bg:'bg-amber-500/8',   b:'border-amber-500/20',   t:'text-amber-600',   bd:'bg-amber-500/15 text-amber-700'},
+  purple: {bg:'bg-purple-500/8',  b:'border-purple-500/20',  t:'text-purple-600',  bd:'bg-purple-500/15 text-purple-700'},
+  cyan:   {bg:'bg-cyan-500/8',    b:'border-cyan-500/20',    t:'text-cyan-600',    bd:'bg-cyan-500/15 text-cyan-700'},
+  green:  {bg:'bg-green-500/8',   b:'border-green-500/20',   t:'text-green-600',   bd:'bg-green-500/15 text-green-700'},
 };
 
 function Features() {
@@ -367,11 +367,11 @@ function Features() {
       <div className="max-w-7xl mx-auto px-5 sm:px-8">
         <motion.div initial={{opacity:0,y:24}} animate={inView?{opacity:1,y:0}:{}} transition={{duration:0.5}} className="text-center mb-14">
           <div className="inline-flex items-center gap-2 bg-violet-500/10 border border-violet-500/20 rounded-full px-4 py-1.5 mb-5">
-            <Activity className="h-3.5 w-3.5 text-violet-400" />
-            <span className="text-xs font-semibold text-violet-300">Complete trading stack</span>
+            <Activity className="h-3.5 w-3.5 text-violet-600" />
+            <span className="text-xs font-semibold text-violet-700">Complete trading stack</span>
           </div>
-          <h2 className="text-4xl sm:text-5xl font-black text-white mb-4 tracking-tight">Everything you need to improve</h2>
-          <p className="text-white/40 text-lg max-w-xl mx-auto">Eight tools that work together to turn trading data into consistent edge.</p>
+          <h2 className="text-4xl sm:text-5xl font-black text-slate-900 mb-4 tracking-tight">Everything you need to improve</h2>
+          <p className="text-slate-600 text-lg max-w-xl mx-auto">Eight tools that work together to turn trading data into consistent edge.</p>
         </motion.div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {FEATURES.map((f,i) => {
@@ -380,14 +380,14 @@ function Features() {
               <motion.div key={f.title}
                 initial={{opacity:0,y:20}} animate={inView?{opacity:1,y:0}:{}} transition={{duration:0.5,delay:i*0.06,ease}}
                 whileHover={{y:-4,transition:{duration:0.2}}}
-                className="group rounded-2xl border border-white/[0.07] bg-white/[0.02] p-5 hover:border-white/[0.15] hover:bg-white/[0.04] transition-all duration-300 cursor-default"
+                className="group rounded-2xl border border-slate-200 bg-white p-5 hover:border-slate-300 hover:bg-slate-50 transition-all duration-300 cursor-default"
               >
                 <div className={`inline-flex items-center justify-center w-10 h-10 rounded-xl ${c.bg} border ${c.b} mb-3`}>
                   <Icon className={`h-5 w-5 ${c.t}`} />
                 </div>
                 <div className={`inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full ${c.bd} mb-2 ml-2`}>{f.tag}</div>
-                <h3 className="font-bold text-white mb-1.5 text-sm">{f.title}</h3>
-                <p className="text-xs text-white/35 leading-relaxed">{f.desc}</p>
+                <h3 className="font-bold text-slate-900 mb-1.5 text-sm">{f.title}</h3>
+                <p className="text-xs text-slate-500 leading-relaxed">{f.desc}</p>
               </motion.div>
             );
           })}
@@ -410,8 +410,8 @@ function HowItWorks() {
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-violet-950/5 to-transparent pointer-events-none" />
       <div className="max-w-7xl mx-auto px-5 sm:px-8">
         <motion.div initial={{opacity:0,y:24}} animate={inView?{opacity:1,y:0}:{}} transition={{duration:0.5}} className="text-center mb-14">
-          <h2 className="text-4xl sm:text-5xl font-black text-white mb-4 tracking-tight">Plan → Execute → Review → Improve</h2>
-          <p className="text-white/40 text-lg max-w-xl mx-auto">A closed-loop operating system for your trading career.</p>
+          <h2 className="text-4xl sm:text-5xl font-black text-slate-900 mb-4 tracking-tight">Plan → Execute → Review → Improve</h2>
+          <p className="text-slate-600 text-lg max-w-xl mx-auto">A closed-loop operating system for your trading career.</p>
         </motion.div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {steps.map((s,i) => {
@@ -422,9 +422,9 @@ function HowItWorks() {
                 <div className={`w-16 h-16 rounded-2xl ${c.bg} border ${c.b} flex items-center justify-center mb-5`}>
                   <Icon className={`h-7 w-7 ${c.t}`} />
                 </div>
-                <div className="text-[11px] font-mono text-white/20 mb-1">{s.n}</div>
-                <h3 className="text-xl font-black text-white mb-2">{s.title}</h3>
-                <p className="text-sm text-white/40 leading-relaxed">{s.desc}</p>
+                <div className="text-[11px] font-mono text-slate-400 mb-1">{s.n}</div>
+                <h3 className="text-xl font-black text-slate-900 mb-2">{s.title}</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">{s.desc}</p>
               </motion.div>
             );
           })}
@@ -441,16 +441,16 @@ function DashboardShowcase({ onSignup }: { onSignup: () => void }) {
       <div className="max-w-7xl mx-auto px-5 sm:px-8">
         <motion.div initial={{opacity:0,y:24}} animate={inView?{opacity:1,y:0}:{}} transition={{duration:0.5}} className="text-center mb-14">
           <div className="inline-flex items-center gap-2 bg-violet-500/10 border border-violet-500/20 rounded-full px-4 py-1.5 mb-5">
-            <BarChart3 className="h-3.5 w-3.5 text-violet-400" />
-            <span className="text-xs font-semibold text-violet-300">Live dashboard preview</span>
+            <BarChart3 className="h-3.5 w-3.5 text-violet-600" />
+            <span className="text-xs font-semibold text-violet-700">Live dashboard preview</span>
           </div>
-          <h2 className="text-4xl sm:text-5xl font-black text-white mb-4 tracking-tight">Your edge, visualized</h2>
-          <p className="text-white/40 text-lg max-w-xl mx-auto">Real-time metrics, charts, and insights — all in one command center.</p>
+          <h2 className="text-4xl sm:text-5xl font-black text-slate-900 mb-4 tracking-tight">Your edge, visualized</h2>
+          <p className="text-slate-600 text-lg max-w-xl mx-auto">Real-time metrics, charts, and insights — all in one command center.</p>
         </motion.div>
 
         <motion.div initial={{opacity:0,y:40}} animate={inView?{opacity:1,y:0}:{}} transition={{duration:0.8,ease}}
-          className="rounded-3xl border border-white/[0.08] bg-[#08080f] overflow-hidden shadow-2xl shadow-violet-900/15">
-          <div className="grid grid-cols-2 lg:grid-cols-4 border-b border-white/[0.05]">
+          className="rounded-3xl border border-white/[0.06] bg-[#08080f] overflow-hidden shadow-2xl shadow-violet-900/15">
+          <div className="grid grid-cols-2 lg:grid-cols-4 border-b border-white/[0.06]">
             {[
               {l:'Total P&L', v:'+$12,480.75', c:'text-emerald-400'},
               {l:'Win Rate',  v:'68%',          c:'text-white'},
@@ -458,14 +458,14 @@ function DashboardShowcase({ onSignup }: { onSignup: () => void }) {
               {l:'Trades',    v:'143',           c:'text-violet-400'},
             ].map((m,i) => (
               <motion.div key={m.l} initial={{opacity:0}} animate={inView?{opacity:1}:{}} transition={{delay:0.1+i*0.07}}
-                className="p-5 sm:p-6 border-r border-white/[0.05] last:border-0">
+                className="p-5 sm:p-6 border-r border-white/[0.06] last:border-0">
                 <p className="text-[11px] text-white/30 uppercase tracking-wider mb-2">{m.l}</p>
                 <p className={`text-2xl sm:text-3xl font-black font-mono ${m.c}`}>{m.v}</p>
               </motion.div>
             ))}
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 border-b border-white/[0.05]">
-            <div className="lg:col-span-2 p-5 sm:p-6 border-r border-white/[0.05]">
+          <div className="grid grid-cols-1 lg:grid-cols-3 border-b border-white/[0.06]">
+            <div className="lg:col-span-2 p-5 sm:p-6 border-r border-white/[0.06]">
               <div className="flex items-center justify-between mb-4">
                 <div><p className="text-sm font-bold text-white">Equity Curve</p><p className="text-[11px] text-white/30">Jan – Dec 2025</p></div>
                 <span className="text-sm font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full">+$12,480.75</span>
@@ -489,7 +489,7 @@ function DashboardShowcase({ onSignup }: { onSignup: () => void }) {
               <div className="space-y-3">
                 {SCORE_ITEMS.map((s,i) => (
                   <div key={s.label}>
-                    <div className="flex justify-between mb-1.5"><span className="text-xs text-white/35">{s.label}</span><span className="text-xs font-bold" style={{color:s.color}}>{s.value}</span></div>
+                    <div className="flex justify-between mb-1.5"><span className="text-xs text-white/30">{s.label}</span><span className="text-xs font-bold" style={{color:s.color}}>{s.value}</span></div>
                     <div className="h-1.5 bg-white/[0.05] rounded-full overflow-hidden">
                       <motion.div initial={{width:0}} animate={inView?{width:`${s.value}%`}:{}} transition={{duration:0.9,delay:0.3+i*0.1,ease}} className="h-full rounded-full" style={{background:s.color}}/>
                     </div>
@@ -499,15 +499,15 @@ function DashboardShowcase({ onSignup }: { onSignup: () => void }) {
             </div>
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2">
-            <div className="p-5 sm:p-6 border-r border-white/[0.05]">
+            <div className="p-5 sm:p-6 border-r border-white/[0.06]">
               <p className="text-sm font-bold text-white mb-4">Recent Trades</p>
               <div className="space-y-1">
                 {RECENT_TRADES.map((t,i) => (
                   <motion.div key={i} initial={{opacity:0,x:-6}} animate={inView?{opacity:1,x:0}:{}} transition={{delay:0.15+i*0.07}}
-                    className="flex items-center justify-between py-2.5 border-b border-white/[0.04] last:border-0 hover:bg-white/[0.02] rounded-lg px-2 -mx-2 transition-colors">
+                    className="flex items-center justify-between py-2.5 border-b border-white/[0.04] last:border-0 hover:bg-white rounded-lg px-2 -mx-2 transition-colors">
                     <div className="flex items-center gap-3">
                       <div className={`w-1 h-6 rounded-full ${t.win?'bg-emerald-500':'bg-red-500'}`}/>
-                      <div><p className="text-sm font-semibold text-white">{t.pair}</p><p className="text-[10px] text-white/25">{t.side} · {t.date}</p></div>
+                      <div><p className="text-sm font-semibold text-white">{t.pair}</p><p className="text-[10px] text-white/30">{t.side} · {t.date}</p></div>
                     </div>
                     <div className="text-right">
                       <p className={`text-sm font-bold font-mono ${t.win?'text-emerald-400':'text-red-400'}`}>{t.result>0?'+':''}${Math.abs(t.result).toFixed(2)}</p>
@@ -525,7 +525,7 @@ function DashboardShowcase({ onSignup }: { onSignup: () => void }) {
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="text-sm font-semibold text-white">{s.name}</span>
                       <div className="flex items-center gap-3">
-                        <span className="text-[10px] text-white/25">{s.pct}% WR</span>
+                        <span className="text-[10px] text-white/30">{s.pct}% WR</span>
                         <span className="text-sm font-bold text-emerald-400">+${s.value.toLocaleString()}</span>
                       </div>
                     </div>
@@ -543,7 +543,7 @@ function DashboardShowcase({ onSignup }: { onSignup: () => void }) {
           <button onClick={onSignup} className="group inline-flex items-center gap-2.5 bg-violet-600 hover:bg-violet-500 text-white px-8 py-4 rounded-2xl font-black text-sm transition-all hover:shadow-2xl hover:shadow-violet-500/25 hover:-translate-y-0.5">
             Get this dashboard for free <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform"/>
           </button>
-          <p className="text-xs text-white/20 mt-3">No credit card · Free forever plan available</p>
+          <p className="text-xs text-slate-400 mt-3">No credit card · Free forever plan available</p>
         </motion.div>
       </div>
     </section>
@@ -562,18 +562,18 @@ function Testimonials() {
     <section className="py-24 sm:py-32" ref={ref}>
       <div className="max-w-7xl mx-auto px-5 sm:px-8">
         <motion.div initial={{opacity:0,y:24}} animate={inView?{opacity:1,y:0}:{}} transition={{duration:0.5}} className="text-center mb-14">
-          <h2 className="text-4xl sm:text-5xl font-black text-white mb-3 tracking-tight">Traders love TradeNova</h2>
-          <p className="text-white/35">Join traders who turned data into consistent edge.</p>
+          <h2 className="text-4xl sm:text-5xl font-black text-slate-900 mb-3 tracking-tight">Traders love TradeNova</h2>
+          <p className="text-slate-500">Join traders who turned data into consistent edge.</p>
         </motion.div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {tms.map((t,i) => (
             <motion.div key={t.name} initial={{opacity:0,y:16}} animate={inView?{opacity:1,y:0}:{}} transition={{delay:i*0.09,duration:0.5}} whileHover={{y:-4,transition:{duration:0.2}}}
-              className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-5 hover:border-white/[0.14] hover:bg-white/[0.04] transition-all">
-              <div className="flex gap-0.5 mb-4">{[1,2,3,4,5].map(j=><Star key={j} className="h-3.5 w-3.5 text-amber-400 fill-amber-400"/>)}</div>
-              <p className="text-sm text-white/55 leading-relaxed mb-5">"{t.text}"</p>
+              className="rounded-2xl border border-slate-200 bg-white p-5 hover:border-slate-300 hover:bg-slate-50 transition-all">
+              <div className="flex gap-0.5 mb-4">{[1,2,3,4,5].map(j=><Star key={j} className="h-3.5 w-3.5 text-amber-600 fill-amber-400"/>)}</div>
+              <p className="text-sm text-slate-700 leading-relaxed mb-5">"{t.text}"</p>
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-violet-600/25 border border-violet-500/25 flex items-center justify-center text-[11px] font-bold text-violet-300">{t.av}</div>
-                <div><p className="text-sm font-bold text-white">{t.name}</p><p className="text-[11px] text-white/25">{t.role}</p></div>
+                <div className="w-8 h-8 rounded-full bg-violet-600/25 border border-violet-500/25 flex items-center justify-center text-[11px] font-bold text-violet-700">{t.av}</div>
+                <div><p className="text-sm font-bold text-slate-900">{t.name}</p><p className="text-[11px] text-slate-500">{t.role}</p></div>
               </div>
             </motion.div>
           ))}
@@ -596,23 +596,23 @@ function Pricing({ onSignup }: { onSignup: () => void }) {
       <div className="max-w-5xl mx-auto px-5 sm:px-8">
         <motion.div initial={{opacity:0,y:24}} animate={inView?{opacity:1,y:0}:{}} transition={{duration:0.5}} className="text-center mb-14">
           <div className="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 rounded-full px-4 py-1.5 mb-5">
-            <span className="text-xs font-semibold text-amber-300">🔄 Stripe coming soon · Manual activation via Payoneer</span>
+            <span className="text-xs font-semibold text-amber-700">🔄 Stripe coming soon · Manual activation via Payoneer</span>
           </div>
-          <h2 className="text-4xl sm:text-5xl font-black text-white mb-4 tracking-tight">Simple, honest pricing</h2>
-          <p className="text-white/35">Start free. Upgrade when you're ready.</p>
+          <h2 className="text-4xl sm:text-5xl font-black text-slate-900 mb-4 tracking-tight">Simple, honest pricing</h2>
+          <p className="text-slate-500">Start free. Upgrade when you're ready.</p>
         </motion.div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {plans.map((p,i) => (
             <motion.div key={p.name} initial={{opacity:0,y:20}} animate={inView?{opacity:1,y:0}:{}} transition={{delay:i*0.09,duration:0.5}}
-              className={`relative rounded-2xl p-6 border ${p.hi?'border-violet-500/40 bg-violet-600/5 shadow-xl shadow-violet-500/10':'border-white/[0.07] bg-white/[0.02]'}`}>
+              className={`relative rounded-2xl p-6 border ${p.hi?'border-violet-500/40 bg-violet-600/5 shadow-xl shadow-violet-500/10':'border-slate-200 bg-white'}`}>
               {p.badge&&<div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-violet-600 text-white text-[11px] font-bold px-4 py-1 rounded-full">{p.badge}</div>}
               <div className="mb-5">
-                <p className="text-sm font-bold text-white/45 mb-1.5">{p.name}</p>
-                <div className="flex items-end gap-1"><span className="text-4xl font-black text-white">{p.price}</span>{(p as any).per&&<span className="text-white/30 text-sm mb-1">{(p as any).per}</span>}</div>
-                <p className="text-xs text-white/30 mt-1">{p.desc}</p>
+                <p className="text-sm font-bold text-slate-600 mb-1.5">{p.name}</p>
+                <div className="flex items-end gap-1"><span className="text-4xl font-black text-slate-900">{p.price}</span>{(p as any).per&&<span className="text-slate-500 text-sm mb-1">{(p as any).per}</span>}</div>
+                <p className="text-xs text-slate-500 mt-1">{p.desc}</p>
               </div>
-              <ul className="space-y-2.5 mb-6">{p.features.map(f=><li key={f} className="flex items-center gap-2 text-sm text-white/50"><Check className="h-3.5 w-3.5 text-emerald-400 flex-shrink-0"/>{f}</li>)}</ul>
-              <button onClick={onSignup} className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${p.hi?'bg-violet-600 hover:bg-violet-500 text-white hover:shadow-lg hover:shadow-violet-500/20':'border border-white/10 text-white/55 hover:bg-white/[0.05] hover:text-white'}`}>{p.cta}</button>
+              <ul className="space-y-2.5 mb-6">{p.features.map(f=><li key={f} className="flex items-center gap-2 text-sm text-slate-600"><Check className="h-3.5 w-3.5 text-emerald-600 flex-shrink-0"/>{f}</li>)}</ul>
+              <button onClick={onSignup} className={`w-full py-3 rounded-xl text-sm font-bold transition-all ${p.hi?'bg-violet-600 hover:bg-violet-500 text-slate-900 hover:shadow-lg hover:shadow-violet-500/20':'border border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900'}`}>{p.cta}</button>
             </motion.div>
           ))}
         </div>
@@ -627,19 +627,19 @@ function FinalCTA({ onSignup }: { onSignup: () => void }) {
     <section className="py-24 sm:py-32" ref={ref}>
       <div className="max-w-4xl mx-auto px-5 sm:px-8">
         <motion.div initial={{opacity:0,y:24}} animate={inView?{opacity:1,y:0}:{}} transition={{duration:0.7,ease}}
-          className="relative rounded-3xl border border-white/[0.09] bg-gradient-to-br from-violet-600/10 via-white/[0.01] to-indigo-600/5 p-12 sm:p-16 text-center overflow-hidden">
+          className="relative rounded-3xl border border-slate-200 bg-gradient-to-br from-violet-600/10 via-white/[0.01] to-indigo-600/5 p-12 sm:p-16 text-center overflow-hidden">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-violet-500/40 to-transparent"/>
           <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-72 h-72 bg-violet-600/8 rounded-full blur-3xl"/>
           <div className="relative z-10">
-            <Award className="h-10 w-10 text-violet-400 mx-auto mb-6 opacity-70"/>
-            <h2 className="text-4xl sm:text-5xl font-black text-white mb-5 tracking-tight leading-tight">
+            <Award className="h-10 w-10 text-violet-600 mx-auto mb-6 opacity-70"/>
+            <h2 className="text-4xl sm:text-5xl font-black text-slate-900 mb-5 tracking-tight leading-tight">
               Start building your<br/><span className="bg-gradient-to-r from-violet-400 to-purple-300 bg-clip-text text-transparent">trading edge today</span>
             </h2>
-            <p className="text-white/40 text-lg mb-10 max-w-lg mx-auto">Stop trading on gut feeling. Start trading on data. Free forever — upgrade when you're ready.</p>
+            <p className="text-slate-600 text-lg mb-10 max-w-lg mx-auto">Stop trading on gut feeling. Start trading on data. Free forever — upgrade when you're ready.</p>
             <button onClick={onSignup} className="group inline-flex items-center gap-3 bg-violet-600 hover:bg-violet-500 text-white px-10 py-4 rounded-2xl font-black text-sm transition-all hover:shadow-2xl hover:shadow-violet-500/25 hover:-translate-y-0.5">
               Start Free Now <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform"/>
             </button>
-            <p className="text-[11px] text-white/15 mt-5">No credit card required · Free forever plan available</p>
+            <p className="text-[11px] text-slate-400 mt-5">No credit card required · Free forever plan available</p>
           </div>
         </motion.div>
       </div>
@@ -649,18 +649,18 @@ function FinalCTA({ onSignup }: { onSignup: () => void }) {
 
 function Footer() {
   return (
-    <footer className="border-t border-white/[0.05] py-10">
+    <footer className="border-t border-slate-200 py-10">
       <div className="max-w-7xl mx-auto px-5 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2.5">
           <div className="w-6 h-6 rounded-md bg-violet-600 flex items-center justify-center"><BarChart3 className="h-3.5 w-3.5 text-white"/></div>
-          <span className="text-sm font-black text-white/50">TradeNova</span>
-          <span className="text-white/15 text-xs">· The Trading Operating System</span>
+          <span className="text-sm font-black text-slate-600">TradeNova</span>
+          <span className="text-slate-400 text-xs">· The Trading Operating System</span>
         </div>
-        <p className="text-xs text-white/15">© 2026 TradeNova. All rights reserved.</p>
-        <div className="flex gap-5 text-xs text-white/20">
-          <a href="#" className="hover:text-white/45 transition-colors">Privacy</a>
-          <a href="#" className="hover:text-white/45 transition-colors">Terms</a>
-          <a href="#" className="hover:text-white/45 transition-colors">Contact</a>
+        <p className="text-xs text-slate-400">© 2026 TradeNova. All rights reserved.</p>
+        <div className="flex gap-5 text-xs text-slate-400">
+          <a href="#" className="hover:text-slate-600 transition-colors">Privacy</a>
+          <a href="#" className="hover:text-slate-600 transition-colors">Terms</a>
+          <a href="#" className="hover:text-slate-600 transition-colors">Contact</a>
         </div>
       </div>
     </footer>
@@ -671,7 +671,7 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const go = (path: string) => navigate(path);
   return (
-    <div className="landing-light min-h-screen bg-[#f8fafc] text-slate-900 overflow-x-hidden">
+    <div className="landing-light min-h-screen bg-white text-slate-900 overflow-x-hidden">
       <MarketingNavbar onLogin={() => go('/login')} onSignup={() => go('/signup')} />
       <Hero onSignup={() => go('/signup')} />
       <BrokersStrip />
