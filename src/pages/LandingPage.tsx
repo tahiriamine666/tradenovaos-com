@@ -408,7 +408,7 @@ function Hero({ onSignup }: { onSignup: () => void }) {
                 <div className="mt-3 rounded-xl border border-violet-200 bg-gradient-to-br from-violet-50 to-white p-2.5">
                   <p className="text-[10px] font-black text-slate-900">Upgrade to Pro</p>
                   <p className="text-[8px] text-slate-500 mt-0.5 leading-tight">Unlock AI, CSV import, playbooks</p>
-                  <div className="mt-2 bg-violet-600 text-white text-[9px] font-bold py-1.5 rounded-md text-center shadow-sm shadow-violet-500/30">Start 14-day trial</div>
+                  <div className="mt-2 bg-violet-600 text-white text-[9px] font-bold py-1.5 rounded-md text-center shadow-sm shadow-violet-500/30">Start 7-day free trial</div>
                 </div>
                 <div className="mt-2 flex items-center gap-2 pt-2 border-t border-slate-100">
                   <div className="w-6 h-6 rounded-full bg-violet-600 text-white text-[9px] font-bold flex items-center justify-center">U</div>
@@ -890,8 +890,8 @@ function Pricing({ onSignup }: { onSignup: () => void }) {
   const { ref, inView } = useReveal();
   const plans = [
     {name:'Free',  price:'$0',  desc:'Start tracking',          features:['50 trades/month','Basic analytics','Trade journal','Calendar','Dark/light mode'],cta:'Start Free',hi:false},
-    {name:'Pro',   price:'$14', per:'/mo',desc:'Serious traders',badge:'Most Popular',features:['Unlimited trades','Full analytics','CSV import','AI insights','Playbook lab','Trade plan'],cta:'Start 14-day Trial',hi:true},
-    {name:'Elite', price:'$28', per:'/mo',desc:'Funded traders', features:['Everything in Pro','Replay studio','API access','Unlimited AI','Priority support'],cta:'Start 14-day Trial',hi:false},
+    {name:'Pro',   price:'$14', per:'/mo',desc:'Serious traders',badge:'Most Popular',features:['Unlimited trades','Full analytics','CSV import','AI insights','Playbook lab','Trade plan'],cta:'Start 7-day Free Trial',hi:true},
+    {name:'Elite', price:'$28', per:'/mo',desc:'Funded traders', features:['Everything in Pro','Replay studio','API access','Unlimited AI','Priority support'],cta:'Start 7-day Free Trial',hi:false},
   ];
   return (
     <section id="pricing" className="py-24 sm:py-32 relative" ref={ref}>

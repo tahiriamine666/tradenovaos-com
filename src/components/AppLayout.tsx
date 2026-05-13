@@ -116,7 +116,7 @@ function SidebarContent({ active, onNavigate }: {
             <p className="font-heading font-semibold text-sm text-foreground">Upgrade to Pro</p>
             <p className="text-xs text-muted-foreground mt-1 mb-3">Unlock AI, CSV import, playbooks</p>
             <Button size="sm" className="w-full rounded-xl h-8 text-xs" onClick={() => onNavigate('pricing')}>
-              Start 14-day trial
+              Start 7-day free trial
             </Button>
           </div>
         )}

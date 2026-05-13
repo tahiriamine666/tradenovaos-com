@@ -225,7 +225,7 @@ export default function PayoneerUpgradeModal({
                       'Playbook lab',
                       'Advanced analytics (profit factor, expectancy)',
                       'Trade plan',
-                      '14-day free trial',
+                      '7-day free trial',
                     ] : [
                       'Everything in Pro',
                       'Replay studio (candle-by-candle)',

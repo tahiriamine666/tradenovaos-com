@@ -58,7 +58,7 @@ TradeNova features:
 
 Plans: Free (50 trades/mo), Pro ($29/mo), Elite ($59/mo)
 Payment: Currently via Payoneer (manual), Stripe coming soon
-14-day free trial on Pro and Elite
+7-day free trial on Pro and Elite
 
 Rules:
 - Be concise — max 3 short paragraphs per reply
