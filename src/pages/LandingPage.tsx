@@ -894,8 +894,8 @@ function Pricing({ onSignup }: { onSignup: () => void }) {
   const { ref, inView } = useReveal();
   const plans = [
     {name:'Free',  price:'$0',  desc:'Start tracking',          features:['50 trades/month','Basic analytics','Trade journal','Calendar','Dark/light mode'],cta:'Start Free',hi:false},
-    {name:'Pro',   price:'$29', per:'/mo',desc:'Serious traders',badge:'Most Popular',features:['Unlimited trades','Full analytics','CSV import','AI insights','Playbook lab','Trade plan'],cta:'Start 14-day Trial',hi:true},
-    {name:'Elite', price:'$59', per:'/mo',desc:'Funded traders', features:['Everything in Pro','Replay studio','API access','Unlimited AI','Priority support'],cta:'Start 14-day Trial',hi:false},
+    {name:'Pro',   price:'$14', per:'/mo',desc:'Serious traders',badge:'Most Popular',features:['Unlimited trades','Full analytics','CSV import','AI insights','Playbook lab','Trade plan'],cta:'Start 14-day Trial',hi:true},
+    {name:'Elite', price:'$28', per:'/mo',desc:'Funded traders', features:['Everything in Pro','Replay studio','API access','Unlimited AI','Priority support'],cta:'Start 14-day Trial',hi:false},
   ];
   return (
     <section id="pricing" className="py-24 sm:py-32 relative" ref={ref}>
