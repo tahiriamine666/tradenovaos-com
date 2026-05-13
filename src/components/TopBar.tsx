@@ -1,7 +1,8 @@
 // src/components/TopBar.tsx
 // Premium top bar — filters + theme toggle + logout + user avatar (YouTube style)
 
-import React, { useState, useRef, useEffect, ReactNode } from 'react';
+import React, { useState, useRef, useEffect, useLayoutEffect, ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sun, Moon, LogOut, ChevronDown, Calendar,
