@@ -24,7 +24,20 @@ function PublicOnly({ children }: { children: React.ReactNode }) {
       </div>
     );
   }
-  if (user) return <Navigate to="/dashboard" replace />;
+  if (user) return <Navigate to="/app" replace />;
+  return <>{children}</>;
+}
+
+function ProtectedApp({ children }: { children: React.ReactNode }) {
+  const { user, loading } = useAuth();
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+  if (!user) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
@@ -42,13 +55,14 @@ const App = () => (
                 <Route path="/login" element={<PublicOnly><Login /></PublicOnly>} />
                 <Route path="/signup" element={<PublicOnly><Signup /></PublicOnly>} />
                 <Route
-                  path="/dashboard"
+                  path="/app"
                   element={
-                    <ProtectedRoute>
+                    <ProtectedApp>
                       <Index />
-                    </ProtectedRoute>
+                    </ProtectedApp>
                   }
                 />
+                <Route path="/dashboard" element={<Navigate to="/app" replace />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </PlanProvider>
