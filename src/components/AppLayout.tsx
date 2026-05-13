@@ -30,6 +30,7 @@ export const sidebarItems = [
   { id: 'replay',     label: 'Replay Studio',    icon: PlayCircle },
   { id: 'resources',  label: 'Learning Hub',     icon: Brain },
   { id: 'settings',   label: 'Studio Settings',  icon: Settings },
+  { id: 'admin',      label: 'Admin',            icon: ShieldCheck },
 ];
 
 const bottomNavItems = [
