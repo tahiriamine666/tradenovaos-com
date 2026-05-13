@@ -13,7 +13,7 @@ import PayoneerUpgradeModal from '@/components/PayoneerUpgradeModal';
 
 const CONTACT = {
   whatsapp: '+212XXXXXXXXX',
-  email: 'support@tradenova.app',
+  email: 'support@tradenovaos.com',
 };
 
 const PLANS = [

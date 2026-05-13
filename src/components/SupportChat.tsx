@@ -17,7 +17,7 @@ import { toast } from '@/hooks/use-toast';
 
 // ─── Config ────────────────────────────────────────────────────────────────────
 const WHATSAPP = '+212XXXXXXXXX'; // ← replace with your number
-const EMAIL    = 'support@tradenova.app';
+const EMAIL    = 'support@tradenovaos.com';
 
 // ─── Quick help topics ────────────────────────────────────────────────────────
 const TOPICS = [

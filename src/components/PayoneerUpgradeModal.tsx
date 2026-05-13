@@ -19,8 +19,8 @@ import { toast } from '@/hooks/use-toast';
 // ─── Config — update these ────────────────────────────────────────────────────
 const CONTACT = {
   whatsapp:   '+212XXXXXXXXX',      // ← replace with your WhatsApp number
-  email:      'support@tradenova.app',
-  payoneer:   'payments@tradenova.app', // Payoneer email to send payment to
+  email:      'support@tradenovaos.com',
+  payoneer:   'payments@tradenovaos.com', // Payoneer email to send payment to
 };
 
 const PLAN_PRICES = {
