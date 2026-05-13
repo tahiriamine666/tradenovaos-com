@@ -74,7 +74,7 @@ function useCountUp(target: number, duration = 1.2) {
 }
 
 // ─── Stagger variants ─────────────────────────────────────────────────────────
-const cardVariants = {
+const cardVariants: any = {
   hidden:   { opacity: 0, y: 20 },
   visible:  (i: number) => ({
     opacity: 1, y: 0,
