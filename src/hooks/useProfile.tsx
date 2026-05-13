@@ -66,7 +66,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         .select('*')
         .eq('id', user.id)
         .single();
-      if (p) setProfile({ ...p, is_admin: false } as UserProfile);
+      if (p) setProfile({ ...p, is_admin: false, stripe_customer_id: null } as unknown as UserProfile);
     }
     setLoading(false);
   }, [user]);
