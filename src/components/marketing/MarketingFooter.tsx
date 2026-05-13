@@ -102,15 +102,12 @@ export default function MarketingFooter() {
           ))}
           <div>
             <p className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-4">Social</p>
-            <ul className="space-y-2.5">
+            <ul className="flex items-center gap-3">
               {SOCIAL.map(s => (
                 <li key={s.label}>
-                  <a href={s.href} target="_blank" rel="noreferrer noopener"
-                    className="group flex items-center gap-2.5 text-sm text-slate-600 hover:text-violet-700 transition-colors">
-                    <span className="w-7 h-7 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center group-hover:bg-violet-500/15 group-hover:border-violet-500/30 transition-colors">
-                      <s.Icon className="h-3.5 w-3.5" />
-                    </span>
-                    {s.label}
+                  <a href={s.href} target="_blank" rel="noreferrer noopener" aria-label={s.label}
+                    className="group flex items-center justify-center w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 hover:bg-violet-500/15 hover:border-violet-500/30 hover:text-violet-700 transition-colors">
+                    <s.Icon className="h-4 w-4" />
                   </a>
                 </li>
               ))}
