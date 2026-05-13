@@ -71,21 +71,13 @@ Rules:
 - End responses with a follow-up question or helpful tip when appropriate`;
 
 // ─── API call ─────────────────────────────────────────────────────────────────
-async function callClaude(messages: { role: Role; content: string }[]): Promise<string> {
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1000,
-      system: SYSTEM_PROMPT,
-      messages: messages.slice(-12), // keep last 12 for context
-    }),
+async function callAI(messages: { role: Role; content: string }[]): Promise<string> {
+  const { data, error } = await supabase.functions.invoke('ai-chat', {
+    body: { messages: messages.slice(-12) },
   });
-
-  if (!res.ok) throw new Error(`API error ${res.status}`);
-  const data = await res.json();
-  return data.content?.[0]?.text ?? 'Sorry, I could not generate a response.';
+  if (error) throw error;
+  if ((data as any)?.error) throw new Error((data as any).error);
+  return (data as any)?.text ?? 'Sorry, I could not generate a response.';
 }
 
 // ─── Pulse ring ───────────────────────────────────────────────────────────────
@@ -228,17 +220,10 @@ export default function AIChatWidget() {
     }
   }, [open]);
 
-  // Save conversation to Supabase
-  const saveConversation = useCallback(async (msgs: Message[]) => {
-    if (!user) return;
-    const payload = { user_id: user.id, messages: msgs, updated_at: new Date().toISOString() };
-    if (convId) {
-      await supabase.from('chat_conversations').update(payload).eq('id', convId);
-    } else {
-      const { data } = await supabase.from('chat_conversations').insert(payload).select('id').single();
-      if (data?.id) setConvId(data.id);
-    }
-  }, [user, convId]);
+  // Save conversation (no-op: persistence not enabled)
+  const saveConversation = useCallback(async (_msgs: Message[]) => {
+    return;
+  }, []);
 
   // Send message
   const sendMessage = useCallback(async (text: string) => {
@@ -262,7 +247,7 @@ export default function AIChatWidget() {
       } else {
         // Call Claude
         const history = newMessages.map(m => ({ role: m.role, content: m.content }));
-        responseText = await callClaude(history);
+        responseText = await callAI(history);
       }
     } catch (err) {
       console.error('Chat error:', err);
