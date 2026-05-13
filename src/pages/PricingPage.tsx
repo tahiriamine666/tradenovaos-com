@@ -211,7 +211,7 @@ export default function PricingPage() {
                   ) : (
                     <Button onClick={() => openModal(p.id as 'pro' | 'elite')}
                       className={`w-full rounded-xl ${isBest ? 'bg-amber-500 hover:bg-amber-600 text-white border-0' : ''}`}>
-                      Start 14-day trial
+                      Start 7-day free trial
                     </Button>
                   )}
                   {p.id !== 'free' && !isCur && (
