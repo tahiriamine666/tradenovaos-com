@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   BarChart3, BookOpen, Brain, CalendarDays, CircleDollarSign,
   LayoutDashboard, LogOut, Menu, PlayCircle,
-  Settings, Target, Upload, X, ChevronRight,
+  Settings, ShieldCheck, Target, Upload, X, ChevronRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
