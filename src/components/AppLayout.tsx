@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import UserAvatar from '@/components/UserAvatar';
 import { useProfile } from '@/hooks/useProfile';
 import { useAuth } from '@/contexts/AuthContext';
+import SupportChat from '@/components/SupportChat';
 
 const ADMIN_EMAILS = ['tahiria740@gmail.com', 'tahiriamine889@gmail.com'];
 
@@ -215,6 +216,8 @@ export default function AppLayout({ active, onNavigate, dark, children, topBar }
           {children}
         </div>
       </main>
+
+      <SupportChat />
 
       {/* Mobile bottom nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-30 lg:hidden border-t bg-sidebar border-border">
