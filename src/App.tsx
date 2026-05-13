@@ -67,6 +67,21 @@ const App = () => (
                   }
                 />
                 <Route path="/dashboard" element={<Navigate to="/app" replace />} />
+
+                {/* Public marketing routes */}
+                <Route path="/pricing" element={<PublicPricingPage />} />
+                <Route path="/supported-brokers" element={<SupportedBrokersPage />} />
+                <Route path="/products/:slug" element={<MarketingPlaceholder group="product" />} />
+                <Route path="/solutions/:slug" element={<MarketingPlaceholder group="solution" />} />
+                <Route path="/resources/:slug" element={<MarketingPlaceholder group="resource" />} />
+                <Route path="/compare/:slug" element={<MarketingPlaceholder group="compare" />} />
+                <Route path="/blog" element={<MarketingPlaceholder group="static" staticKey="blog" />} />
+                <Route path="/contact" element={<MarketingPlaceholder group="static" staticKey="contact" />} />
+                <Route path="/careers" element={<MarketingPlaceholder group="static" staticKey="careers" />} />
+                <Route path="/privacy" element={<MarketingPlaceholder group="static" staticKey="privacy" />} />
+                <Route path="/terms" element={<MarketingPlaceholder group="static" staticKey="terms" />} />
+                <Route path="/help" element={<MarketingPlaceholder group="static" staticKey="help" />} />
+
                 <Route path="*" element={<NotFound />} />
               </Routes>
               <AIChatWidget />
