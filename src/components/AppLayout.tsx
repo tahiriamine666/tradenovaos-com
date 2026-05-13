@@ -10,6 +10,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import UserAvatar from '@/components/UserAvatar';
 import { useProfile } from '@/hooks/useProfile';
+import { useAuth } from '@/contexts/AuthContext';
+
+const ADMIN_EMAILS = ['tahiria740@gmail.com', 'tahiriamine889@gmail.com'];
 
 export const BASE_ITEMS = [
   { id: 'dashboard',  label: 'Command Center',  icon: LayoutDashboard },
@@ -151,7 +154,8 @@ interface AppLayoutProps {
 }
 
 export default function AppLayout({ active, onNavigate, dark, children, topBar }: AppLayoutProps) {
-  const { isAdmin } = useProfile();
+  const { user } = useAuth();
+  const isAdmin = !!user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase());
   const [open, setOpen] = useState(false);
 
   useEffect(() => { setOpen(false); }, [active]);
