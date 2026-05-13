@@ -26,7 +26,7 @@ interface Trade {
   trade_date: string;
   setup: string | null;
   rr: number | null;
-  account_type: string | null;
+  account_type?: string | null;
 }
 
 interface DashboardMetrics {
