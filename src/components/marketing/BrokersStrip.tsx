@@ -1,26 +1,24 @@
 import React from 'react';
-import {
-  CandlestickChart, LineChart, BarChart3, Briefcase, Activity,
-  TrendingUp, Zap, Layers, Upload,
-} from 'lucide-react';
 
 const BROKERS = [
-  { name: 'MetaTrader 4', icon: CandlestickChart },
-  { name: 'MetaTrader 5', icon: CandlestickChart },
-  { name: 'NinjaTrader', icon: BarChart3 },
-  { name: 'Interactive Brokers', icon: Briefcase },
-  { name: 'TradingView', icon: LineChart },
-  { name: 'Tradovate', icon: Activity },
-  { name: 'cTrader', icon: TrendingUp },
-  { name: 'Thinkorswim', icon: Zap },
-  { name: 'CSV Import', icon: Upload },
+  { name: 'MetaTrader 5', logo: '/brokers/mt5.png' },
+  { name: 'MetaTrader 4', logo: '/brokers/mt4.png' },
+  { name: 'TradingView',  logo: '/brokers/tradingview.png' },
+  { name: 'NinjaTrader',  logo: '/brokers/ninjatrader.png' },
+  { name: 'Tradovate',    logo: '/brokers/tradovate.png' },
+  { name: 'cTrader',      logo: '/brokers/ctrader.png' },
 ];
 
-function BrokerCard({ name, Icon }: { name: string; Icon: React.ComponentType<any> }) {
+function BrokerCard({ name, logo }: { name: string; logo: string }) {
   return (
-    <div className="flex items-center gap-3 px-6 py-4 rounded-2xl bg-white border border-slate-200/80 shadow-sm hover:shadow-md hover:border-violet-200 transition-all min-w-[220px]">
-      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-50 to-violet-100 flex items-center justify-center flex-shrink-0">
-        <Icon className="h-5 w-5 text-violet-600" />
+    <div className="flex items-center gap-4 px-6 py-4 rounded-2xl bg-white border border-slate-200/80 shadow-sm hover:shadow-md hover:border-violet-200 transition-all min-w-[230px]">
+      <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
+        <img
+          src={logo}
+          alt={`${name} logo`}
+          loading="lazy"
+          className="max-h-9 max-w-9 object-contain"
+        />
       </div>
       <span className="font-semibold text-slate-800 text-sm whitespace-nowrap">{name}</span>
     </div>
@@ -49,7 +47,7 @@ export default function BrokersStrip() {
       >
         <div className="flex gap-5 w-max animate-[brokers-marquee_40s_linear_infinite] group-hover:[animation-play-state:paused]">
           {items.map((b, i) => (
-            <BrokerCard key={i} name={b.name} Icon={b.icon} />
+            <BrokerCard key={i} name={b.name} logo={b.logo} />
           ))}
         </div>
       </div>
