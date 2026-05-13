@@ -149,8 +149,8 @@ export default function MarketingNavbar({ onLogin, onSignup }: MarketingNavbarPr
   return (
     <nav
       ref={navRef}
-      className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
-        scrolled ? 'bg-white/95 backdrop-blur-xl border-b border-slate-200' : ''
+      className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 bg-white/90 backdrop-blur-xl ${
+        scrolled ? 'border-b border-slate-200 shadow-[0_1px_0_0_rgba(15,23,42,0.04)]' : 'border-b border-transparent'
       }`}
     >
       <div className="max-w-7xl mx-auto px-5 sm:px-8">
