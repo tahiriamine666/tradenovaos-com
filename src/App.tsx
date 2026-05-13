@@ -16,6 +16,7 @@ import AIChatWidget from "@/components/AIChatWidget";
 import SupportedBrokersPage from "./pages/SupportedBrokersPage.tsx";
 import PublicPricingPage from "./pages/marketing/PublicPricingPage.tsx";
 import MarketingPlaceholder from "./pages/marketing/MarketingPlaceholder.tsx";
+import { FeaturePage, SolutionPage, BlogPage, HelpCenterPage } from "./pages/marketing/MarketingPages.tsx";
 
 const queryClient = new QueryClient();
 
@@ -71,6 +72,10 @@ const App = () => (
                 {/* Public marketing routes */}
                 <Route path="/pricing" element={<PublicPricingPage />} />
                 <Route path="/supported-brokers" element={<SupportedBrokersPage />} />
+                <Route path="/features/:feature" element={<FeaturePage />} />
+                <Route path="/solutions/:solution" element={<SolutionPage />} />
+                <Route path="/resources/blog" element={<BlogPage />} />
+                <Route path="/resources/help-center" element={<HelpCenterPage />} />
                 <Route path="/products/:slug" element={<MarketingPlaceholder group="product" />} />
                 <Route path="/solutions/:slug" element={<MarketingPlaceholder group="solution" />} />
                 <Route path="/resources/:slug" element={<MarketingPlaceholder group="resource" />} />
