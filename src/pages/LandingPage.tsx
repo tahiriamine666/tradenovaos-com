@@ -15,7 +15,7 @@ import {
   AreaChart, Area, ResponsiveContainer, XAxis, YAxis,
   Tooltip, CartesianGrid,
 } from 'recharts';
-import MarketingNav from '@/components/marketing/MarketingNav';
+import MarketingNavbar from '@/components/MarketingNavbar';
 import MarketingFooter from '@/components/marketing/MarketingFooter';
 import BrokersStrip from '@/components/marketing/BrokersStrip';
 
@@ -672,7 +672,7 @@ export default function LandingPage() {
   const go = (path: string) => navigate(path);
   return (
     <div className="landing-light min-h-screen bg-[#f8fafc] text-slate-900 overflow-x-hidden">
-      <MarketingNav />
+      <MarketingNavbar onLogin={() => go('/login')} onSignup={() => go('/signup')} />
       <Hero onSignup={() => go('/signup')} />
       <BrokersStrip />
       <StatsBar />
