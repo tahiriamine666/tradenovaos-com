@@ -602,8 +602,9 @@ export default function LandingPage() {
   const go = (path: string) => navigate(path);
   return (
     <div className="min-h-screen bg-[#06060f] text-white overflow-x-hidden">
-      <Navbar onLogin={() => go('/login')} onSignup={() => go('/signup')} />
+      <MarketingNav />
       <Hero onSignup={() => go('/signup')} />
+      <BrokersStrip />
       <StatsBar />
       <Features />
       <HowItWorks />
@@ -611,7 +612,7 @@ export default function LandingPage() {
       <Testimonials />
       <Pricing onSignup={() => go('/signup')} />
       <FinalCTA onSignup={() => go('/signup')} />
-      <Footer />
+      <MarketingFooter />
     </div>
   );
 }
