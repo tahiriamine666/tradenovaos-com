@@ -66,6 +66,7 @@ const App = () => (
                 <Route path="/dashboard" element={<Navigate to="/app" replace />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              <SupportChat />
             </PlanProvider>
           </ProfileProvider>
         </AuthProvider>
