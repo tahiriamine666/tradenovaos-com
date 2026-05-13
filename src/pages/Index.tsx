@@ -16,7 +16,8 @@ import { TradeDialogProvider, useTradeDialog, useTradesChanged, useNavigationEve
 import LearningHub from '@/pages/LearningHub';
 import TraderScore from '@/components/TraderScore';
 import CSVImport from '@/components/CSVImport';
-import AppLayout, { sidebarItems } from '@/components/AppLayout';
+import AppLayout, { BASE_ITEMS, ADMIN_ITEM } from '@/components/AppLayout';
+const sidebarItems = [...BASE_ITEMS, ADMIN_ITEM];
 import TopBar from '@/components/TopBar';
 import { GlobalFiltersProvider } from '@/contexts/GlobalFiltersContext';
 import AnalyticsMetrics from '@/components/AnalyticsMetrics';
