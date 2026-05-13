@@ -154,7 +154,8 @@ interface AppLayoutProps {
 }
 
 export default function AppLayout({ active, onNavigate, dark, children, topBar }: AppLayoutProps) {
-  const { isAdmin } = useProfile();
+  const { user } = useAuth();
+  const isAdmin = !!user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase());
   const [open, setOpen] = useState(false);
 
   useEffect(() => { setOpen(false); }, [active]);
