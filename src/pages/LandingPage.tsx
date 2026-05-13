@@ -15,6 +15,9 @@ import {
   AreaChart, Area, ResponsiveContainer, XAxis, YAxis,
   Tooltip, CartesianGrid,
 } from 'recharts';
+import MarketingNav from '@/components/marketing/MarketingNav';
+import MarketingFooter from '@/components/marketing/MarketingFooter';
+import BrokersStrip from '@/components/marketing/BrokersStrip';
 
 const EQUITY_DATA = [
   { day: 'Jan', value: 0 }, { day: 'Feb', value: 1240 }, { day: 'Mar', value: 890 },
@@ -599,8 +602,9 @@ export default function LandingPage() {
   const go = (path: string) => navigate(path);
   return (
     <div className="min-h-screen bg-[#06060f] text-white overflow-x-hidden">
-      <Navbar onLogin={() => go('/login')} onSignup={() => go('/signup')} />
+      <MarketingNav />
       <Hero onSignup={() => go('/signup')} />
+      <BrokersStrip />
       <StatsBar />
       <Features />
       <HowItWorks />
@@ -608,7 +612,7 @@ export default function LandingPage() {
       <Testimonials />
       <Pricing onSignup={() => go('/signup')} />
       <FinalCTA onSignup={() => go('/signup')} />
-      <Footer />
+      <MarketingFooter />
     </div>
   );
 }
