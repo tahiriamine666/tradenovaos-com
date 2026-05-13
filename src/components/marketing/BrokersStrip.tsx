@@ -12,10 +12,10 @@ const BROKERS = [
 function BrokerCard({ name, logo }: { name: string; logo: string }) {
   const [failed, setFailed] = useState(false);
   return (
-    <div className="group/card flex items-center gap-4 px-5 py-4 rounded-2xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] shadow-sm hover:shadow-lg hover:shadow-violet-500/5 hover:border-violet-300 dark:hover:border-violet-400/30 hover:-translate-y-0.5 hover:scale-[1.02] transition-all duration-300 min-w-[230px] h-[72px]">
-      <div className="w-14 h-14 rounded-md bg-[#f5f5f5] dark:bg-white/[0.06] flex items-center justify-center flex-shrink-0 p-2">
+    <div className="group/card flex h-[72px] min-w-[230px] items-center gap-4 rounded-xl border border-border bg-card px-5 py-4 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:scale-[1.02] hover:border-primary/35 hover:shadow-lg hover:shadow-primary/10">
+      <div className="flex h-9 min-w-[112px] items-center justify-start overflow-hidden flex-shrink-0">
         {failed ? (
-          <span className="text-[10px] font-bold text-slate-500 dark:text-white/60 text-center leading-tight">
+          <span className="text-center text-[10px] font-bold leading-tight text-muted-foreground">
             {name.split(' ').map(w => w[0]).join('')}
           </span>
         ) : (
@@ -24,12 +24,11 @@ function BrokerCard({ name, logo }: { name: string; logo: string }) {
             alt={`${name} logo`}
             loading="lazy"
             onError={() => setFailed(true)}
-            style={{ maxHeight: 32, width: 'auto' }}
-            className="object-contain"
+            className="block max-h-7 w-auto object-contain"
           />
         )}
       </div>
-      <span className="font-semibold text-slate-800 dark:text-white text-sm whitespace-nowrap">{name}</span>
+      <span className="whitespace-nowrap text-sm font-semibold text-foreground">{name}</span>
     </div>
   );
 }
@@ -37,12 +36,12 @@ function BrokerCard({ name, logo }: { name: string; logo: string }) {
 export default function BrokersStrip() {
   const items = [...BROKERS, ...BROKERS];
   return (
-    <section className="py-20 sm:py-24 bg-white text-slate-900">
+    <section className="bg-background py-20 text-foreground sm:py-24">
       <div className="max-w-7xl mx-auto px-5 sm:px-8 text-center mb-12">
-        <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900 mb-3">
+        <h2 className="mb-3 text-3xl font-black tracking-tight text-foreground sm:text-4xl">
           Connect your trading workflow
         </h2>
-        <p className="text-slate-500 text-base sm:text-lg max-w-2xl mx-auto">
+        <p className="mx-auto max-w-2xl text-base text-muted-foreground sm:text-lg">
           Import, review, and analyze trades from your favorite platforms.
         </p>
       </div>
