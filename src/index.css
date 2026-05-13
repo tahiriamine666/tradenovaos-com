@@ -94,3 +94,99 @@
     font-family: 'Space Grotesk', system-ui, sans-serif;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   Light Mode polish for in-app dashboard (.app-shell)
+   The dashboard was originally designed dark-first using
+   white-opacity glass utilities and a few literal hex backgrounds.
+   These rules remap those patterns so light mode looks premium
+   without rewriting every component. Marketing pages live outside
+   .app-shell and stay intentionally dark.
+   ───────────────────────────────────────────────────────────── */
+html:not(.dark) :is(.app-shell, .app-chrome) {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+.app-chrome { background-color: transparent; }
+
+/* White-opacity surfaces → soft slate-tinted surfaces */
+html:not(.dark) :is(.app-shell, .app-chrome) [class*="bg-white/"] {
+  background-color: hsl(222 47% 11% / 0.04) !important;
+}
+html:not(.dark) :is(.app-shell, .app-chrome) [class*="hover\:bg-white/"]:hover {
+  background-color: hsl(222 47% 11% / 0.07) !important;
+}
+html:not(.dark) :is(.app-shell, .app-chrome) [class*="border-white/"] {
+  border-color: hsl(214 32% 91%) !important;
+}
+html:not(.dark) :is(.app-shell, .app-chrome) [class*="hover\:border-white/"]:hover {
+  border-color: hsl(214 32% 80%) !important;
+}
+
+/* White-opacity text → muted slate; pure text-white → foreground */
+html:not(.dark) :is(.app-shell, .app-chrome) [class*="text-white/"] {
+  color: hsl(215 16% 47%) !important;
+}
+html:not(.dark) :is(.app-shell, .app-chrome) .text-white {
+  color: hsl(var(--foreground));
+}
+html:not(.dark) :is(.app-shell, .app-chrome) [class~="hover:text-white"]:hover {
+  color: hsl(var(--foreground)) !important;
+}
+html:not(.dark) :is(.app-shell, .app-chrome) [class*="placeholder\:text-white/"]::placeholder {
+  color: hsl(215 16% 60%) !important;
+}
+
+/* Keep text-white legible on solid colored buttons/badges */
+html:not(.dark) :is(.app-shell, .app-chrome)
+  :is(
+    [class*="bg-violet-"], [class*="bg-purple-"], [class*="bg-indigo-"],
+    [class*="bg-fuchsia-"], [class*="bg-pink-"], [class*="bg-rose-"],
+    [class*="bg-red-"],     [class*="bg-orange-"], [class*="bg-amber-"],
+    [class*="bg-yellow-"],  [class*="bg-lime-"],   [class*="bg-green-"],
+    [class*="bg-emerald-"], [class*="bg-teal-"],   [class*="bg-cyan-"],
+    [class*="bg-sky-"],     [class*="bg-blue-"],   [class*="bg-primary"],
+    [class*="bg-destructive"], [class*="bg-gradient"]
+  ) .text-white,
+html:not(.dark) :is(.app-shell, .app-chrome)
+  :is(
+    [class*="bg-violet-"], [class*="bg-purple-"], [class*="bg-indigo-"],
+    [class*="bg-fuchsia-"], [class*="bg-pink-"], [class*="bg-rose-"],
+    [class*="bg-red-"],     [class*="bg-orange-"], [class*="bg-amber-"],
+    [class*="bg-yellow-"],  [class*="bg-lime-"],   [class*="bg-green-"],
+    [class*="bg-emerald-"], [class*="bg-teal-"],   [class*="bg-cyan-"],
+    [class*="bg-sky-"],     [class*="bg-blue-"],   [class*="bg-primary"],
+    [class*="bg-destructive"], [class*="bg-gradient"]
+  ).text-white {
+  color: #fff !important;
+}
+
+/* Literal dark hex backgrounds used by chat widgets / popovers (scoped) */
+html:not(.dark) :is(.app-shell, .app-chrome) [class*="bg-[#0c0c16]"],
+html:not(.dark) :is(.app-shell, .app-chrome) [class*="bg-[#0d0d18]"],
+html:not(.dark) :is(.app-shell, .app-chrome) [class*="bg-[#0d0d1a]"],
+html:not(.dark) :is(.app-shell, .app-chrome) [class*="bg-[#0a0a14]"] {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground));
+}
+html:not(.dark) :is(.app-shell, .app-chrome) [class*="border-[#0c0c16]"],
+html:not(.dark) :is(.app-shell, .app-chrome) [class*="border-[#0d0d18]"],
+html:not(.dark) :is(.app-shell, .app-chrome) [class*="border-[#0d0d1a]"] {
+  border-color: hsl(var(--border)) !important;
+}
+
+/* Recharts: lighter grid + readable tooltips in light mode */
+html:not(.dark) .app-shell .recharts-cartesian-grid line {
+  stroke: hsl(214 32% 91%) !important;
+}
+html:not(.dark) .app-shell .recharts-default-tooltip {
+  background-color: #fff !important;
+  border: 1px solid hsl(214 32% 91%) !important;
+  color: hsl(222 47% 11%) !important;
+  border-radius: 0.75rem !important;
+  box-shadow: 0 8px 24px -8px rgba(15, 23, 42, 0.15) !important;
+}
+html:not(.dark) .app-shell .recharts-tooltip-label,
+html:not(.dark) .app-shell .recharts-tooltip-item {
+  color: hsl(222 47% 11%) !important;
+}

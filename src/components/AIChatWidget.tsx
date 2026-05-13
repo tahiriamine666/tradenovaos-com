@@ -294,7 +294,7 @@ export default function AIChatWidget() {
   const whatsappUrl = `https://wa.me/${WHATSAPP.replace(/\D/g, '')}?text=${encodeURIComponent('Hi TradeNova! I need support.')}`;
 
   return (
-    <div className="fixed bottom-6 right-6 z-[9999] flex flex-col items-end gap-3">
+    <div className="app-chrome fixed bottom-6 right-6 z-[9999] flex flex-col items-end gap-3">
 
       {/* ── Chat window ── */}
       <AnimatePresence>
