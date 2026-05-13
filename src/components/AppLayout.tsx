@@ -74,7 +74,7 @@ function SidebarUser({ onNavigate }: { onNavigate: (id: string) => void }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1.5">
           <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
-          {isAdmin && <Shield aria-label="Admin" className="h-3 w-3 text-primary flex-shrink-0" />}
+          {isAdmin && <Shield className="h-3 w-3 text-primary flex-shrink-0" title="Admin" />}
         </div>
         <Badge variant="outline" className={`text-[10px] rounded-full px-2 py-0 h-4 border mt-0.5 capitalize ${badge}`}>
           {plan}
