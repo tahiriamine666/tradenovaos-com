@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import UserAvatar from '@/components/UserAvatar';
 import { useProfile } from '@/hooks/useProfile';
 import { useAuth } from '@/contexts/AuthContext';
+import SupportChat from '@/components/SupportChat';
 
 const ADMIN_EMAILS = ['tahiria740@gmail.com', 'tahiriamine889@gmail.com'];
 
