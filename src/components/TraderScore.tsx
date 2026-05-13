@@ -110,7 +110,7 @@ function calculateScores(trades: Trade[]): ScoreBreakdown | null {
 
 // ─── Score color ──────────────────────────────────────────────────────────────
 function scoreColor(val: number): string {
-  if (val >= 75) return 'text-emerald-500';
+  if (val >= 75) return 'text-violet-500';
   if (val >= 50) return 'text-primary';
   if (val >= 30) return 'text-amber-500';
   return 'text-red-500';
