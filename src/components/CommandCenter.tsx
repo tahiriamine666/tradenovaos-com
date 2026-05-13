@@ -265,8 +265,8 @@ function TraderScoreCard({ trades, loading }: { trades: Trade[]; loading: boolea
   }, [trades]);
 
   const overallColor = !scores ? '' :
-    scores.overall >= 70 ? 'text-emerald-400' :
-    scores.overall >= 50 ? 'text-violet-400'  : 'text-amber-400';
+    scores.overall >= 70 ? 'text-violet-400' :
+    scores.overall >= 50 ? 'text-violet-300'  : 'text-amber-400';
 
   return (
     <GlassCard index={5} className="p-5">
