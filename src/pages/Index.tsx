@@ -15,7 +15,9 @@ import { TradeDialogProvider, useTradeDialog, useTradesChanged, useNavigationEve
 import LearningHub from '@/pages/LearningHub';
 import TraderScore from '@/components/TraderScore';
 import CSVImport from '@/components/CSVImport';
-import AppLayout from '@/components/AppLayout';
+import AppLayout, { sidebarItems } from '@/components/AppLayout';
+import TopBar from '@/components/TopBar';
+import { GlobalFiltersProvider } from '@/contexts/GlobalFiltersContext';
 import AnalyticsMetrics from '@/components/AnalyticsMetrics';
 import { getTradeDateDay } from '@/lib/dateUtils';
 import {
@@ -435,7 +437,15 @@ function TradingDashboardInner() {
       dark={dark}
       onToggleTheme={() => setTheme(dark ? 'light' : 'dark')}
       onLogout={handleLogout}
-      onNewTrade={openNewTrade}
+      topBar={
+        <TopBar
+          dark={dark}
+          onToggleTheme={() => setTheme(dark ? 'light' : 'dark')}
+          onLogout={handleLogout}
+          activePageLabel={sidebarItems.find(i => i.id === active)?.label ?? 'Dashboard'}
+          onNavigate={setActive}
+        />
+      }
     >
       <div className="space-y-8">
           {active === 'dashboard' && (
@@ -613,7 +623,9 @@ function TradingDashboardInner() {
 export default function TradingDashboard() {
   return (
     <TradeDialogProvider>
-      <TradingDashboardInner />
+      <GlobalFiltersProvider>
+        <TradingDashboardInner />
+      </GlobalFiltersProvider>
     </TradeDialogProvider>
   );
 }
