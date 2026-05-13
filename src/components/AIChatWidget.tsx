@@ -305,9 +305,8 @@ export default function AIChatWidget() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ type: 'spring', damping: 26, stiffness: 280 }}
-            style={{ transformOrigin: 'bottom right' }}
-            className="w-[380px] max-w-[calc(100vw-1.5rem)] flex flex-col rounded-2xl overflow-hidden border border-white/[0.09] bg-[#0c0c16] shadow-2xl shadow-black/70"
             style={{ height: 'min(580px, calc(100dvh - 100px))', transformOrigin: 'bottom right' }}
+            className="w-[380px] max-w-[calc(100vw-1.5rem)] flex flex-col rounded-2xl overflow-hidden border border-white/[0.09] bg-[#0c0c16] shadow-2xl shadow-black/70"
           >
             {/* ── Header ── */}
             <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/[0.07] bg-gradient-to-r from-violet-600/15 via-transparent to-transparent flex-shrink-0">
