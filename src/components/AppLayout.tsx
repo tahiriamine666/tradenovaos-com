@@ -55,7 +55,7 @@ function Logo() {
 }
 
 function SidebarUser({ onNavigate }: { onNavigate: (id: string) => void }) {
-  const { profile, isAdmin, displayName } = useProfile();
+  const { profile, displayName } = useProfile();
   const plan = profile?.plan_type ?? 'free';
   const badge = plan === 'elite'
     ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
@@ -70,10 +70,7 @@ function SidebarUser({ onNavigate }: { onNavigate: (id: string) => void }) {
         displayName={profile?.display_name || profile?.full_name}
         email={profile?.email ?? null} size="md" editable />
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-1.5">
-          <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
-          {isAdmin && <Shield aria-label="Admin" className="h-3 w-3 text-primary flex-shrink-0" />}
-        </div>
+        <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
         <Badge variant="outline" className={`text-[10px] rounded-full px-2 py-0 h-4 border mt-0.5 capitalize ${badge}`}>
           {plan}
         </Badge>
@@ -83,11 +80,10 @@ function SidebarUser({ onNavigate }: { onNavigate: (id: string) => void }) {
   );
 }
 
-function SidebarContent({ active, onNavigate, isAdmin }: {
-  active: string; onNavigate: (id: string) => void; isAdmin: boolean;
+function SidebarContent({ active, onNavigate }: {
+  active: string; onNavigate: (id: string) => void;
 }) {
   const { profile } = useProfile();
-  const items = isAdmin ? [...BASE_ITEMS, ADMIN_ITEM] : BASE_ITEMS;
 
   return (
     <div className="flex flex-col h-full">
@@ -95,32 +91,20 @@ function SidebarContent({ active, onNavigate, isAdmin }: {
 
       <div className="px-3 flex-1 overflow-y-auto">
         <nav className="space-y-0.5">
-          {items.map((item, idx) => {
+          {BASE_ITEMS.map((item) => {
             const Icon = item.icon;
             const sel  = active === item.id;
-            const isAd = item.id === 'admin';
-            // Separator before admin item
-            const sep  = isAd && idx > 0;
             return (
-              <React.Fragment key={item.id}>
-                {sep && <div className="h-px bg-border my-2" />}
-                <button onClick={() => onNavigate(item.id)}
-                  className={cx(
-                    'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all',
-                    sel && !isAd && 'bg-primary text-primary-foreground shadow-lg shadow-primary/20',
-                    sel && isAd && 'bg-red-500/15 text-red-500',
-                    !sel && !isAd && 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                    !sel && isAd && 'text-muted-foreground hover:bg-red-500/10 hover:text-red-500',
-                  )}>
-                  <Icon className="h-4 w-4 flex-shrink-0" />
-                  {item.label}
-                  {isAd && (
-                    <Badge className="ml-auto bg-red-500/10 text-red-500 border-0 text-[9px] px-1.5 leading-tight">
-                      ADMIN
-                    </Badge>
-                  )}
-                </button>
-              </React.Fragment>
+              <button key={item.id} onClick={() => onNavigate(item.id)}
+                className={cx(
+                  'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all',
+                  sel
+                    ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                )}>
+                <Icon className="h-4 w-4 flex-shrink-0" />
+                {item.label}
+              </button>
             );
           })}
         </nav>
@@ -149,8 +133,6 @@ interface AppLayoutProps {
 }
 
 export default function AppLayout({ active, onNavigate, dark, children, topBar }: AppLayoutProps) {
-  const { user } = useAuth();
-  const isAdmin = !!user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase());
   const [open, setOpen] = useState(false);
 
   useEffect(() => { setOpen(false); }, [active]);
@@ -169,7 +151,7 @@ export default function AppLayout({ active, onNavigate, dark, children, topBar }
 
       {/* Desktop sidebar */}
       <aside className="hidden lg:flex w-72 flex-shrink-0 flex-col border-r overflow-hidden bg-sidebar border-border">
-        <SidebarContent active={active} onNavigate={onNavigate} isAdmin={isAdmin} />
+        <SidebarContent active={active} onNavigate={onNavigate} />
       </aside>
 
       {/* Mobile drawer */}
@@ -184,7 +166,7 @@ export default function AppLayout({ active, onNavigate, dark, children, topBar }
               className="absolute top-4 right-4 rounded-lg p-1.5 text-muted-foreground hover:text-foreground hover:bg-muted z-10">
               <X className="h-5 w-5" />
             </button>
-            <SidebarContent active={active} onNavigate={onNavigate} isAdmin={isAdmin} />
+            <SidebarContent active={active} onNavigate={onNavigate} />
           </motion.aside>
         </>}
       </AnimatePresence>
@@ -230,7 +212,6 @@ export default function AppLayout({ active, onNavigate, dark, children, topBar }
             className="flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl text-muted-foreground relative">
             <Menu className="h-5 w-5" />
             <span className="text-[10px] font-medium">More</span>
-            {isAdmin && <span className="absolute top-1.5 right-2.5 w-2 h-2 rounded-full bg-red-500" />}
           </button>
         </div>
       </nav>
