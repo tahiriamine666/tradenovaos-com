@@ -126,14 +126,104 @@ function Navbar({ onLogin, onSignup }: { onLogin: () => void; onSignup: () => vo
   );
 }
 
+// Floating particles for cinematic background
+const PARTICLES = Array.from({ length: 18 }).map((_, i) => ({
+  id: i,
+  x: (i * 53) % 100,
+  y: (i * 37) % 100,
+  size: 2 + (i % 3),
+  delay: (i % 7) * 0.4,
+  duration: 8 + (i % 5) * 2,
+}));
+
+function HeroBackground() {
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      {/* Nebula glows — slow breathing */}
+      <motion.div
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[1100px] h-[680px] bg-violet-500/15 rounded-full blur-[160px]"
+        animate={{ opacity: [0.55, 0.95, 0.55], scale: [1, 1.06, 1] }}
+        transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.div
+        className="absolute bottom-[-120px] left-[10%] w-[560px] h-[440px] bg-indigo-500/12 rounded-full blur-[130px]"
+        animate={{ opacity: [0.4, 0.75, 0.4], x: [0, 40, 0] }}
+        transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.div
+        className="absolute top-[20%] right-[5%] w-[420px] h-[420px] bg-fuchsia-500/10 rounded-full blur-[120px]"
+        animate={{ opacity: [0.3, 0.6, 0.3], y: [0, -30, 0] }}
+        transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut' }}
+      />
+
+      {/* Grid */}
+      <div
+        className="absolute inset-0 opacity-[0.04]"
+        style={{
+          backgroundImage: `linear-gradient(rgba(139,92,246,1) 1px,transparent 1px),linear-gradient(90deg,rgba(139,92,246,1) 1px,transparent 1px)`,
+          backgroundSize: '72px 72px',
+          maskImage: 'radial-gradient(ellipse at center, black 40%, transparent 75%)',
+          WebkitMaskImage: 'radial-gradient(ellipse at center, black 40%, transparent 75%)',
+        }}
+      />
+
+      {/* Particles */}
+      {PARTICLES.map((p) => (
+        <motion.span
+          key={p.id}
+          className="absolute rounded-full bg-violet-400/60"
+          style={{ left: `${p.x}%`, top: `${p.y}%`, width: p.size, height: p.size, filter: 'blur(0.5px)' }}
+          animate={{ y: [0, -40, 0], opacity: [0, 0.8, 0] }}
+          transition={{ duration: p.duration, repeat: Infinity, delay: p.delay, ease: 'easeInOut' }}
+        />
+      ))}
+
+      {/* Scan line shimmer */}
+      <motion.div
+        className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-violet-400/50 to-transparent"
+        animate={{ y: ['0vh', '100vh'] }}
+        transition={{ duration: 14, repeat: Infinity, ease: 'linear' }}
+      />
+    </div>
+  );
+}
+
+// Live ticker metric — gently pulses around a base value
+function LiveMetric({ base, prefix = '', suffix = '', decimals = 0, drift = 0, className = '' }: {
+  base: number; prefix?: string; suffix?: string; decimals?: number; drift?: number; className?: string;
+}) {
+  const [val, setVal] = useState(0);
+  const { ref, inView } = useReveal();
+  const started = useRef(false);
+  useEffect(() => {
+    if (!inView) return;
+    if (!started.current) {
+      started.current = true;
+      const s = performance.now();
+      const dur = 1800;
+      const tick = (now: number) => {
+        const p = Math.min((now - s) / dur, 1);
+        setVal((1 - Math.pow(1 - p, 3)) * base);
+        if (p < 1) requestAnimationFrame(tick); else setVal(base);
+      };
+      requestAnimationFrame(tick);
+    }
+    if (!drift) return;
+    const id = setInterval(() => {
+      setVal(base + (Math.random() - 0.5) * 2 * drift);
+    }, 1600);
+    return () => clearInterval(id);
+  }, [inView, base, drift]);
+  const formatted = decimals
+    ? val.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
+    : Math.round(val).toLocaleString();
+  return <span ref={ref} className={className}>{prefix}{formatted}{suffix}</span>;
+}
+
 function Hero({ onSignup }: { onSignup: () => void }) {
   return (
     <section className="relative min-h-[100dvh] flex flex-col items-center justify-center pt-20 pb-16 overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-violet-600/8 rounded-full blur-[140px]" />
-        <div className="absolute bottom-0 left-1/4 w-[500px] h-[400px] bg-indigo-700/6 rounded-full blur-[100px]" />
-        <div className="absolute inset-0 opacity-[0.025]" style={{ backgroundImage: `linear-gradient(rgba(139,92,246,1) 1px,transparent 1px),linear-gradient(90deg,rgba(139,92,246,1) 1px,transparent 1px)`, backgroundSize: '72px 72px' }} />
-      </div>
+      <HeroBackground />
       <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 w-full">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="flex justify-center mb-8">
           <div className="inline-flex items-center gap-2 bg-violet-500/10 border border-violet-500/20 rounded-full px-4 py-1.5">
