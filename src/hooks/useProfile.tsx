@@ -58,7 +58,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase.rpc('get_my_profile');
 
     if (!error && data) {
-      setProfile(data as UserProfile);
+      setProfile(data as unknown as UserProfile);
     } else {
       // Fallback: direct query
       const { data: p } = await supabase
