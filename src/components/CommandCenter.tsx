@@ -135,7 +135,7 @@ function MetricCard({
             <p className="text-[11px] text-white/30 mt-1.5">{sub}</p>
           )}
         </div>
-        <div className={`rounded-xl p-2.5 ${color.includes('emerald') ? 'bg-emerald-500/10' : color.includes('red') ? 'bg-red-500/10' : color.includes('blue') ? 'bg-blue-500/10' : 'bg-violet-500/10'}`}>
+        <div className={`rounded-xl p-2.5 ${color.includes('red') ? 'bg-red-500/10' : color.includes('blue') ? 'bg-blue-500/10' : color.includes('amber') ? 'bg-amber-500/10' : 'bg-violet-500/10'}`}>
           <Icon className={`h-5 w-5 ${color}`} />
         </div>
       </div>
@@ -265,8 +265,8 @@ function TraderScoreCard({ trades, loading }: { trades: Trade[]; loading: boolea
   }, [trades]);
 
   const overallColor = !scores ? '' :
-    scores.overall >= 70 ? 'text-emerald-400' :
-    scores.overall >= 50 ? 'text-violet-400'  : 'text-amber-400';
+    scores.overall >= 70 ? 'text-violet-400' :
+    scores.overall >= 50 ? 'text-violet-300'  : 'text-amber-400';
 
   return (
     <GlassCard index={5} className="p-5">
@@ -297,7 +297,7 @@ function TraderScoreCard({ trades, loading }: { trades: Trade[]; loading: boolea
               transition={{ delay: 0.1 + i * 0.07 }}>
               <div className="flex items-center justify-between mb-1.5">
                 <span className="text-xs text-white/40">{item.label}</span>
-                <span className={`text-xs font-bold ${item.value >= 70 ? 'text-emerald-400' : item.value >= 50 ? 'text-violet-400' : 'text-amber-400'}`}>
+                <span className={`text-xs font-bold ${item.value >= 70 ? 'text-violet-400' : item.value >= 50 ? 'text-violet-300' : 'text-amber-400'}`}>
                   {item.value}
                 </span>
               </div>
@@ -306,7 +306,7 @@ function TraderScoreCard({ trades, loading }: { trades: Trade[]; loading: boolea
                   initial={{ width: 0 }}
                   animate={{ width: `${item.value}%` }}
                   transition={{ duration: 0.8, delay: 0.3 + i * 0.08, ease: [0.22, 1, 0.36, 1] }}
-                  className={`h-full rounded-full ${item.value >= 70 ? 'bg-emerald-500' : item.value >= 50 ? 'bg-violet-500' : 'bg-amber-500'}`}
+                  className={`h-full rounded-full ${item.value >= 70 ? 'bg-violet-500' : item.value >= 50 ? 'bg-violet-400' : 'bg-amber-500'}`}
                 />
               </div>
             </motion.div>
@@ -625,14 +625,14 @@ export default function CommandCenter({ onNavigate, onAddTrade }: CommandCenterP
       value: fmtMoney(metrics.totalPnl),
       sub: `From ${metrics.tradesCount} trades`,
       icon: TrendingUp,
-      color: metrics.totalPnl >= 0 ? 'text-emerald-400' : 'text-red-400',
+      color: metrics.totalPnl >= 0 ? 'text-violet-400' : 'text-red-400',
     },
     {
       title: 'Win Rate',
       value: `${metrics.winRate}%`,
       sub: `${metrics.wins} wins · ${metrics.losses} losses`,
       icon: Target,
-      color: metrics.winRate >= 50 ? 'text-emerald-400' : 'text-amber-400',
+      color: metrics.winRate >= 50 ? 'text-violet-400' : 'text-amber-400',
     },
     {
       title: 'Avg R:R',

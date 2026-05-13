@@ -110,7 +110,7 @@ function calculateScores(trades: Trade[]): ScoreBreakdown | null {
 
 // ─── Score color ──────────────────────────────────────────────────────────────
 function scoreColor(val: number): string {
-  if (val >= 75) return 'text-emerald-500';
+  if (val >= 75) return 'text-violet-500';
   if (val >= 50) return 'text-primary';
   if (val >= 30) return 'text-amber-500';
   return 'text-red-500';
@@ -130,7 +130,7 @@ function RadialScore({ value, size = 80 }: { value: number; size?: number }) {
   const circumference = 2 * Math.PI * radius;
   const dash = (value / 100) * circumference;
 
-  const color = value >= 75 ? '#10b981' : value >= 50 ? '#7c3aed' : value >= 30 ? '#f59e0b' : '#ef4444';
+  const color = value >= 75 ? '#7c3aed' : value >= 50 ? '#a78bfa' : value >= 30 ? '#f59e0b' : '#ef4444';
 
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
