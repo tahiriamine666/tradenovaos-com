@@ -11,13 +11,12 @@ import ReplayStudio from '@/pages/ReplayStudio';
 import TradePlan from '@/pages/TradePlan';
 import AIInsights from '@/pages/AIInsights';
 import PricingPage from '@/pages/PricingPage';
-import AdminPanel from '@/pages/AdminPanel';
 import { TradeDialogProvider, useTradeDialog, useTradesChanged, useNavigationEvent } from '@/contexts/TradeDialogContext';
 import LearningHub from '@/pages/LearningHub';
 import TraderScore from '@/components/TraderScore';
 import CSVImport from '@/components/CSVImport';
-import AppLayout, { BASE_ITEMS, ADMIN_ITEM } from '@/components/AppLayout';
-const sidebarItems = [...BASE_ITEMS, ADMIN_ITEM];
+import AppLayout, { BASE_ITEMS } from '@/components/AppLayout';
+const sidebarItems = BASE_ITEMS;
 import TopBar from '@/components/TopBar';
 import { GlobalFiltersProvider } from '@/contexts/GlobalFiltersContext';
 import AnalyticsMetrics from '@/components/AnalyticsMetrics';
@@ -480,7 +479,6 @@ function TradingDashboardInner() {
 
           {active === 'pricing' && <PricingPage />}
 
-          {active === 'admin' && <AdminPanel />}
 
           {active === 'import' && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
