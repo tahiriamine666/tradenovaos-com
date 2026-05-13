@@ -58,7 +58,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase.rpc('get_my_profile');
 
     if (!error && data) {
-      setProfile(data as unknown as UserProfile);
+      setProfile(data as UserProfile);
     } else {
       // Fallback: direct query
       const { data: p } = await supabase
@@ -66,7 +66,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         .select('*')
         .eq('id', user.id)
         .single();
-      if (p) setProfile({ ...p, is_admin: false, stripe_customer_id: null } as unknown as UserProfile);
+      if (p) setProfile({ ...p, is_admin: false } as UserProfile);
     }
     setLoading(false);
   }, [user]);
