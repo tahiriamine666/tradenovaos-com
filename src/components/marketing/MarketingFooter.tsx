@@ -125,7 +125,8 @@ export default function MarketingFooter() {
       <div className="relative border-t border-white/[0.06]">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-white/30">
           <p>© {new Date().getFullYear()} TradeNova. All rights reserved.</p>
-          <p>Built for traders who take their craft seriously.</p>
+          <a href="https://tradenovaos.com" target="_blank" rel="noreferrer noopener"
+            className="hover:text-violet-300 transition-colors">tradenovaos.com</a>
         </div>
       </div>
     </footer>
