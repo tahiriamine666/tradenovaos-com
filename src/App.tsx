@@ -12,6 +12,7 @@ import Login from "./pages/Login.tsx";
 import Signup from "./pages/Signup.tsx";
 import LandingPage from "./pages/LandingPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import SupportChat from "@/components/SupportChat";
 
 const queryClient = new QueryClient();
 
@@ -65,6 +66,7 @@ const App = () => (
                 <Route path="/dashboard" element={<Navigate to="/app" replace />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              <SupportChat />
             </PlanProvider>
           </ProfileProvider>
         </AuthProvider>
