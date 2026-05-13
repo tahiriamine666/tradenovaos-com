@@ -46,7 +46,7 @@ const SCORE_ITEMS = [
   { label: 'Consistency', value: 85, color: '#10b981' },
 ];
 
-const ease = [0.22, 1, 0.36, 1];
+const ease: any = [0.22, 1, 0.36, 1];
 
 function useReveal() {
   const ref = useRef(null);
