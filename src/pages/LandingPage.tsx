@@ -192,153 +192,255 @@ function Hero({ onSignup }: { onSignup: () => void }) {
               </div>
             </div>
 
-            {/* Dashboard body — light theme matching real app */}
+            {/* Dashboard body — premium light theme matching real app */}
             <div className="flex bg-slate-50">
               {/* Sidebar */}
-              <div className="hidden sm:flex w-44 lg:w-52 flex-col border-r border-slate-200 bg-white p-4 gap-0.5 flex-shrink-0">
-                <div className="flex items-center gap-2 mb-5 px-1">
-                  <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-violet-700 flex items-center justify-center shadow-sm shadow-violet-500/30"><BarChart3 className="h-4 w-4 text-white" /></div>
+              <div className="hidden sm:flex w-44 lg:w-[210px] flex-col border-r border-slate-200 bg-white p-3 flex-shrink-0">
+                <div className="flex items-center gap-2 mb-4 px-1">
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-violet-700 flex items-center justify-center shadow-sm shadow-violet-500/30">
+                    <BarChart3 className="h-[18px] w-[18px] text-white" />
+                  </div>
                   <div className="leading-tight">
-                    <p className="text-[12px] font-black text-slate-900">TradeNova</p>
-                    <p className="text-[8px] font-semibold text-slate-400 tracking-wider">TRADING OS</p>
+                    <p className="text-[12px] font-black text-slate-900 tracking-tight">TradeNova</p>
+                    <p className="text-[8px] font-semibold text-slate-400 tracking-[0.12em]">TRADING OS</p>
                   </div>
                 </div>
-                {[{l:'Command Center',a:true},{l:'Trade Plan',a:false},{l:'Trade Vault',a:false},{l:'Mind Journal',a:false},{l:'Edge Analytics',a:false},{l:'Playbook Lab',a:false},{l:'Replay Studio',a:false},{l:'Learning Hub',a:false}].map(item => (
-                  <div key={item.l} className={`text-[11px] px-3 py-2 rounded-lg font-medium ${item.a ? 'bg-violet-600 text-white shadow-sm shadow-violet-500/30' : 'text-slate-500'}`}>{item.l}</div>
-                ))}
+
+                <div className="flex-1 flex flex-col gap-0.5">
+                  {[
+                    {l:'Command Center', a:true},
+                    {l:'Trade Plan'},
+                    {l:'Trade Vault'},
+                    {l:'Mind Journal'},
+                    {l:'Edge Analytics'},
+                    {l:'Playbook Lab'},
+                    {l:'Import CSV'},
+                    {l:'Replay Studio'},
+                    {l:'Learning Hub'},
+                    {l:'Studio Settings'},
+                  ].map(item => (
+                    <div key={item.l} className={`text-[11px] px-3 py-1.5 rounded-lg font-medium flex items-center gap-2 ${item.a ? 'bg-violet-600 text-white shadow-sm shadow-violet-500/30' : 'text-slate-500'}`}>
+                      <span className="w-1 h-1 rounded-full bg-current opacity-60" />
+                      {item.l}
+                    </div>
+                  ))}
+                  <div className="text-[11px] px-3 py-1.5 rounded-lg font-medium text-rose-500 flex items-center justify-between mt-1">
+                    <span className="flex items-center gap-2"><span className="w-1 h-1 rounded-full bg-current opacity-60" /> Admin Panel</span>
+                    <span className="text-[7px] font-bold bg-rose-100 text-rose-600 px-1.5 py-0.5 rounded">ADMIN</span>
+                  </div>
+                </div>
+
+                <div className="mt-3 rounded-xl border border-violet-200 bg-gradient-to-br from-violet-50 to-white p-2.5">
+                  <p className="text-[10px] font-black text-slate-900">Upgrade to Pro</p>
+                  <p className="text-[8px] text-slate-500 mt-0.5 leading-tight">Unlock AI, CSV import, playbooks</p>
+                  <div className="mt-2 bg-violet-600 text-white text-[9px] font-bold py-1.5 rounded-md text-center shadow-sm shadow-violet-500/30">Start 14-day trial</div>
+                </div>
+                <div className="mt-2 flex items-center gap-2 pt-2 border-t border-slate-100">
+                  <div className="w-6 h-6 rounded-full bg-violet-600 text-white text-[9px] font-bold flex items-center justify-center">U</div>
+                  <div className="leading-tight">
+                    <p className="text-[10px] font-bold text-slate-900">Trader</p>
+                    <span className="text-[7px] font-semibold text-violet-700 bg-violet-100 px-1.5 rounded">Free</span>
+                  </div>
+                </div>
               </div>
 
               {/* Main */}
-              <div className="flex-1 min-w-0 p-4 sm:p-5 space-y-3">
-                {/* Header */}
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[15px] font-black text-slate-900">Command Center</p>
-                    <p className="text-[10px] text-slate-500">Wednesday, May 13</p>
+              <div className="flex-1 min-w-0 flex flex-col">
+                {/* Top bar */}
+                <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-200 bg-white">
+                  <p className="text-[11px] font-semibold text-slate-700">Command Center</p>
+                  <div className="flex items-center gap-1.5">
+                    {['All Time','Filters','All Accounts'].map(t => (
+                      <div key={t} className="text-[9px] font-medium text-slate-600 border border-slate-200 rounded-lg px-2.5 py-1 bg-white">{t} ▾</div>
+                    ))}
+                    <div className="w-6 h-6 rounded-full bg-violet-600 text-white text-[9px] font-bold flex items-center justify-center ml-1">U</div>
                   </div>
-                  <div className="hidden sm:inline-flex items-center gap-1.5 bg-violet-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-sm shadow-violet-500/30">+ New Trade</div>
                 </div>
 
-                {/* Top metrics */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
-                  {[
-                    {l:'Total P&L', v:'+$12,480', c:'text-emerald-600', sub:'From 143 trades'},
-                    {l:'Win Rate',  v:'68%',       c:'text-violet-600', sub:'97 wins · 46 losses'},
-                    {l:'Avg R:R',   v:'1:3.2',     c:'text-blue-600',   sub:'Across logged R:R'},
-                    {l:'Trades',    v:'143',       c:'text-slate-900',  sub:'Total logged trades'},
-                  ].map((m,i) => (
-                    <motion.div key={m.l} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} transition={{delay:0.6+i*0.08}}
-                      className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                      <p className="text-[9px] text-slate-500 uppercase tracking-wider mb-1 font-semibold">{m.l}</p>
-                      <p className={`text-lg font-black font-mono ${m.c}`}>{m.v}</p>
-                      <p className="text-[9px] text-slate-400 mt-0.5">{m.sub}</p>
-                    </motion.div>
-                  ))}
-                </div>
-
-                {/* Equity + Trader Score */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-                  <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:0.8}} className="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                    <div className="flex items-center justify-between mb-2">
-                      <div>
-                        <p className="text-[11px] font-bold text-slate-900">Equity Curve</p>
-                        <p className="text-[9px] text-slate-400">Cumulative P&L over time</p>
-                      </div>
-                      <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">+$12,480</span>
-                    </div>
-                    <ResponsiveContainer width="100%" height={104}>
-                      <AreaChart data={EQUITY_DATA}>
-                        <defs><linearGradient id="hg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#10b981" stopOpacity={0.35}/><stop offset="100%" stopColor="#10b981" stopOpacity={0}/></linearGradient></defs>
-                        <Area type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2} fill="url(#hg)" dot={false}/>
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </motion.div>
-                  <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:0.9}} className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <p className="text-[11px] font-bold text-slate-900">Trader Score</p>
-                        <p className="text-[9px] text-slate-400">Overall performance</p>
-                      </div>
-                      <span className="text-lg font-black text-violet-600 font-mono">82<span className="text-[9px] text-slate-400">/100</span></span>
-                    </div>
-                    <div className="space-y-1.5">
-                      {SCORE_ITEMS.map((s,i) => (
-                        <div key={s.label} className="flex items-center gap-2">
-                          <span className="text-[9px] text-slate-500 w-14 font-medium">{s.label}</span>
-                          <div className="flex-1 h-1 bg-slate-100 rounded-full overflow-hidden">
-                            <motion.div initial={{width:0}} animate={{width:`${s.value}%`}} transition={{duration:0.7,delay:1+i*0.08}} className="h-full rounded-full" style={{background:s.color}}/>
-                          </div>
-                          <span className="text-[9px] font-bold w-5 text-right" style={{color:s.color}}>{s.value}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </motion.div>
-                </div>
-
-                {/* Calendar + Best Setups */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-                  <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:1}} className="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                    <div className="flex items-center justify-between mb-2">
-                      <div>
-                        <p className="text-[11px] font-bold text-slate-900">Trading Calendar</p>
-                        <p className="text-[9px] text-slate-400">Monthly P&L heatmap</p>
-                      </div>
-                      <span className="text-[9px] text-slate-500 font-semibold">May 2026</span>
-                    </div>
-                    <div className="grid grid-cols-7 gap-1">
-                      {Array.from({length: 28}).map((_, i) => {
-                        const r = Math.sin(i * 1.7);
-                        const has = i % 3 !== 0;
-                        const win = r > -0.2;
-                        return (
-                          <div key={i} className={`aspect-square rounded-md flex items-center justify-center text-[8px] font-bold ${
-                            !has ? 'bg-slate-50 text-slate-300' :
-                            win ? 'bg-emerald-100 border border-emerald-200 text-emerald-700' :
-                                  'bg-red-100 border border-red-200 text-red-700'
-                          }`}>{i+1}</div>
-                        );
-                      })}
-                    </div>
-                  </motion.div>
-                  <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:1.05}} className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                    <p className="text-[11px] font-bold text-slate-900 mb-0.5">Best Setups</p>
-                    <p className="text-[9px] text-slate-400 mb-2">P&L by setup type</p>
-                    <div className="space-y-2">
-                      {SETUP_DATA.map((s,i) => (
-                        <div key={s.name}>
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-[10px] text-slate-700 font-medium">{s.name}</span>
-                            <span className="text-[10px] font-bold font-mono text-emerald-600">+${s.value.toLocaleString()}</span>
-                          </div>
-                          <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
-                            <motion.div initial={{width:0}} animate={{width:`${s.pct}%`}} transition={{duration:0.7,delay:1.15+i*0.08}} className="h-full rounded-full bg-gradient-to-r from-violet-500 to-violet-400"/>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </motion.div>
-                </div>
-
-                {/* Recent trades */}
-                <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:1.1}} className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                  <div className="flex items-center justify-between mb-2">
+                <div className="p-4 sm:p-5 space-y-3">
+                  <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-[11px] font-bold text-slate-900">Recent Trades</p>
-                      <p className="text-[9px] text-slate-400">Last executions</p>
+                      <p className="text-[18px] font-black text-slate-900 leading-tight">Command Center</p>
+                      <p className="text-[10px] text-slate-500 mt-0.5">Wednesday, May 13</p>
                     </div>
-                    <span className="text-[9px] text-violet-600 font-semibold">View all →</span>
+                    <div className="inline-flex items-center gap-1.5 bg-violet-600 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-sm shadow-violet-500/30">+ New Trade</div>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                    {RECENT_TRADES.map((t,i) => (
-                      <motion.div key={i} initial={{opacity:0,y:4}} animate={{opacity:1,y:0}} transition={{delay:1.2+i*0.05}}
-                        className={`rounded-lg p-2 border ${t.win ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'}`}>
-                        <p className="text-[10px] text-slate-900 font-bold truncate">{t.pair}</p>
-                        <p className="text-[8px] text-slate-500 mb-0.5">{t.side} · {t.date}</p>
-                        <p className={`text-xs font-bold font-mono ${t.win ? 'text-emerald-600' : 'text-red-600'}`}>{t.result>0?'+':'-'}${Math.abs(t.result)}</p>
+
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+                    {[
+                      {l:'Total P&L', v:'+$12,480', sub:'From 143 trades', Icon:TrendingUp},
+                      {l:'Win Rate',  v:'68%',       sub:'97 wins · 46 losses', Icon:Target},
+                      {l:'Avg R:R',   v:'1:3.2',     sub:'Across logged R:R', Icon:LineChart},
+                      {l:'Trades',    v:'143',       sub:'Total logged trades', Icon:BarChart3},
+                    ].map((m,i) => (
+                      <motion.div key={m.l} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} transition={{delay:0.6+i*0.08}}
+                        className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <p className="text-[9px] text-slate-500 uppercase tracking-wider mb-1 font-semibold">{m.l}</p>
+                            <p className="text-xl font-black font-mono text-violet-600">{m.v}</p>
+                            <p className="text-[9px] text-slate-400 mt-0.5">{m.sub}</p>
+                          </div>
+                          <div className="w-7 h-7 rounded-lg bg-violet-50 border border-violet-100 flex items-center justify-center">
+                            <m.Icon className="h-3.5 w-3.5 text-violet-600" />
+                          </div>
+                        </div>
                       </motion.div>
                     ))}
                   </div>
-                </motion.div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                    <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:0.8}} className="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <p className="text-[12px] font-bold text-slate-900">Equity Curve</p>
+                          <p className="text-[9px] text-slate-400">Cumulative P&L over time</p>
+                        </div>
+                        <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">+$12,480</span>
+                      </div>
+                      <ResponsiveContainer width="100%" height={140}>
+                        <AreaChart data={EQUITY_DATA} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                          <defs><linearGradient id="hg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#10b981" stopOpacity={0.32}/><stop offset="100%" stopColor="#10b981" stopOpacity={0}/></linearGradient></defs>
+                          <CartesianGrid strokeDasharray="2 4" stroke="#e2e8f0" vertical={false} />
+                          <XAxis dataKey="day" tick={{fontSize:8, fill:'#94a3b8'}} axisLine={false} tickLine={false} />
+                          <YAxis tick={{fontSize:8, fill:'#94a3b8'}} axisLine={false} tickLine={false} />
+                          <Area type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2} fill="url(#hg)" dot={false}/>
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </motion.div>
+
+                    <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:0.85}} className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <p className="text-[12px] font-bold text-slate-900">Today Focus</p>
+                          <p className="text-[9px] text-slate-400">Pre-market plan</p>
+                        </div>
+                        <span className="text-[9px] font-semibold text-violet-600">Edit ›</span>
+                      </div>
+                      <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 mb-2">
+                        <p className="text-[8px] text-slate-400 font-bold tracking-wider uppercase">BIAS</p>
+                        <p className="text-[10px] text-slate-700 font-medium mt-0.5">Long NQ above 18,400 · trim into 18,520</p>
+                      </div>
+                      <div className="rounded-lg border border-violet-200 bg-violet-50/60 p-2 flex items-start gap-1.5">
+                        <Sparkles className="h-3 w-3 text-violet-600 mt-0.5 flex-shrink-0" />
+                        <div>
+                          <p className="text-[8px] text-violet-600 font-bold tracking-wider uppercase">AI HINT</p>
+                          <p className="text-[10px] text-slate-700 leading-snug mt-0.5">Win rate climbs 14% on pullback setups before noon EST.</p>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                    <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:0.95}} className="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <p className="text-[12px] font-bold text-slate-900">Trading Calendar</p>
+                          <p className="text-[9px] text-slate-400">Monthly P&L heatmap</p>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-[9px] text-slate-500 font-semibold">
+                          <span className="px-1">‹</span>May 2026<span className="px-1">›</span>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-7 gap-1 mb-1">
+                        {['S','M','T','W','T','F','S'].map((d,i) => (
+                          <div key={i} className="text-[8px] text-slate-400 text-center font-semibold">{d}</div>
+                        ))}
+                      </div>
+                      <div className="grid grid-cols-7 gap-1">
+                        {Array.from({length: 35}).map((_, i) => {
+                          const day = i - 4;
+                          const r = Math.sin((day+1) * 1.7);
+                          const has = day >= 1 && day <= 31 && (day % 4 !== 0);
+                          const win = r > -0.2;
+                          return (
+                            <div key={i} className={`aspect-square rounded-md flex items-center justify-center text-[8px] font-bold ${
+                              day < 1 || day > 31 ? 'bg-transparent' :
+                              !has ? 'bg-slate-50 text-slate-300' :
+                              win ? 'bg-emerald-100 border border-emerald-200 text-emerald-700' :
+                                    'bg-red-100 border border-red-200 text-red-700'
+                            }`}>{day >=1 && day <= 31 ? day : ''}</div>
+                          );
+                        })}
+                      </div>
+                      <div className="flex items-center gap-3 mt-2 text-[8px] text-slate-500">
+                        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />Profit</span>
+                        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-500" />Loss</span>
+                      </div>
+                    </motion.div>
+
+                    <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:1}} className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <p className="text-[12px] font-bold text-slate-900">Trader Score</p>
+                          <p className="text-[9px] text-slate-400">Overall performance</p>
+                        </div>
+                        <div className="text-right leading-none">
+                          <span className="text-2xl font-black text-violet-600 font-mono">82</span>
+                          <span className="text-[9px] text-slate-400">/100</span>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        {SCORE_ITEMS.map((s,i) => (
+                          <div key={s.label}>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[10px] text-slate-700 font-medium">{s.label}</span>
+                              <span className="text-[10px] font-bold font-mono text-slate-900">{s.value}</span>
+                            </div>
+                            <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
+                              <motion.div initial={{width:0}} animate={{width:`${s.value}%`}} transition={{duration:0.7,delay:1+i*0.08}} className="h-full rounded-full bg-gradient-to-r from-violet-500 to-violet-400"/>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  </div>
+
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                    <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:1.1}} className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <p className="text-[12px] font-bold text-slate-900">Recent Trades</p>
+                          <p className="text-[9px] text-slate-400">Last executions</p>
+                        </div>
+                        <span className="text-[9px] text-violet-600 font-semibold">View all ›</span>
+                      </div>
+                      <div className="space-y-1.5">
+                        {RECENT_TRADES.map((t,i) => (
+                          <motion.div key={i} initial={{opacity:0,y:4}} animate={{opacity:1,y:0}} transition={{delay:1.2+i*0.05}}
+                            className="flex items-center justify-between px-2.5 py-1.5 rounded-lg border border-slate-100 bg-slate-50/60">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className={`w-1.5 h-1.5 rounded-full ${t.win ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                              <div className="leading-tight min-w-0">
+                                <p className="text-[10px] font-bold text-slate-900 truncate">{t.pair}</p>
+                                <p className="text-[8px] text-slate-500">{t.side} · {t.date}</p>
+                              </div>
+                            </div>
+                            <p className={`text-[11px] font-bold font-mono ${t.win ? 'text-emerald-600' : 'text-red-600'}`}>{t.result>0?'+':'-'}${Math.abs(t.result)}</p>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </motion.div>
+
+                    <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:1.15}} className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
+                      <p className="text-[12px] font-bold text-slate-900 mb-0.5">Best Setups</p>
+                      <p className="text-[9px] text-slate-400 mb-2">P&L by setup type</p>
+                      <div className="space-y-2.5">
+                        {SETUP_DATA.map((s,i) => (
+                          <div key={s.name}>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-[10px] text-slate-700 font-medium">{s.name}</span>
+                              <span className="text-[10px] font-bold font-mono text-emerald-600">+${s.value.toLocaleString()}</span>
+                            </div>
+                            <div className="h-1 bg-slate-100 rounded-full overflow-hidden">
+                              <motion.div initial={{width:0}} animate={{width:`${s.pct}%`}} transition={{duration:0.7,delay:1.25+i*0.08}} className="h-full rounded-full bg-gradient-to-r from-violet-500 to-violet-400"/>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </motion.div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
