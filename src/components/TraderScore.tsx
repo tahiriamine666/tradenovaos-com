@@ -130,7 +130,7 @@ function RadialScore({ value, size = 80 }: { value: number; size?: number }) {
   const circumference = 2 * Math.PI * radius;
   const dash = (value / 100) * circumference;
 
-  const color = value >= 75 ? '#10b981' : value >= 50 ? '#7c3aed' : value >= 30 ? '#f59e0b' : '#ef4444';
+  const color = value >= 75 ? '#7c3aed' : value >= 50 ? '#a78bfa' : value >= 30 ? '#f59e0b' : '#ef4444';
 
   return (
     <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
