@@ -358,10 +358,10 @@ function Hero({ onSignup }: { onSignup: () => void }) {
 
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
                     {[
-                      {l:'Total P&L', v:'+$12,480', sub:'From 143 trades', Icon:TrendingUp},
-                      {l:'Win Rate',  v:'68%',       sub:'97 wins · 46 losses', Icon:Target},
-                      {l:'Avg R:R',   v:'1:3.2',     sub:'Across logged R:R', Icon:LineChart},
-                      {l:'Trades',    v:'143',       sub:'Total logged trades', Icon:BarChart3},
+                      {l:'Total P&L', v:<><LiveMetric base={12480} prefix="+$" drift={6} /></>, sub:'From 143 trades', Icon:TrendingUp},
+                      {l:'Win Rate',  v:<><LiveMetric base={68} suffix="%" drift={0.4} /></>, sub:'97 wins · 46 losses', Icon:Target},
+                      {l:'Avg R:R',   v:<>1:<LiveMetric base={3.2} decimals={1} drift={0.05} /></>, sub:'Across logged R:R', Icon:LineChart},
+                      {l:'Trades',    v:<><LiveMetric base={143} /></>, sub:'Total logged trades', Icon:BarChart3},
                     ].map((m,i) => (
                       <motion.div key={m.l} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} transition={{delay:0.6+i*0.08}}
                         className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
