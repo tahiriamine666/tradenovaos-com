@@ -126,14 +126,104 @@ function Navbar({ onLogin, onSignup }: { onLogin: () => void; onSignup: () => vo
   );
 }
 
+// Floating particles for cinematic background
+const PARTICLES = Array.from({ length: 18 }).map((_, i) => ({
+  id: i,
+  x: (i * 53) % 100,
+  y: (i * 37) % 100,
+  size: 2 + (i % 3),
+  delay: (i % 7) * 0.4,
+  duration: 8 + (i % 5) * 2,
+}));
+
+function HeroBackground() {
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      {/* Nebula glows — slow breathing */}
+      <motion.div
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[1100px] h-[680px] bg-violet-500/15 rounded-full blur-[160px]"
+        animate={{ opacity: [0.55, 0.95, 0.55], scale: [1, 1.06, 1] }}
+        transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.div
+        className="absolute bottom-[-120px] left-[10%] w-[560px] h-[440px] bg-indigo-500/12 rounded-full blur-[130px]"
+        animate={{ opacity: [0.4, 0.75, 0.4], x: [0, 40, 0] }}
+        transition={{ duration: 12, repeat: Infinity, ease: 'easeInOut' }}
+      />
+      <motion.div
+        className="absolute top-[20%] right-[5%] w-[420px] h-[420px] bg-fuchsia-500/10 rounded-full blur-[120px]"
+        animate={{ opacity: [0.3, 0.6, 0.3], y: [0, -30, 0] }}
+        transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut' }}
+      />
+
+      {/* Grid */}
+      <div
+        className="absolute inset-0 opacity-[0.04]"
+        style={{
+          backgroundImage: `linear-gradient(rgba(139,92,246,1) 1px,transparent 1px),linear-gradient(90deg,rgba(139,92,246,1) 1px,transparent 1px)`,
+          backgroundSize: '72px 72px',
+          maskImage: 'radial-gradient(ellipse at center, black 40%, transparent 75%)',
+          WebkitMaskImage: 'radial-gradient(ellipse at center, black 40%, transparent 75%)',
+        }}
+      />
+
+      {/* Particles */}
+      {PARTICLES.map((p) => (
+        <motion.span
+          key={p.id}
+          className="absolute rounded-full bg-violet-400/60"
+          style={{ left: `${p.x}%`, top: `${p.y}%`, width: p.size, height: p.size, filter: 'blur(0.5px)' }}
+          animate={{ y: [0, -40, 0], opacity: [0, 0.8, 0] }}
+          transition={{ duration: p.duration, repeat: Infinity, delay: p.delay, ease: 'easeInOut' }}
+        />
+      ))}
+
+      {/* Scan line shimmer */}
+      <motion.div
+        className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-violet-400/50 to-transparent"
+        animate={{ y: ['0vh', '100vh'] }}
+        transition={{ duration: 14, repeat: Infinity, ease: 'linear' }}
+      />
+    </div>
+  );
+}
+
+// Live ticker metric — gently pulses around a base value
+function LiveMetric({ base, prefix = '', suffix = '', decimals = 0, drift = 0, className = '' }: {
+  base: number; prefix?: string; suffix?: string; decimals?: number; drift?: number; className?: string;
+}) {
+  const [val, setVal] = useState(0);
+  const { ref, inView } = useReveal();
+  const started = useRef(false);
+  useEffect(() => {
+    if (!inView) return;
+    if (!started.current) {
+      started.current = true;
+      const s = performance.now();
+      const dur = 1800;
+      const tick = (now: number) => {
+        const p = Math.min((now - s) / dur, 1);
+        setVal((1 - Math.pow(1 - p, 3)) * base);
+        if (p < 1) requestAnimationFrame(tick); else setVal(base);
+      };
+      requestAnimationFrame(tick);
+    }
+    if (!drift) return;
+    const id = setInterval(() => {
+      setVal(base + (Math.random() - 0.5) * 2 * drift);
+    }, 1600);
+    return () => clearInterval(id);
+  }, [inView, base, drift]);
+  const formatted = decimals
+    ? val.toLocaleString(undefined, { minimumFractionDigits: decimals, maximumFractionDigits: decimals })
+    : Math.round(val).toLocaleString();
+  return <span ref={ref} className={className}>{prefix}{formatted}{suffix}</span>;
+}
+
 function Hero({ onSignup }: { onSignup: () => void }) {
   return (
     <section className="relative min-h-[100dvh] flex flex-col items-center justify-center pt-20 pb-16 overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-violet-600/8 rounded-full blur-[140px]" />
-        <div className="absolute bottom-0 left-1/4 w-[500px] h-[400px] bg-indigo-700/6 rounded-full blur-[100px]" />
-        <div className="absolute inset-0 opacity-[0.025]" style={{ backgroundImage: `linear-gradient(rgba(139,92,246,1) 1px,transparent 1px),linear-gradient(90deg,rgba(139,92,246,1) 1px,transparent 1px)`, backgroundSize: '72px 72px' }} />
-      </div>
+      <HeroBackground />
       <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 w-full">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="flex justify-center mb-8">
           <div className="inline-flex items-center gap-2 bg-violet-500/10 border border-violet-500/20 rounded-full px-4 py-1.5">
@@ -179,6 +269,95 @@ function Hero({ onSignup }: { onSignup: () => void }) {
           className="relative w-full max-w-[1180px] mx-auto pb-12 sm:pb-20"
         >
           <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-3/4 h-40 bg-violet-600/15 blur-3xl rounded-full pointer-events-none" />
+
+          {/* Floating accent cards — cinematic depth */}
+          <motion.div
+            initial={{ opacity: 0, x: -40, y: 20 }}
+            animate={{ opacity: 1, x: 0, y: 0 }}
+            transition={{ duration: 0.8, delay: 1.4, ease }}
+            className="hidden md:block absolute -left-6 lg:-left-16 top-[28%] z-20"
+          >
+            <motion.div
+              animate={{ y: [0, -10, 0] }}
+              transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+              className="rounded-2xl bg-white/95 backdrop-blur-xl border border-violet-100 shadow-2xl shadow-violet-500/20 p-3 w-[210px]"
+            >
+              <div className="flex items-center gap-2 mb-1.5">
+                <div className="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center">
+                  <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />
+                </div>
+                <div>
+                  <p className="text-[9px] text-slate-500 font-semibold tracking-wider uppercase">Trade Closed</p>
+                  <p className="text-[11px] font-bold text-slate-900">NQ · Long</p>
+                </div>
+              </div>
+              <div className="flex items-end justify-between">
+                <span className="text-lg font-black font-mono text-emerald-600">+$480</span>
+                <span className="text-[9px] text-slate-400">+2.4R</span>
+              </div>
+            </motion.div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 40, y: -20 }}
+            animate={{ opacity: 1, x: 0, y: 0 }}
+            transition={{ duration: 0.8, delay: 1.6, ease }}
+            className="hidden md:block absolute -right-4 lg:-right-12 top-[14%] z-20"
+          >
+            <motion.div
+              animate={{ y: [0, 8, 0] }}
+              transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut', delay: 0.4 }}
+              className="rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-700 border border-violet-400/40 shadow-2xl shadow-violet-700/40 p-3 w-[220px] text-white"
+            >
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-violet-200" />
+                <p className="text-[9px] font-bold tracking-wider uppercase text-violet-100">AI Insight</p>
+              </div>
+              <p className="text-[11px] leading-snug text-white/90">
+                Your <span className="font-bold">pullback setups</span> win 84% before 11AM EST.
+              </p>
+              <div className="mt-2 h-1 rounded-full bg-white/15 overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: '84%' }}
+                  transition={{ duration: 1.4, delay: 2 }}
+                  className="h-full bg-emerald-300"
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 1.9, ease }}
+            className="hidden lg:block absolute -right-8 bottom-[18%] z-20"
+          >
+            <motion.div
+              animate={{ y: [0, -6, 0] }}
+              transition={{ duration: 4.5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+              className="rounded-2xl bg-white/95 backdrop-blur-xl border border-slate-200 shadow-2xl shadow-slate-900/10 p-3 w-[190px]"
+            >
+              <p className="text-[9px] text-slate-500 font-semibold tracking-wider uppercase mb-1">Trader Score</p>
+              <div className="flex items-baseline gap-1 mb-2">
+                <span className="text-2xl font-black font-mono text-violet-600">82</span>
+                <span className="text-[10px] text-slate-400">/100</span>
+                <span className="ml-auto text-[9px] font-bold text-emerald-600">▲ +4</span>
+              </div>
+              <div className="flex gap-0.5">
+                {Array.from({ length: 10 }).map((_, i) => (
+                  <motion.span
+                    key={i}
+                    initial={{ scaleY: 0 }}
+                    animate={{ scaleY: 1 }}
+                    transition={{ duration: 0.4, delay: 2.1 + i * 0.05 }}
+                    className={`flex-1 h-3 rounded-sm origin-bottom ${i < 8 ? 'bg-violet-500' : 'bg-slate-200'}`}
+                  />
+                ))}
+              </div>
+            </motion.div>
+          </motion.div>
+
           <div className="relative rounded-3xl border border-white/[0.06] bg-[#0a0a14] overflow-hidden shadow-2xl shadow-black/60">
             {/* Browser chrome */}
             <div className="flex items-center gap-3 px-5 py-3.5 border-b border-white/[0.06] bg-white/[0.02]">
@@ -268,10 +447,10 @@ function Hero({ onSignup }: { onSignup: () => void }) {
 
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
                     {[
-                      {l:'Total P&L', v:'+$12,480', sub:'From 143 trades', Icon:TrendingUp},
-                      {l:'Win Rate',  v:'68%',       sub:'97 wins · 46 losses', Icon:Target},
-                      {l:'Avg R:R',   v:'1:3.2',     sub:'Across logged R:R', Icon:LineChart},
-                      {l:'Trades',    v:'143',       sub:'Total logged trades', Icon:BarChart3},
+                      {l:'Total P&L', v:<><LiveMetric base={12480} prefix="+$" drift={6} /></>, sub:'From 143 trades', Icon:TrendingUp},
+                      {l:'Win Rate',  v:<><LiveMetric base={68} suffix="%" drift={0.4} /></>, sub:'97 wins · 46 losses', Icon:Target},
+                      {l:'Avg R:R',   v:<>1:<LiveMetric base={3.2} decimals={1} drift={0.05} /></>, sub:'Across logged R:R', Icon:LineChart},
+                      {l:'Trades',    v:<><LiveMetric base={143} /></>, sub:'Total logged trades', Icon:BarChart3},
                     ].map((m,i) => (
                       <motion.div key={m.l} initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} transition={{delay:0.6+i*0.08}}
                         className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
