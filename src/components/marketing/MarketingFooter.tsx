@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { BarChart3, Twitter, Instagram, Linkedin, Facebook, MessageCircle, ArrowRight } from 'lucide-react';
+import { BarChart3, Twitter, Instagram, ArrowRight } from 'lucide-react';
 
 const COLS: { title: string; links: { label: string; to: string; external?: boolean }[] }[] = [
   {
