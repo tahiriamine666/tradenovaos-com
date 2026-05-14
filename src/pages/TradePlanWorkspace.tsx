@@ -1,6 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Responsive, WidthProvider, Layout } from 'react-grid-layout';
+// @ts-ignore - types mismatch with runtime
+import RGL from 'react-grid-layout';
+const Responsive: any = (RGL as any).Responsive;
+const WidthProvider: any = (RGL as any).WidthProvider;
+type Layout = { i: string; x: number; y: number; w: number; h: number };
 import { GripVertical, ChevronDown, ChevronUp, Lock, Unlock, Save, RotateCcw, Edit3, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
