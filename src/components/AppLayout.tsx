@@ -89,7 +89,11 @@ function SidebarContent({ active, onNavigate }: {
 }) {
   const { profile } = useProfile();
   const { user } = useAuth();
-  const isAdmin = !!user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase());
+  const [isAdmin, setIsAdmin] = useState(false);
+  useEffect(() => {
+    if (!user) { setIsAdmin(false); return; }
+    supabase.rpc('is_admin').then(({ data }) => setIsAdmin(!!data));
+  }, [user]);
   const items = isAdmin ? [...BASE_ITEMS, ADMIN_ITEM] : BASE_ITEMS;
 
   return (
