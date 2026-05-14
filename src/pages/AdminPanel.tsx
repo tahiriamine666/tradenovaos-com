@@ -70,6 +70,16 @@ export default function AdminPanel() {
   const [search,    setSearch]    = useState('');
   const [upgrading, setUpgrading] = useState(null);
 
+  // Manual activation state
+  const [activateEmail,    setActivateEmail]    = useState('');
+  const [activatePlan,     setActivatePlan]     = useState('pro');
+  const [activateStatus,   setActivateStatus]   = useState('active');
+  const [activateTrialDays,setActivateTrialDays]= useState('0');
+  const [activateNotes,    setActivateNotes]    = useState('');
+  const [activating,       setActivating]       = useState(false);
+  const [searchResults,    setSearchResults]    = useState<any[]>([]);
+  const [searching,        setSearching]        = useState(false);
+
   useEffect(() => {
     if (!user) return;
     supabase.rpc('is_admin').then(({ data }) => setIsAdmin(!!data));
@@ -156,12 +166,67 @@ export default function AdminPanel() {
     { name: 'Elite', value: stats?.elite_users ?? 0, color: '#f59e0b' },
   ];
 
+  const searchUsers = useCallback(async (query: string) => {
+    if (!query || query.length < 2) { setSearchResults([]); return; }
+    setSearching(true);
+    const { data } = await supabase.rpc('admin_search_users' as any, { p_query: query });
+    setSearchResults((data as any[]) ?? []);
+    setSearching(false);
+  }, []);
+
+  const handleActivate = async () => {
+    if (!activateEmail.trim()) { toast({ title: 'Email required', variant: 'destructive' }); return; }
+    setActivating(true);
+    try {
+      const { data, error } = await supabase.rpc('admin_upgrade_by_email' as any, {
+        p_email:      activateEmail.trim(),
+        p_plan:       activatePlan,
+        p_status:     activateStatus,
+        p_trial_days: parseInt(activateTrialDays) || 0,
+        p_notes:      activateNotes.trim() || null,
+      });
+      if (error) throw error;
+      if (!(data as any)?.success) throw new Error((data as any)?.error || 'Failed');
+      const planLabel = activatePlan.charAt(0).toUpperCase() + activatePlan.slice(1);
+      toast({ title: `✅ User upgraded to ${planLabel} successfully!` });
+      setActivateEmail(''); setActivateNotes(''); setActivateTrialDays('0'); setSearchResults([]);
+      load();
+    } catch (e: any) { toast({ title: 'Error', description: e.message, variant: 'destructive' }); }
+    finally { setActivating(false); }
+  };
+
+  const handleExtendTrial = async (email: string) => {
+    setActivating(true);
+    try {
+      const { error } = await supabase.rpc('admin_extend_trial' as any, { p_email: email, p_days: 7 });
+      if (error) throw error;
+      toast({ title: `✅ Trial extended 7 days for ${email}` });
+      load();
+    } catch (e: any) { toast({ title: 'Error', description: e.message, variant: 'destructive' }); }
+    finally { setActivating(false); }
+  };
+
+  const quickUpgrade = async (userId: string, userEmail: string, plan: string) => {
+    setUpgrading(userId);
+    try {
+      const { data, error } = await supabase.rpc('admin_upgrade_by_email' as any, {
+        p_email: userEmail, p_plan: plan, p_status: 'active', p_trial_days: 0, p_notes: 'Quick upgrade from admin panel',
+      });
+      if (error) throw error;
+      if (!(data as any)?.success) throw new Error((data as any)?.error || 'Failed');
+      toast({ title: `✅ User upgraded to ${plan} successfully!` });
+      load();
+    } catch (e: any) { toast({ title: 'Error', description: e.message, variant: 'destructive' }); }
+    finally { setUpgrading(null); }
+  };
+
   const TABS = [
     { id: 'overview', l: 'Overview',  badge: null },
     { id: 'users',    l: 'Users',     badge: stats?.total_users },
     { id: 'live',     l: 'Live',      badge: liveUsers.length || null },
     { id: 'support',  l: 'Support',   badge: stats?.open_tickets || null },
     { id: 'upgrades', l: 'Upgrades',  badge: pending.length || null },
+    { id: 'activate', l: 'Activate Plan', badge: null },
   ];
 
   if (isAdmin === false) return (
@@ -507,6 +572,234 @@ export default function AdminPanel() {
                   </div>
                 </motion.div>
               ))}
+          </motion.div>
+        )}
+
+        {/* ── ACTIVATE PLAN ── */}
+        {tab === 'activate' && (
+          <motion.div key="act" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-5">
+            <div className="rounded-2xl border border-violet-500/20 bg-violet-500/5 p-5">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 rounded-xl bg-violet-500/15 border border-violet-500/25 flex items-center justify-center flex-shrink-0">
+                  <Shield className="h-5 w-5 text-violet-400" />
+                </div>
+                <div>
+                  <p className="text-sm font-black text-white">Manual Plan Activation</p>
+                  <p className="text-xs text-white/40 mt-1 leading-relaxed">
+                    Manually activate Pro or Elite for users who paid via Payoneer or need manual access.
+                    Use after confirming payment. All activations are logged with your admin ID.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-6 space-y-5">
+              <p className="text-sm font-black text-white">Activate Subscription</p>
+
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-white/40 uppercase tracking-wider">User Email</label>
+                <div className="relative">
+                  <input type="email" value={activateEmail}
+                    onChange={e => { setActivateEmail(e.target.value); searchUsers(e.target.value); }}
+                    placeholder="user@example.com"
+                    className="w-full px-4 py-3 bg-white/[0.04] border border-white/[0.10] rounded-xl text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-violet-500/50 focus:bg-white/[0.06] transition-all" />
+                  {searching && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <div className="w-4 h-4 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  )}
+                </div>
+
+                {searchResults.length > 0 && (
+                  <div className="rounded-xl border border-white/[0.08] bg-[#0d0d1a] overflow-hidden shadow-xl">
+                    {searchResults.map((u: any) => (
+                      <button key={u.id} onClick={() => { setActivateEmail(u.email); setSearchResults([]); }}
+                        className="flex items-center justify-between w-full px-4 py-3 hover:bg-white/[0.05] transition-colors text-left border-b border-white/[0.04] last:border-0">
+                        <div>
+                          <p className="text-sm font-semibold text-white">{u.email}</p>
+                          <p className="text-xs text-white/30">{u.display_name ?? 'No name'}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border capitalize ${
+                            u.plan_type === 'elite' ? 'bg-amber-500/15 text-amber-400 border-amber-500/25' :
+                            u.plan_type === 'pro'   ? 'bg-violet-500/15 text-violet-400 border-violet-500/25' :
+                            'bg-white/5 text-white/35 border-white/10'
+                          }`}>{u.plan_type}</span>
+                          {u.upgraded_manually && (
+                            <span className="text-[9px] font-bold bg-blue-500/15 text-blue-400 border border-blue-500/20 px-1.5 py-0.5 rounded-full">MANUAL</span>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-white/40 uppercase tracking-wider">Plan</label>
+                  <div className="grid grid-cols-3 gap-1.5">
+                    {['free','pro','elite'].map(p => (
+                      <button key={p} onClick={() => setActivatePlan(p)}
+                        className={`py-2.5 rounded-xl border text-xs font-black capitalize transition-all ${
+                          activatePlan === p
+                            ? p === 'elite' ? 'bg-amber-500/15 border-amber-500/30 text-amber-400'
+                            : p === 'pro'   ? 'bg-violet-500/15 border-violet-500/30 text-violet-400'
+                            : 'bg-white/10 border-white/20 text-white'
+                            : 'border-white/[0.08] text-white/30 hover:text-white hover:bg-white/[0.04]'
+                        }`}>
+                        {p === 'elite' ? '👑' : p === 'pro' ? '⚡' : '🆓'} {p}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold text-white/40 uppercase tracking-wider">Status</label>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {[
+                      { v:'active',   l:'Active',   c:'emerald' },
+                      { v:'trialing', l:'Trial',    c:'blue' },
+                      { v:'inactive', l:'Inactive', c:'gray' },
+                      { v:'canceled', l:'Canceled', c:'red' },
+                    ].map(s => (
+                      <button key={s.v} onClick={() => setActivateStatus(s.v)}
+                        className={`py-2 rounded-xl border text-xs font-bold transition-all ${
+                          activateStatus === s.v
+                            ? s.c === 'emerald' ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400'
+                            : s.c === 'blue'    ? 'bg-blue-500/15 border-blue-500/30 text-blue-400'
+                            : s.c === 'red'     ? 'bg-red-500/15 border-red-500/30 text-red-400'
+                            : 'bg-white/10 border-white/20 text-white/60'
+                            : 'border-white/[0.08] text-white/30 hover:text-white hover:bg-white/[0.04]'
+                        }`}>
+                        {s.l}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-white/40 uppercase tracking-wider">Trial Days (0 = immediate activation)</label>
+                <div className="flex items-center gap-3">
+                  <input type="number" min="0" max="365" value={activateTrialDays}
+                    onChange={e => setActivateTrialDays(e.target.value)}
+                    className="w-28 px-4 py-3 bg-white/[0.04] border border-white/[0.10] rounded-xl text-sm text-white focus:outline-none focus:border-violet-500/50 transition-all text-center font-mono" />
+                  <div className="flex gap-2">
+                    {[7, 14, 30].map(d => (
+                      <button key={d} onClick={() => setActivateTrialDays(String(d))}
+                        className="px-3 py-1.5 rounded-lg border border-white/[0.08] text-white/35 text-xs font-bold hover:bg-white/[0.05] hover:text-white transition-colors">
+                        {d}d
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-white/40 uppercase tracking-wider">Admin Notes (optional)</label>
+                <textarea value={activateNotes} onChange={e => setActivateNotes(e.target.value)}
+                  placeholder="e.g. Paid via Payoneer ref: PAY-XXXXXXX on May 14..." rows={2}
+                  className="w-full px-4 py-3 bg-white/[0.04] border border-white/[0.10] rounded-xl text-sm text-white placeholder:text-white/20 focus:outline-none focus:border-violet-500/50 transition-all resize-none" />
+              </div>
+
+              {activateEmail && (
+                <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] px-4 py-3">
+                  <p className="text-[11px] text-white/30 mb-2 font-semibold uppercase tracking-wider">Activation Preview</p>
+                  <div className="flex items-center gap-3 flex-wrap text-sm">
+                    <span className="text-white font-semibold">{activateEmail}</span>
+                    <span className="text-white/30">→</span>
+                    <span className={`font-black capitalize ${activatePlan === 'elite' ? 'text-amber-400' : activatePlan === 'pro' ? 'text-violet-400' : 'text-white/50'}`}>{activatePlan}</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full border font-bold ${activateStatus === 'active' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : activateStatus === 'trialing' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-white/5 text-white/30 border-white/10'}`}>{activateStatus}</span>
+                    {parseInt(activateTrialDays) > 0 && <span className="text-xs text-white/40">· {activateTrialDays} day trial</span>}
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center gap-3 pt-1">
+                <button onClick={handleActivate} disabled={activating || !activateEmail.trim()}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-black transition-all disabled:opacity-40 disabled:cursor-not-allowed ${
+                    activatePlan === 'elite'
+                      ? 'bg-amber-500 hover:bg-amber-400 text-white shadow-lg shadow-amber-500/25'
+                      : activatePlan === 'pro'
+                      ? 'bg-violet-600 hover:bg-violet-500 text-white shadow-lg shadow-violet-500/25'
+                      : 'bg-white/10 hover:bg-white/15 text-white'
+                  }`}>
+                  {activating ? (
+                    <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Activating...</>
+                  ) : (
+                    <>
+                      {activatePlan === 'elite' ? '👑' : activatePlan === 'pro' ? '⚡' : '🆓'}
+                      {activatePlan === 'free' ? ' Downgrade to Free' : ` Activate ${activatePlan.charAt(0).toUpperCase() + activatePlan.slice(1)}`}
+                    </>
+                  )}
+                </button>
+                <button onClick={() => { setActivateEmail(''); setActivateNotes(''); setActivateTrialDays('0'); setSearchResults([]); }}
+                  className="px-4 py-3 rounded-xl border border-white/[0.08] text-white/30 text-sm font-semibold hover:bg-white/[0.04] hover:text-white transition-all">
+                  Clear
+                </button>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] overflow-hidden">
+              <div className="p-5 border-b border-white/[0.06]">
+                <p className="text-sm font-black text-white">Quick User Actions</p>
+                <p className="text-xs text-white/30 mt-0.5">Upgrade, downgrade, or extend trial directly from user list</p>
+              </div>
+              {loading ? (
+                <div className="p-5 space-y-3">{[1,2,3].map(i => <div key={i} className="h-14 bg-white/[0.02] rounded-xl animate-pulse"/>)}</div>
+              ) : users.length === 0 ? (
+                <div className="py-10 text-center"><p className="text-sm text-white/20">No users yet</p></div>
+              ) : (
+                <div className="divide-y divide-white/[0.04]">
+                  {users.map((u: any) => (
+                    <div key={u.id} className="flex items-center gap-4 px-5 py-4">
+                      <div className="w-8 h-8 rounded-full bg-violet-600/15 border border-violet-500/20 flex items-center justify-center flex-shrink-0">
+                        <span className="text-xs font-black text-violet-300">{(u.display_name ?? u.email ?? '?')[0].toUpperCase()}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-sm font-semibold text-white truncate">{u.email}</p>
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border capitalize flex-shrink-0 ${
+                            u.plan_type === 'elite' ? 'bg-amber-500/15 text-amber-400 border-amber-500/25' :
+                            u.plan_type === 'pro'   ? 'bg-violet-500/15 text-violet-400 border-violet-500/25' :
+                            'bg-white/5 text-white/35 border-white/10'
+                          }`}>{u.plan_type}</span>
+                          {u.upgraded_manually && (
+                            <span className="text-[9px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/15 px-1.5 py-0.5 rounded-full flex-shrink-0">MANUAL</span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-white/25 mt-0.5">{u.subscription_status} · {u.trade_count} trades</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap justify-end">
+                        {u.plan_type !== 'pro' && (
+                          <button onClick={() => quickUpgrade(u.id, u.email, 'pro')} disabled={upgrading === u.id}
+                            className="px-2.5 py-1.5 rounded-lg bg-violet-500/10 border border-violet-500/20 text-violet-400 text-[10px] font-black hover:bg-violet-500/15 disabled:opacity-40 transition-colors">
+                            ⚡ Pro
+                          </button>
+                        )}
+                        {u.plan_type !== 'elite' && (
+                          <button onClick={() => quickUpgrade(u.id, u.email, 'elite')} disabled={upgrading === u.id}
+                            className="px-2.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] font-black hover:bg-amber-500/15 disabled:opacity-40 transition-colors">
+                            👑 Elite
+                          </button>
+                        )}
+                        <button onClick={() => handleExtendTrial(u.email)} disabled={activating}
+                          className="px-2.5 py-1.5 rounded-lg bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-black hover:bg-blue-500/15 disabled:opacity-40 transition-colors">
+                          +7d
+                        </button>
+                        {u.plan_type !== 'free' && (
+                          <button onClick={() => quickUpgrade(u.id, u.email, 'free')} disabled={upgrading === u.id}
+                            className="px-2.5 py-1.5 rounded-lg border border-white/[0.08] text-white/25 text-[10px] font-black hover:bg-white/[0.04] disabled:opacity-40 transition-colors">
+                            Free
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </motion.div>
         )}
 

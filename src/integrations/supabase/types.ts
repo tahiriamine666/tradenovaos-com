@@ -230,6 +230,7 @@ export type Database = {
           trial_ends_at: string | null
           updated_at: string
           upgraded_at: string | null
+          upgraded_manually: boolean
         }
         Insert: {
           avatar_url?: string | null
@@ -251,6 +252,7 @@ export type Database = {
           trial_ends_at?: string | null
           updated_at?: string
           upgraded_at?: string | null
+          upgraded_manually?: boolean
         }
         Update: {
           avatar_url?: string | null
@@ -272,6 +274,7 @@ export type Database = {
           trial_ends_at?: string | null
           updated_at?: string
           upgraded_at?: string | null
+          upgraded_manually?: boolean
         }
         Relationships: []
       }
@@ -536,6 +539,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_extend_trial: {
+        Args: { p_days?: number; p_email: string }
+        Returns: Json
+      }
+      admin_search_users: { Args: { p_query: string }; Returns: Json }
+      admin_upgrade_by_email: {
+        Args: {
+          p_email: string
+          p_notes?: string
+          p_plan: string
+          p_status?: string
+          p_trial_days?: number
+        }
+        Returns: Json
+      }
       admin_upgrade_user: {
         Args: {
           new_plan: string
