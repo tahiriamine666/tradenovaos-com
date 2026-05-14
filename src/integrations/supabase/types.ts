@@ -521,7 +521,15 @@ export type Database = {
           user_id?: string
           user_message?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "upgrade_requests_user_id_profiles_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -537,12 +545,15 @@ export type Database = {
         }
         Returns: undefined
       }
-      get_admin_analytics: { Args: { p_days?: number }; Returns: Json }
+      get_active_users_now: { Args: never; Returns: Json }
+      get_admin_analytics: { Args: { days_back?: number }; Returns: Json }
       get_admin_stats: { Args: never; Returns: Json }
       get_admin_users_list: { Args: never; Returns: Json }
       get_my_profile: { Args: never; Returns: Json }
       get_user_plan_info: { Args: never; Returns: Json }
-      is_admin: { Args: { _uid: string }; Returns: boolean }
+      is_admin:
+        | { Args: never; Returns: boolean }
+        | { Args: { _uid: string }; Returns: boolean }
       request_upgrade: {
         Args: { p_message: string; p_payoneer_ref: string; p_plan: string }
         Returns: string
