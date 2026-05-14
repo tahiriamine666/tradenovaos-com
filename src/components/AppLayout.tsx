@@ -7,8 +7,8 @@ import {
   Upload, X, ChevronRight,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
-const ADMIN_EMAILS = ['tahiriamine889@gmail.com', 'tahiria740@gmail.com'];
 export const ADMIN_ITEM = { id: 'admin', label: 'Admin Panel', icon: Shield };
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -89,7 +89,11 @@ function SidebarContent({ active, onNavigate }: {
 }) {
   const { profile } = useProfile();
   const { user } = useAuth();
-  const isAdmin = !!user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase());
+  const [isAdmin, setIsAdmin] = useState(false);
+  useEffect(() => {
+    if (!user) { setIsAdmin(false); return; }
+    supabase.rpc('is_admin').then(({ data }) => setIsAdmin(!!data));
+  }, [user]);
   const items = isAdmin ? [...BASE_ITEMS, ADMIN_ITEM] : BASE_ITEMS;
 
   return (

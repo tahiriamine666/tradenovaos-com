@@ -16,7 +16,7 @@ const PERIODS = [
 
 const PLAN_BADGE = { elite: 'bg-amber-500/15 text-amber-400 border-amber-500/25', pro: 'bg-violet-500/15 text-violet-400 border-violet-500/25', free: 'bg-white/5 text-white/35 border-white/10' };
 const STATUS_COLOR = { active:'text-emerald-400', trialing:'text-blue-400', inactive:'text-white/25', canceled:'text-red-400', past_due:'text-amber-400' };
-const ease = [0.22, 1, 0.36, 1];
+const ease: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 function fmtRel(d) {
   if (!d) return 'Never';
@@ -89,10 +89,10 @@ export default function AdminPanel() {
       if (s.error) throw new Error(s.error.message);
       if (u.error) throw new Error(u.error.message);
       setStats(s.data);
-      setUsers(u.data ?? []);
+      setUsers((u.data as any[]) ?? []);
       setMessages(m.data ?? []);
       setRequests(r.data ?? []);
-      setLiveUsers(l.data ?? []);
+      setLiveUsers((l.data as any[]) ?? []);
     } catch (e) { setError(e.message); }
     finally { setLoading(false); }
   }, [user, period]);
