@@ -89,10 +89,10 @@ export default function AdminPanel() {
       if (s.error) throw new Error(s.error.message);
       if (u.error) throw new Error(u.error.message);
       setStats(s.data);
-      setUsers(u.data ?? []);
+      setUsers((u.data as any[]) ?? []);
       setMessages(m.data ?? []);
       setRequests(r.data ?? []);
-      setLiveUsers(l.data ?? []);
+      setLiveUsers((l.data as any[]) ?? []);
     } catch (e) { setError(e.message); }
     finally { setLoading(false); }
   }, [user, period]);
