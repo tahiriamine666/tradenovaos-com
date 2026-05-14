@@ -7,8 +7,8 @@ import {
   Upload, X, ChevronRight,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
-const ADMIN_EMAILS = ['tahiriamine889@gmail.com', 'tahiria740@gmail.com'];
 export const ADMIN_ITEM = { id: 'admin', label: 'Admin Panel', icon: Shield };
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
