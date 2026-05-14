@@ -3,9 +3,13 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BarChart3, BookOpen, Brain, CalendarDays, CircleDollarSign,
-  LayoutDashboard, Menu, PlayCircle, Settings, Target,
+  LayoutDashboard, Menu, PlayCircle, Settings, Shield, Target,
   Upload, X, ChevronRight,
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+
+const ADMIN_EMAILS = ['tahiriamine889@gmail.com', 'tahiria740@gmail.com'];
+export const ADMIN_ITEM = { id: 'admin', label: 'Admin Panel', icon: Shield };
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import UserAvatar from '@/components/UserAvatar';
@@ -84,6 +88,9 @@ function SidebarContent({ active, onNavigate }: {
   active: string; onNavigate: (id: string) => void;
 }) {
   const { profile } = useProfile();
+  const { user } = useAuth();
+  const isAdmin = !!user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase());
+  const items = isAdmin ? [...BASE_ITEMS, ADMIN_ITEM] : BASE_ITEMS;
 
   return (
     <div className="flex flex-col h-full">
@@ -91,9 +98,10 @@ function SidebarContent({ active, onNavigate }: {
 
       <div className="px-3 flex-1 overflow-y-auto">
         <nav className="space-y-0.5">
-          {BASE_ITEMS.map((item) => {
+          {items.map((item) => {
             const Icon = item.icon;
             const sel  = active === item.id;
+            const isAdminItem = item.id === 'admin';
             return (
               <button key={item.id} onClick={() => onNavigate(item.id)}
                 className={cx(
@@ -103,7 +111,10 @@ function SidebarContent({ active, onNavigate }: {
                     : 'text-muted-foreground hover:bg-muted hover:text-foreground',
                 )}>
                 <Icon className="h-4 w-4 flex-shrink-0" />
-                {item.label}
+                <span className="flex-1">{item.label}</span>
+                {isAdminItem && !sel && (
+                  <span className="text-[9px] font-semibold tracking-wider px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-500 border border-amber-500/20">ADMIN</span>
+                )}
               </button>
             );
           })}
