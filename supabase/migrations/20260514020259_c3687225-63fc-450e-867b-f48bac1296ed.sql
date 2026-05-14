@@ -1,0 +1,17 @@
+ALTER TABLE public.playbooks
+  ADD COLUMN IF NOT EXISTS name text,
+  ADD COLUMN IF NOT EXISTS emoji text DEFAULT '📋',
+  ADD COLUMN IF NOT EXISTS strategy_type text DEFAULT 'other',
+  ADD COLUMN IF NOT EXISTS tags text[] NOT NULL DEFAULT '{}',
+  ADD COLUMN IF NOT EXISTS entry_checklist jsonb NOT NULL DEFAULT '[]'::jsonb,
+  ADD COLUMN IF NOT EXISTS exit_checklist jsonb NOT NULL DEFAULT '[]'::jsonb,
+  ADD COLUMN IF NOT EXISTS psych_checklist jsonb NOT NULL DEFAULT '[]'::jsonb,
+  ADD COLUMN IF NOT EXISTS sessions text[] NOT NULL DEFAULT '{}',
+  ADD COLUMN IF NOT EXISTS pairs text[] NOT NULL DEFAULT '{}',
+  ADD COLUMN IF NOT EXISTS risk_percent numeric DEFAULT 1,
+  ADD COLUMN IF NOT EXISTS max_loss numeric,
+  ADD COLUMN IF NOT EXISTS target_rr numeric DEFAULT 2,
+  ADD COLUMN IF NOT EXISTS invalidation text,
+  ADD COLUMN IF NOT EXISTS conditions text,
+  ADD COLUMN IF NOT EXISTS ai_insight text,
+  ADD COLUMN IF NOT EXISTS color text DEFAULT 'violet';

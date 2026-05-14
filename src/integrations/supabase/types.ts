@@ -160,49 +160,97 @@ export type Database = {
       }
       playbooks: {
         Row: {
+          ai_insight: string | null
           best_market_conditions: string | null
           checklist: string | null
+          color: string | null
+          conditions: string | null
           created_at: string
           description: string | null
+          emoji: string | null
+          entry_checklist: Json
           entry_rules: string | null
+          exit_checklist: Json
           exit_rules: string | null
           id: string
+          invalidation: string | null
+          max_loss: number | null
+          name: string | null
+          pairs: string[]
+          psych_checklist: Json
+          risk_percent: number | null
           risk_rules: string | null
           rules: string | null
           rules_array: string[]
+          sessions: string[]
           status: string
+          strategy_type: string | null
+          tags: string[]
+          target_rr: number | null
           title: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          ai_insight?: string | null
           best_market_conditions?: string | null
           checklist?: string | null
+          color?: string | null
+          conditions?: string | null
           created_at?: string
           description?: string | null
+          emoji?: string | null
+          entry_checklist?: Json
           entry_rules?: string | null
+          exit_checklist?: Json
           exit_rules?: string | null
           id?: string
+          invalidation?: string | null
+          max_loss?: number | null
+          name?: string | null
+          pairs?: string[]
+          psych_checklist?: Json
+          risk_percent?: number | null
           risk_rules?: string | null
           rules?: string | null
           rules_array?: string[]
+          sessions?: string[]
           status?: string
+          strategy_type?: string | null
+          tags?: string[]
+          target_rr?: number | null
           title: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          ai_insight?: string | null
           best_market_conditions?: string | null
           checklist?: string | null
+          color?: string | null
+          conditions?: string | null
           created_at?: string
           description?: string | null
+          emoji?: string | null
+          entry_checklist?: Json
           entry_rules?: string | null
+          exit_checklist?: Json
           exit_rules?: string | null
           id?: string
+          invalidation?: string | null
+          max_loss?: number | null
+          name?: string | null
+          pairs?: string[]
+          psych_checklist?: Json
+          risk_percent?: number | null
           risk_rules?: string | null
           rules?: string | null
           rules_array?: string[]
+          sessions?: string[]
           status?: string
+          strategy_type?: string | null
+          tags?: string[]
+          target_rr?: number | null
           title?: string
           updated_at?: string
           user_id?: string
