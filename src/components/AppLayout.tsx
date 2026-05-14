@@ -3,9 +3,13 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   BarChart3, BookOpen, Brain, CalendarDays, CircleDollarSign,
-  LayoutDashboard, Menu, PlayCircle, Settings, Target,
+  LayoutDashboard, Menu, PlayCircle, Settings, Shield, Target,
   Upload, X, ChevronRight,
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+
+const ADMIN_EMAILS = ['tahiriamine889@gmail.com', 'tahiria740@gmail.com'];
+export const ADMIN_ITEM = { id: 'admin', label: 'Admin Panel', icon: Shield };
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import UserAvatar from '@/components/UserAvatar';
