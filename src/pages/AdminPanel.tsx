@@ -226,6 +226,7 @@ export default function AdminPanel() {
     { id: 'live',     l: 'Live',      badge: liveUsers.length || null },
     { id: 'support',  l: 'Support',   badge: stats?.open_tickets || null },
     { id: 'upgrades', l: 'Upgrades',  badge: pending.length || null },
+    { id: 'activate', l: 'Activate Plan', badge: null },
   ];
 
   if (isAdmin === false) return (
