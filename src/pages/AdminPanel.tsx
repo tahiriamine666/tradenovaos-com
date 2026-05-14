@@ -70,6 +70,16 @@ export default function AdminPanel() {
   const [search,    setSearch]    = useState('');
   const [upgrading, setUpgrading] = useState(null);
 
+  // Manual activation state
+  const [activateEmail,    setActivateEmail]    = useState('');
+  const [activatePlan,     setActivatePlan]     = useState('pro');
+  const [activateStatus,   setActivateStatus]   = useState('active');
+  const [activateTrialDays,setActivateTrialDays]= useState('0');
+  const [activateNotes,    setActivateNotes]    = useState('');
+  const [activating,       setActivating]       = useState(false);
+  const [searchResults,    setSearchResults]    = useState<any[]>([]);
+  const [searching,        setSearching]        = useState(false);
+
   useEffect(() => {
     if (!user) return;
     supabase.rpc('is_admin').then(({ data }) => setIsAdmin(!!data));
