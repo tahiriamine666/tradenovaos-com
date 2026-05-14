@@ -166,6 +166,60 @@ export default function AdminPanel() {
     { name: 'Elite', value: stats?.elite_users ?? 0, color: '#f59e0b' },
   ];
 
+  const searchUsers = useCallback(async (query: string) => {
+    if (!query || query.length < 2) { setSearchResults([]); return; }
+    setSearching(true);
+    const { data } = await supabase.rpc('admin_search_users' as any, { p_query: query });
+    setSearchResults((data as any[]) ?? []);
+    setSearching(false);
+  }, []);
+
+  const handleActivate = async () => {
+    if (!activateEmail.trim()) { toast({ title: 'Email required', variant: 'destructive' }); return; }
+    setActivating(true);
+    try {
+      const { data, error } = await supabase.rpc('admin_upgrade_by_email' as any, {
+        p_email:      activateEmail.trim(),
+        p_plan:       activatePlan,
+        p_status:     activateStatus,
+        p_trial_days: parseInt(activateTrialDays) || 0,
+        p_notes:      activateNotes.trim() || null,
+      });
+      if (error) throw error;
+      if (!(data as any)?.success) throw new Error((data as any)?.error || 'Failed');
+      const planLabel = activatePlan.charAt(0).toUpperCase() + activatePlan.slice(1);
+      toast({ title: `✅ User upgraded to ${planLabel} successfully!` });
+      setActivateEmail(''); setActivateNotes(''); setActivateTrialDays('0'); setSearchResults([]);
+      load();
+    } catch (e: any) { toast({ title: 'Error', description: e.message, variant: 'destructive' }); }
+    finally { setActivating(false); }
+  };
+
+  const handleExtendTrial = async (email: string) => {
+    setActivating(true);
+    try {
+      const { error } = await supabase.rpc('admin_extend_trial' as any, { p_email: email, p_days: 7 });
+      if (error) throw error;
+      toast({ title: `✅ Trial extended 7 days for ${email}` });
+      load();
+    } catch (e: any) { toast({ title: 'Error', description: e.message, variant: 'destructive' }); }
+    finally { setActivating(false); }
+  };
+
+  const quickUpgrade = async (userId: string, userEmail: string, plan: string) => {
+    setUpgrading(userId);
+    try {
+      const { data, error } = await supabase.rpc('admin_upgrade_by_email' as any, {
+        p_email: userEmail, p_plan: plan, p_status: 'active', p_trial_days: 0, p_notes: 'Quick upgrade from admin panel',
+      });
+      if (error) throw error;
+      if (!(data as any)?.success) throw new Error((data as any)?.error || 'Failed');
+      toast({ title: `✅ User upgraded to ${plan} successfully!` });
+      load();
+    } catch (e: any) { toast({ title: 'Error', description: e.message, variant: 'destructive' }); }
+    finally { setUpgrading(null); }
+  };
+
   const TABS = [
     { id: 'overview', l: 'Overview',  badge: null },
     { id: 'users',    l: 'Users',     badge: stats?.total_users },
