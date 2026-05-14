@@ -219,6 +219,7 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          last_seen_at: string | null
           plan_type: string
           preferred_market: string | null
           risk_per_trade: number | null
@@ -239,6 +240,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
+          last_seen_at?: string | null
           plan_type?: string
           preferred_market?: string | null
           risk_per_trade?: number | null
@@ -259,6 +261,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          last_seen_at?: string | null
           plan_type?: string
           preferred_market?: string | null
           risk_per_trade?: number | null
@@ -534,6 +537,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      get_admin_analytics: { Args: { p_days?: number }; Returns: Json }
       get_admin_stats: { Args: never; Returns: Json }
       get_admin_users_list: { Args: never; Returns: Json }
       get_my_profile: { Args: never; Returns: Json }
@@ -543,6 +547,7 @@ export type Database = {
         Args: { p_message: string; p_payoneer_ref: string; p_plan: string }
         Returns: string
       }
+      update_last_seen: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
