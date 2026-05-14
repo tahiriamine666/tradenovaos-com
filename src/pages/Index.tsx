@@ -480,6 +480,8 @@ function TradingDashboardInner() {
 
           {active === 'pricing' && <PricingPage />}
 
+          {active === 'admin' && <AdminPanel />}
+
 
           {active === 'import' && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
