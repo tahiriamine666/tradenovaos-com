@@ -262,12 +262,16 @@ export type Database = {
           avatar_url: string | null
           bio: string | null
           created_at: string
+          current_period_end: string | null
           default_account_type: string
           display_name: string | null
           email: string | null
           full_name: string | null
           id: string
           last_seen_at: string | null
+          paddle_customer_id: string | null
+          paddle_price_id: string | null
+          paddle_subscription_id: string | null
           plan_type: string
           preferred_market: string | null
           risk_per_trade: number | null
@@ -284,12 +288,16 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          current_period_end?: string | null
           default_account_type?: string
           display_name?: string | null
           email?: string | null
           full_name?: string | null
           id: string
           last_seen_at?: string | null
+          paddle_customer_id?: string | null
+          paddle_price_id?: string | null
+          paddle_subscription_id?: string | null
           plan_type?: string
           preferred_market?: string | null
           risk_per_trade?: number | null
@@ -306,12 +314,16 @@ export type Database = {
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          current_period_end?: string | null
           default_account_type?: string
           display_name?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
           last_seen_at?: string | null
+          paddle_customer_id?: string | null
+          paddle_price_id?: string | null
+          paddle_subscription_id?: string | null
           plan_type?: string
           preferred_market?: string | null
           risk_per_trade?: number | null
