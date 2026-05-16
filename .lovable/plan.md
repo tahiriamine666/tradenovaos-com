@@ -1,83 +1,123 @@
-## Paddle billing integration for TradeNova
+## Paddle BYOK integration for TradeNova
 
-### What you DON'T need to do
-Lovable's built-in Paddle integration handles all of this for you:
-- No Paddle dashboard account, API key, client token, webhook secret, or price IDs to create manually
-- No webhook URL to register — Lovable provisions the endpoint automatically
-- A test (sandbox) environment is set up instantly so you can run real checkout flows immediately
-- Going live later requires Paddle to verify your business (manual review — given your product is a trading journal, expect Paddle to ask questions; approval is not guaranteed but the eligibility check looked clean)
+### ⚠️ First: rotate the leaked key
+The `pdl_live_apikey_01krp3jqq...` you pasted in chat is now compromised. Revoke it in Paddle → Developer Tools → Authentication → API keys → Revoke. Generate a new one. I'll request it through a secure secrets form — never paste it back in chat.
 
-### Step 1 — Enable Paddle Payments
-Call `enable_paddle_payments`. This provisions the test environment, the integration secrets, and the webhook handler.
+### What you'll need to create in Paddle
 
-### Step 2 — Database migration
-Add columns to `profiles` for Paddle:
+You need to set these up in your Paddle dashboard **before** I can finish wiring things:
+
+**1. API key** (server-side)
+- Paddle → Developer Tools → Authentication → API keys → New API key
+- Permissions: Read + Write for `transactions`, `subscriptions`, `customers`, `prices`, `products`
+- Copy the key (starts with `pdl_live_apikey_...` or `pdl_sdbx_apikey_...`)
+
+**2. Client-side token** (publishable, used by Paddle.js in the browser)
+- Paddle → Developer Tools → Authentication → Client-side tokens → New
+- Copy (starts with `live_...` or `test_...`)
+
+**3. Two products with prices**
+- Paddle → Catalog → Products → Create
+  - **Pro** — recurring monthly, $14 USD, 7-day free trial (card required upfront)
+  - **Elite** — recurring monthly, $28 USD, 7-day free trial (card required upfront)
+- Copy the **price IDs** for each (start with `pri_...`) — not the product IDs
+
+**4. Webhook destination**
+- Paddle → Developer Tools → Notifications → New destination
+- URL: `https://jbdivofznclkfctcqfln.supabase.co/functions/v1/paddle-webhook`
+- Subscribe to these events:
+  - `subscription.created`
+  - `subscription.activated`
+  - `subscription.updated`
+  - `subscription.canceled`
+  - `subscription.paused`
+  - `subscription.resumed`
+  - `transaction.completed`
+  - `transaction.payment_failed`
+- Copy the **secret key** (starts with `pdl_ntfset_...` or similar) — used to verify webhook signatures
+
+**5. Environment** — tell me whether you're using `sandbox` or `production`. (Your pasted key was `live`, so I'll assume production unless you say otherwise.)
+
+### Secrets I'll store after you give them to me
+Via the secure secrets form:
+- `PADDLE_API_KEY`
+- `PADDLE_WEBHOOK_SECRET`
+- `PADDLE_PRO_PRICE_ID`
+- `PADDLE_ELITE_PRICE_ID`
+- `PADDLE_ENVIRONMENT` (`sandbox` or `production`)
+
+The client-side token is public — I'll add it to `.env` as `VITE_PADDLE_CLIENT_TOKEN` and `VITE_PADDLE_ENVIRONMENT`.
+
+### Step-by-step build
+
+**Step 1 — Database migration**
+Add to `profiles`:
 - `paddle_customer_id text`
 - `paddle_subscription_id text`
 - `paddle_price_id text`
 - `current_period_end timestamptz`
 
-(Existing columns `plan_type`, `subscription_status`, `trial_ends_at`, `upgraded_at`, `upgraded_manually` already cover the rest. The Paddle integration may also create its own `subscriptions` / `orders` tracking tables — we'll reconcile into `profiles` from the webhook.)
+**Step 2 — Frontend checkout (Paddle.js overlay)**
+- Add Paddle.js loader hook `src/lib/paddle.ts` — initializes with client token + environment
+- Update `PricingPage.tsx` Pro/Elite buttons → call `Paddle.Checkout.open({ items: [{ priceId, quantity: 1 }], customer: { email }, customData: { user_id }, settings: { successUrl: '/billing/success' } })`
+- Pass `customData.user_id` so webhook can match the Paddle customer back to the Supabase user
+- Keep a small "Pay via Payoneer instead" link → opens existing `PayoneerUpgradeModal`
+- Loading state, success/error sonner toasts
+- Same wiring in `PublicPricingPage.tsx` (logged-out users get redirected to signup first, then back to pricing)
 
-### Step 3 — Create Pro and Elite products in Paddle
-Use `batch_create_product` to create:
-- **Pro** — recurring monthly, $14, 7-day trial, card required
-- **Elite** — recurring monthly, $28, 7-day trial, card required
+**Step 3 — Webhook handler** `supabase/functions/paddle-webhook/index.ts`
+- `verify_jwt = false` in `config.toml`
+- Verify Paddle signature using `PADDLE_WEBHOOK_SECRET` (HMAC SHA-256 of the raw body, format `ts=...;h1=...`)
+- Use service-role Supabase client to update `profiles`
+- Event handling:
+  - `subscription.created` / `activated` / `updated` → determine plan by matching `items[0].price.id` against `PADDLE_PRO_PRICE_ID` / `PADDLE_ELITE_PRICE_ID`; set `plan_type`, `subscription_status` (`trialing` / `active` / `past_due`), `paddle_customer_id`, `paddle_subscription_id`, `paddle_price_id`, `trial_ends_at`, `current_period_end`
+  - `subscription.canceled` → `subscription_status='canceled'` (kept active until period end; cron not needed since `current_period_end` gates access)
+  - `subscription.paused` → `subscription_status='past_due'`
+  - `subscription.resumed` → re-activate
+  - `transaction.payment_failed` → `subscription_status='past_due'`
+  - `transaction.completed` → log only
+- Match user by `customData.user_id` first, fall back to `paddle_customer_id`, fall back to email
 
-### Step 4 — Frontend checkout
-- Update `PricingPage.tsx` and `PublicPricingPage.tsx` "Start 7-day free trial" buttons for Pro/Elite to open Paddle Checkout overlay (Paddle.js loaded via `client_token`)
-- Keep a small secondary "Pay via Payoneer instead" link → opens existing `PayoneerUpgradeModal`
-- Pass logged-in user's email + `user_id` as `customData` so the webhook can match the Paddle customer to the Supabase user
-- Add loading states, success/error sonner toasts
+**Step 4 — Premium gating (no changes needed)**
+`usePlan()` + `PlanGate` already reads `plan_type` + `subscription_status` from `profiles`. Gated features (AI Insights, CSV Import, Replay Studio, Advanced Analytics, Playbook Lab, Trade Plan) follow automatically.
 
-### Step 5 — Webhook handler (edge function)
-Lovable's Paddle integration auto-deploys a webhook handler. We'll customize it to map Paddle events → `profiles` updates:
-- `subscription.created` / `subscription.updated` / `subscription.activated` → set `plan_type`, `subscription_status` (`trialing`/`active`/`past_due`/`canceled`), `paddle_customer_id`, `paddle_subscription_id`, `paddle_price_id`, `trial_ends_at`, `current_period_end`
-- `subscription.canceled` → set `subscription_status='canceled'`, downgrade to `free` after `current_period_end` passes
-- `transaction.completed` → no-op besides logging (subscription event covers state)
-- `transaction.payment_failed` → set `subscription_status='past_due'`
-- Verifies Paddle webhook signature using built-in secret
+Tiny update to `get_user_plan_info` RPC: also expose `current_period_end` so the frontend can show "Cancels on Mar 14".
 
-### Step 6 — Premium feature gating
-Already wired through `usePlan()` + `PlanGate` (`src/hooks/usePlan.tsx`). Update `get_user_plan_info` RPC if needed so `is_pro`/`is_elite` returns true for both `active` and `trialing` statuses (already does). No code changes needed to gates — they automatically follow `profiles.plan_type` + `subscription_status`.
+**Step 5 — Manage Billing button**
+- New edge function `paddle-portal` — calls Paddle API `POST /customers/{paddle_customer_id}/portal-sessions` with `PADDLE_API_KEY`, returns the `general.overview` URL
+- Add "Manage Billing" button in `StudioSettings.tsx`:
+  - Visible when `profiles.paddle_subscription_id` is set
+  - Opens portal URL in new tab
+  - For Payoneer-upgraded users, shows "Contact support" instead
 
-Gated features (already configured): AI Insights, CSV Import, Replay Studio, Advanced Analytics, Playbook Lab, Trade Plan.
+**Step 6 — Success / Cancel routes**
+- `/billing/success` — confirmation page, refreshes `usePlan()` on mount, "Continue to dashboard" CTA
+- `/billing/cancel` — "No charge made" page with link back to /pricing
+- Both wrapped in `ProtectedApp` and added to `App.tsx`
 
-### Step 7 — Manage Billing button
-Add a "Manage Billing" button in `StudioSettings.tsx`:
-- Visible when `paddle_subscription_id` is set
-- Calls a new edge function that returns a Paddle customer portal session URL → opens in new tab
-- For users upgraded manually via Payoneer (no `paddle_subscription_id`), shows "Contact support" instead
-
-### Step 8 — Success / Cancel routes
-Add to `App.tsx`:
-- `/billing/success` — confirmation page with "Continue to dashboard" CTA, refreshes `usePlan()` on mount
-- `/billing/cancel` — gentle "No charge made" page with link back to /pricing
-
-Both wrapped in `ProtectedApp`.
-
-### Step 9 — Admin manual upgrades stay intact
-- `admin_upgrade_by_email` RPC, `admin_extend_trial`, `upgrade_requests` table, `PayoneerUpgradeModal` — all untouched
-- Admin panel continues to work for support / Payoneer cases
-- A user can have either a Paddle subscription OR a manual upgrade; admin upgrades set `upgraded_manually=true` and don't touch Paddle fields
-
-### What stays untouched
-- Supabase auth, profiles RLS, trades, playbooks, journal_entries, dashboard, admin panel, existing pricing layout (only the CTA wiring changes)
+**Step 7 — Admin manual upgrades stay intact**
+Untouched: `admin_upgrade_by_email`, `admin_extend_trial`, `upgrade_requests`, `PayoneerUpgradeModal`. Admin upgrades set `upgraded_manually=true` and leave Paddle fields null.
 
 ### Files that will change
-- `supabase/migrations/<new>.sql` — add 4 columns to profiles
-- `src/pages/PricingPage.tsx` — Pro/Elite buttons → Paddle Checkout
-- `src/pages/marketing/PublicPricingPage.tsx` — same
-- `src/App.tsx` — `/billing/success` and `/billing/cancel` routes
+- `supabase/migrations/<new>.sql` — 4 columns on profiles + tiny `get_user_plan_info` patch
+- `supabase/functions/paddle-webhook/index.ts` (new)
+- `supabase/functions/paddle-portal/index.ts` (new)
+- `supabase/config.toml` — `verify_jwt = false` for paddle-webhook
+- `src/lib/paddle.ts` (new) — Paddle.js loader + checkout helper
+- `src/pages/PricingPage.tsx` — buttons → Paddle Checkout
+- `src/pages/marketing/PublicPricingPage.tsx` — same (with signup redirect for logged-out)
 - `src/pages/BillingSuccess.tsx`, `src/pages/BillingCancel.tsx` (new)
 - `src/pages/StudioSettings.tsx` — Manage Billing button
-- `supabase/functions/paddle-webhook/index.ts` — customize event → profile mapping
-- `supabase/functions/paddle-portal/index.ts` (new) — returns customer portal URL
+- `src/App.tsx` — `/billing/success` and `/billing/cancel` routes
 
-### What I need from you
-**Nothing manual.** No keys, no price IDs, no webhook URL. After you approve this plan I'll:
-1. Run `enable_paddle_payments` (you'll see a one-time setup form for business name/email — Paddle test environment is created)
-2. Create the Pro/Elite products
-3. Wire up everything above
+### What stays untouched
+Supabase auth, profiles RLS, trades, playbooks, journal_entries, dashboard, admin panel, existing pricing layout (CTAs only).
 
-Approve to proceed.
+### Execution order
+1. You: revoke the leaked key, create new API key + client token + 2 products + webhook destination in Paddle, copy the 4 IDs/secrets
+2. Me: run the DB migration
+3. You: paste secrets into the secure form I'll send
+4. Me: build everything, deploy edge functions
+5. You: test a checkout in your own browser (use a real card — Paddle live mode; or switch to sandbox first if you prefer)
+
+Approve and I'll start with the migration + secrets form.
