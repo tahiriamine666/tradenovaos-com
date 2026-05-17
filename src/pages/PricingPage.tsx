@@ -1,15 +1,19 @@
 // src/pages/PricingPage.tsx
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 import { usePlan, Plan } from '@/hooks/usePlan';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   CheckCircle2, Zap, Crown, Rocket,
-  MessageCircle, Mail, Clock, AlertCircle,
+  MessageCircle, Mail, Clock, ShieldCheck, Loader2,
 } from 'lucide-react';
 import PayoneerUpgradeModal from '@/components/PayoneerUpgradeModal';
+import { openPaddleCheckout } from '@/lib/paddle';
 
 const CONTACT = {
   whatsapp: '+212XXXXXXXXX',
@@ -77,12 +81,31 @@ const PLANS = [
 ];
 
 export default function PricingPage() {
-  const { plan: currentPlan, isActive, isTrialing, trialEndsAt, loading } = usePlan();
+  const { plan: currentPlan, isActive, isTrialing, trialEndsAt } = usePlan();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [interval, setIntervalVal] = useState<'monthly' | 'yearly'>('monthly');
   const [modal, setModal] = useState<{ open: boolean; plan: 'pro' | 'elite' } | null>(null);
+  const [loadingPlan, setLoadingPlan] = useState<'pro' | 'elite' | null>(null);
 
   const openModal = (plan: 'pro' | 'elite') => setModal({ open: true, plan });
   const closeModal = () => setModal(null);
+
+  const handlePaddleCheckout = async (plan: 'pro' | 'elite') => {
+    if (!user) {
+      navigate('/signup?redirect=/pricing');
+      return;
+    }
+    try {
+      setLoadingPlan(plan);
+      await openPaddleCheckout({ plan, userId: user.id, email: user.email ?? '' });
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message ?? 'Could not open checkout');
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
 
   const whatsappMsg = encodeURIComponent('Hi! I want to upgrade my TradeNova plan. ');
 
@@ -91,26 +114,26 @@ export default function PricingPage() {
       {/* Header */}
       <div className="text-center space-y-2">
         <h2 className="text-3xl font-bold font-heading text-foreground">Choose your plan</h2>
-        <p className="text-muted-foreground">Manual activation via Payoneer · Usually within 24 hours</p>
-        <div className="flex items-center justify-center gap-2 mt-2">
-          <Badge variant="outline" className="border-amber-500/30 text-amber-500 bg-amber-500/5 text-xs">
-            🔄 Stripe coming soon
+        <p className="text-muted-foreground">Instant activation by card · 7-day free trial</p>
+        <div className="flex items-center justify-center gap-2 mt-2 flex-wrap">
+          <Badge variant="outline" className="border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 text-xs">
+            <ShieldCheck className="h-3 w-3 mr-1" /> Secure checkout by Paddle
           </Badge>
           <Badge variant="outline" className="text-xs">
-            <Clock className="h-3 w-3 mr-1" /> Manual activation 24h
+            <Clock className="h-3 w-3 mr-1" /> Cancel anytime
           </Badge>
         </div>
       </div>
 
-      {/* Payment method notice */}
+      {/* Payoneer alternative notice */}
       <Card className="border-0 shadow-sm bg-muted/30">
         <CardContent className="py-4 px-5">
           <div className="flex items-start gap-3 flex-wrap sm:flex-nowrap">
-            <AlertCircle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
+            <ShieldCheck className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground">Payments handled manually via Payoneer</p>
+              <p className="text-sm font-medium text-foreground">Can't pay by card? Use Payoneer instead</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                After payment, we'll manually activate your plan within 24 hours. Stripe integration coming soon for instant activation.
+                Pay via Payoneer and we'll manually activate your plan within 24 hours.
               </p>
             </div>
             <div className="flex gap-2 flex-shrink-0">
@@ -200,7 +223,7 @@ export default function PricingPage() {
                 </div>
 
                 {/* CTA */}
-                <div className="mb-6">
+                <div className="mb-6 space-y-2">
                   {isCur ? (
                     <Button variant="outline" className="w-full rounded-xl" disabled>
                       <CheckCircle2 className="h-4 w-4 mr-2 text-emerald-500" />
@@ -209,13 +232,27 @@ export default function PricingPage() {
                   ) : p.id === 'free' ? (
                     <Button variant="outline" className="w-full rounded-xl" disabled>Downgrade</Button>
                   ) : (
-                    <Button onClick={() => openModal(p.id as 'pro' | 'elite')}
-                      className={`w-full rounded-xl ${isBest ? 'bg-amber-500 hover:bg-amber-600 text-white border-0' : ''}`}>
-                      Start 7-day free trial
-                    </Button>
+                    <>
+                      <Button
+                        onClick={() => handlePaddleCheckout(p.id as 'pro' | 'elite')}
+                        disabled={loadingPlan !== null}
+                        className={`w-full rounded-xl ${isBest ? 'bg-amber-500 hover:bg-amber-600 text-white border-0' : ''}`}>
+                        {loadingPlan === p.id ? (
+                          <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Opening checkout…</>
+                        ) : (
+                          'Start 7-day free trial'
+                        )}
+                      </Button>
+                      <button
+                        type="button"
+                        onClick={() => openModal(p.id as 'pro' | 'elite')}
+                        className="w-full text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline">
+                        Pay via Payoneer instead
+                      </button>
+                    </>
                   )}
                   {p.id !== 'free' && !isCur && (
-                    <p className="text-xs text-center text-muted-foreground mt-2">Via Payoneer · Activated within 24h</p>
+                    <p className="text-xs text-center text-muted-foreground">Card required · Cancel anytime in 7 days</p>
                   )}
                 </div>
 

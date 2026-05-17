@@ -17,6 +17,8 @@ import SupportedBrokersPage from "./pages/SupportedBrokersPage.tsx";
 import PublicPricingPage from "./pages/marketing/PublicPricingPage.tsx";
 import MarketingPlaceholder from "./pages/marketing/MarketingPlaceholder.tsx";
 import { FeaturePage, SolutionPage, BlogPage, HelpCenterPage } from "./pages/marketing/MarketingPages.tsx";
+import BillingSuccess from "./pages/BillingSuccess.tsx";
+import BillingCancel from "./pages/BillingCancel.tsx";
 
 const queryClient = new QueryClient();
 
@@ -68,6 +70,9 @@ const App = () => (
                   }
                 />
                 <Route path="/dashboard" element={<Navigate to="/app" replace />} />
+
+                <Route path="/billing/success" element={<ProtectedApp><BillingSuccess /></ProtectedApp>} />
+                <Route path="/billing/cancel" element={<ProtectedApp><BillingCancel /></ProtectedApp>} />
 
                 {/* Public marketing routes */}
                 <Route path="/pricing" element={<PublicPricingPage />} />
