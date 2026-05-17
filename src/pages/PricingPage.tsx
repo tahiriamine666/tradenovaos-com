@@ -114,26 +114,26 @@ export default function PricingPage() {
       {/* Header */}
       <div className="text-center space-y-2">
         <h2 className="text-3xl font-bold font-heading text-foreground">Choose your plan</h2>
-        <p className="text-muted-foreground">Manual activation via Payoneer · Usually within 24 hours</p>
-        <div className="flex items-center justify-center gap-2 mt-2">
-          <Badge variant="outline" className="border-amber-500/30 text-amber-500 bg-amber-500/5 text-xs">
-            🔄 Stripe coming soon
+        <p className="text-muted-foreground">Instant activation by card · 7-day free trial</p>
+        <div className="flex items-center justify-center gap-2 mt-2 flex-wrap">
+          <Badge variant="outline" className="border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 text-xs">
+            <ShieldCheck className="h-3 w-3 mr-1" /> Secure checkout by Paddle
           </Badge>
           <Badge variant="outline" className="text-xs">
-            <Clock className="h-3 w-3 mr-1" /> Manual activation 24h
+            <Clock className="h-3 w-3 mr-1" /> Cancel anytime
           </Badge>
         </div>
       </div>
 
-      {/* Payment method notice */}
+      {/* Payoneer alternative notice */}
       <Card className="border-0 shadow-sm bg-muted/30">
         <CardContent className="py-4 px-5">
           <div className="flex items-start gap-3 flex-wrap sm:flex-nowrap">
-            <AlertCircle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
+            <ShieldCheck className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground">Payments handled manually via Payoneer</p>
+              <p className="text-sm font-medium text-foreground">Can't pay by card? Use Payoneer instead</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                After payment, we'll manually activate your plan within 24 hours. Stripe integration coming soon for instant activation.
+                Pay via Payoneer and we'll manually activate your plan within 24 hours.
               </p>
             </div>
             <div className="flex gap-2 flex-shrink-0">
