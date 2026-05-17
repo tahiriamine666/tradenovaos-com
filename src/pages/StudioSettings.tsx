@@ -10,8 +10,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Save, User, TrendingUp, Globe, Shield, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Save, User, TrendingUp, Globe, Shield, AlertCircle, CheckCircle2, CreditCard, ExternalLink, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { openPaddlePortal } from '@/lib/paddle';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Profile {
@@ -371,6 +372,7 @@ export default function StudioSettings() {
             </div>
           ))}
         </div>
+        <ManageBillingButton />
         <p className="text-xs text-muted-foreground">
           To change your email or password, use the account settings in your auth provider.
         </p>
