@@ -9,10 +9,9 @@ const corsHeaders = {
 };
 
 const PADDLE_API_KEY = Deno.env.get("PADDLE_API_KEY") ?? "";
-const PADDLE_ENV = (Deno.env.get("PADDLE_ENVIRONMENT") ?? "sandbox").toLowerCase();
-const API_BASE = PADDLE_ENV === "production" || PADDLE_ENV === "live"
-  ? "https://api.paddle.com"
-  : "https://sandbox-api.paddle.com";
+const PADDLE_ENV_RAW = (Deno.env.get("PADDLE_ENVIRONMENT") ?? "sandbox").toLowerCase();
+const IS_PROD = PADDLE_ENV_RAW.includes("prod") || PADDLE_ENV_RAW.includes("live");
+const API_BASE = IS_PROD ? "https://api.paddle.com" : "https://sandbox-api.paddle.com";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });

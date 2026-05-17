@@ -11,9 +11,11 @@ const corsHeaders = {
 Deno.serve((req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  const rawEnv = (Deno.env.get("PADDLE_ENVIRONMENT") ?? "sandbox").toLowerCase();
+  const isProd = rawEnv.includes("prod") || rawEnv.includes("live");
   const body = {
     clientToken: Deno.env.get("PADDLE_CLIENT_TOKEN") ?? "",
-    environment: (Deno.env.get("PADDLE_ENVIRONMENT") ?? "sandbox").toLowerCase(),
+    environment: isProd ? "production" : "sandbox",
     priceIds: {
       pro: Deno.env.get("PADDLE_PRO_PRICE_ID") ?? "",
       elite: Deno.env.get("PADDLE_ELITE_PRICE_ID") ?? "",
