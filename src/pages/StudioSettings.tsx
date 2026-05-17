@@ -390,3 +390,60 @@ export default function StudioSettings() {
     </motion.div>
   );
 }
+
+// ─── Manage Billing ──────────────────────────────────────────────────────────
+function ManageBillingButton() {
+  const { user } = useAuth();
+  const [paddleSubId, setPaddleSubId] = useState<string | null>(null);
+  const [upgradedManually, setUpgradedManually] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [opening, setOpening] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from('profiles')
+      .select('paddle_subscription_id, upgraded_manually')
+      .eq('id', user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        setPaddleSubId(data?.paddle_subscription_id ?? null);
+        setUpgradedManually(!!data?.upgraded_manually);
+        setLoading(false);
+      });
+  }, [user]);
+
+  const handleOpen = async () => {
+    try {
+      setOpening(true);
+      await openPaddlePortal();
+    } catch (e: any) {
+      toast({ title: 'Could not open billing portal', description: e?.message ?? 'Try again later', variant: 'destructive' });
+    } finally {
+      setOpening(false);
+    }
+  };
+
+  if (loading) return null;
+
+  if (paddleSubId) {
+    return (
+      <Button onClick={handleOpen} disabled={opening} variant="outline" className="rounded-xl">
+        {opening
+          ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Opening…</>
+          : <><CreditCard className="h-4 w-4 mr-2" /> Manage billing <ExternalLink className="h-3 w-3 ml-2 opacity-60" /></>}
+      </Button>
+    );
+  }
+
+  if (upgradedManually) {
+    return (
+      <div className="rounded-lg border border-border bg-muted/30 p-3">
+        <p className="text-sm font-medium text-foreground">Your plan was activated manually</p>
+        <p className="text-xs text-muted-foreground mt-0.5">To make billing changes, contact support.</p>
+      </div>
+    );
+  }
+
+  return null;
+}
