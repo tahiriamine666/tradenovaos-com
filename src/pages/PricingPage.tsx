@@ -223,7 +223,7 @@ export default function PricingPage() {
                 </div>
 
                 {/* CTA */}
-                <div className="mb-6">
+                <div className="mb-6 space-y-2">
                   {isCur ? (
                     <Button variant="outline" className="w-full rounded-xl" disabled>
                       <CheckCircle2 className="h-4 w-4 mr-2 text-emerald-500" />
@@ -232,13 +232,27 @@ export default function PricingPage() {
                   ) : p.id === 'free' ? (
                     <Button variant="outline" className="w-full rounded-xl" disabled>Downgrade</Button>
                   ) : (
-                    <Button onClick={() => openModal(p.id as 'pro' | 'elite')}
-                      className={`w-full rounded-xl ${isBest ? 'bg-amber-500 hover:bg-amber-600 text-white border-0' : ''}`}>
-                      Start 7-day free trial
-                    </Button>
+                    <>
+                      <Button
+                        onClick={() => handlePaddleCheckout(p.id as 'pro' | 'elite')}
+                        disabled={loadingPlan !== null}
+                        className={`w-full rounded-xl ${isBest ? 'bg-amber-500 hover:bg-amber-600 text-white border-0' : ''}`}>
+                        {loadingPlan === p.id ? (
+                          <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Opening checkout…</>
+                        ) : (
+                          'Start 7-day free trial'
+                        )}
+                      </Button>
+                      <button
+                        type="button"
+                        onClick={() => openModal(p.id as 'pro' | 'elite')}
+                        className="w-full text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline">
+                        Pay via Payoneer instead
+                      </button>
+                    </>
                   )}
                   {p.id !== 'free' && !isCur && (
-                    <p className="text-xs text-center text-muted-foreground mt-2">Via Payoneer · Activated within 24h</p>
+                    <p className="text-xs text-center text-muted-foreground">Card required · Cancel anytime in 7 days</p>
                   )}
                 </div>
 
