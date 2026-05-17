@@ -1,15 +1,19 @@
 // src/pages/PricingPage.tsx
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 import { usePlan, Plan } from '@/hooks/usePlan';
+import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   CheckCircle2, Zap, Crown, Rocket,
-  MessageCircle, Mail, Clock, AlertCircle,
+  MessageCircle, Mail, Clock, ShieldCheck, Loader2,
 } from 'lucide-react';
 import PayoneerUpgradeModal from '@/components/PayoneerUpgradeModal';
+import { openPaddleCheckout } from '@/lib/paddle';
 
 const CONTACT = {
   whatsapp: '+212XXXXXXXXX',
@@ -77,12 +81,31 @@ const PLANS = [
 ];
 
 export default function PricingPage() {
-  const { plan: currentPlan, isActive, isTrialing, trialEndsAt, loading } = usePlan();
+  const { plan: currentPlan, isActive, isTrialing, trialEndsAt } = usePlan();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [interval, setIntervalVal] = useState<'monthly' | 'yearly'>('monthly');
   const [modal, setModal] = useState<{ open: boolean; plan: 'pro' | 'elite' } | null>(null);
+  const [loadingPlan, setLoadingPlan] = useState<'pro' | 'elite' | null>(null);
 
   const openModal = (plan: 'pro' | 'elite') => setModal({ open: true, plan });
   const closeModal = () => setModal(null);
+
+  const handlePaddleCheckout = async (plan: 'pro' | 'elite') => {
+    if (!user) {
+      navigate('/signup?redirect=/pricing');
+      return;
+    }
+    try {
+      setLoadingPlan(plan);
+      await openPaddleCheckout({ plan, userId: user.id, email: user.email ?? '' });
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message ?? 'Could not open checkout');
+    } finally {
+      setLoadingPlan(null);
+    }
+  };
 
   const whatsappMsg = encodeURIComponent('Hi! I want to upgrade my TradeNova plan. ');
 
