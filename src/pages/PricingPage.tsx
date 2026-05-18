@@ -10,15 +10,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
   CheckCircle2, Zap, Crown, Rocket,
-  MessageCircle, Mail, Clock, ShieldCheck, Loader2,
+  Clock, ShieldCheck, Loader2,
 } from 'lucide-react';
-import PayoneerUpgradeModal from '@/components/PayoneerUpgradeModal';
 import { openPaddleCheckout } from '@/lib/paddle';
-
-const CONTACT = {
-  whatsapp: '+212XXXXXXXXX',
-  email: 'support@tradenovaos.com',
-};
 
 const PLANS = [
   {
@@ -85,11 +79,7 @@ export default function PricingPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [interval, setIntervalVal] = useState<'monthly' | 'yearly'>('monthly');
-  const [modal, setModal] = useState<{ open: boolean; plan: 'pro' | 'elite' } | null>(null);
   const [loadingPlan, setLoadingPlan] = useState<'pro' | 'elite' | null>(null);
-
-  const openModal = (plan: 'pro' | 'elite') => setModal({ open: true, plan });
-  const closeModal = () => setModal(null);
 
   const handlePaddleCheckout = async (plan: 'pro' | 'elite') => {
     if (!user) {
@@ -107,8 +97,6 @@ export default function PricingPage() {
     }
   };
 
-  const whatsappMsg = encodeURIComponent('Hi! I want to upgrade my TradeNova plan. ');
-
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8 max-w-5xl mx-auto">
       {/* Header */}
@@ -124,32 +112,6 @@ export default function PricingPage() {
           </Badge>
         </div>
       </div>
-
-      {/* Payoneer alternative notice */}
-      <Card className="border-0 shadow-sm bg-muted/30">
-        <CardContent className="py-4 px-5">
-          <div className="flex items-start gap-3 flex-wrap sm:flex-nowrap">
-            <ShieldCheck className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-foreground">Can't pay by card? Use Payoneer instead</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Pay via Payoneer and we'll manually activate your plan within 24 hours.
-              </p>
-            </div>
-            <div className="flex gap-2 flex-shrink-0">
-              <a href={`https://wa.me/${CONTACT.whatsapp.replace(/\D/g,'')}?text=${whatsappMsg}`}
-                target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-medium hover:bg-emerald-500/20 transition-colors">
-                <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
-              </a>
-              <a href={`mailto:${CONTACT.email}`}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border text-muted-foreground text-xs font-medium hover:bg-muted/50 transition-colors">
-                <Mail className="h-3.5 w-3.5" /> Email
-              </a>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Current plan banner */}
       {currentPlan !== 'free' && isActive && (
@@ -232,24 +194,16 @@ export default function PricingPage() {
                   ) : p.id === 'free' ? (
                     <Button variant="outline" className="w-full rounded-xl" disabled>Downgrade</Button>
                   ) : (
-                    <>
-                      <Button
-                        onClick={() => handlePaddleCheckout(p.id as 'pro' | 'elite')}
-                        disabled={loadingPlan !== null}
-                        className={`w-full rounded-xl ${isBest ? 'bg-amber-500 hover:bg-amber-600 text-white border-0' : ''}`}>
-                        {loadingPlan === p.id ? (
-                          <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Opening checkout…</>
-                        ) : (
-                          'Start 7-day free trial'
-                        )}
-                      </Button>
-                      <button
-                        type="button"
-                        onClick={() => openModal(p.id as 'pro' | 'elite')}
-                        className="w-full text-xs text-muted-foreground hover:text-foreground underline-offset-2 hover:underline">
-                        Pay via Payoneer instead
-                      </button>
-                    </>
+                    <Button
+                      onClick={() => handlePaddleCheckout(p.id as 'pro' | 'elite')}
+                      disabled={loadingPlan !== null}
+                      className={`w-full rounded-xl ${isBest ? 'bg-amber-500 hover:bg-amber-600 text-white border-0' : ''}`}>
+                      {loadingPlan === p.id ? (
+                        <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Opening checkout…</>
+                      ) : (
+                        'Start 7-day free trial'
+                      )}
+                    </Button>
                   )}
                   {p.id !== 'free' && !isCur && (
                     <p className="text-xs text-center text-muted-foreground">Card required · Cancel anytime in 7 days</p>
@@ -277,11 +231,11 @@ export default function PricingPage() {
           <h3 className="font-heading font-semibold text-foreground mb-4">Common questions</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             {[
-              { q: 'How do I pay?', a: 'Send payment via Payoneer to our account, then submit your transaction reference in the upgrade modal.' },
-              { q: 'How fast is activation?', a: 'Usually within 24 hours of payment confirmation. Contact us on WhatsApp for faster activation.' },
-              { q: 'When will Stripe be available?', a: 'Stripe integration is coming soon. Until then, all payments are handled manually via Payoneer.' },
-              { q: 'Can I get a refund?', a: 'Yes, within 7 days if the plan was not activated. Contact us directly.' },
-              { q: 'What currencies are accepted?', a: 'USD via Payoneer. Contact us if you need other arrangements.' },
+              { q: 'How do I pay?', a: 'Checkout is handled securely by Paddle. Pay by card and your plan activates instantly.' },
+              { q: 'How fast is activation?', a: 'Instant. As soon as your card payment is confirmed, your plan unlocks automatically.' },
+              { q: 'Is there a free trial?', a: 'Yes — every paid plan starts with a 7-day free trial. Cancel anytime before it ends.' },
+              { q: 'Can I get a refund?', a: 'Yes, within 7 days of your first charge. Contact us and we\'ll process it.' },
+              { q: 'Can I cancel anytime?', a: 'Yes. Manage or cancel your subscription anytime from Settings → Billing.' },
               { q: 'What\'s the Free plan limit?', a: '50 trades per month. Unlimited journaling, calendar, and basic analytics.' },
             ].map(({ q, a }) => (
               <div key={q} className="space-y-1">
@@ -292,16 +246,6 @@ export default function PricingPage() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Upgrade modal */}
-      {modal && (
-        <PayoneerUpgradeModal
-          open={modal.open}
-          plan={modal.plan}
-          interval={interval}
-          onClose={closeModal}
-        />
-      )}
     </motion.div>
   );
 }
