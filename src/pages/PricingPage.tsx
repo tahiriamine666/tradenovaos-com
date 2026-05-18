@@ -9,8 +9,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-  CheckCircle2, Zap, Crown, Rocket,
-  Clock, ShieldCheck, Loader2,
+  CheckCircle2, Zap, Crown, Rocket, Loader2,
 } from 'lucide-react';
 import { openPaddleCheckout } from '@/lib/paddle';
 
@@ -103,14 +102,6 @@ export default function PricingPage() {
       <div className="text-center space-y-2">
         <h2 className="text-3xl font-bold font-heading text-foreground">Choose your plan</h2>
         <p className="text-muted-foreground">Instant activation by card · 7-day free trial</p>
-        <div className="flex items-center justify-center gap-2 mt-2 flex-wrap">
-          <Badge variant="outline" className="border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 text-xs">
-            <ShieldCheck className="h-3 w-3 mr-1" /> Secure checkout by Paddle
-          </Badge>
-          <Badge variant="outline" className="text-xs">
-            <Clock className="h-3 w-3 mr-1" /> Cancel anytime
-          </Badge>
-        </div>
       </div>
 
       {/* Current plan banner */}
