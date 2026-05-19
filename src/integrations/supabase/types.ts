@@ -424,43 +424,106 @@ export type Database = {
       }
       trade_plans: {
         Row: {
+          account_protection: boolean
+          ai_analysis: Json
+          avoid_before_news: boolean
+          checklist: Json
+          confidence: number
           created_at: string
+          daily_target: number | null
+          discipline_score: number
+          emotion: string
           focus: string | null
           id: string
           market_bias: string
+          max_consec_losses: number
           max_daily_loss: number | null
           max_risk_per_trade: number | null
+          max_trades: number | null
+          mental_state: string | null
+          name: string | null
+          news_events: Json
+          news_impact: string
           notes: string | null
           plan_date: string
+          psych_notes: string | null
+          secondary_setup: string | null
+          session: string | null
           setups_to_trade: string[]
+          sleep_quality: string
+          stop_on_rule_break: boolean
           updated_at: string
           user_id: string
+          volatility: string
+          wait_after_news: number
         }
         Insert: {
+          account_protection?: boolean
+          ai_analysis?: Json
+          avoid_before_news?: boolean
+          checklist?: Json
+          confidence?: number
           created_at?: string
+          daily_target?: number | null
+          discipline_score?: number
+          emotion?: string
           focus?: string | null
           id?: string
           market_bias?: string
+          max_consec_losses?: number
           max_daily_loss?: number | null
           max_risk_per_trade?: number | null
+          max_trades?: number | null
+          mental_state?: string | null
+          name?: string | null
+          news_events?: Json
+          news_impact?: string
           notes?: string | null
           plan_date?: string
+          psych_notes?: string | null
+          secondary_setup?: string | null
+          session?: string | null
           setups_to_trade?: string[]
+          sleep_quality?: string
+          stop_on_rule_break?: boolean
           updated_at?: string
           user_id: string
+          volatility?: string
+          wait_after_news?: number
         }
         Update: {
+          account_protection?: boolean
+          ai_analysis?: Json
+          avoid_before_news?: boolean
+          checklist?: Json
+          confidence?: number
           created_at?: string
+          daily_target?: number | null
+          discipline_score?: number
+          emotion?: string
           focus?: string | null
           id?: string
           market_bias?: string
+          max_consec_losses?: number
           max_daily_loss?: number | null
           max_risk_per_trade?: number | null
+          max_trades?: number | null
+          mental_state?: string | null
+          name?: string | null
+          news_events?: Json
+          news_impact?: string
           notes?: string | null
           plan_date?: string
+          psych_notes?: string | null
+          secondary_setup?: string | null
+          session?: string | null
           setups_to_trade?: string[]
+          sleep_quality?: string
+          stop_on_rule_break?: boolean
           updated_at?: string
           user_id?: string
+          volatility?: string
+          wait_after_news?: number
         }
         Relationships: []
       }
