@@ -1,0 +1,23 @@
+
+ALTER TABLE public.trade_plans
+  ADD COLUMN IF NOT EXISTS secondary_setup text,
+  ADD COLUMN IF NOT EXISTS session text,
+  ADD COLUMN IF NOT EXISTS confidence integer NOT NULL DEFAULT 60,
+  ADD COLUMN IF NOT EXISTS volatility text NOT NULL DEFAULT 'normal',
+  ADD COLUMN IF NOT EXISTS news_impact text NOT NULL DEFAULT 'none',
+  ADD COLUMN IF NOT EXISTS checklist jsonb NOT NULL DEFAULT '[]'::jsonb,
+  ADD COLUMN IF NOT EXISTS news_events jsonb NOT NULL DEFAULT '[]'::jsonb,
+  ADD COLUMN IF NOT EXISTS avoid_before_news boolean NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS wait_after_news integer NOT NULL DEFAULT 15,
+  ADD COLUMN IF NOT EXISTS daily_target numeric,
+  ADD COLUMN IF NOT EXISTS max_trades integer,
+  ADD COLUMN IF NOT EXISTS max_consec_losses integer NOT NULL DEFAULT 2,
+  ADD COLUMN IF NOT EXISTS account_protection boolean NOT NULL DEFAULT true,
+  ADD COLUMN IF NOT EXISTS stop_on_rule_break boolean NOT NULL DEFAULT true,
+  ADD COLUMN IF NOT EXISTS emotion text NOT NULL DEFAULT 'focused',
+  ADD COLUMN IF NOT EXISTS mental_state text,
+  ADD COLUMN IF NOT EXISTS sleep_quality text NOT NULL DEFAULT 'good',
+  ADD COLUMN IF NOT EXISTS discipline_score integer NOT NULL DEFAULT 7,
+  ADD COLUMN IF NOT EXISTS psych_notes text,
+  ADD COLUMN IF NOT EXISTS ai_analysis jsonb NOT NULL DEFAULT '{}'::jsonb,
+  ADD COLUMN IF NOT EXISTS name text;
