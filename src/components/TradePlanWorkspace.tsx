@@ -539,20 +539,21 @@ export default function TradePlanWorkspace() {
 
       {/* ── DRAGGABLE GRID ── */}
       <div ref={containerRef} className="w-full">
-        {React.createElement(GridLayout as any, {
-          className: 'layout',
-          layout,
-          cols: 12,
-          rowHeight: 44,
-          width: containerWidth,
-          isDraggable: editLayoutMode && !locked,
-          isResizable: editLayoutMode && !locked,
-          draggableHandle: '.widget-drag-handle',
-          onLayoutChange: (newLayout: any) => setLayout([...newLayout]),
-          margin: [12, 12],
-          containerPadding: [0, 0],
-          compactType: 'vertical',
-        },
+        <Grid
+          className="layout"
+          layout={layout}
+          cols={12}
+          rowHeight={44}
+          width={containerWidth}
+          isDraggable={editLayoutMode && !locked}
+          isResizable={editLayoutMode && !locked}
+          draggableHandle=".widget-drag-handle"
+          onLayoutChange={(newLayout: any) => setLayout([...newLayout])}
+          margin={[12, 12]}
+          containerPadding={[0, 0]}
+          compactType="vertical"
+        >
+
 
           {/* MARKET */}
           <div key="market">
