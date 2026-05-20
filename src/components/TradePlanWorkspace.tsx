@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import GridLayout from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
+const Grid: any = GridLayout;
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import {
