@@ -1,70 +1,58 @@
-# Premium Trade Plan Workspace
+## Draggable Trade Plan Workspace
 
-Replace the current Trade Plan with the institutional-grade single-page workspace described in your uploaded spec. Strip out the TradingView chart, watchlist, react-grid-layout, and old workspace UI.
+Add drag-and-drop + resize + per-widget collapse to the existing Trade Plan workspace, with layout persisted per user.
 
-## 1. Database (migration)
+### 1. Dependency
 
-The current `trade_plans` table only has `market_bias / focus / max_daily_loss / max_risk_per_trade / setups_to_trade / notes`. The new spec needs many more fields. Add nullable columns with safe defaults so existing rows keep working:
+Add `react-grid-layout` (^1.4.4). Its peer dep `react-resizable` comes bundled. Import its CSS once at the top of `TradePlanWorkspace.tsx`:
 
-- `secondary_setup` text
-- `session` text
-- `confidence` int default 60
-- `volatility` text default 'normal'
-- `news_impact` text default 'none'
-- `checklist` jsonb default '[]'
-- `news_events` jsonb default '[]'
-- `avoid_before_news` bool default false
-- `wait_after_news` int default 15
-- `daily_target` numeric
-- `max_trades` int
-- `max_consec_losses` int default 2
-- `account_protection` bool default true
-- `stop_on_rule_break` bool default true
-- `emotion` text default 'focused'
-- `mental_state` text
-- `sleep_quality` text default 'good'
-- `discipline_score` int default 7
-- `psych_notes` text
-- `ai_analysis` jsonb default '{}'
-- `name` text (the spec writes this on save)
-
-RLS policies already cover all columns (own-row by `user_id`), no policy changes needed.
-
-## 2. Replace `src/components/TradePlanWorkspace.tsx`
-
-Drop the spec's component in as the new file. Two adjustments vs. the raw paste:
-
-- **AI call**: the spec calls `https://api.anthropic.com/v1/messages` directly with no API key — that will fail in the browser (CORS + auth). Instead route through a new edge function `trade-plan-analysis` that calls **Lovable AI Gateway** (`google/gemini-2.5-flash`, free during promo, no key needed). The function takes the plan JSON and returns the same `{readiness_score, discipline_score, risk_score, warnings, suggestions, verdict}` shape. `generateAIAnalysis()` becomes a `supabase.functions.invoke('trade-plan-analysis', { body: { plan } })`.
-- **Toast import**: keep `@/hooks/use-toast` as in the spec (already in project).
-
-Everything else (sections, score circles, checklist drag-reorder, auto-save, news events, psychology block, etc.) is implemented exactly as in your prompt.
-
-## 3. Simplify `src/pages/TradePlanWorkspace.tsx`
-
-Currently this page reimplements its own plan UI + TradingView chart + watchlist. Replace its entire body with a thin wrapper:
-
-```tsx
-import TradePlanWorkspace from '@/components/TradePlanWorkspace';
-export default function TradePlanWorkspacePage() {
-  return <TradePlanWorkspace />;
-}
+```
+import GridLayout from 'react-grid-layout';
+import 'react-grid-layout/css/styles.css';
+import 'react-resizable/css/styles.css';
 ```
 
-This removes: TradingView script injection, `chartRef`, watchlist state, symbol/timeframe controls, `BIAS` map, tabs UI, inline edit form — all superseded by the new component.
+### 2. New table: `workspace_layouts`
 
-## 4. New edge function `supabase/functions/trade-plan-analysis/index.ts`
+Persist layout per user per page (so this pattern can later be reused on other dashboards).
 
-- CORS headers, POST only.
-- Reads `plan` from request body.
-- Calls `https://ai.gateway.lovable.dev/v1/chat/completions` with `LOVABLE_API_KEY` (auto-provided), model `google/gemini-2.5-flash`, system prompt = "respond with ONLY JSON", user prompt = the trader summary from the spec.
-- Parses the JSON response, returns it. On error/parse failure, returns the safe fallback object from the spec.
-- Registered in `supabase/config.toml` with `verify_jwt = true` (user must be logged in).
+```text
+workspace_layouts
+  user_id     uuid    (fk auth.users, on delete cascade)
+  page        text    -- e.g. 'trade_plan'
+  layout      jsonb   default '[]'
+  preferences jsonb   default '{}'   -- { collapsed: {...}, locked: bool }
+  updated_at  timestamptz default now()
+  PRIMARY KEY (user_id, page)
+```
 
-## 5. Files removed / left alone
+RLS: enable; owner-only select/insert/update/delete using `auth.uid() = user_id`. No new role/admin policies needed.
 
-- `src/pages/TradePlan.tsx` — separate older page, **not touched** (not part of this request).
-- `react-grid-layout` was never installed in this project, nothing to uninstall.
+### 3. Refactor `src/components/TradePlanWorkspace.tsx`
 
-## Result
+Keep all current data/state/AI logic. Add the layout layer around the existing sections:
 
-A single scrollable premium workspace at the Trade Plan route: header with session pill + progress + AI button, collapsible sections (Bias & Focus, Setups, Risk Rules, News, Psychology, Checklist, Notes), AI readiness analysis card, autosave every 2s. No charts, no watchlist, no drag-grid.
+- New state: `layout`, `editLayoutMode`, `locked`, `collapsed`, `containerWidth`, `containerRef`.
+- `DEFAULT_LAYOUT` + `WIDGET_META` constants for 6 widgets: `market`, `checklist`, `risk`, `news`, `psychology`, `notes`.
+- On mount: load saved layout from `workspace_layouts` (fallback to `localStorage` key `tradenova_plan_layout_v2`, then `DEFAULT_LAYOUT`).
+- `saveLayout()` writes to localStorage immediately and upserts to Supabase. `resetLayout()` restores `DEFAULT_LAYOUT`.
+- `ResizeObserver` on container → updates `containerWidth` for `GridLayout`.
+- New `DraggableWidget` wrapper component renders a uniform header (icon + title + collapse chevron + grip when editing) and a scrollable body.
+- Replace the section list in the render with a single `<GridLayout cols={12} rowHeight={44} draggableHandle=".widget-drag-handle" isDraggable={editLayoutMode && !locked} isResizable={editLayoutMode && !locked} onLayoutChange={setLayout}>` containing the six widgets. The existing section JSX (Market Overview, Checklist, Risk, News, Psychology, Notes) is moved verbatim into the matching `<DraggableWidget>` children.
+- Toolbar gains: **Edit Layout** / **Save Layout** / **Reset** / **Done** / **Lock-Unlock** buttons next to the existing AI + Save Plan buttons; show a violet banner while in edit mode.
+
+No changes to the AI edge function, plan autosave, or `src/pages/TradePlanWorkspace.tsx` wrapper.
+
+### 4. Files touched
+
+- `package.json` — add `react-grid-layout`.
+- `supabase/migrations/<ts>_workspace_layouts.sql` — new table + RLS.
+- `src/components/TradePlanWorkspace.tsx` — add grid layer (largest change; existing widget bodies preserved).
+- `src/integrations/supabase/types.ts` — regenerated automatically after migration.
+
+### Notes / risks
+
+- Drag handle uses the widget header (`.widget-drag-handle` on each grid child). Inner form controls remain interactive because the handle is restricted to the header bar.
+- The checklist already has internal HTML5 drag-and-drop for reordering tasks; that keeps working because grid drag is scoped to the header.
+- `react-grid-layout` requires a numeric `width`; we measure via ResizeObserver, so it works inside the existing AppLayout without hardcoding.
+- Layout JSON is small (~6 objects); `jsonb` is fine, no extra indexes needed.
