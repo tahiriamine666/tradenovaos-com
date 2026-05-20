@@ -866,7 +866,7 @@ export default function TradePlanWorkspace() {
             </DraggableWidget>
           </div>
 
-        </GridLayout>
+        </Grid>
       </div>
 
       <div className="flex items-center justify-center gap-2 pt-2 pb-4">
