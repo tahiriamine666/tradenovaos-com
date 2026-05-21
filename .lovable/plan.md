@@ -1,58 +1,38 @@
-## Draggable Trade Plan Workspace
+## Premium Trade Plan Workspace
 
-Add drag-and-drop + resize + per-widget collapse to the existing Trade Plan workspace, with layout persisted per user.
+Replace the current `TradePlanWorkspace` with the premium institutional design from the uploaded spec. Strip out the draggable grid layout, TradingView charts, and watchlist — this is a clean, scrollable, single-column workspace with collapsible sections and animated transitions.
 
-### 1. Dependency
+### What gets removed
+- `react-grid-layout` + `react-resizable` (dependency, CSS imports, `Grid`/`DraggableWidget` wrappers, layout state, ResizeObserver, Edit/Save/Reset/Lock toolbar)
+- All TradingView/chart code and `selectedSym`/`timeframe` state (if any still in the component)
+- Watchlist panel
+- `workspace_layouts` table reads/writes from this page (table stays in DB, unused for now)
 
-Add `react-grid-layout` (^1.4.4). Its peer dep `react-resizable` comes bundled. Import its CSS once at the top of `TradePlanWorkspace.tsx`:
+### What gets built — `src/components/TradePlanWorkspace.tsx` (full rewrite)
 
-```
-import GridLayout from 'react-grid-layout';
-import 'react-grid-layout/css/styles.css';
-import 'react-resizable/css/styles.css';
-```
+Following the spec verbatim with two adaptations:
 
-### 2. New table: `workspace_layouts`
+1. **AI call** — instead of calling `api.anthropic.com` directly from the browser (would expose key + CORS-fail), keep using the existing `supabase.functions.invoke('trade-plan-analysis', { body: { plan } })` edge function. Same JSON contract (`readiness_score`, `discipline_score`, `risk_score`, `warnings`, `suggestions`, `verdict`), same fallback shape.
+2. **Toast** — use the project's `useToast`/`toast` from `@/hooks/use-toast` (already imported in spec).
 
-Persist layout per user per page (so this pattern can later be reused on other dashboards).
+Component pieces from the spec:
+- Types: `ChecklistItem`, `NewsEvent`, `TradePlan`
+- Constants: `BIAS_OPTIONS`, `SESSIONS`, `EMOTIONS`, `CAT_CONFIG`, `DEFAULT_CHECKLIST`, `IMPACT_NEWS`, `IMPACT_COLOR`, `EMPTY_PLAN`
+- Helpers: `Section` (collapsible w/ framer-motion), `Toggle`, `ScoreCircle`
+- Main `TradePlanWorkspace`:
+  - Loads today's `trade_plans` row by `user_id` + `plan_date`
+  - 2-second debounced autosave to `trade_plans`
+  - Live session indicator (London/NY/Asia/Closed based on UTC hour)
+  - Sections: Market Overview (bias, focus, setups, session, confidence, volatility) · Execution Checklist (categorized, HTML5 drag reorder, add/delete) · News & Economic Events (filter by impact, quick-add presets) · Risk Management (max loss/risk/target/trades, protections) · Psychology (emotion, sleep, mental state, discipline) · Notes · AI Analysis panel (run button, score circles, warnings, suggestions, verdict)
+  - Sticky header: date, session pill, save status, "Analyze with AI" button, manual Save button
 
-```text
-workspace_layouts
-  user_id     uuid    (fk auth.users, on delete cascade)
-  page        text    -- e.g. 'trade_plan'
-  layout      jsonb   default '[]'
-  preferences jsonb   default '{}'   -- { collapsed: {...}, locked: bool }
-  updated_at  timestamptz default now()
-  PRIMARY KEY (user_id, page)
-```
+### Files touched
+- `src/components/TradePlanWorkspace.tsx` — full replacement (~800 lines from spec, with the two adaptations above)
+- `package.json` — remove `react-grid-layout`
+- `src/pages/TradePlanWorkspace.tsx` — no change (still renders the component)
+- No DB migration, no edge function changes (existing `trade-plan-analysis` works as-is)
 
-RLS: enable; owner-only select/insert/update/delete using `auth.uid() = user_id`. No new role/admin policies needed.
-
-### 3. Refactor `src/components/TradePlanWorkspace.tsx`
-
-Keep all current data/state/AI logic. Add the layout layer around the existing sections:
-
-- New state: `layout`, `editLayoutMode`, `locked`, `collapsed`, `containerWidth`, `containerRef`.
-- `DEFAULT_LAYOUT` + `WIDGET_META` constants for 6 widgets: `market`, `checklist`, `risk`, `news`, `psychology`, `notes`.
-- On mount: load saved layout from `workspace_layouts` (fallback to `localStorage` key `tradenova_plan_layout_v2`, then `DEFAULT_LAYOUT`).
-- `saveLayout()` writes to localStorage immediately and upserts to Supabase. `resetLayout()` restores `DEFAULT_LAYOUT`.
-- `ResizeObserver` on container → updates `containerWidth` for `GridLayout`.
-- New `DraggableWidget` wrapper component renders a uniform header (icon + title + collapse chevron + grip when editing) and a scrollable body.
-- Replace the section list in the render with a single `<GridLayout cols={12} rowHeight={44} draggableHandle=".widget-drag-handle" isDraggable={editLayoutMode && !locked} isResizable={editLayoutMode && !locked} onLayoutChange={setLayout}>` containing the six widgets. The existing section JSX (Market Overview, Checklist, Risk, News, Psychology, Notes) is moved verbatim into the matching `<DraggableWidget>` children.
-- Toolbar gains: **Edit Layout** / **Save Layout** / **Reset** / **Done** / **Lock-Unlock** buttons next to the existing AI + Save Plan buttons; show a violet banner while in edit mode.
-
-No changes to the AI edge function, plan autosave, or `src/pages/TradePlanWorkspace.tsx` wrapper.
-
-### 4. Files touched
-
-- `package.json` — add `react-grid-layout`.
-- `supabase/migrations/<ts>_workspace_layouts.sql` — new table + RLS.
-- `src/components/TradePlanWorkspace.tsx` — add grid layer (largest change; existing widget bodies preserved).
-- `src/integrations/supabase/types.ts` — regenerated automatically after migration.
-
-### Notes / risks
-
-- Drag handle uses the widget header (`.widget-drag-handle` on each grid child). Inner form controls remain interactive because the handle is restricted to the header bar.
-- The checklist already has internal HTML5 drag-and-drop for reordering tasks; that keeps working because grid drag is scoped to the header.
-- `react-grid-layout` requires a numeric `width`; we measure via ResizeObserver, so it works inside the existing AppLayout without hardcoding.
-- Layout JSON is small (~6 objects); `jsonb` is fine, no extra indexes needed.
+### Notes
+- All existing `trade_plans` columns are already in the schema (verified) — no migration needed.
+- The `workspace_layouts` table stays in place but goes unused; can be cleaned up later.
+- All styling is Tailwind with the dark slate/violet palette from the spec (matches existing app aesthetic).
