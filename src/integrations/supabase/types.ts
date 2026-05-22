@@ -529,12 +529,17 @@ export type Database = {
       }
       trades: {
         Row: {
+          account_type: string
+          ai_review: Json
           created_at: string
           discipline_score: number | null
+          emotion: string | null
           entry_price: number | null
           execution_score: number | null
           exit_price: number | null
           id: string
+          is_starred: boolean
+          mistakes: string[]
           notes: string | null
           outcome: string | null
           pair: string
@@ -542,22 +547,29 @@ export type Database = {
           quantity: number | null
           result: number | null
           rr: number | null
+          screenshot_url: string | null
           session: string | null
           setup: string | null
           side: string | null
           stop_loss: number | null
+          tags: string[]
           take_profit: number | null
           trade_date: string
           updated_at: string
           user_id: string
         }
         Insert: {
+          account_type?: string
+          ai_review?: Json
           created_at?: string
           discipline_score?: number | null
+          emotion?: string | null
           entry_price?: number | null
           execution_score?: number | null
           exit_price?: number | null
           id?: string
+          is_starred?: boolean
+          mistakes?: string[]
           notes?: string | null
           outcome?: string | null
           pair: string
@@ -565,22 +577,29 @@ export type Database = {
           quantity?: number | null
           result?: number | null
           rr?: number | null
+          screenshot_url?: string | null
           session?: string | null
           setup?: string | null
           side?: string | null
           stop_loss?: number | null
+          tags?: string[]
           take_profit?: number | null
           trade_date?: string
           updated_at?: string
           user_id: string
         }
         Update: {
+          account_type?: string
+          ai_review?: Json
           created_at?: string
           discipline_score?: number | null
+          emotion?: string | null
           entry_price?: number | null
           execution_score?: number | null
           exit_price?: number | null
           id?: string
+          is_starred?: boolean
+          mistakes?: string[]
           notes?: string | null
           outcome?: string | null
           pair?: string
@@ -588,10 +607,12 @@ export type Database = {
           quantity?: number | null
           result?: number | null
           rr?: number | null
+          screenshot_url?: string | null
           session?: string | null
           setup?: string | null
           side?: string | null
           stop_loss?: number | null
+          tags?: string[]
           take_profit?: number | null
           trade_date?: string
           updated_at?: string
