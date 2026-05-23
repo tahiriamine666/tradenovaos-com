@@ -504,142 +504,420 @@ function TradeRow({ trade, onView, onEdit, onDuplicate, onDelete }: {
   );
 }
 
-// ── Trade Detail Drawer ───────────────────────────────────────────────────────
-function TradeDrawer({ trade, onClose, onEdit, onAIReview }: {
-  trade: Trade; onClose: () => void; onEdit: (t: Trade) => void; onAIReview: (t: Trade) => Promise<void>;
+// ── Premium Trade Drawer ──────────────────────────────────────────────────────
+function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview, playbooks }: {
+  trade: Trade;
+  onClose: () => void;
+  onEdit: (t: Trade) => void;
+  onDuplicate: (t: Trade) => void;
+  onDelete: (t: Trade) => void;
+  onAIReview: (t: Trade) => Promise<void>;
+  playbooks: { id: string; title: string; entry_rules?: string | null }[];
 }) {
+  const [tab, setTab] = useState<'notes' | 'mistakes' | 'ai' | 'playbook'>('notes');
   const [reviewing, setReviewing] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
   const isWin = (trade.result ?? 0) > 0;
-  const ai = trade.ai_review as any;
+  const isLoss = (trade.result ?? 0) < 0;
+  const ai = (trade.ai_review as any) ?? {};
+
+  const linkedPlaybook = playbooks.find(p => p.id === trade.playbook_id);
+
+  const accent = isWin ? '#10b981' : isLoss ? '#ef4444' : '#6b7280';
+  const accentBg = isWin
+    ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-400'
+    : isLoss
+      ? 'bg-red-500/10 border-red-500/25 text-red-400'
+      : 'bg-white/5 border-white/15 text-white/40';
 
   const handleReview = async () => {
     setReviewing(true);
     await onAIReview(trade);
     setReviewing(false);
+    setTab('ai');
   };
 
-  return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      className="fixed inset-0 z-40 flex"
-      onClick={onClose}>
-      <div className="flex-1 bg-black/50 backdrop-blur-sm" />
-      <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
-        transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-        className="w-full sm:w-[420px] bg-[#0c0c16] border-l border-white/[0.08] h-full overflow-y-auto shadow-2xl"
-        onClick={e => e.stopPropagation()}>
+  const handleDelete = async () => {
+    setDeleting(true);
+    await onDelete(trade);
+    onClose();
+  };
 
-        <div className="sticky top-0 flex items-center justify-between px-5 py-4 border-b border-white/[0.07] bg-[#0c0c16] z-10">
-          <div>
-            <p className="text-sm font-black text-white">{trade.pair}</p>
-            <p className="text-xs text-white/30">{fmtDate(trade.trade_date)}</p>
+  const TABS = [
+    { id: 'notes', label: 'Notes' },
+    { id: 'mistakes', label: 'Mistakes' },
+    { id: 'ai', label: 'AI Review' },
+    { id: 'playbook', label: 'Playbook' },
+  ] as const;
+
+  const QUICK_STATS = [
+    {
+      label: 'P&L',
+      value: `${(trade.result ?? 0) >= 0 ? '+' : ''}$${Math.abs(trade.result ?? 0).toFixed(2)}`,
+      color: isWin ? 'text-emerald-400' : isLoss ? 'text-red-400' : 'text-white/50',
+      glow: isWin ? 'shadow-emerald-500/15' : isLoss ? 'shadow-red-500/15' : '',
+      bg: isWin ? 'bg-emerald-500/8' : isLoss ? 'bg-red-500/8' : 'bg-white/[0.02]',
+      border: isWin ? 'border-emerald-500/20' : isLoss ? 'border-red-500/20' : 'border-white/[0.07]',
+    },
+    { label: 'R:R', value: trade.rr ? `1:${Number(trade.rr).toFixed(1)}` : '—', color: 'text-blue-400', glow: 'shadow-blue-500/10', bg: 'bg-blue-500/8', border: 'border-blue-500/20' },
+    { label: 'Session', value: trade.session || '—', color: 'text-violet-400', glow: '', bg: 'bg-violet-500/8', border: 'border-violet-500/20' },
+    { label: 'Setup', value: trade.setup || '—', color: 'text-amber-400', glow: '', bg: 'bg-amber-500/8', border: 'border-amber-500/20' },
+    { label: 'Execution', value: trade.execution_score ? `${trade.execution_score}/10` : '—', color: 'text-cyan-400', glow: '', bg: 'bg-cyan-500/8', border: 'border-cyan-500/20' },
+    { label: 'Emotion', value: trade.emotion || '—', color: 'text-pink-400', glow: '', bg: 'bg-pink-500/8', border: 'border-pink-500/20' },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-50 flex" onClick={onClose}>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 bg-black/60 backdrop-blur-md" />
+
+      <motion.div
+        initial={{ x: '100%', opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        exit={{ x: '100%', opacity: 0 }}
+        transition={{ type: 'spring', damping: 30, stiffness: 320 }}
+        className="relative w-full sm:w-[400px] lg:w-[440px] h-full overflow-hidden flex flex-col"
+        style={{
+          background: 'linear-gradient(160deg, #0d0d1f 0%, #0a0a18 100%)',
+          borderLeft: '1px solid rgba(255,255,255,0.08)',
+          boxShadow: `-24px 0 80px rgba(0,0,0,0.6), ${isWin ? '0 0 40px rgba(16,185,129,0.05)' : isLoss ? '0 0 40px rgba(239,68,68,0.05)' : ''}`,
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="absolute top-0 inset-x-0 h-0.5 opacity-70" style={{ background: `linear-gradient(90deg, transparent, ${accent}, transparent)` }} />
+
+        {/* HEADER */}
+        <div className="flex-shrink-0 px-5 pt-5 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-black ${accentBg}`}>
+                {isWin ? <TrendingUp className="h-3.5 w-3.5" /> : isLoss ? <TrendingDown className="h-3.5 w-3.5" /> : <Minus className="h-3.5 w-3.5" />}
+                {isWin ? 'WIN' : isLoss ? 'LOSS' : 'BREAKEVEN'}
+              </div>
+              <div className={`px-2.5 py-1 rounded-lg border text-[10px] font-black ${
+                trade.side === 'long' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-red-500/10 border-red-500/20 text-red-400'
+              }`}>
+                {trade.side === 'long' ? '↑ LONG' : '↓ SHORT'}
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <button onClick={() => onEdit(trade)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/[0.08] text-white/40 text-xs font-bold hover:bg-white/[0.06] hover:text-white transition-all">
+                <Edit className="h-3.5 w-3.5" /> Edit
+              </button>
+              <button onClick={onClose} className="p-1.5 rounded-xl hover:bg-white/[0.06] text-white/30 hover:text-white transition-colors">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button onClick={() => onEdit(trade)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/[0.08] text-white/40 text-xs font-bold hover:bg-white/[0.05] hover:text-white transition-all">
-              <Edit className="h-3.5 w-3.5" /> Edit
-            </button>
-            <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/[0.06] text-white/30 hover:text-white transition-colors">
-              <X className="h-4 w-4" />
-            </button>
+
+          <div className="flex items-baseline justify-between mt-3">
+            <div>
+              <h2 className="text-2xl font-black text-white tracking-tight">{trade.pair}</h2>
+              <p className="text-xs text-white/30 mt-0.5">
+                {new Date(trade.trade_date + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
+                {trade.session && ` · ${trade.session}`}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className={`text-3xl font-black tracking-tight font-mono ${isWin ? 'text-emerald-400' : isLoss ? 'text-red-400' : 'text-white/40'}`}>
+                {(trade.result ?? 0) >= 0 ? '+' : ''}${Math.abs(trade.result ?? 0).toFixed(2)}
+              </p>
+            </div>
           </div>
         </div>
 
-        <div className="p-5 space-y-5">
-          <div className="grid grid-cols-3 gap-3">
-            <div className="p-3 rounded-2xl border border-white/[0.07] bg-white/[0.02] text-center">
-              <p className="text-[9px] text-white/25 uppercase tracking-wider mb-1.5">P&L</p>
-              <p className={`text-xl font-black font-mono ${isWin ? 'text-emerald-400' : 'text-red-400'}`}>{fmtMoney(trade.result ?? 0)}</p>
-            </div>
-            <div className="p-3 rounded-2xl border border-white/[0.07] bg-white/[0.02] text-center">
-              <p className="text-[9px] text-white/25 uppercase tracking-wider mb-1.5">R:R</p>
-              <p className="text-xl font-black text-white">{trade.rr ? `1:${Number(trade.rr).toFixed(1)}` : '—'}</p>
-            </div>
-            <div className="p-3 rounded-2xl border border-white/[0.07] bg-white/[0.02] text-center">
-              <p className="text-[9px] text-white/25 uppercase tracking-wider mb-1.5">Result</p>
-              <p className={`text-sm font-black capitalize ${isWin ? 'text-emerald-400' : 'text-red-400'}`}>{trade.outcome || '—'}</p>
+        {/* SCROLLABLE CONTENT */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="px-5 pt-4 pb-3">
+            <div className="grid grid-cols-3 gap-2">
+              {QUICK_STATS.map(stat => (
+                <motion.div key={stat.label} whileHover={{ scale: 1.02, transition: { duration: 0.15 } }} className={`rounded-xl border ${stat.border} ${stat.bg} p-2.5 shadow-lg ${stat.glow}`}>
+                  <p className="text-[9px] font-bold text-white/25 uppercase tracking-wider mb-1">{stat.label}</p>
+                  <p className={`text-sm font-black truncate ${stat.color}`}>{stat.value}</p>
+                </motion.div>
+              ))}
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] overflow-hidden">
-            {[
-              { l: 'Direction', v: trade.side === 'long' ? '↑ Long' : '↓ Short' },
-              { l: 'Session', v: trade.session || '—' },
-              { l: 'Setup', v: trade.setup || '—' },
-              { l: 'Entry', v: trade.entry_price?.toString() || '—' },
-              { l: 'Exit', v: trade.exit_price?.toString() || '—' },
-              { l: 'Account', v: ACCOUNT_TYPES.find(a => a.value === trade.account_type)?.label || trade.account_type || '—' },
-              { l: 'Emotion', v: trade.emotion || '—' },
-              { l: 'Execution', v: trade.execution_score ? `${trade.execution_score}/10` : '—' },
-              { l: 'Discipline', v: trade.discipline_score ? `${trade.discipline_score}/10` : '—' },
-            ].map((row, i) => (
-              <div key={row.l} className={`flex items-center justify-between px-4 py-3 ${i < 8 ? 'border-b border-white/[0.04]' : ''}`}>
-                <span className="text-[11px] text-white/30 font-medium">{row.l}</span>
-                <span className="text-xs font-semibold text-white/70">{row.v}</span>
+          {(trade.entry_price || trade.exit_price) && (
+            <div className="px-5 pb-4">
+              <div className="rounded-2xl border border-white/[0.07] overflow-hidden" style={{ background: 'rgba(255,255,255,0.02)' }}>
+                <div className="grid grid-cols-2 divide-x divide-white/[0.06]">
+                  <div className="px-4 py-3">
+                    <p className="text-[9px] font-bold text-white/25 uppercase tracking-wider mb-1.5">Entry</p>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-blue-400" />
+                      <p className="text-base font-black text-white font-mono">{trade.entry_price ? Number(trade.entry_price).toLocaleString() : '—'}</p>
+                    </div>
+                  </div>
+                  <div className="px-4 py-3">
+                    <p className="text-[9px] font-bold text-white/25 uppercase tracking-wider mb-1.5">Exit</p>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${isWin ? 'bg-emerald-400' : 'bg-red-400'}`} />
+                      <p className={`text-base font-black font-mono ${isWin ? 'text-emerald-400' : isLoss ? 'text-red-400' : 'text-white'}`}>
+                        {trade.exit_price ? Number(trade.exit_price).toLocaleString() : '—'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {trade.entry_price && trade.exit_price && (
+                  <div className="px-4 pb-3">
+                    <div className="relative h-1.5 bg-white/[0.05] rounded-full overflow-hidden">
+                      <motion.div initial={{ width: 0 }} animate={{ width: '100%' }} transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }} className="absolute inset-y-0 left-0 rounded-full" style={{ background: `linear-gradient(90deg, rgba(99,102,241,0.5), ${accent})` }} />
+                    </div>
+                    <div className="flex justify-between mt-1.5">
+                      <span className="text-[9px] text-white/20 font-mono">{Number(trade.entry_price).toLocaleString()}</span>
+                      <span className={`text-[9px] font-mono font-bold ${isWin ? 'text-emerald-400' : 'text-red-400'}`}>
+                        {isWin ? '▲' : '▼'} {Math.abs(((Number(trade.exit_price) - Number(trade.entry_price)) / Number(trade.entry_price)) * 100).toFixed(2)}%
+                      </span>
+                      <span className="text-[9px] text-white/20 font-mono">{Number(trade.exit_price).toLocaleString()}</span>
+                    </div>
+                  </div>
+                )}
               </div>
-            ))}
-          </div>
+            </div>
+          )}
 
           {trade.screenshot_url && (
-            <div className="rounded-2xl overflow-hidden border border-white/[0.07]">
-              <img src={trade.screenshot_url} alt="Trade screenshot" className="w-full object-cover" />
-            </div>
-          )}
-
-          {(trade.mistakes ?? []).length > 0 && (
-            <div className="rounded-2xl border border-red-500/15 bg-red-500/5 p-4">
-              <p className="text-[10px] text-red-400/60 uppercase tracking-wider mb-2.5 font-bold flex items-center gap-1.5">
-                <AlertCircle className="h-3.5 w-3.5" /> Mistakes
-              </p>
-              <div className="space-y-1.5">
-                {(trade.mistakes ?? []).map(m => (
-                  <div key={m} className="flex items-center gap-2 text-xs text-red-400/70">
-                    <div className="w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0" />
-                    {m}
-                  </div>
-                ))}
+            <div className="px-5 pb-4">
+              <div className="rounded-2xl overflow-hidden border border-white/[0.08] relative group">
+                <img src={trade.screenshot_url} alt="Trade chart" className="w-full object-cover max-h-48" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-3">
+                  <span className="text-[10px] text-white/70 font-semibold">Trade Screenshot</span>
+                </div>
               </div>
             </div>
           )}
 
-          {trade.notes && (
-            <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4">
-              <p className="text-[10px] text-white/25 uppercase tracking-wider mb-2 font-bold">Notes</p>
-              <p className="text-sm text-white/60 leading-relaxed whitespace-pre-wrap">{trade.notes}</p>
+          {(trade.discipline_score || trade.execution_score) && (
+            <div className="px-5 pb-4">
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label: 'Discipline', value: trade.discipline_score, color: '#ec4899' },
+                  { label: 'Execution', value: trade.execution_score, color: '#7c3aed' },
+                ].map(score => {
+                  const pct = ((score.value ?? 0) / 10) * 100;
+                  const circ = 2 * Math.PI * 20;
+                  return (
+                    <div key={score.label} className="flex items-center gap-3 p-3 rounded-2xl border border-white/[0.07] bg-white/[0.02]">
+                      <div className="relative w-11 h-11 flex items-center justify-center flex-shrink-0">
+                        <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 44 44">
+                          <circle cx="22" cy="22" r="20" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="3.5" />
+                          <motion.circle cx="22" cy="22" r="20" fill="none" stroke={score.color} strokeWidth="3.5" strokeDasharray={circ} initial={{ strokeDashoffset: circ }} animate={{ strokeDashoffset: circ * (1 - pct / 100) }} transition={{ duration: 1, delay: 0.3, ease: [0.22, 1, 0.36, 1] }} strokeLinecap="round" />
+                        </svg>
+                        <span className="text-xs font-black text-white">{score.value ?? 0}</span>
+                      </div>
+                      <div>
+                        <p className="text-[9px] text-white/25 uppercase tracking-wider">{score.label}</p>
+                        <p className="text-sm font-bold text-white">{score.value ?? 0}/10</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           )}
 
-          <div className="rounded-2xl border border-violet-500/20 bg-violet-500/5">
-            <div className="flex items-center justify-between px-4 py-3 border-b border-violet-500/10">
-              <p className="text-[10px] text-violet-400/60 uppercase tracking-wider font-bold flex items-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5" /> AI Trade Review
-              </p>
-              <button onClick={handleReview} disabled={reviewing}
-                className="flex items-center gap-1.5 text-[10px] font-bold text-violet-400 hover:text-violet-300 transition-colors disabled:opacity-50">
-                <RefreshCw className={`h-3 w-3 ${reviewing ? 'animate-spin' : ''}`} />
-                {reviewing ? 'Analyzing...' : ai?.verdict ? 'Re-analyze' : 'Analyze'}
-              </button>
+          {/* TABS */}
+          <div className="px-5 pb-2">
+            <div className="flex gap-0.5 p-1 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+              {TABS.map(t => (
+                <button key={t.id} onClick={() => setTab(t.id)} className={`flex-1 py-2 rounded-lg text-[10px] font-bold transition-all ${tab === t.id ? 'bg-violet-600 text-white shadow-lg shadow-violet-500/20' : 'text-white/30 hover:text-white hover:bg-white/[0.04]'}`}>
+                  {t.label}
+                  {t.id === 'ai' && ai?.verdict && <span className="ml-1 w-1 h-1 rounded-full bg-emerald-400 inline-block" />}
+                </button>
+              ))}
             </div>
-            <div className="p-4">
-              {ai?.verdict ? (
-                <div className="space-y-3">
-                  <div className={`text-xs font-black px-3 py-1.5 rounded-full inline-flex items-center gap-1.5 ${
-                    ai.verdict === 'Good trade' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
-                      : ai.verdict === 'Poor trade' ? 'bg-red-500/15 text-red-400 border border-red-500/20'
-                        : 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
-                  }`}>
-                    <Sparkles className="h-3 w-3" /> {ai.verdict}
-                  </div>
-                  {ai.what_went_well && <div><p className="text-[9px] text-white/25 uppercase tracking-wider mb-1">What went well</p><p className="text-xs text-white/55 leading-relaxed">{ai.what_went_well}</p></div>}
-                  {ai.what_went_wrong && <div><p className="text-[9px] text-white/25 uppercase tracking-wider mb-1">What went wrong</p><p className="text-xs text-red-400/60 leading-relaxed">{ai.what_went_wrong}</p></div>}
-                  {ai.improvement && <div><p className="text-[9px] text-white/25 uppercase tracking-wider mb-1">Suggestion</p><p className="text-xs text-violet-300/70 leading-relaxed">{ai.improvement}</p></div>}
-                </div>
-              ) : (
-                <p className="text-xs text-white/20 text-center py-3">Click "Analyze" for AI trade review</p>
+          </div>
+
+          <div className="px-5 pb-24">
+            <AnimatePresence mode="wait">
+              {tab === 'notes' && (
+                <motion.div key="notes" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }} className="pt-3">
+                  {trade.notes ? (
+                    <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4">
+                      <p className="text-sm text-white/65 leading-relaxed whitespace-pre-wrap">{trade.notes}</p>
+                    </div>
+                  ) : (
+                    <div className="text-center py-10">
+                      <div className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/[0.07] flex items-center justify-center mx-auto mb-3">
+                        <Edit className="h-5 w-5 text-white/20" />
+                      </div>
+                      <p className="text-sm text-white/20">No notes for this trade</p>
+                      <button onClick={() => onEdit(trade)} className="mt-3 text-xs text-violet-400 hover:text-violet-300 transition-colors">Add notes →</button>
+                    </div>
+                  )}
+                </motion.div>
               )}
-            </div>
+
+              {tab === 'mistakes' && (
+                <motion.div key="mistakes" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }} className="pt-3 space-y-2">
+                  {(trade.mistakes ?? []).length > 0 ? (
+                    <>
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-[10px] text-white/25 uppercase tracking-wider font-bold">
+                          {(trade.mistakes ?? []).length} mistake{(trade.mistakes ?? []).length > 1 ? 's' : ''} identified
+                        </p>
+                        <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/20">
+                          <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                          <span className="text-[9px] font-bold text-red-400">Needs review</span>
+                        </div>
+                      </div>
+                      {(trade.mistakes ?? []).map((m, i) => (
+                        <motion.div key={m} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} className="flex items-center gap-3 p-3.5 rounded-xl border border-red-500/15 bg-red-500/5">
+                          <div className="w-6 h-6 rounded-lg bg-red-500/20 flex items-center justify-center flex-shrink-0">
+                            <AlertCircle className="h-3.5 w-3.5 text-red-400" />
+                          </div>
+                          <p className="text-xs font-medium text-red-300/80">{m}</p>
+                        </motion.div>
+                      ))}
+                    </>
+                  ) : (
+                    <div className="text-center py-10">
+                      <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto mb-3">
+                        <Check className="h-5 w-5 text-emerald-400" />
+                      </div>
+                      <p className="text-sm font-bold text-emerald-400">No mistakes logged</p>
+                      <p className="text-xs text-white/25 mt-1">Clean execution on this trade</p>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+
+              {tab === 'ai' && (
+                <motion.div key="ai" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }} className="pt-3">
+                  {ai?.verdict ? (
+                    <div className="space-y-3">
+                      <div className="rounded-2xl border overflow-hidden" style={{
+                        borderColor: ai.verdict === 'Good trade' ? 'rgba(16,185,129,0.2)' : ai.verdict === 'Poor trade' ? 'rgba(239,68,68,0.2)' : 'rgba(245,158,11,0.2)',
+                        background: ai.verdict === 'Good trade' ? 'rgba(16,185,129,0.05)' : ai.verdict === 'Poor trade' ? 'rgba(239,68,68,0.05)' : 'rgba(245,158,11,0.05)',
+                      }}>
+                        <div className="px-4 py-3 flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: ai.verdict === 'Good trade' ? 'rgba(16,185,129,0.15)' : ai.verdict === 'Poor trade' ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)' }}>
+                            <Sparkles className="h-4 w-4" style={{ color: ai.verdict === 'Good trade' ? '#10b981' : ai.verdict === 'Poor trade' ? '#ef4444' : '#f59e0b' }} />
+                          </div>
+                          <div>
+                            <p className="text-xs font-black text-white">AI Verdict</p>
+                            <p className="text-sm font-black" style={{ color: ai.verdict === 'Good trade' ? '#10b981' : ai.verdict === 'Poor trade' ? '#ef4444' : '#f59e0b' }}>{ai.verdict}</p>
+                          </div>
+                          {ai.discipline_score != null && (
+                            <div className="ml-auto text-center">
+                              <p className="text-[9px] text-white/25 uppercase">Score</p>
+                              <p className="text-xl font-black" style={{ color: ai.discipline_score >= 70 ? '#10b981' : ai.discipline_score >= 40 ? '#f59e0b' : '#ef4444' }}>{ai.discipline_score}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {ai.what_went_well && (
+                        <div className="rounded-2xl border border-emerald-500/15 bg-emerald-500/5 p-4">
+                          <p className="text-[9px] font-bold text-emerald-400/60 uppercase tracking-wider mb-2 flex items-center gap-1.5"><Check className="h-3 w-3" /> What went well</p>
+                          <p className="text-xs text-emerald-300/80 leading-relaxed">{ai.what_went_well}</p>
+                        </div>
+                      )}
+                      {ai.what_went_wrong && (
+                        <div className="rounded-2xl border border-red-500/15 bg-red-500/5 p-4">
+                          <p className="text-[9px] font-bold text-red-400/60 uppercase tracking-wider mb-2 flex items-center gap-1.5"><AlertCircle className="h-3 w-3" /> What went wrong</p>
+                          <p className="text-xs text-red-300/70 leading-relaxed">{ai.what_went_wrong}</p>
+                        </div>
+                      )}
+                      {ai.improvement && (
+                        <div className="rounded-2xl border border-violet-500/20 bg-violet-500/5 p-4">
+                          <p className="text-[9px] font-bold text-violet-400/60 uppercase tracking-wider mb-2 flex items-center gap-1.5"><Sparkles className="h-3 w-3" /> AI Suggestion</p>
+                          <p className="text-xs text-violet-300/80 leading-relaxed">{ai.improvement}</p>
+                        </div>
+                      )}
+
+                      <button onClick={handleReview} disabled={reviewing} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-white/[0.08] text-white/35 text-xs font-bold hover:bg-white/[0.04] hover:text-white transition-all disabled:opacity-40">
+                        <RefreshCw className={`h-3.5 w-3.5 ${reviewing ? 'animate-spin' : ''}`} />
+                        {reviewing ? 'Re-analyzing...' : 'Re-analyze'}
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="text-center py-10">
+                      <div className="relative mb-4 mx-auto w-16 h-16">
+                        <div className="w-16 h-16 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
+                          <Sparkles className="h-7 w-7 text-violet-400" />
+                        </div>
+                        <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-violet-600 border-2 border-[#0d0d1f] flex items-center justify-center">
+                          <Zap className="h-2.5 w-2.5 text-white" />
+                        </div>
+                      </div>
+                      <p className="text-sm font-bold text-white mb-1">AI Trade Review</p>
+                      <p className="text-xs text-white/30 mb-5 max-w-[200px] mx-auto leading-relaxed">Get instant analysis of what worked, what didn't, and how to improve.</p>
+                      <button onClick={handleReview} disabled={reviewing} className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-6 py-2.5 rounded-xl font-bold text-sm transition-all shadow-lg shadow-violet-500/20 mx-auto disabled:opacity-50">
+                        <Sparkles className={`h-4 w-4 ${reviewing ? 'animate-spin' : ''}`} />
+                        {reviewing ? 'Analyzing...' : 'Analyze This Trade'}
+                      </button>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+
+              {tab === 'playbook' && (
+                <motion.div key="playbook" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }} className="pt-3">
+                  {linkedPlaybook ? (
+                    <div className="space-y-3">
+                      <div className="rounded-2xl border border-violet-500/20 bg-violet-500/5 p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="text-[9px] text-violet-400/60 uppercase tracking-wider font-bold mb-1.5">Linked Playbook</p>
+                            <p className="text-base font-black text-white">{linkedPlaybook.title}</p>
+                            {trade.setup && <p className="text-xs text-white/40 mt-0.5">{trade.setup}</p>}
+                          </div>
+                        </div>
+                      </div>
+
+                      {linkedPlaybook.entry_rules && (
+                        <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4">
+                          <p className="text-[9px] font-bold text-white/25 uppercase tracking-wider mb-2.5">Entry Rules</p>
+                          <p className="text-xs text-white/55 leading-relaxed">{linkedPlaybook.entry_rules}</p>
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="p-3 rounded-xl border border-emerald-500/15 bg-emerald-500/5">
+                          <p className="text-[9px] font-bold text-emerald-400/60 uppercase tracking-wider mb-2">Rules followed</p>
+                          <p className="text-2xl font-black text-emerald-400">{Math.max(0, 5 - (trade.mistakes?.length ?? 0))}</p>
+                        </div>
+                        <div className="p-3 rounded-xl border border-red-500/15 bg-red-500/5">
+                          <p className="text-[9px] font-bold text-red-400/60 uppercase tracking-wider mb-2">Rules broken</p>
+                          <p className="text-2xl font-black text-red-400">{trade.mistakes?.length ?? 0}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-10">
+                      <div className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/[0.07] flex items-center justify-center mx-auto mb-3">
+                        <Target className="h-5 w-5 text-white/20" />
+                      </div>
+                      <p className="text-sm text-white/20">No playbook linked</p>
+                      <button onClick={() => onEdit(trade)} className="mt-3 text-xs text-violet-400 hover:text-violet-300 transition-colors">Link a playbook →</button>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* FLOATING BOTTOM ACTIONS */}
+        <div className="absolute bottom-0 inset-x-0 px-5 py-4" style={{ background: 'linear-gradient(to top, rgba(10,10,24,1) 60%, transparent)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="flex items-center gap-2">
+            <button onClick={() => onDuplicate(trade)} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-white/[0.08] text-white/40 text-xs font-bold hover:bg-white/[0.05] hover:text-white transition-all">
+              <Copy className="h-3.5 w-3.5" /> Duplicate
+            </button>
+            <button onClick={handleReview} disabled={reviewing} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-violet-600/20 border border-violet-500/25 text-violet-400 text-xs font-bold hover:bg-violet-600/30 transition-all disabled:opacity-40">
+              <Sparkles className={`h-3.5 w-3.5 ${reviewing ? 'animate-spin' : ''}`} /> AI Review
+            </button>
+            <button onClick={handleDelete} disabled={deleting} className="p-2.5 rounded-xl border border-red-500/20 text-red-400/50 hover:bg-red-500/10 hover:text-red-400 transition-all disabled:opacity-40">
+              <Trash2 className="h-4 w-4" />
+            </button>
           </div>
         </div>
       </motion.div>
-    </motion.div>
+    </div>
   );
 }
 
