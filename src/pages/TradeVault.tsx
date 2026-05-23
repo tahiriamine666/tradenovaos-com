@@ -951,7 +951,7 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
 export default function TradeVault() {
   const { user } = useAuth();
   const [trades, setTrades] = useState<Trade[]>([]);
-  const [playbooks, setPlaybooks] = useState<{ id: string; title: string }[]>([]);
+  const [playbooks, setPlaybooks] = useState<{ id: string; title: string; entry_rules?: string | null }[]>([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editTrade, setEditTrade] = useState<Trade | null>(null);
