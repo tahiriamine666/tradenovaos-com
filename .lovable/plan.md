@@ -1,42 +1,42 @@
-## Redesign Trade Vault
+## Premium Trade Detail Drawer
 
-Replace `src/pages/TradeVault.tsx` with the premium journal from the uploaded spec: stat cards, search + filters, table rows, right-side detail drawer, 3-step Add/Edit Trade modal, AI per-trade review, empty state.
+Replace the existing `TradeDrawer` component inside `src/pages/TradeVault.tsx` with the new premium version from the uploaded spec. No other component on the page changes.
 
-### Database migration (`trades` table)
-The spec uses fields not yet on `trades`. Add them (nullable / safe defaults):
-- `mistakes text[] not null default '{}'`
-- `screenshot_url text`
-- `emotion text`
-- `account_type text not null default 'main'`
-- `ai_review jsonb not null default '{}'`
-- `is_starred boolean not null default false`
-- `tags text[] not null default '{}'`
+### What changes
 
-No RLS changes (existing `own trades *` policies still apply). Existing columns preserved.
+**1. `TradeDrawer` (lines 508–644) — full replacement**
+- New props: `onDuplicate`, `onDelete`, `playbooks` (with optional `entry_rules`, `win_rate`)
+- Tabbed content (Notes / Mistakes / AI Review / Playbook) using `AnimatePresence`
+- Premium header with WIN/LOSS/BREAKEVEN + side badge, large P&L
+- 6-card quick stat grid (P&L, R:R, Session, Setup, Execution, Emotion)
+- Entry/Exit price card with animated delta bar and %
+- Screenshot preview with hover overlay
+- Discipline + Execution radial progress rings
+- Richer AI review section (verdict card, what went well/wrong, suggestion, re-analyze)
+- Playbook tab showing linked playbook, entry rules, rules-followed vs rules-broken
+- Floating bottom action bar (Duplicate / AI Review / Delete)
 
-### Edge function for AI review
-Spec calls `api.anthropic.com` directly from the browser — would expose keys and CORS-fail. Create `supabase/functions/trade-review/index.ts` mirroring the existing `trade-plan-analysis` pattern: JWT-verified, calls Lovable AI Gateway (`google/gemini-2.5-flash`), returns the same JSON shape (`verdict`, `what_went_well`, `what_went_wrong`, `rule_broken`, `improvement`, `discipline_score`). Fallback object on 429/402/error.
+**2. Call site (line ~899)** — pass new props:
+```tsx
+<TradeDrawer
+  trade={viewTrade}
+  onClose={() => setViewTrade(null)}
+  onEdit={openEdit}
+  onDuplicate={(t) => { handleDuplicate(t); setViewTrade(null); }}
+  onDelete={handleDelete}
+  onAIReview={handleAIReview}
+  playbooks={playbooks}
+/>
+```
 
-Client `handleAIReview` will use `supabase.functions.invoke('trade-review', { body: { trade } })` instead of the raw `fetch` from the spec.
+**3. Playbooks query + state**
+- The spec asks to also select `win_rate`, but the `playbooks` table has no `win_rate` column (only `entry_rules`). Selecting it would 400. **Adaptation:** select `id, title, entry_rules` only and omit `win_rate` from state. The UI already renders the win-rate badge conditionally (`win_rate != null`), so it simply hides.
+- Update state type to `{ id: string; title: string; entry_rules?: string | null }[]`.
 
-### `src/pages/TradeVault.tsx` (full rewrite from spec)
-Components inlined per spec:
-- `StatCard`, `TradeRow`, `EmptyState`
-- `AddTradeModal` — 3 steps (Basic Info, Result, Setup & Notes), validation, "Save & add another"
-- `TradeDrawer` — right-side panel with stats, details, mistakes, notes, AI review section with run button
-- Main `TradeVault` — loads trades + playbooks, stats memo, search + outcome/session/pair filters, table, modal/drawer wiring
-
-Adaptations vs spec:
-- `toast` import: from `@/hooks/use-toast` (already in project)
-- AI review: edge function call instead of direct Anthropic fetch
-- Drops the previous page's shared `TradeDialogContext` (`openNew`/`openEdit`) and `CSVImport` button — this page becomes self-contained. The context stays in the project for other consumers (Dashboard, etc.) — only this page stops using it.
+**4. Imports** — add `TrendingDown`, `Minus`, `Zap`, `Target`, `Check` to the `lucide-react` import if missing.
 
 ### Files touched
-- `supabase/migrations/<new>.sql` — add 7 columns to `trades`
-- `supabase/functions/trade-review/index.ts` — new edge function
-- `src/pages/TradeVault.tsx` — full replacement (~950 lines from spec, with the two adaptations above)
+- `src/pages/TradeVault.tsx` — only the `TradeDrawer` function, the playbooks query/state, the drawer call site, and the lucide imports.
 
-### Notes
-- `Index.tsx` already renders `<TradeVault />` for the trades tab — no change needed.
-- No changes to other pages, auth, dashboard, playbooks, or analytics.
-- `mistakes`, `tags` arrays and `ai_review` jsonb default to empty so all existing rows remain valid.
+### Out of scope (unchanged)
+- `AddTradeModal`, `TradeRow`, `EmptyState`, main `TradeVault`, Supabase queries other than the playbooks `select`, auth, edge functions, DB schema.
