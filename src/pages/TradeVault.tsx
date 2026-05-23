@@ -1179,7 +1179,10 @@ export default function TradeVault() {
             trade={viewTrade}
             onClose={() => setViewTrade(null)}
             onEdit={openEdit}
+            onDuplicate={(t) => { handleDuplicate(t); setViewTrade(null); }}
+            onDelete={handleDelete}
             onAIReview={handleAIReview}
+            playbooks={playbooks}
           />
         )}
       </AnimatePresence>
