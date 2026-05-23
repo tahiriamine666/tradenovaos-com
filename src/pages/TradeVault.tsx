@@ -967,7 +967,7 @@ export default function TradeVault() {
     setLoading(true);
     const [tradesRes, playbooksRes] = await Promise.all([
       supabase.from('trades').select('*').eq('user_id', user.id).order('trade_date', { ascending: false }).order('created_at', { ascending: false }),
-      supabase.from('playbooks').select('id,title').eq('user_id', user.id),
+      supabase.from('playbooks').select('id,title,entry_rules').eq('user_id', user.id),
     ]);
     setTrades(((tradesRes.data ?? []) as unknown as Trade[]));
     setPlaybooks((playbooksRes.data ?? []) as any);
