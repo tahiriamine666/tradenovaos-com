@@ -693,7 +693,7 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
             <div className="grid grid-cols-3 gap-2">
               {QUICK_STATS.map(stat => (
                 <motion.div key={stat.label} whileHover={{ scale: 1.02, transition: { duration: 0.15 } }} className={`rounded-xl border ${stat.border} ${stat.bg} p-2.5 shadow-lg ${stat.glow}`}>
-                  <p className="text-[9px] font-bold text-white/25 uppercase tracking-wider mb-1">{stat.label}</p>
+                  <p className="text-[9px] font-bold text-muted-foreground/70 dark:text-white/25 uppercase tracking-wider mb-1">{stat.label}</p>
                   <p className={`text-sm font-black truncate ${stat.color}`}>{stat.value}</p>
                 </motion.div>
               ))}
