@@ -101,6 +101,7 @@ function AddTradeModal({ onClose, onSaved, editTrade, playbooks }: {
   editTrade?: Trade | null; playbooks: { id: string; title: string }[];
 }) {
   const { user } = useAuth();
+  const fileRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<FormData>(editTrade ? {
     pair: editTrade.pair, side: (editTrade.side as any) ?? 'long',
