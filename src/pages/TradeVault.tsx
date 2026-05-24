@@ -702,20 +702,20 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
 
           {(trade.entry_price || trade.exit_price) && (
             <div className="px-5 pb-4">
-              <div className="rounded-2xl border border-white/[0.07] overflow-hidden" style={{ background: 'rgba(255,255,255,0.02)' }}>
-                <div className="grid grid-cols-2 divide-x divide-white/[0.06]">
+              <div className="rounded-2xl border border-border dark:border-white/[0.07] overflow-hidden bg-slate-50 dark:bg-white/[0.02]">
+                <div className="grid grid-cols-2 divide-x divide-border dark:divide-white/[0.06]">
                   <div className="px-4 py-3">
-                    <p className="text-[9px] font-bold text-white/25 uppercase tracking-wider mb-1.5">Entry</p>
+                    <p className="text-[9px] font-bold text-muted-foreground/70 dark:text-white/25 uppercase tracking-wider mb-1.5">Entry</p>
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-blue-400" />
-                      <p className="text-base font-black text-white font-mono">{trade.entry_price ? Number(trade.entry_price).toLocaleString() : '—'}</p>
+                      <p className="text-base font-black text-foreground dark:text-white font-mono">{trade.entry_price ? Number(trade.entry_price).toLocaleString() : '—'}</p>
                     </div>
                   </div>
                   <div className="px-4 py-3">
-                    <p className="text-[9px] font-bold text-white/25 uppercase tracking-wider mb-1.5">Exit</p>
+                    <p className="text-[9px] font-bold text-muted-foreground/70 dark:text-white/25 uppercase tracking-wider mb-1.5">Exit</p>
                     <div className="flex items-center gap-2">
                       <div className={`w-2 h-2 rounded-full ${isWin ? 'bg-emerald-400' : 'bg-red-400'}`} />
-                      <p className={`text-base font-black font-mono ${isWin ? 'text-emerald-400' : isLoss ? 'text-red-400' : 'text-white'}`}>
+                      <p className={`text-base font-black font-mono ${isWin ? 'text-emerald-400' : isLoss ? 'text-red-400' : 'text-foreground dark:text-white'}`}>
                         {trade.exit_price ? Number(trade.exit_price).toLocaleString() : '—'}
                       </p>
                     </div>
@@ -724,15 +724,15 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
 
                 {trade.entry_price && trade.exit_price && (
                   <div className="px-4 pb-3">
-                    <div className="relative h-1.5 bg-white/[0.05] rounded-full overflow-hidden">
+                    <div className="relative h-1.5 bg-muted dark:bg-white/[0.05] rounded-full overflow-hidden">
                       <motion.div initial={{ width: 0 }} animate={{ width: '100%' }} transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }} className="absolute inset-y-0 left-0 rounded-full" style={{ background: `linear-gradient(90deg, rgba(99,102,241,0.5), ${accent})` }} />
                     </div>
                     <div className="flex justify-between mt-1.5">
-                      <span className="text-[9px] text-white/20 font-mono">{Number(trade.entry_price).toLocaleString()}</span>
+                      <span className="text-[9px] text-muted-foreground/60 dark:text-white/20 font-mono">{Number(trade.entry_price).toLocaleString()}</span>
                       <span className={`text-[9px] font-mono font-bold ${isWin ? 'text-emerald-400' : 'text-red-400'}`}>
                         {isWin ? '▲' : '▼'} {Math.abs(((Number(trade.exit_price) - Number(trade.entry_price)) / Number(trade.entry_price)) * 100).toFixed(2)}%
                       </span>
-                      <span className="text-[9px] text-white/20 font-mono">{Number(trade.exit_price).toLocaleString()}</span>
+                      <span className="text-[9px] text-muted-foreground/60 dark:text-white/20 font-mono">{Number(trade.exit_price).toLocaleString()}</span>
                     </div>
                   </div>
                 )}
