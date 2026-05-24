@@ -592,7 +592,7 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
     ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-400'
     : isLoss
       ? 'bg-red-500/10 border-red-500/25 text-red-400'
-      : 'bg-white/5 border-white/15 text-white/40';
+      : 'bg-muted border-border text-muted-foreground dark:bg-white/5 dark:border-white/15 dark:text-white/40';
 
   const handleReview = async () => {
     setReviewing(true);
