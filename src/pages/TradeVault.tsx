@@ -952,38 +952,38 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
                       <div className="rounded-2xl border border-violet-500/20 bg-violet-500/5 p-4">
                         <div className="flex items-start justify-between gap-3">
                           <div>
-                            <p className="text-[9px] text-violet-400/60 uppercase tracking-wider font-bold mb-1.5">Linked Playbook</p>
-                            <p className="text-base font-black text-white">{linkedPlaybook.title}</p>
-                            {trade.setup && <p className="text-xs text-white/40 mt-0.5">{trade.setup}</p>}
+                            <p className="text-[9px] text-violet-500 dark:text-violet-400/60 uppercase tracking-wider font-bold mb-1.5">Linked Playbook</p>
+                            <p className="text-base font-black text-foreground dark:text-white">{linkedPlaybook.title}</p>
+                            {trade.setup && <p className="text-xs text-muted-foreground dark:text-white/40 mt-0.5">{trade.setup}</p>}
                           </div>
                         </div>
                       </div>
 
                       {linkedPlaybook.entry_rules && (
-                        <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4">
-                          <p className="text-[9px] font-bold text-white/25 uppercase tracking-wider mb-2.5">Entry Rules</p>
-                          <p className="text-xs text-white/55 leading-relaxed">{linkedPlaybook.entry_rules}</p>
+                        <div className="rounded-2xl border border-border dark:border-white/[0.07] bg-card dark:bg-white/[0.02] p-4">
+                          <p className="text-[9px] font-bold text-muted-foreground dark:text-white/25 uppercase tracking-wider mb-2.5">Entry Rules</p>
+                          <p className="text-xs text-foreground/70 dark:text-white/55 leading-relaxed">{linkedPlaybook.entry_rules}</p>
                         </div>
                       )}
 
                       <div className="grid grid-cols-2 gap-2">
                         <div className="p-3 rounded-xl border border-emerald-500/15 bg-emerald-500/5">
-                          <p className="text-[9px] font-bold text-emerald-400/60 uppercase tracking-wider mb-2">Rules followed</p>
-                          <p className="text-2xl font-black text-emerald-400">{Math.max(0, 5 - (trade.mistakes?.length ?? 0))}</p>
+                          <p className="text-[9px] font-bold text-emerald-500 dark:text-emerald-400/60 uppercase tracking-wider mb-2">Rules followed</p>
+                          <p className="text-2xl font-black text-emerald-500 dark:text-emerald-400">{Math.max(0, 5 - (trade.mistakes?.length ?? 0))}</p>
                         </div>
                         <div className="p-3 rounded-xl border border-red-500/15 bg-red-500/5">
-                          <p className="text-[9px] font-bold text-red-400/60 uppercase tracking-wider mb-2">Rules broken</p>
-                          <p className="text-2xl font-black text-red-400">{trade.mistakes?.length ?? 0}</p>
+                          <p className="text-[9px] font-bold text-red-500 dark:text-red-400/60 uppercase tracking-wider mb-2">Rules broken</p>
+                          <p className="text-2xl font-black text-red-500 dark:text-red-400">{trade.mistakes?.length ?? 0}</p>
                         </div>
                       </div>
                     </div>
                   ) : (
                     <div className="text-center py-10">
-                      <div className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/[0.07] flex items-center justify-center mx-auto mb-3">
-                        <Target className="h-5 w-5 text-white/20" />
+                      <div className="w-12 h-12 rounded-2xl bg-muted dark:bg-white/[0.03] border border-border dark:border-white/[0.07] flex items-center justify-center mx-auto mb-3">
+                        <Target className="h-5 w-5 text-muted-foreground/60 dark:text-white/20" />
                       </div>
-                      <p className="text-sm text-white/20">No playbook linked</p>
-                      <button onClick={() => onEdit(trade)} className="mt-3 text-xs text-violet-400 hover:text-violet-300 transition-colors">Link a playbook →</button>
+                      <p className="text-sm text-muted-foreground dark:text-white/20">No playbook linked</p>
+                      <button onClick={() => onEdit(trade)} className="mt-3 text-xs text-violet-500 dark:text-violet-400 hover:text-violet-600 dark:hover:text-violet-300 transition-colors">Link a playbook →</button>
                     </div>
                   )}
                 </motion.div>
