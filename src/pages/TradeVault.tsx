@@ -930,12 +930,12 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
                         <div className="w-16 h-16 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center">
                           <Sparkles className="h-7 w-7 text-violet-400" />
                         </div>
-                        <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-violet-600 border-2 border-[#0d0d1f] flex items-center justify-center">
+                        <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-violet-600 border-2 border-background dark:border-[#0d0d1f] flex items-center justify-center">
                           <Zap className="h-2.5 w-2.5 text-white" />
                         </div>
                       </div>
-                      <p className="text-sm font-bold text-white mb-1">AI Trade Review</p>
-                      <p className="text-xs text-white/30 mb-5 max-w-[200px] mx-auto leading-relaxed">Get instant analysis of what worked, what didn't, and how to improve.</p>
+                      <p className="text-sm font-bold text-foreground dark:text-white mb-1">AI Trade Review</p>
+                      <p className="text-xs text-muted-foreground dark:text-white/30 mb-5 max-w-[200px] mx-auto leading-relaxed">Get instant analysis of what worked, what didn't, and how to improve.</p>
                       <button onClick={handleReview} disabled={reviewing} className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-6 py-2.5 rounded-xl font-bold text-sm transition-all shadow-lg shadow-violet-500/20 mx-auto disabled:opacity-50">
                         <Sparkles className={`h-4 w-4 ${reviewing ? 'animate-spin' : ''}`} />
                         {reviewing ? 'Analyzing...' : 'Analyze This Trade'}
