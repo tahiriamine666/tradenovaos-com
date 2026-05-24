@@ -790,17 +790,17 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
                   const pct = ((score.value ?? 0) / 10) * 100;
                   const circ = 2 * Math.PI * 20;
                   return (
-                    <div key={score.label} className="flex items-center gap-3 p-3 rounded-2xl border border-white/[0.07] bg-white/[0.02]">
+                    <div key={score.label} className="flex items-center gap-3 p-3 rounded-2xl border border-border dark:border-white/[0.07] bg-card dark:bg-white/[0.02]">
                       <div className="relative w-11 h-11 flex items-center justify-center flex-shrink-0">
                         <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 44 44">
-                          <circle cx="22" cy="22" r="20" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="3.5" />
+                          <circle cx="22" cy="22" r="20" fill="none" stroke="hsl(var(--muted))" strokeWidth="3.5" />
                           <motion.circle cx="22" cy="22" r="20" fill="none" stroke={score.color} strokeWidth="3.5" strokeDasharray={circ} initial={{ strokeDashoffset: circ }} animate={{ strokeDashoffset: circ * (1 - pct / 100) }} transition={{ duration: 1, delay: 0.3, ease: [0.22, 1, 0.36, 1] }} strokeLinecap="round" />
                         </svg>
-                        <span className="text-xs font-black text-white">{score.value ?? 0}</span>
+                        <span className="text-xs font-black text-foreground dark:text-white">{score.value ?? 0}</span>
                       </div>
                       <div>
-                        <p className="text-[9px] text-white/25 uppercase tracking-wider">{score.label}</p>
-                        <p className="text-sm font-bold text-white">{score.value ?? 0}/10</p>
+                        <p className="text-[9px] text-muted-foreground/70 dark:text-white/25 uppercase tracking-wider">{score.label}</p>
+                        <p className="text-sm font-bold text-foreground dark:text-white">{score.value ?? 0}/10</p>
                       </div>
                     </div>
                   );
