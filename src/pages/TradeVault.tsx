@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import {
   Plus, Search, Filter, TrendingUp, TrendingDown, Target,
   BarChart3, Star, Edit, Trash2, Copy, X, Check, Minus, Zap,
-  ChevronRight, ChevronLeft, Upload,
+  ChevronRight, ChevronLeft, Upload, Eye,
   AlertCircle, Sparkles,
   Award, Activity, DollarSign, RefreshCw,
 } from 'lucide-react';
@@ -101,6 +101,7 @@ function AddTradeModal({ onClose, onSaved, editTrade, playbooks }: {
   editTrade?: Trade | null; playbooks: { id: string; title: string }[];
 }) {
   const { user } = useAuth();
+  const fileRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<FormData>(editTrade ? {
     pair: editTrade.pair, side: (editTrade.side as any) ?? 'long',
@@ -373,6 +374,68 @@ function AddTradeModal({ onClose, onSaved, editTrade, playbooks }: {
           {step === 3 && (
             <AnimatePresence mode="wait">
               <motion.div key="s3" initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -8 }} className="space-y-4">
+                <div>
+                  <label className="text-[10px] font-bold text-white/35 uppercase tracking-wider block mb-2">Chart Screenshot</label>
+                  {form.screenshot_url ? (
+                    <div className="relative group rounded-2xl overflow-hidden border border-white/[0.09]">
+                      <img src={form.screenshot_url} alt="Trade screenshot" className="w-full h-40 object-cover" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+                        <button type="button" onClick={() => set('screenshot_url', '')}
+                          className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 text-xs font-bold hover:bg-red-500/30 transition-colors">
+                          <X className="h-3.5 w-3.5" /> Remove
+                        </button>
+                      </div>
+                      <div className="absolute bottom-2 left-2 right-2 text-center">
+                        <span className="text-[10px] text-white/50 bg-black/50 px-2 py-0.5 rounded-full">Screenshot uploaded ✓</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      <input
+                        ref={fileRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file || !user) return;
+                          if (file.size > 10 * 1024 * 1024) {
+                            toast({ title: 'Image too large', description: 'Max size is 10MB', variant: 'destructive' });
+                            return;
+                          }
+                          const localUrl = URL.createObjectURL(file);
+                          set('screenshot_url', localUrl);
+                          const ext = file.name.split('.').pop() ?? 'jpg';
+                          const path = `${user.id}/${Date.now()}.${ext}`;
+                          const { error } = await supabase.storage
+                            .from('trade-screenshots')
+                            .upload(path, file, { upsert: true, contentType: file.type });
+                          if (error) {
+                            toast({ title: 'Upload failed', description: error.message, variant: 'destructive' });
+                            set('screenshot_url', '');
+                            return;
+                          }
+                          const { data: urlData } = supabase.storage.from('trade-screenshots').getPublicUrl(path);
+                          if (urlData?.publicUrl) {
+                            set('screenshot_url', urlData.publicUrl);
+                            URL.revokeObjectURL(localUrl);
+                          }
+                        }}
+                      />
+                      <button type="button" onClick={() => fileRef.current?.click()}
+                        className="w-full flex flex-col items-center justify-center gap-2 py-8 rounded-2xl border-2 border-dashed border-white/[0.10] bg-white/[0.02] hover:bg-white/[0.04] hover:border-violet-500/30 transition-all group">
+                        <div className="w-10 h-10 rounded-xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center group-hover:bg-violet-500/10 group-hover:border-violet-500/20 transition-all">
+                          <Upload className="h-5 w-5 text-white/25 group-hover:text-violet-400 transition-colors" />
+                        </div>
+                        <div className="text-center">
+                          <p className="text-xs font-semibold text-white/40 group-hover:text-white/60 transition-colors">Click to upload screenshot</p>
+                          <p className="text-[10px] text-white/20 mt-0.5">PNG, JPG, WebP · max 10MB</p>
+                        </div>
+                      </button>
+                    </div>
+                  )}
+                </div>
+
                 <div>
                   <label className="text-[10px] font-bold text-white/35 uppercase tracking-wider block mb-2">Setup Name</label>
                   <input value={form.setup} onChange={e => set('setup', e.target.value)}
@@ -679,16 +742,45 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
             </div>
           )}
 
-          {trade.screenshot_url && (
-            <div className="px-5 pb-4">
-              <div className="rounded-2xl overflow-hidden border border-white/[0.08] relative group">
-                <img src={trade.screenshot_url} alt="Trade chart" className="w-full object-cover max-h-48" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-3">
-                  <span className="text-[10px] text-white/70 font-semibold">Trade Screenshot</span>
+          <div className="px-5 pb-4">
+            {trade.screenshot_url ? (
+              <div className="rounded-2xl overflow-hidden border border-white/[0.08] relative group cursor-pointer"
+                onClick={() => window.open(trade.screenshot_url!, '_blank')}>
+                <img
+                  src={trade.screenshot_url}
+                  alt="Trade screenshot"
+                  className="w-full object-cover"
+                  style={{ maxHeight: '220px', minHeight: '120px' }}
+                  onError={(e) => { (e.target as HTMLImageElement).parentElement!.style.display = 'none'; }}
+                />
+                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-black/60 backdrop-blur-sm border border-white/[0.15] text-white text-xs font-bold">
+                    <Eye className="h-3.5 w-3.5" /> View Full Size
+                  </div>
+                </div>
+                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent px-3 py-2">
+                  <p className="text-[10px] text-white/50 font-medium">Chart Screenshot · Click to expand</p>
                 </div>
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.01] p-6 flex flex-col items-center justify-center gap-3 text-center">
+                <div className="w-10 h-10 rounded-xl bg-white/[0.03] border border-white/[0.07] flex items-center justify-center">
+                  <Upload className="h-5 w-5 text-white/15" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-white/25">No chart screenshot</p>
+                  <p className="text-[10px] text-white/15 mt-0.5">Upload one while editing this trade</p>
+                </div>
+                <button
+                  onClick={() => onEdit(trade)}
+                  className="text-[10px] font-bold text-violet-400/70 hover:text-violet-400 transition-colors border border-violet-500/20 px-3 py-1.5 rounded-lg hover:bg-violet-500/10"
+                >
+                  + Add Screenshot
+                </button>
+              </div>
+            )}
+          </div>
+
 
           {(trade.discipline_score || trade.execution_score) && (
             <div className="px-5 pb-4">
