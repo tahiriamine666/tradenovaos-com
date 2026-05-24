@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import {
   Plus, Search, Filter, TrendingUp, TrendingDown, Target,
   BarChart3, Star, Edit, Trash2, Copy, X, Check, Minus, Zap,
-  ChevronRight, ChevronLeft, Upload,
+  ChevronRight, ChevronLeft, Upload, Eye,
   AlertCircle, Sparkles,
   Award, Activity, DollarSign, RefreshCw,
 } from 'lucide-react';
