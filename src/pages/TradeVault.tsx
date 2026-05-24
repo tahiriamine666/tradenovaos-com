@@ -919,7 +919,7 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
                         </div>
                       )}
 
-                      <button onClick={handleReview} disabled={reviewing} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-white/[0.08] text-white/35 text-xs font-bold hover:bg-white/[0.04] hover:text-white transition-all disabled:opacity-40">
+                      <button onClick={handleReview} disabled={reviewing} className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-border text-muted-foreground text-xs font-bold hover:bg-muted hover:text-foreground transition-all disabled:opacity-40 dark:border-white/[0.08] dark:text-white/35 dark:hover:bg-white/[0.04] dark:hover:text-white">
                         <RefreshCw className={`h-3.5 w-3.5 ${reviewing ? 'animate-spin' : ''}`} />
                         {reviewing ? 'Re-analyzing...' : 'Re-analyze'}
                       </button>
