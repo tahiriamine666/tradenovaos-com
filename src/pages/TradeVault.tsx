@@ -632,25 +632,23 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
 
   return (
     <div className="fixed inset-0 z-50 flex" onClick={onClose}>
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 bg-black/60 backdrop-blur-md" />
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 bg-black/10 dark:bg-black/60 backdrop-blur-sm dark:backdrop-blur-md" />
 
       <motion.div
         initial={{ x: '100%', opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         exit={{ x: '100%', opacity: 0 }}
         transition={{ type: 'spring', damping: 30, stiffness: 320 }}
-        className="relative w-full sm:w-[400px] lg:w-[440px] h-full overflow-hidden flex flex-col"
+        className="relative w-full sm:w-[400px] lg:w-[440px] h-full overflow-hidden flex flex-col bg-white dark:bg-gradient-to-br dark:from-[#0d0d1f] dark:to-[#0a0a18] border-l border-border dark:border-white/[0.08]"
         style={{
-          background: 'linear-gradient(160deg, #0d0d1f 0%, #0a0a18 100%)',
-          borderLeft: '1px solid rgba(255,255,255,0.08)',
-          boxShadow: `-24px 0 80px rgba(0,0,0,0.6), ${isWin ? '0 0 40px rgba(16,185,129,0.05)' : isLoss ? '0 0 40px rgba(239,68,68,0.05)' : ''}`,
+          boxShadow: `-24px 0 80px rgba(0,0,0,0.08)${isWin ? ', 0 0 40px rgba(16,185,129,0.04)' : isLoss ? ', 0 0 40px rgba(239,68,68,0.04)' : ''}`,
         }}
         onClick={e => e.stopPropagation()}
       >
         <div className="absolute top-0 inset-x-0 h-0.5 opacity-70" style={{ background: `linear-gradient(90deg, transparent, ${accent}, transparent)` }} />
 
         {/* HEADER */}
-        <div className="flex-shrink-0 px-5 pt-5 pb-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="flex-shrink-0 px-5 pt-5 pb-4 border-b border-border">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-3">
               <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-black ${accentBg}`}>
@@ -664,10 +662,10 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
               </div>
             </div>
             <div className="flex items-center gap-1.5">
-              <button onClick={() => onEdit(trade)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/[0.08] text-white/40 text-xs font-bold hover:bg-white/[0.06] hover:text-white transition-all">
+              <button onClick={() => onEdit(trade)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border text-muted-foreground text-xs font-bold hover:bg-muted hover:text-foreground transition-all dark:border-white/[0.08] dark:text-white/40 dark:hover:bg-white/[0.06] dark:hover:text-white">
                 <Edit className="h-3.5 w-3.5" /> Edit
               </button>
-              <button onClick={onClose} className="p-1.5 rounded-xl hover:bg-white/[0.06] text-white/30 hover:text-white transition-colors">
+              <button onClick={onClose} className="p-1.5 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground transition-colors dark:hover:bg-white/[0.06] dark:text-white/30 dark:hover:text-white">
                 <X className="h-4 w-4" />
               </button>
             </div>
@@ -675,14 +673,14 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
 
           <div className="flex items-baseline justify-between mt-3">
             <div>
-              <h2 className="text-2xl font-black text-white tracking-tight">{trade.pair}</h2>
-              <p className="text-xs text-white/30 mt-0.5">
+              <h2 className="text-2xl font-black text-foreground dark:text-white tracking-tight">{trade.pair}</h2>
+              <p className="text-xs text-muted-foreground/70 dark:text-white/30 mt-0.5">
                 {new Date(trade.trade_date + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })}
                 {trade.session && ` · ${trade.session}`}
               </p>
             </div>
             <div className="text-right">
-              <p className={`text-3xl font-black tracking-tight font-mono ${isWin ? 'text-emerald-400' : isLoss ? 'text-red-400' : 'text-white/40'}`}>
+              <p className={`text-3xl font-black tracking-tight font-mono ${isWin ? 'text-emerald-400' : isLoss ? 'text-red-400' : 'text-muted-foreground/60 dark:text-white/40'}`}>
                 {(trade.result ?? 0) >= 0 ? '+' : ''}${Math.abs(trade.result ?? 0).toFixed(2)}
               </p>
             </div>
