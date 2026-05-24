@@ -811,9 +811,9 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
 
           {/* TABS */}
           <div className="px-5 pb-2">
-            <div className="flex gap-0.5 p-1 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+            <div className="flex gap-0.5 p-1 rounded-xl bg-muted border border-border">
               {TABS.map(t => (
-                <button key={t.id} onClick={() => setTab(t.id)} className={`flex-1 py-2 rounded-lg text-[10px] font-bold transition-all ${tab === t.id ? 'bg-violet-600 text-white shadow-lg shadow-violet-500/20' : 'text-white/30 hover:text-white hover:bg-white/[0.04]'}`}>
+                <button key={t.id} onClick={() => setTab(t.id)} className={`flex-1 py-2 rounded-lg text-[10px] font-bold transition-all ${tab === t.id ? 'bg-violet-600 text-white shadow-lg shadow-violet-500/20' : 'text-muted-foreground hover:text-foreground hover:bg-background/60 dark:text-white/30 dark:hover:text-white dark:hover:bg-white/[0.04]'}`}>
                   {t.label}
                   {t.id === 'ai' && ai?.verdict && <span className="ml-1 w-1 h-1 rounded-full bg-emerald-400 inline-block" />}
                 </button>
