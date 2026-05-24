@@ -618,10 +618,10 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
     {
       label: 'P&L',
       value: `${(trade.result ?? 0) >= 0 ? '+' : ''}$${Math.abs(trade.result ?? 0).toFixed(2)}`,
-      color: isWin ? 'text-emerald-400' : isLoss ? 'text-red-400' : 'text-white/50',
+      color: isWin ? 'text-emerald-400' : isLoss ? 'text-red-400' : 'text-muted-foreground/70 dark:text-white/50',
       glow: isWin ? 'shadow-emerald-500/15' : isLoss ? 'shadow-red-500/15' : '',
-      bg: isWin ? 'bg-emerald-500/8' : isLoss ? 'bg-red-500/8' : 'bg-white/[0.02]',
-      border: isWin ? 'border-emerald-500/20' : isLoss ? 'border-red-500/20' : 'border-white/[0.07]',
+      bg: isWin ? 'bg-emerald-500/8' : isLoss ? 'bg-red-500/8' : 'bg-slate-50 dark:bg-white/[0.02]',
+      border: isWin ? 'border-emerald-500/20' : isLoss ? 'border-red-500/20' : 'border-border dark:border-white/[0.07]',
     },
     { label: 'R:R', value: trade.rr ? `1:${Number(trade.rr).toFixed(1)}` : '—', color: 'text-blue-400', glow: 'shadow-blue-500/10', bg: 'bg-blue-500/8', border: 'border-blue-500/20' },
     { label: 'Session', value: trade.session || '—', color: 'text-violet-400', glow: '', bg: 'bg-violet-500/8', border: 'border-violet-500/20' },
