@@ -869,7 +869,7 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
                         <Check className="h-5 w-5 text-emerald-400" />
                       </div>
                       <p className="text-sm font-bold text-emerald-400">No mistakes logged</p>
-                      <p className="text-xs text-white/25 mt-1">Clean execution on this trade</p>
+                      <p className="text-xs text-muted-foreground dark:text-white/25 mt-1">Clean execution on this trade</p>
                     </div>
                   )}
                 </motion.div>
