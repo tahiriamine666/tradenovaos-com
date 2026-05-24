@@ -742,16 +742,45 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
             </div>
           )}
 
-          {trade.screenshot_url && (
-            <div className="px-5 pb-4">
-              <div className="rounded-2xl overflow-hidden border border-white/[0.08] relative group">
-                <img src={trade.screenshot_url} alt="Trade chart" className="w-full object-cover max-h-48" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center pb-3">
-                  <span className="text-[10px] text-white/70 font-semibold">Trade Screenshot</span>
+          <div className="px-5 pb-4">
+            {trade.screenshot_url ? (
+              <div className="rounded-2xl overflow-hidden border border-white/[0.08] relative group cursor-pointer"
+                onClick={() => window.open(trade.screenshot_url!, '_blank')}>
+                <img
+                  src={trade.screenshot_url}
+                  alt="Trade screenshot"
+                  className="w-full object-cover"
+                  style={{ maxHeight: '220px', minHeight: '120px' }}
+                  onError={(e) => { (e.target as HTMLImageElement).parentElement!.style.display = 'none'; }}
+                />
+                <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-black/60 backdrop-blur-sm border border-white/[0.15] text-white text-xs font-bold">
+                    <Eye className="h-3.5 w-3.5" /> View Full Size
+                  </div>
+                </div>
+                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent px-3 py-2">
+                  <p className="text-[10px] text-white/50 font-medium">Chart Screenshot · Click to expand</p>
                 </div>
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.01] p-6 flex flex-col items-center justify-center gap-3 text-center">
+                <div className="w-10 h-10 rounded-xl bg-white/[0.03] border border-white/[0.07] flex items-center justify-center">
+                  <Upload className="h-5 w-5 text-white/15" />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-white/25">No chart screenshot</p>
+                  <p className="text-[10px] text-white/15 mt-0.5">Upload one while editing this trade</p>
+                </div>
+                <button
+                  onClick={() => onEdit(trade)}
+                  className="text-[10px] font-bold text-violet-400/70 hover:text-violet-400 transition-colors border border-violet-500/20 px-3 py-1.5 rounded-lg hover:bg-violet-500/10"
+                >
+                  + Add Screenshot
+                </button>
+              </div>
+            )}
+          </div>
+
 
           {(trade.discipline_score || trade.execution_score) && (
             <div className="px-5 pb-4">
