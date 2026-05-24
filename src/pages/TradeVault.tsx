@@ -993,15 +993,15 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
         </div>
 
         {/* FLOATING BOTTOM ACTIONS */}
-        <div className="absolute bottom-0 inset-x-0 px-5 py-4" style={{ background: 'linear-gradient(to top, rgba(10,10,24,1) 60%, transparent)', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        <div className="absolute bottom-0 inset-x-0 px-5 py-4 bg-gradient-to-t from-background via-background/80 to-transparent border-t border-border">
           <div className="flex items-center gap-2">
-            <button onClick={() => onDuplicate(trade)} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-white/[0.08] text-white/40 text-xs font-bold hover:bg-white/[0.05] hover:text-white transition-all">
+            <button onClick={() => onDuplicate(trade)} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-border text-muted-foreground text-xs font-bold hover:bg-muted hover:text-foreground transition-all dark:border-white/[0.08] dark:text-white/40 dark:hover:bg-white/[0.05] dark:hover:text-white">
               <Copy className="h-3.5 w-3.5" /> Duplicate
             </button>
-            <button onClick={handleReview} disabled={reviewing} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-violet-600/20 border border-violet-500/25 text-violet-400 text-xs font-bold hover:bg-violet-600/30 transition-all disabled:opacity-40">
+            <button onClick={handleReview} disabled={reviewing} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-violet-600/20 border border-violet-500/25 text-violet-500 dark:text-violet-400 text-xs font-bold hover:bg-violet-600/30 transition-all disabled:opacity-40">
               <Sparkles className={`h-3.5 w-3.5 ${reviewing ? 'animate-spin' : ''}`} /> AI Review
             </button>
-            <button onClick={handleDelete} disabled={deleting} className="p-2.5 rounded-xl border border-red-500/20 text-red-400/50 hover:bg-red-500/10 hover:text-red-400 transition-all disabled:opacity-40">
+            <button onClick={handleDelete} disabled={deleting} className="p-2.5 rounded-xl border border-red-500/20 text-red-500/70 dark:text-red-400/50 hover:bg-red-500/10 hover:text-red-500 dark:hover:text-red-400 transition-all disabled:opacity-40">
               <Trash2 className="h-4 w-4" />
             </button>
           </div>
