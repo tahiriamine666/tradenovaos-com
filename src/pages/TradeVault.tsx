@@ -826,16 +826,16 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
               {tab === 'notes' && (
                 <motion.div key="notes" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }} className="pt-3">
                   {trade.notes ? (
-                    <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4">
-                      <p className="text-sm text-white/65 leading-relaxed whitespace-pre-wrap">{trade.notes}</p>
+                    <div className="rounded-2xl border border-border dark:border-white/[0.07] bg-card dark:bg-white/[0.02] p-4">
+                      <p className="text-sm text-foreground/75 dark:text-white/65 leading-relaxed whitespace-pre-wrap">{trade.notes}</p>
                     </div>
                   ) : (
                     <div className="text-center py-10">
-                      <div className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/[0.07] flex items-center justify-center mx-auto mb-3">
-                        <Edit className="h-5 w-5 text-white/20" />
+                      <div className="w-12 h-12 rounded-2xl bg-muted dark:bg-white/[0.03] border border-border dark:border-white/[0.07] flex items-center justify-center mx-auto mb-3">
+                        <Edit className="h-5 w-5 text-muted-foreground/60 dark:text-white/20" />
                       </div>
-                      <p className="text-sm text-white/20">No notes for this trade</p>
-                      <button onClick={() => onEdit(trade)} className="mt-3 text-xs text-violet-400 hover:text-violet-300 transition-colors">Add notes →</button>
+                      <p className="text-sm text-muted-foreground dark:text-white/20">No notes for this trade</p>
+                      <button onClick={() => onEdit(trade)} className="mt-3 text-xs text-violet-500 dark:text-violet-400 hover:text-violet-600 dark:hover:text-violet-300 transition-colors">Add notes →</button>
                     </div>
                   )}
                 </motion.div>
