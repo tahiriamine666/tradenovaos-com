@@ -846,7 +846,7 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
                   {(trade.mistakes ?? []).length > 0 ? (
                     <>
                       <div className="flex items-center justify-between mb-3">
-                        <p className="text-[10px] text-white/25 uppercase tracking-wider font-bold">
+                        <p className="text-[10px] text-muted-foreground dark:text-white/25 uppercase tracking-wider font-bold">
                           {(trade.mistakes ?? []).length} mistake{(trade.mistakes ?? []).length > 1 ? 's' : ''} identified
                         </p>
                         <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/10 border border-red-500/20">
