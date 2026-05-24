@@ -888,12 +888,12 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
                             <Sparkles className="h-4 w-4" style={{ color: ai.verdict === 'Good trade' ? '#10b981' : ai.verdict === 'Poor trade' ? '#ef4444' : '#f59e0b' }} />
                           </div>
                           <div>
-                            <p className="text-xs font-black text-white">AI Verdict</p>
+                            <p className="text-xs font-black text-foreground dark:text-white">AI Verdict</p>
                             <p className="text-sm font-black" style={{ color: ai.verdict === 'Good trade' ? '#10b981' : ai.verdict === 'Poor trade' ? '#ef4444' : '#f59e0b' }}>{ai.verdict}</p>
                           </div>
                           {ai.discipline_score != null && (
                             <div className="ml-auto text-center">
-                              <p className="text-[9px] text-white/25 uppercase">Score</p>
+                              <p className="text-[9px] text-muted-foreground dark:text-white/25 uppercase">Score</p>
                               <p className="text-xl font-black" style={{ color: ai.discipline_score >= 70 ? '#10b981' : ai.discipline_score >= 40 ? '#f59e0b' : '#ef4444' }}>{ai.discipline_score}</p>
                             </div>
                           )}
