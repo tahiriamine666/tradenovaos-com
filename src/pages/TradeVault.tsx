@@ -65,7 +65,7 @@ const EMPTY_FILTERS: Filters = {
   setup: '', outcome: '', account: '',
 };
 
-const ease = [0.22, 1, 0.36, 1];
+const ease: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 function fmtMoney(v: number) {
   const s = v >= 0 ? '+' : '';
@@ -725,11 +725,11 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
   return (
     <div className="fixed inset-0 z-50 flex" onClick={onClose}>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        className="flex-1 bg-black/60 backdrop-blur-md"/>
+        className="flex-1 bg-black/10 dark:bg-black/60 backdrop-blur-sm dark:backdrop-blur-md"/>
       <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
         transition={{ type: 'spring', damping: 30, stiffness: 320 }}
-        className="relative w-full sm:w-[400px] h-full flex flex-col overflow-hidden"
-        style={{ background: 'linear-gradient(160deg,#0d0d1f,#0a0a18)', borderLeft: '1px solid rgba(255,255,255,0.08)', boxShadow: `-24px 0 80px rgba(0,0,0,0.5),0 0 40px ${isWin?'rgba(16,185,129,0.06)':isLoss?'rgba(239,68,68,0.06)':'transparent'}` }}
+        className="relative w-full sm:w-[400px] h-full flex flex-col overflow-hidden bg-background dark:bg-gradient-to-br dark:from-[#0d0d1f] dark:to-[#0a0a18] border-l border-border"
+        style={{ boxShadow: `-24px 0 80px rgba(0,0,0,0.5),0 0 40px ${isWin?'rgba(16,185,129,0.06)':isLoss?'rgba(239,68,68,0.06)':'transparent'}` }}
         onClick={e => e.stopPropagation()}>
 
         {/* accent line */}
@@ -737,7 +737,7 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
           style={{ background: `linear-gradient(90deg,transparent,${accentColor},transparent)` }}/>
 
         {/* Header */}
-        <div className="flex-shrink-0 px-5 pt-5 pb-4 border-b border-white/[0.06]">
+        <div className="flex-shrink-0 px-5 pt-5 pb-4 border-b border-border">
           <div className="flex items-start justify-between gap-3">
             <div className="flex items-center gap-2">
               <div className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-[10px] font-black ${accentBg}`}>
@@ -749,20 +749,20 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
               </div>
             </div>
             <div className="flex items-center gap-1.5">
-              <button onClick={() => onEdit(trade)} className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-white/[0.08] text-white/40 text-[10px] font-bold hover:bg-white/[0.06] hover:text-white transition-all">
+              <button onClick={() => onEdit(trade)} className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl border border-border text-muted-foreground text-[10px] font-bold hover:bg-muted hover:text-foreground transition-all">
                 <Edit className="h-3 w-3"/> Edit
               </button>
-              <button onClick={onClose} className="p-1.5 rounded-xl hover:bg-white/[0.06] text-white/30 hover:text-white transition-colors">
+              <button onClick={onClose} className="p-1.5 rounded-xl hover:bg-muted dark:hover:bg-white/[0.06] text-muted-foreground/50 dark:text-white/30 hover:text-foreground dark:hover:text-white transition-colors">
                 <X className="h-4 w-4"/>
               </button>
             </div>
           </div>
           <div className="flex items-baseline justify-between mt-3">
             <div>
-              <h2 className="text-2xl font-black text-white tracking-tight">{trade.pair}</h2>
-              <p className="text-xs text-white/30 mt-0.5">{fmtDate(trade.trade_date)}</p>
+              <h2 className="text-2xl font-black text-foreground dark:text-white tracking-tight">{trade.pair}</h2>
+              <p className="text-xs text-muted-foreground/50 dark:text-white/30 mt-0.5">{fmtDate(trade.trade_date)}</p>
             </div>
-            <p className={`text-3xl font-black font-mono tracking-tight ${isWin?'text-emerald-400':isLoss?'text-red-400':'text-white/40'}`}>
+            <p className={`text-3xl font-black font-mono tracking-tight ${isWin?'text-emerald-400':isLoss?'text-red-400':'text-muted-foreground/60 dark:text-white/40'}`}>
               {(trade.result??0)>=0?'+':''}${Math.abs(trade.result??0).toFixed(2)}
             </p>
           </div>
@@ -773,8 +773,8 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
           {/* Stats grid */}
           <div className="px-5 pt-4 pb-3 grid grid-cols-3 gap-2">
             {STATS.map(s => (
-              <div key={s.label} className="rounded-xl border border-white/[0.07] bg-white/[0.02] p-2.5">
-                <p className="text-[9px] font-bold text-white/25 uppercase tracking-wider mb-1">{s.label}</p>
+              <div key={s.label} className="rounded-xl border border-border bg-card dark:bg-white/[0.02] p-2.5">
+                <p className="text-[9px] font-bold text-muted-foreground/40 dark:text-white/25 uppercase tracking-wider mb-1">{s.label}</p>
                 <p className={`text-sm font-black truncate ${s.color}`}>{s.value}</p>
               </div>
             ))}
@@ -783,22 +783,22 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
           {/* Entry/Exit bar */}
           {(trade.entry_price || trade.exit_price) && (
             <div className="px-5 pb-3">
-              <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] overflow-hidden">
-                <div className="grid grid-cols-2 divide-x divide-white/[0.06]">
+              <div className="rounded-2xl border border-border bg-card dark:bg-white/[0.02] overflow-hidden">
+                <div className="grid grid-cols-2 divide-x divide-border">
                   <div className="px-4 py-3">
-                    <p className="text-[9px] font-bold text-white/25 uppercase tracking-wider mb-1.5">Entry</p>
-                    <p className="text-base font-black text-white font-mono">{trade.entry_price ? Number(trade.entry_price).toLocaleString() : '—'}</p>
+                    <p className="text-[9px] font-bold text-muted-foreground/40 dark:text-white/25 uppercase tracking-wider mb-1.5">Entry</p>
+                    <p className="text-base font-black text-foreground dark:text-white font-mono">{trade.entry_price ? Number(trade.entry_price).toLocaleString() : '—'}</p>
                   </div>
                   <div className="px-4 py-3">
-                    <p className="text-[9px] font-bold text-white/25 uppercase tracking-wider mb-1.5">Exit</p>
-                    <p className={`text-base font-black font-mono ${isWin?'text-emerald-400':isLoss?'text-red-400':'text-white'}`}>
+                    <p className="text-[9px] font-bold text-muted-foreground/40 dark:text-white/25 uppercase tracking-wider mb-1.5">Exit</p>
+                    <p className={`text-base font-black font-mono ${isWin?'text-emerald-400':isLoss?'text-red-400':'text-foreground dark:text-white'}`}>
                       {trade.exit_price ? Number(trade.exit_price).toLocaleString() : '—'}
                     </p>
                   </div>
                 </div>
                 {trade.entry_price && trade.exit_price && (
                   <div className="px-4 pb-3">
-                    <div className="h-1 bg-white/[0.05] rounded-full overflow-hidden">
+                    <div className="h-1 bg-muted dark:bg-white/[0.05] rounded-full overflow-hidden">
                       <motion.div initial={{ width: 0 }} animate={{ width: '100%' }} transition={{ duration: 0.8, ease }}
                         className="h-full rounded-full" style={{ background: `linear-gradient(90deg,rgba(99,102,241,0.5),${accentColor})` }}/>
                     </div>
@@ -818,10 +818,10 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
                 const pct = (sc.value / 10) * 100;
                 const circ = 2 * Math.PI * 20;
                 return (
-                  <div key={sc.label} className="flex items-center gap-3 p-3 rounded-2xl border border-white/[0.07] bg-white/[0.02]">
+                  <div key={sc.label} className="flex items-center gap-3 p-3 rounded-2xl border border-border bg-card dark:bg-white/[0.02]">
                     <div className="relative w-11 h-11 flex items-center justify-center flex-shrink-0">
                       <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 44 44">
-                        <circle cx="22" cy="22" r="20" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="3.5"/>
+                        <circle cx="22" cy="22" r="20" fill="none" stroke="hsl(var(--muted))" strokeWidth="3.5"/>
                         <motion.circle cx="22" cy="22" r="20" fill="none" stroke={sc.color}
                           strokeWidth="3.5" strokeDasharray={circ}
                           initial={{ strokeDashoffset: circ }}
@@ -829,11 +829,11 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
                           transition={{ duration:1, delay:0.3, ease }}
                           strokeLinecap="round"/>
                       </svg>
-                      <span className="text-xs font-black text-white">{sc.value}</span>
+                      <span className="text-xs font-black text-foreground dark:text-white">{sc.value}</span>
                     </div>
                     <div>
-                      <p className="text-[9px] text-white/25 uppercase tracking-wider">{sc.label}</p>
-                      <p className="text-sm font-bold text-white">{sc.value}/10</p>
+                      <p className="text-[9px] text-muted-foreground/40 dark:text-white/25 uppercase tracking-wider">{sc.label}</p>
+                      <p className="text-sm font-bold text-foreground dark:text-white">{sc.value}/10</p>
                     </div>
                   </div>
                 );
@@ -844,12 +844,12 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
           {/* Screenshot */}
           <div className="px-5 pb-3">
             {trade.screenshot_url ? (
-              <div className="rounded-2xl overflow-hidden border border-white/[0.08] relative group cursor-pointer"
+              <div className="rounded-2xl overflow-hidden border border-border dark:border-white/[0.08] relative group cursor-pointer"
                 onClick={() => window.open(trade.screenshot_url!, '_blank')}>
                 <img src={trade.screenshot_url} alt="chart" className="w-full object-cover" style={{ maxHeight:'200px', minHeight:'100px' }}
                   onError={e => { (e.target as HTMLImageElement).parentElement!.style.display='none'; }}/>
                 <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-black/60 backdrop-blur-sm border border-white/[0.15] text-white text-xs font-bold">
+                  <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-black/60 backdrop-blur-sm border border-border/60 dark:border-white/[0.15] text-white text-xs font-bold">
                     <Eye className="h-3.5 w-3.5"/> View Full Size
                   </div>
                 </div>
@@ -858,9 +858,9 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
                 </div>
               </div>
             ) : (
-              <div className="rounded-2xl border border-dashed border-white/[0.08] bg-white/[0.01] p-5 flex flex-col items-center gap-2 text-center">
-                <Upload className="h-5 w-5 text-white/15"/>
-                <p className="text-xs text-white/20">No screenshot</p>
+              <div className="rounded-2xl border border-dashed border-border bg-muted/20 dark:bg-white/[0.01] p-5 flex flex-col items-center gap-2 text-center">
+                <Upload className="h-5 w-5 text-muted-foreground/30 dark:text-white/15"/>
+                <p className="text-xs text-muted-foreground/30 dark:text-white/20">No screenshot</p>
                 <button onClick={() => onEdit(trade)} className="text-[10px] text-violet-400/60 hover:text-violet-400 transition-colors border border-violet-500/20 px-3 py-1 rounded-lg hover:bg-violet-500/10">+ Add Screenshot</button>
               </div>
             )}
@@ -868,11 +868,11 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
 
           {/* Tabs */}
           <div className="px-5 pb-2">
-            <div className="flex gap-0.5 p-1 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+            <div className="flex gap-0.5 p-1 rounded-xl bg-muted border border-border">
               {(['notes','mistakes','ai','playbook'] as const).map(t => (
                 <button key={t} onClick={() => setTab(t)}
                   className={`flex-1 py-2 rounded-lg text-[10px] font-bold capitalize transition-all ${
-                    tab === t ? 'bg-violet-600 text-white shadow-lg shadow-violet-500/20' : 'text-white/30 hover:text-white hover:bg-white/[0.04]'
+                    tab === t ? 'bg-violet-600 text-white shadow-lg shadow-violet-500/20' : 'text-muted-foreground/50 dark:text-white/30 hover:text-foreground dark:hover:text-white hover:bg-muted dark:hover:bg-white/[0.04]'
                   }`}>
                   {t === 'ai' ? 'AI' : t}
                   {t === 'ai' && ai?.verdict && <span className="ml-1 w-1 h-1 rounded-full bg-emerald-400 inline-block"/>}
@@ -886,12 +886,12 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
               {tab === 'notes' && (
                 <motion.div key="notes" initial={{opacity:0,y:6}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-6}} transition={{duration:0.18}} className="pt-3">
                   {trade.notes ? (
-                    <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4">
-                      <p className="text-sm text-white/65 leading-relaxed whitespace-pre-wrap">{trade.notes}</p>
+                    <div className="rounded-2xl border border-border bg-card dark:bg-white/[0.02] p-4">
+                      <p className="text-sm text-foreground/70 dark:text-white/65 leading-relaxed whitespace-pre-wrap">{trade.notes}</p>
                     </div>
                   ) : (
                     <div className="text-center py-10">
-                      <p className="text-sm text-white/20">No notes for this trade</p>
+                      <p className="text-sm text-muted-foreground/30 dark:text-white/20">No notes for this trade</p>
                       <button onClick={() => onEdit(trade)} className="mt-3 text-xs text-violet-400 hover:text-violet-300 transition-colors">Add notes →</button>
                     </div>
                   )}
@@ -928,12 +928,12 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
                         <div className="px-4 py-3 flex items-center gap-3">
                           <Sparkles className="h-5 w-5" style={{ color: ai.verdict==='Good trade'?'#10b981':ai.verdict==='Poor trade'?'#ef4444':'#6b7280' }}/>
                           <div className="flex-1">
-                            <p className="text-[9px] text-white/25 uppercase tracking-wider">AI Verdict</p>
+                            <p className="text-[9px] text-muted-foreground/40 dark:text-white/25 uppercase tracking-wider">AI Verdict</p>
                             <p className="text-sm font-black" style={{ color: ai.verdict==='Good trade'?'#10b981':ai.verdict==='Poor trade'?'#ef4444':'#6b7280' }}>{ai.verdict}</p>
                           </div>
                           {ai.discipline_score != null && (
                             <div className="text-center">
-                              <p className="text-[9px] text-white/25">Score</p>
+                              <p className="text-[9px] text-muted-foreground/40 dark:text-white/25">Score</p>
                               <p className="text-2xl font-black" style={{ color: ai.discipline_score>=70?'#10b981':ai.discipline_score>=40?'#6b7280':'#ef4444' }}>{ai.discipline_score}</p>
                             </div>
                           )}
@@ -942,7 +942,7 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
                       {ai.what_went_well && (
                         <div className="rounded-2xl border border-emerald-500/15 bg-emerald-500/5 p-4">
                           <p className="text-[9px] font-bold text-emerald-400/60 uppercase tracking-wider mb-2 flex items-center gap-1.5"><Check className="h-3 w-3"/>What went well</p>
-                          <p className="text-xs text-white/60 leading-relaxed">{ai.what_went_well}</p>
+                          <p className="text-xs text-muted-foreground dark:text-white/60 leading-relaxed">{ai.what_went_well}</p>
                         </div>
                       )}
                       {ai.what_went_wrong && (
@@ -954,11 +954,11 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
                       {ai.improvement && (
                         <div className="rounded-2xl border border-violet-500/20 bg-violet-500/5 p-4">
                           <p className="text-[9px] font-bold text-violet-400/60 uppercase tracking-wider mb-2 flex items-center gap-1.5"><Sparkles className="h-3 w-3"/>Suggestion</p>
-                          <p className="text-xs text-white/60 leading-relaxed">{ai.improvement}</p>
+                          <p className="text-xs text-muted-foreground dark:text-white/60 leading-relaxed">{ai.improvement}</p>
                         </div>
                       )}
                       <button onClick={handleReview} disabled={reviewing}
-                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-white/[0.08] text-white/35 text-xs font-bold hover:bg-white/[0.04] hover:text-white transition-all disabled:opacity-40">
+                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-border text-muted-foreground text-xs font-bold hover:bg-muted hover:text-foreground transition-all disabled:opacity-40">
                         <RefreshCw className={`h-3.5 w-3.5 ${reviewing?'animate-spin':''}`}/> Re-analyze
                       </button>
                     </div>
@@ -967,8 +967,8 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
                       <div className="w-14 h-14 rounded-2xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mx-auto mb-4">
                         <Sparkles className="h-6 w-6 text-violet-400"/>
                       </div>
-                      <p className="text-sm font-bold text-white mb-1">AI Trade Review</p>
-                      <p className="text-xs text-white/30 mb-5 max-w-[200px] mx-auto">Get instant analysis of this trade</p>
+                      <p className="text-sm font-bold text-foreground dark:text-white mb-1">AI Trade Review</p>
+                      <p className="text-xs text-muted-foreground/50 dark:text-white/30 mb-5 max-w-[200px] mx-auto">Get instant analysis of this trade</p>
                       <button onClick={handleReview} disabled={reviewing}
                         className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-6 py-2.5 rounded-xl font-bold text-sm transition-all shadow-lg shadow-violet-500/20 mx-auto disabled:opacity-50">
                         <Sparkles className={`h-4 w-4 ${reviewing?'animate-spin':''}`}/>{reviewing?'Analyzing...':'Analyze'}
@@ -984,13 +984,13 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
                     <div className="space-y-3">
                       <div className="rounded-2xl border border-violet-500/20 bg-violet-500/5 p-4">
                         <p className="text-[9px] text-violet-400/60 uppercase tracking-wider font-bold mb-2">Linked Playbook</p>
-                        <p className="text-base font-black text-white">{linkedPb.title}</p>
-                        {trade.setup && <p className="text-xs text-white/40 mt-0.5">{trade.setup}</p>}
+                        <p className="text-base font-black text-foreground dark:text-white">{linkedPb.title}</p>
+                        {trade.setup && <p className="text-xs text-muted-foreground/60 dark:text-white/40 mt-0.5">{trade.setup}</p>}
                       </div>
                       {linkedPb.entry_rules && (
-                        <div className="rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4">
-                          <p className="text-[9px] font-bold text-white/25 uppercase tracking-wider mb-2">Entry Rules</p>
-                          <p className="text-xs text-white/55 leading-relaxed">{linkedPb.entry_rules}</p>
+                        <div className="rounded-2xl border border-border bg-card dark:bg-white/[0.02] p-4">
+                          <p className="text-[9px] font-bold text-muted-foreground/40 dark:text-white/25 uppercase tracking-wider mb-2">Entry Rules</p>
+                          <p className="text-xs text-muted-foreground/75 dark:text-white/55 leading-relaxed">{linkedPb.entry_rules}</p>
                         </div>
                       )}
                       <div className="grid grid-cols-2 gap-2">
@@ -1006,8 +1006,8 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
                     </div>
                   ) : (
                     <div className="text-center py-10">
-                      <Target className="h-10 w-10 text-white/10 mx-auto mb-3"/>
-                      <p className="text-sm text-white/20">No playbook linked</p>
+                      <Target className="h-10 w-10 text-muted-foreground/20 dark:text-white/10 mx-auto mb-3"/>
+                      <p className="text-sm text-muted-foreground/30 dark:text-white/20">No playbook linked</p>
                       <button onClick={() => onEdit(trade)} className="mt-3 text-xs text-violet-400 hover:text-violet-300 transition-colors">Link a playbook →</button>
                     </div>
                   )}
@@ -1018,11 +1018,10 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
         </div>
 
         {/* Bottom actions */}
-        <div className="absolute bottom-0 inset-x-0 px-5 py-4"
-          style={{ background:'linear-gradient(to top,rgba(10,10,24,1) 60%,transparent)', borderTop:'1px solid rgba(255,255,255,0.06)' }}>
+        <div className="absolute bottom-0 inset-x-0 px-5 py-4 bg-gradient-to-t from-background via-background/90 to-transparent border-t border-border">
           <div className="flex items-center gap-2">
             <button onClick={() => { onDuplicate(trade); onClose(); }}
-              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-white/[0.08] text-white/40 text-xs font-bold hover:bg-white/[0.05] hover:text-white transition-all">
+              className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl border border-border text-muted-foreground text-xs font-bold hover:bg-muted hover:text-foreground transition-all">
               <Copy className="h-3.5 w-3.5"/> Duplicate
             </button>
             <button onClick={handleReview} disabled={reviewing}
