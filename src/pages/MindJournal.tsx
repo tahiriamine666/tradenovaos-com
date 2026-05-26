@@ -716,8 +716,8 @@ Journal entries:\n${summary}`
               <option value="">All Moods</option>
               {MOODS.map(m => <option key={m.value} value={m.value}>{m.emoji} {m.label}</option>)}
             </select>
-            {(search || filterMood || filterDate) && (
-              <button onClick={() => { setSearch(''); setFilterMood(''); setFilterDate(''); }}
+            {(search || filterMood || filterDate || activeTab !== 'all') && (
+              <button onClick={() => { setSearch(''); setFilterMood(''); setFilterDate(''); setActiveTab('all'); }}
                 className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border text-muted-foreground text-xs font-semibold hover:bg-muted transition-colors">
                 <RotateCcw className="h-3.5 w-3.5"/> Reset
               </button>
@@ -726,17 +726,36 @@ Journal entries:\n${summary}`
 
           {/* Tabs */}
           <div className="flex gap-1 p-1 rounded-xl bg-muted border border-border">
-            {['All Entries', 'Mistakes', 'Lessons', 'Emotions'].map(t => (
-              <button key={t} className="flex-1 py-2 rounded-lg text-xs font-bold text-muted-foreground hover:text-foreground hover:bg-background transition-all first:text-foreground first:bg-background">
-                {t}
-              </button>
-            ))}
+            {([
+              { id: 'all',      label: 'All Entries' },
+              { id: 'mistakes', label: 'Mistakes' },
+              { id: 'lessons',  label: 'Lessons' },
+              { id: 'emotions', label: 'Emotions' },
+            ] as const).map(t => {
+              const count = t.id === 'all' ? 0 : tabCounts[t.id];
+              const isActive = activeTab === t.id;
+              return (
+                <button key={t.id} onClick={() => setActiveTab(t.id)}
+                  className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all ${
+                    isActive
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-background/60'
+                  }`}>
+                  {t.label}
+                  {t.id !== 'all' && count > 0 && (
+                    <span className={`ml-1.5 text-[9px] font-black px-1.5 py-0.5 rounded-full ${
+                      isActive ? 'bg-violet-600 text-white' : 'bg-muted-foreground/15 text-muted-foreground'
+                    }`}>{count}</span>
+                  )}
+                </button>
+              );
+            })}
           </div>
 
           {/* Entry list */}
           {loading ? (
             <div className="space-y-3">{[1,2,3].map(i=><div key={i} className="h-24 bg-muted/30 rounded-2xl animate-pulse"/>)}</div>
-          ) : filtered.length === 0 ? (
+          ) : entries.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20 text-center">
               <div className="w-16 h-16 rounded-2xl bg-muted border border-border flex items-center justify-center mb-4">
                 <Brain className="h-7 w-7 text-muted-foreground/30"/>
@@ -745,6 +764,21 @@ Journal entries:\n${summary}`
               <p className="text-sm text-muted-foreground mb-6 max-w-xs">Log your first session to start tracking your trading psychology.</p>
               <button onClick={() => setModalOpen(true)} className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-6 py-3 rounded-xl font-bold text-sm transition-all shadow-lg shadow-violet-500/20">
                 <Plus className="h-4 w-4"/> Log First Entry
+              </button>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center rounded-2xl border border-dashed border-border bg-muted/20">
+              <Search className="h-8 w-8 text-muted-foreground/20 mb-3"/>
+              <p className="text-sm font-bold text-foreground mb-1">No entries match this filter</p>
+              <p className="text-xs text-muted-foreground mb-4">
+                {activeTab !== 'all'
+                  ? `No entries in "${activeTab === 'mistakes' ? 'Mistakes' : activeTab === 'lessons' ? 'Lessons' : 'Emotions'}" tab`
+                  : 'Try adjusting your search or filters'}
+              </p>
+              <button
+                onClick={() => { setSearch(''); setFilterMood(''); setFilterDate(''); setActiveTab('all'); }}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border text-muted-foreground text-xs font-semibold hover:bg-muted transition-colors">
+                <RotateCcw className="h-3.5 w-3.5"/> Clear all filters
               </button>
             </div>
           ) : (
