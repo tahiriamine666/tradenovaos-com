@@ -624,12 +624,48 @@ Journal entries:\n${summary}`
     return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
   }, [entries]);
 
-  const filtered = useMemo(() => entries.filter(e => {
-    if (search && !(e.mood?.toLowerCase().includes(search.toLowerCase())) && !(e.lesson?.toLowerCase().includes(search.toLowerCase())) && !(e.notes?.toLowerCase().includes(search.toLowerCase()))) return false;
-    if (filterMood && e.mood !== filterMood) return false;
-    if (filterDate && e.entry_date < filterDate) return false;
-    return true;
-  }), [entries, search, filterMood, filterDate]);
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    return entries.filter(e => {
+      if (q) {
+        const haystack = [
+          e.mood ?? '',
+          e.notes ?? '',
+          e.mistakes ?? '',
+          e.lesson ?? '',
+          e.bias ?? '',
+          (e as any).emotional_trigger ?? '',
+          (e as any).what_went_well ?? '',
+          (e as any).summary ?? '',
+          ...((e.mistakes_list as string[] | null) ?? []),
+        ].join(' ').toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
+      if (filterMood && e.mood !== filterMood) return false;
+      if (filterDate && e.entry_date < filterDate) return false;
+
+      if (activeTab === 'mistakes') {
+        const hasMistakes = ((e.mistakes_list as string[] | null)?.length ?? 0) > 0
+          || (e.mistakes != null && e.mistakes.trim() !== '');
+        if (!hasMistakes) return false;
+      }
+      if (activeTab === 'lessons') {
+        if (!(e.lesson != null && e.lesson.trim() !== '')) return false;
+      }
+      if (activeTab === 'emotions') {
+        const trig = (e as any).emotional_trigger as string | null | undefined;
+        const hasEmotion = (trig != null && trig.trim() !== '') || (e.mood != null && e.mood !== '');
+        if (!hasEmotion) return false;
+      }
+      return true;
+    });
+  }, [entries, search, filterMood, filterDate, activeTab]);
+
+  const tabCounts = useMemo(() => ({
+    mistakes: entries.filter(e => ((e.mistakes_list as string[] | null)?.length ?? 0) > 0 || (e.mistakes?.trim() ?? '') !== '').length,
+    lessons:  entries.filter(e => (e.lesson?.trim() ?? '') !== '').length,
+    emotions: entries.filter(e => (((e as any).emotional_trigger as string | null | undefined)?.trim() ?? '') !== '' || (e.mood != null && e.mood !== '')).length,
+  }), [entries]);
 
   const openEdit = (e: JournalEntry) => { setEditEntry(e); setModalOpen(true); };
   const topMoodObj = MOODS.find(m => m.value === stats?.topMood);
