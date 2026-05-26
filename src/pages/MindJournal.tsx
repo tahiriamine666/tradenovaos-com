@@ -523,6 +523,7 @@ export default function MindJournal() {
   const [search,     setSearch]     = useState('');
   const [filterMood, setFilterMood] = useState('');
   const [filterDate, setFilterDate] = useState('');
+  const [activeTab,  setActiveTab]  = useState<'all'|'mistakes'|'lessons'|'emotions'>('all');
   const [showFilters,setShowFilters]= useState(false);
 
   // AI sidebar
