@@ -67,7 +67,7 @@ const EMPTY_FORM: FormData = {
   notes: '', session: '', session_time: '',
 };
 
-const ease = [0.22, 1, 0.36, 1];
+const ease: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 function moodColor(mood: string) {
   const m = MOODS.find(x => x.value === mood);
