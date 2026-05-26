@@ -112,49 +112,79 @@ export type Database = {
       }
       journal_entries: {
         Row: {
+          ai_review: Json
           bias: string | null
           confidence_level: number | null
+          confidence_score: number | null
           created_at: string
+          emotional_trigger: string | null
           energy_level: number | null
           entry_date: string
           id: string
           lesson: string | null
           mistakes: string | null
+          mistakes_list: string[]
           mood: string | null
           notes: string | null
           rule_adherence: number | null
+          session: string | null
+          session_time: string | null
+          stress_label: string | null
+          stress_score: number | null
+          summary: string | null
           updated_at: string
           user_id: string
+          what_went_well: string | null
         }
         Insert: {
+          ai_review?: Json
           bias?: string | null
           confidence_level?: number | null
+          confidence_score?: number | null
           created_at?: string
+          emotional_trigger?: string | null
           energy_level?: number | null
           entry_date?: string
           id?: string
           lesson?: string | null
           mistakes?: string | null
+          mistakes_list?: string[]
           mood?: string | null
           notes?: string | null
           rule_adherence?: number | null
+          session?: string | null
+          session_time?: string | null
+          stress_label?: string | null
+          stress_score?: number | null
+          summary?: string | null
           updated_at?: string
           user_id: string
+          what_went_well?: string | null
         }
         Update: {
+          ai_review?: Json
           bias?: string | null
           confidence_level?: number | null
+          confidence_score?: number | null
           created_at?: string
+          emotional_trigger?: string | null
           energy_level?: number | null
           entry_date?: string
           id?: string
           lesson?: string | null
           mistakes?: string | null
+          mistakes_list?: string[]
           mood?: string | null
           notes?: string | null
           rule_adherence?: number | null
+          session?: string | null
+          session_time?: string | null
+          stress_label?: string | null
+          stress_score?: number | null
+          summary?: string | null
           updated_at?: string
           user_id?: string
+          what_went_well?: string | null
         }
         Relationships: []
       }

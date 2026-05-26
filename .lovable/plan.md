@@ -1,42 +1,36 @@
-## TradeDrawer Theme Fix (Light + Dark Mode)
+## Mind Journal Redesign
 
-Make the `TradeDrawer` component in `src/pages/TradeVault.tsx` fully theme-aware by replacing every hardcoded dark value with a `light dark:` Tailwind pair, per the uploaded spec.
+Replace `src/pages/MindJournal.tsx` with the premium trading-psychology workspace from `MIND_JOURNAL_REDESIGN_PROMPT.txt`. Match Trade Vault's color rules: emerald (good), red (bad), violet (accent), white/gray for the rest — no orange/yellow/blue/cyan/pink/amber.
 
-### Scope
-- File: `src/pages/TradeVault.tsx` — only the `TradeDrawer` function (no other component touched).
+### 1. Database migration (`journal_entries`)
+The new UI needs columns that don't exist yet. Add them as nullable so existing rows keep working:
 
-### Swap rules (applied across entire TradeDrawer)
+- `stress_score` int, `stress_label` text
+- `what_went_well` text
+- `mistakes_list` text[] (default `{}`)
+- `emotional_trigger` text
+- `summary` text
+- `session` text, `session_time` text
+- `ai_review` jsonb (default `{}`)
 
-**Backgrounds**: `bg-[#0d0d1f]` → `bg-white dark:bg-[#0d0d1f]`; `bg-[#0c0c16]` → `bg-white dark:bg-[#0c0c16]`; `bg-[#0a0a18]` → `bg-background dark:bg-[#0a0a18]`; `bg-black/60|40|30` → light counterparts (`bg-black/10|5`) with `dark:` original.
+Keep existing columns and RLS policies as-is.
 
-**White-opacity surfaces**: `bg-white/[0.02..0.06]` → slate-50/100/200 light variants with `dark:bg-white/[0.0x]`.
+### 2. Page rewrite
+Replace `src/pages/MindJournal.tsx` with the spec's component (lines 14-end of the upload). Key pieces:
 
-**Borders**: all `border-white/[0.06..0.15]` → `border-border dark:border-white/[0.0x]`.
+- Header with title, search, filter, "New Entry" CTA
+- Stats strip: total entries, avg rule adherence, avg confidence, dominant mood
+- Trend chart (recharts AreaChart) of confidence/adherence over time
+- Entry list with expandable cards showing mood badge, scores, mistakes chips, lesson, AI review
+- New-entry slide-over form covering all new fields (mood grid, sliders, mistakes multi-select chips, session, bias, free-text areas)
+- Theme-aware: use `text-foreground` / `bg-card` / `border-border` + `dark:` variants matching Trade Vault treatment
 
-**Text**: `text-white` → `text-foreground dark:text-white`; `text-white/20..70` → `text-muted-foreground/30..75` (or `text-foreground/70..75` for higher opacities) with `dark:text-white/x`.
-
-**Inline-style dividers/backgrounds**: replace `rgba(255,255,255,0.06|0.08)` and `rgba(10,10,24,1)` with Tailwind `border-border` / `bg-background`.
-
-### Specific structural fixes
-1. Backdrop overlay → `bg-black/10 dark:bg-black/60` + lighter backdrop-blur in light.
-2. Drawer panel — drop inline gradient background; use `bg-white dark:bg-gradient-to-br dark:from-[#0d0d1f] dark:to-[#0a0a18] border-l border-border dark:border-white/[0.08]`. Keep boxShadow (softer in light).
-3. Header border → Tailwind `border-b border-border` (remove inline style).
-4. 6 quick stat cards — fix only neutral white-opacity slots; keep colored emerald/red/blue/violet/amber/cyan/pink as-is.
-5. Price bar wrapper → `bg-slate-50 dark:bg-white/[0.02]`.
-6. Tabs row → `bg-muted border border-border`.
-7. Tab content cards (Notes/Mistakes/AI/Playbook) → `bg-card border border-border`.
-8. Bottom actions gradient → `bg-gradient-to-t from-background via-background/80 to-transparent border-t border-border`.
-9. Header Close/Edit buttons → `border-border text-muted-foreground hover:bg-muted hover:text-foreground`.
-10. Notes empty state → `bg-muted border border-border`.
-11. Screenshots empty state → `border-dashed border-border bg-muted/30`.
-12. Score circles card → `border-border bg-card`.
-13. AI re-analyze button → muted-foreground / hover bg-muted.
-14. Duplicate/Delete buttons → same muted treatment.
-
-### Out of scope (untouched)
-- Colored tokens (emerald/red/blue/violet/amber/cyan/pink) — already work in both modes.
-- Purple accent line at top, win/loss glow logic.
-- `AddTradeModal`, `TradeRow`, main `TradeVault` body, Supabase queries, screenshot upload.
+### 3. Out of scope
+- No changes to other pages, auth, or AI edge functions
+- No new packages (recharts, framer-motion, lucide already installed)
+- Keep route registration unchanged (already mounted via `MindJournal` import)
 
 ### Verification
-After edits, the drawer should render: white panel + slate cards + slate borders + slate/muted text in light mode; unchanged dark-glass aesthetic in dark mode. No regressions to colored badges or win/loss glow.
+- Migration applies cleanly; existing entries still load
+- New entry form saves all fields; list renders mood/stress/adherence colors per rules
+- Light + dark both look correct, no off-palette colors
