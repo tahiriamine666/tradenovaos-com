@@ -563,9 +563,10 @@ function AddTradeModal({ onClose, onSaved, editTrade, playbooks }: {
               {/* Screenshot upload */}
               <div>
                 <label className="text-[10px] font-bold text-white/35 uppercase tracking-wider block mb-2">Chart Screenshot</label>
-                {form.screenshot_url ? (
+                {form.screenshot_url && previewUrl ? (
                   <div className="relative group rounded-2xl overflow-hidden border border-white/[0.09]">
-                    <img src={form.screenshot_url} alt="screenshot" className="w-full h-40 object-cover"/>
+                    <img src={previewUrl} alt="screenshot" className="w-full h-40 object-cover"/>
+
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <button type="button" onClick={() => set('screenshot_url', '')}
                         className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 text-xs font-bold">
