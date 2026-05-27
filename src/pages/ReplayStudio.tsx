@@ -854,7 +854,7 @@ export default function ReplayStudio() {
       supabase.from('replay_sessions').select('*').eq('user_id',user.id).order('created_at',{ascending:false}),
       supabase.from('playbooks').select('id,title,entry_rules').eq('user_id',user.id),
     ]);
-    setSessions((sr.data as ReplaySession[])??[]);
+    setSessions(((sr.data ?? []) as unknown) as ReplaySession[]);
     setPlaybooks(pb.data??[]);
     setLoading(false);
   },[user]);
