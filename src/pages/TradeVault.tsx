@@ -577,8 +577,10 @@ function AddTradeModal({ onClose, onSaved, editTrade, playbooks }: {
                         const path = `${user.id}/${Date.now()}.${file.name.split('.').pop()}`;
                         const { error } = await supabase.storage.from('trade-screenshots').upload(path, file, { upsert: true, contentType: file.type });
                         if (error) { toast({ title: 'Upload failed', description: error.message, variant: 'destructive' }); set('screenshot_url', ''); return; }
-                        const { data: urlData } = supabase.storage.from('trade-screenshots').getPublicUrl(path);
-                        if (urlData?.publicUrl) { set('screenshot_url', urlData.publicUrl); URL.revokeObjectURL(local); }
+                        // Bucket is private — store the storage path, not a public URL.
+                        set('screenshot_url', path);
+                        URL.revokeObjectURL(local);
+
                       }}
                     />
                     <button type="button" onClick={() => fileRef.current?.click()}
