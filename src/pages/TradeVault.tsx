@@ -876,10 +876,11 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
 
           {/* Screenshot */}
           <div className="px-5 pb-3">
-            {trade.screenshot_url ? (
+            {screenshotUrl ? (
               <div className="rounded-2xl overflow-hidden border border-border dark:border-white/[0.08] relative group cursor-pointer"
-                onClick={() => window.open(trade.screenshot_url!, '_blank')}>
-                <img src={trade.screenshot_url} alt="chart" className="w-full object-cover" style={{ maxHeight:'200px', minHeight:'100px' }}
+                onClick={() => screenshotUrl && window.open(screenshotUrl, '_blank')}>
+                <img src={screenshotUrl} alt="chart" className="w-full object-cover" style={{ maxHeight:'200px', minHeight:'100px' }}
+
                   onError={e => { (e.target as HTMLImageElement).parentElement!.style.display='none'; }}/>
                 <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-black/60 backdrop-blur-sm border border-border/60 dark:border-white/[0.15] text-white text-xs font-bold">
