@@ -450,21 +450,18 @@ function SessionDetail({ session, onBack, onEdit, onDelete, playbooks }: {
   const runAI = async () => {
     setReviewing(true);
     try {
-      const res = await fetch('https://api.anthropic.com/v1/messages',{
-        method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,messages:[{role:'user',content:
-          `Review this trade replay. Respond ONLY with JSON (no markdown):
-{"verdict":"Good trade"|"Average trade"|"Poor trade","discipline_score":0-100,"execution_score":0-100,"what_went_well":["string"],"what_to_improve":["string"],"ai_suggestion":string,"setup_quality":0-100,"risk_management":0-100,"patience":0-100}
-Trade: ${session.pair} ${session.outcome?.toUpperCase()} P&L:$${session.result} R:R:${session.rr??'N/A'} Entry:${session.entry_price??'N/A'} SL:${session.stop_loss??'N/A'} TP:${session.take_profit??'N/A'} Session:${session.session_name??'N/A'} Setup:${session.setup??'N/A'} Mistakes:[${(session.mistakes??[]).join(',')}] WentWell:${session.what_went_well??'N/A'} Executions:${executions.length}`
-        }]}),
+      const { data, error } = await supabase.functions.invoke('ai-replay-review', {
+        body: { sessionId: session.id },
       });
-      const data = await res.json();
-      const review = JSON.parse((data.content?.[0]?.text??'{}').replace(/```json|```/g,'').trim());
-      await supabase.from('replay_sessions').update({ai_review:review,updated_at:new Date().toISOString()}).eq('id',session.id);
+      if (error) throw error;
+      const review = (data as any)?.review ?? {};
       setAiReview(review);
-      toast({title:'✅ AI review complete'});
-    } catch { toast({title:'AI review failed',variant:'destructive'}); }
-    finally { setReviewing(false); }
+      toast({ title: '✅ AI review complete' });
+    } catch (e: any) {
+      toast({ title: 'AI review failed', description: e?.message, variant: 'destructive' });
+    } finally {
+      setReviewing(false);
+    }
   };
 
   const tfLabel = (tf:string) => tf==='60'?'1H':tf==='240'?'4H':tf==='D'?'1D':tf==='W'?'1W':`${tf}m`;
