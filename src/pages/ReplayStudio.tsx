@@ -185,11 +185,11 @@ function NewSessionModal({ onClose, onSaved, editSession, playbooks }: {
         updated_at:       new Date().toISOString(),
       };
       if (editSession) {
-        const {error} = await supabase.from('replay_sessions').update(payload).eq('id',editSession.id);
+        const {error} = await supabase.from('replay_sessions').update(payload as any).eq('id',editSession.id);
         if (error) throw error;
         toast({title:'✅ Session updated'});
       } else {
-        const {error} = await supabase.from('replay_sessions').insert({...payload,created_at:new Date().toISOString()});
+        const {error} = await supabase.from('replay_sessions').insert({...payload,created_at:new Date().toISOString()} as any);
         if (error) throw error;
         toast({title:'✅ Replay session saved'});
       }
