@@ -11,6 +11,21 @@ import {
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
+// Helper: get a signed URL for a private trade-screenshots object.
+async function getSignedUrl(path: string): Promise<string | null> {
+  if (!path) return null;
+  if (path.includes('token=')) return path;
+  let storagePath = path;
+  const match = path.match(/trade-screenshots\/(.+)/);
+  if (match) storagePath = match[1];
+  const { data, error } = await supabase.storage
+    .from('trade-screenshots')
+    .createSignedUrl(storagePath, 3600);
+  if (error || !data?.signedUrl) return null;
+  return data.signedUrl;
+}
+
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Trade {
   id: string; user_id: string; pair: string; side: string;
