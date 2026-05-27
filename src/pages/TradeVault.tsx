@@ -365,6 +365,14 @@ function AddTradeModal({ onClose, onSaved, editTrade, playbooks }: {
   const fileRef = useRef<HTMLInputElement>(null);
   const set = (k: keyof FormData, v: any) => setForm(f => ({ ...f, [k]: v }));
 
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!form.screenshot_url) { setPreviewUrl(null); return; }
+    if (form.screenshot_url.startsWith('blob:')) { setPreviewUrl(form.screenshot_url); return; }
+    getSignedUrl(form.screenshot_url).then(setPreviewUrl);
+  }, [form.screenshot_url]);
+
+
   const validate = (s: number) => {
     const e: Record<string, string> = {};
     if (s === 1 && !form.pair.trim()) e.pair = 'Required';
