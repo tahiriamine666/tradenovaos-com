@@ -370,52 +370,109 @@ export type Database = {
       }
       replay_sessions: {
         Row: {
+          ai_review: Json
+          bias: string | null
           created_at: string
+          discipline_score: number | null
+          duration_min: number | null
+          entry_price: number | null
           execution_score: number | null
+          executions: Json
           id: string
           instrument: string | null
+          mistakes: string[]
+          news_context: string | null
           notes: string | null
+          outcome: string | null
           pair: string | null
+          playbook_id: string | null
           replay_date: string
           result: number | null
+          risk_amount: number | null
+          rr: number | null
+          session_name: string | null
           setup: string | null
           status: string
+          stop_loss: number | null
+          tags: string[]
+          take_profit: number | null
+          timeframe: string | null
           title: string | null
           trades: Json
           updated_at: string
           user_id: string
+          volatility: string | null
+          what_went_well: string | null
         }
         Insert: {
+          ai_review?: Json
+          bias?: string | null
           created_at?: string
+          discipline_score?: number | null
+          duration_min?: number | null
+          entry_price?: number | null
           execution_score?: number | null
+          executions?: Json
           id?: string
           instrument?: string | null
+          mistakes?: string[]
+          news_context?: string | null
           notes?: string | null
+          outcome?: string | null
           pair?: string | null
+          playbook_id?: string | null
           replay_date?: string
           result?: number | null
+          risk_amount?: number | null
+          rr?: number | null
+          session_name?: string | null
           setup?: string | null
           status?: string
+          stop_loss?: number | null
+          tags?: string[]
+          take_profit?: number | null
+          timeframe?: string | null
           title?: string | null
           trades?: Json
           updated_at?: string
           user_id: string
+          volatility?: string | null
+          what_went_well?: string | null
         }
         Update: {
+          ai_review?: Json
+          bias?: string | null
           created_at?: string
+          discipline_score?: number | null
+          duration_min?: number | null
+          entry_price?: number | null
           execution_score?: number | null
+          executions?: Json
           id?: string
           instrument?: string | null
+          mistakes?: string[]
+          news_context?: string | null
           notes?: string | null
+          outcome?: string | null
           pair?: string | null
+          playbook_id?: string | null
           replay_date?: string
           result?: number | null
+          risk_amount?: number | null
+          rr?: number | null
+          session_name?: string | null
           setup?: string | null
           status?: string
+          stop_loss?: number | null
+          tags?: string[]
+          take_profit?: number | null
+          timeframe?: string | null
           title?: string | null
           trades?: Json
           updated_at?: string
           user_id?: string
+          volatility?: string | null
+          what_went_well?: string | null
         }
         Relationships: []
       }

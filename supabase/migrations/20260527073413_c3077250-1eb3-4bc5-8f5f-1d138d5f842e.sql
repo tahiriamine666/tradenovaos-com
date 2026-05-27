@@ -1,0 +1,21 @@
+
+ALTER TABLE public.replay_sessions
+  ADD COLUMN IF NOT EXISTS session_name text,
+  ADD COLUMN IF NOT EXISTS timeframe text DEFAULT '60',
+  ADD COLUMN IF NOT EXISTS playbook_id uuid,
+  ADD COLUMN IF NOT EXISTS tags text[] NOT NULL DEFAULT '{}',
+  ADD COLUMN IF NOT EXISTS mistakes text[] NOT NULL DEFAULT '{}',
+  ADD COLUMN IF NOT EXISTS outcome text,
+  ADD COLUMN IF NOT EXISTS rr numeric,
+  ADD COLUMN IF NOT EXISTS risk_amount numeric,
+  ADD COLUMN IF NOT EXISTS entry_price numeric,
+  ADD COLUMN IF NOT EXISTS stop_loss numeric,
+  ADD COLUMN IF NOT EXISTS take_profit numeric,
+  ADD COLUMN IF NOT EXISTS duration_min integer,
+  ADD COLUMN IF NOT EXISTS bias text,
+  ADD COLUMN IF NOT EXISTS volatility text,
+  ADD COLUMN IF NOT EXISTS news_context text,
+  ADD COLUMN IF NOT EXISTS what_went_well text,
+  ADD COLUMN IF NOT EXISTS discipline_score integer DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS executions jsonb NOT NULL DEFAULT '[]'::jsonb,
+  ADD COLUMN IF NOT EXISTS ai_review jsonb NOT NULL DEFAULT '{}'::jsonb;
