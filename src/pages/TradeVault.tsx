@@ -732,6 +732,13 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
   const accentBg    = isWin ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-400' : isLoss ? 'bg-red-500/10 border-red-500/25 text-red-400' : 'bg-white/5 border-white/15 text-white/40';
   const linkedPb = playbooks.find(p => p.id === trade.playbook_id);
 
+  const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!trade.screenshot_url) { setScreenshotUrl(null); return; }
+    getSignedUrl(trade.screenshot_url).then(setScreenshotUrl);
+  }, [trade.screenshot_url]);
+
+
   const handleReview = async () => {
     setReviewing(true);
     await onAIReview(trade);
