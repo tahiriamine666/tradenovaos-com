@@ -11,6 +11,21 @@ import {
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
+// Helper: get a signed URL for a private trade-screenshots object.
+async function getSignedUrl(path: string): Promise<string | null> {
+  if (!path) return null;
+  if (path.includes('token=')) return path;
+  let storagePath = path;
+  const match = path.match(/trade-screenshots\/(.+)/);
+  if (match) storagePath = match[1];
+  const { data, error } = await supabase.storage
+    .from('trade-screenshots')
+    .createSignedUrl(storagePath, 3600);
+  if (error || !data?.signedUrl) return null;
+  return data.signedUrl;
+}
+
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Trade {
   id: string; user_id: string; pair: string; side: string;
@@ -350,6 +365,14 @@ function AddTradeModal({ onClose, onSaved, editTrade, playbooks }: {
   const fileRef = useRef<HTMLInputElement>(null);
   const set = (k: keyof FormData, v: any) => setForm(f => ({ ...f, [k]: v }));
 
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!form.screenshot_url) { setPreviewUrl(null); return; }
+    if (form.screenshot_url.startsWith('blob:')) { setPreviewUrl(form.screenshot_url); return; }
+    getSignedUrl(form.screenshot_url).then(setPreviewUrl);
+  }, [form.screenshot_url]);
+
+
   const validate = (s: number) => {
     const e: Record<string, string> = {};
     if (s === 1 && !form.pair.trim()) e.pair = 'Required';
@@ -540,9 +563,10 @@ function AddTradeModal({ onClose, onSaved, editTrade, playbooks }: {
               {/* Screenshot upload */}
               <div>
                 <label className="text-[10px] font-bold text-white/35 uppercase tracking-wider block mb-2">Chart Screenshot</label>
-                {form.screenshot_url ? (
+                {form.screenshot_url && previewUrl ? (
                   <div className="relative group rounded-2xl overflow-hidden border border-white/[0.09]">
-                    <img src={form.screenshot_url} alt="screenshot" className="w-full h-40 object-cover"/>
+                    <img src={previewUrl} alt="screenshot" className="w-full h-40 object-cover"/>
+
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <button type="button" onClick={() => set('screenshot_url', '')}
                         className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/20 border border-red-500/30 text-red-400 text-xs font-bold">
@@ -562,8 +586,10 @@ function AddTradeModal({ onClose, onSaved, editTrade, playbooks }: {
                         const path = `${user.id}/${Date.now()}.${file.name.split('.').pop()}`;
                         const { error } = await supabase.storage.from('trade-screenshots').upload(path, file, { upsert: true, contentType: file.type });
                         if (error) { toast({ title: 'Upload failed', description: error.message, variant: 'destructive' }); set('screenshot_url', ''); return; }
-                        const { data: urlData } = supabase.storage.from('trade-screenshots').getPublicUrl(path);
-                        if (urlData?.publicUrl) { set('screenshot_url', urlData.publicUrl); URL.revokeObjectURL(local); }
+                        // Bucket is private — store the storage path, not a public URL.
+                        set('screenshot_url', path);
+                        URL.revokeObjectURL(local);
+
                       }}
                     />
                     <button type="button" onClick={() => fileRef.current?.click()}
@@ -706,6 +732,13 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
   const accentBg    = isWin ? 'bg-emerald-500/10 border-emerald-500/25 text-emerald-400' : isLoss ? 'bg-red-500/10 border-red-500/25 text-red-400' : 'bg-white/5 border-white/15 text-white/40';
   const linkedPb = playbooks.find(p => p.id === trade.playbook_id);
 
+  const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!trade.screenshot_url) { setScreenshotUrl(null); return; }
+    getSignedUrl(trade.screenshot_url).then(setScreenshotUrl);
+  }, [trade.screenshot_url]);
+
+
   const handleReview = async () => {
     setReviewing(true);
     await onAIReview(trade);
@@ -843,10 +876,11 @@ function TradeDrawer({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview
 
           {/* Screenshot */}
           <div className="px-5 pb-3">
-            {trade.screenshot_url ? (
+            {screenshotUrl ? (
               <div className="rounded-2xl overflow-hidden border border-border dark:border-white/[0.08] relative group cursor-pointer"
-                onClick={() => window.open(trade.screenshot_url!, '_blank')}>
-                <img src={trade.screenshot_url} alt="chart" className="w-full object-cover" style={{ maxHeight:'200px', minHeight:'100px' }}
+                onClick={() => screenshotUrl && window.open(screenshotUrl, '_blank')}>
+                <img src={screenshotUrl} alt="chart" className="w-full object-cover" style={{ maxHeight:'200px', minHeight:'100px' }}
+
                   onError={e => { (e.target as HTMLImageElement).parentElement!.style.display='none'; }}/>
                 <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-black/60 backdrop-blur-sm border border-border/60 dark:border-white/[0.15] text-white text-xs font-bold">
