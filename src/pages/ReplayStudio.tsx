@@ -67,7 +67,7 @@ const EMPTY_FORM: FormData = {
   discipline_score:7, execution_score:7, executions:[],
 };
 
-const ease = [0.22,1,0.36,1];
+const ease: [number, number, number, number] = [0.22,1,0.36,1];
 
 function fmtMoney(v:number){ return `${v>=0?'+':''}$${Math.abs(v).toFixed(2)}`; }
 function fmtDate(d:string){ return new Date(d+'T12:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'}); }
