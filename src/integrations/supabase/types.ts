@@ -188,6 +188,123 @@ export type Database = {
         }
         Relationships: []
       }
+      learning_stats: {
+        Row: {
+          current_focus: string | null
+          hours_studied: number
+          last_study_date: string | null
+          streak_days: number
+          updated_at: string
+          user_id: string
+          xp_total: number
+        }
+        Insert: {
+          current_focus?: string | null
+          hours_studied?: number
+          last_study_date?: string | null
+          streak_days?: number
+          updated_at?: string
+          user_id: string
+          xp_total?: number
+        }
+        Update: {
+          current_focus?: string | null
+          hours_studied?: number
+          last_study_date?: string | null
+          streak_days?: number
+          updated_at?: string
+          user_id?: string
+          xp_total?: number
+        }
+        Relationships: []
+      }
+      lesson_progress: {
+        Row: {
+          completed: boolean
+          completed_at: string | null
+          id: string
+          lesson_id: string
+          notes: string | null
+          progress_pct: number
+          saved: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          completed_at?: string | null
+          id?: string
+          lesson_id: string
+          notes?: string | null
+          progress_pct?: number
+          saved?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          completed_at?: string | null
+          id?: string
+          lesson_id?: string
+          notes?: string | null
+          progress_pct?: number
+          saved?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      lessons: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          difficulty: string
+          id: string
+          is_premium: boolean
+          order_index: number
+          read_time_min: number
+          slug: string
+          subcategory: string | null
+          tags: string[]
+          thumbnail_url: string | null
+          title: string
+          xp_reward: number
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          difficulty?: string
+          id?: string
+          is_premium?: boolean
+          order_index?: number
+          read_time_min?: number
+          slug: string
+          subcategory?: string | null
+          tags?: string[]
+          thumbnail_url?: string | null
+          title: string
+          xp_reward?: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          difficulty?: string
+          id?: string
+          is_premium?: boolean
+          order_index?: number
+          read_time_min?: number
+          slug?: string
+          subcategory?: string | null
+          tags?: string[]
+          thumbnail_url?: string | null
+          title?: string
+          xp_reward?: number
+        }
+        Relationships: []
+      }
       playbooks: {
         Row: {
           ai_insight: string | null
