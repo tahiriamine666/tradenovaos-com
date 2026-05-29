@@ -57,7 +57,7 @@ function gradient(cat: string) {
   return GRADIENT_MAP[cat] ?? 'from-slate-800 to-slate-600';
 }
 
-const ease = [0.22, 1, 0.36, 1];
+const ease: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 // ── Thumbnail ─────────────────────────────────────────────────────────────────
 function Thumb({ lesson }: { lesson: Lesson }) {
