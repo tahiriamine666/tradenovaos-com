@@ -257,11 +257,13 @@ export type Database = {
       lessons: {
         Row: {
           category: string
+          content: string | null
           created_at: string
           description: string | null
           difficulty: string
           id: string
           is_premium: boolean
+          is_pro: boolean
           order_index: number
           read_time_min: number
           slug: string
@@ -269,15 +271,18 @@ export type Database = {
           tags: string[]
           thumbnail_url: string | null
           title: string
+          video_url: string | null
           xp_reward: number
         }
         Insert: {
           category: string
+          content?: string | null
           created_at?: string
           description?: string | null
           difficulty?: string
           id?: string
           is_premium?: boolean
+          is_pro?: boolean
           order_index?: number
           read_time_min?: number
           slug: string
@@ -285,15 +290,18 @@ export type Database = {
           tags?: string[]
           thumbnail_url?: string | null
           title: string
+          video_url?: string | null
           xp_reward?: number
         }
         Update: {
           category?: string
+          content?: string | null
           created_at?: string
           description?: string | null
           difficulty?: string
           id?: string
           is_premium?: boolean
+          is_pro?: boolean
           order_index?: number
           read_time_min?: number
           slug?: string
@@ -301,6 +309,7 @@ export type Database = {
           tags?: string[]
           thumbnail_url?: string | null
           title?: string
+          video_url?: string | null
           xp_reward?: number
         }
         Relationships: []
@@ -955,6 +964,10 @@ export type Database = {
         Returns: string
       }
       update_last_seen: { Args: never; Returns: undefined }
+      update_learning_streak: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
