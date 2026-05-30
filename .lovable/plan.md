@@ -1,34 +1,19 @@
 ## Scope
-Targeted fix to `src/pages/LearningHub.tsx` only. No other files touched.
-
-## Current state vs spec
-Most of the spec is already implemented correctly:
-- `activeCat` state exists (line 248)
-- `filtered` useMemo already does `l.category !== activeCat` with `activeCat` in deps (lines 278–295)
-- Category buttons already use `cat.name` for click + active check (lines 405–419)
-- `categories` is derived from `lessons` themselves via `l.category`, so counts and names match by string already
-
-So the actual filtering works. The two genuinely missing pieces from the spec are the per-category empty state and the debug logs. I'll add those, plus tighten the toggle handler to match the spec verbatim.
+Single-file change to `src/pages/LearningHub.tsx`. Adds a slide-in lesson detail drawer per the uploaded `LESSON_DETAIL_DRAWER_PROMPT.txt` spec. No route/page added. No other file touched.
 
 ## Changes
 
-1. **Category button onClick** (line 406) — replace with the spec's version so it also resets pagination:
-   ```ts
-   onClick={() => {
-     const next = activeCat === cat.name ? '' : cat.name;
-     setActiveCat(next);
-     setShowMore(10);
-     console.log('[LearningHub] category clicked:', next);
-   }}
-   ```
+1. **Imports** — add `X` to the lucide-react import (rest are already imported: `BookOpen, Lock, Bookmark, BookmarkCheck, CheckCircle2, Clock, ChevronRight, RefreshCw, Play`).
 
-2. **Empty state for "category has no lessons yet"** — add a branch before the generic `filtered.length === 0` block (around line 478) that triggers when `filtered.length === 0 && activeCat !== ''`, showing the category emoji, the message, and a "View all lessons" button that clears `activeCat` and resets `showMore`.
+2. **`LessonDetailDrawer` component** — add above `LearningHub`, exactly as in the spec (header with category/difficulty/PRO/done badges, progress bar, Complete + Save buttons, scrollable tags/description/markdown-rendered content, footer "Up Next" linking to the next lesson by `order_index` in `lessons`).
 
-3. **Debug `useEffect`** — add after state declarations, logging `activeCat`, `filtered.length`, `lessons.length`, sample `lesson.category`, and sample `categories[0].name`, so the user can confirm strings match in the console.
+3. **`LearningHub` state** — add `selectedLesson` and `lessonLoading`.
+
+4. **Handlers** — add `openLesson(lesson)` that fetches the full row from `lessons` (so `content` is hydrated) and sets state; add `closeLesson()`.
+
+5. **`LessonCard` wiring** — add `onOpen` to its props interface; outer wrapper becomes clickable with `cursor-pointer` and `onClick={() => onOpen(lesson)}`; the existing Play button calls `onOpen(lesson)` with `e.stopPropagation()`. Pass `onOpen={openLesson}` where `LessonCard` is rendered. Save/Complete buttons keep their existing `stopPropagation` so they don't trigger open.
+
+6. **Render drawer + loading overlay** — at the end of `LearningHub`'s return, add the two `AnimatePresence` blocks from the spec (loading toast + `LessonDetailDrawer`), wired to `progMap`, `GRADIENT_MAP`, `toggleSave`, `toggleComplete`, and `lessons` for the "next lesson".
 
 ## Not changing
-- `load()`, `toggleSave`, `toggleComplete`, upsert logic
-- `LessonCard`, `Thumb`, `AIAssistant`
-- Hero, sidebar, leaderboard, progress widgets
-- `categories` derivation — it already keys on `l.category` strings, which is what the spec requires (no `learning_categories` table query is needed since lesson rows carry the category name directly)
-- Any other file
+Supabase `load()`, category filtering, tabs/search/difficulty, progress/XP/stats logic, AI assistant, leaderboard, hero, any other file or route.
