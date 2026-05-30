@@ -819,6 +819,35 @@ export default function LearningHub() {
           </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {lessonLoading && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40 bg-black/30 dark:bg-black/50 backdrop-blur-sm flex items-center justify-center">
+            <div className="bg-card border border-border rounded-2xl px-6 py-4 flex items-center gap-3 shadow-xl">
+              <RefreshCw className="h-4 w-4 text-violet-500 animate-spin"/>
+              <p className="text-sm font-semibold text-foreground">Opening lesson…</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {selectedLesson && !lessonLoading && (
+          <LessonDetailDrawer
+            lesson={selectedLesson}
+            progress={progMap[selectedLesson.id]}
+            gradient={GRADIENT_MAP[selectedLesson.category] ?? 'from-slate-800 to-slate-600'}
+            onClose={closeLesson}
+            onComplete={async (id) => { await toggleComplete(id); }}
+            onSave={async (id) => { await toggleSave(id); }}
+            nextLesson={
+              lessons[lessons.findIndex(l => l.id === selectedLesson.id) + 1] ?? null
+            }
+            onOpen={openLesson}
+          />
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
