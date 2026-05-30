@@ -267,6 +267,12 @@ export default function LearningHub() {
 
   useEffect(() => { load(); }, [load]);
 
+  useEffect(() => {
+    console.log('[LearningHub] activeCat:', activeCat);
+    console.log('[LearningHub] lessons.length:', lessons.length);
+    if (lessons.length > 0) console.log('[LearningHub] sample lesson.category:', lessons[0].category);
+  }, [activeCat, lessons]);
+
   const categories = useMemo(() => {
     const map: Record<string, number> = {};
     lessons.forEach(l => { map[l.category] = (map[l.category] ?? 0) + 1; });
@@ -403,7 +409,12 @@ export default function LearningHub() {
           <div className="flex gap-3 overflow-x-auto pb-2">
             {categories.map(cat => (
               <motion.button key={cat.name}
-                onClick={() => setActiveCat(activeCat === cat.name ? '' : cat.name)}
+                onClick={() => {
+                  const next = activeCat === cat.name ? '' : cat.name;
+                  setActiveCat(next);
+                  setShowMore(10);
+                  console.log('[LearningHub] category clicked:', next);
+                }}
                 whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                 className={`flex-shrink-0 flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all ${
                   activeCat === cat.name
@@ -474,6 +485,16 @@ export default function LearningHub() {
           {loading ? (
             <div className="space-y-3">
               {[1,2,3,4].map(i => <div key={i} className="h-24 bg-muted/30 rounded-2xl animate-pulse"/>)}
+            </div>
+          ) : filtered.length === 0 && activeCat !== '' ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center rounded-2xl border border-dashed border-border bg-muted/20">
+              <span className="text-4xl mb-3">{CATEGORY_EMOJI[activeCat] ?? '📚'}</span>
+              <p className="text-sm font-bold text-foreground mb-1">No lessons found in "{activeCat}" yet</p>
+              <p className="text-xs text-muted-foreground mb-4">Check back soon — more content is being added.</p>
+              <button onClick={() => { setActiveCat(''); setShowMore(10); }}
+                className="text-xs text-violet-500 dark:text-violet-400 hover:opacity-70 transition-opacity border border-violet-200 dark:border-violet-500/20 px-3 py-1.5 rounded-lg hover:bg-violet-50 dark:hover:bg-violet-500/10">
+                ← View all lessons
+              </button>
             </div>
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center rounded-2xl border border-dashed border-border bg-muted/20">
