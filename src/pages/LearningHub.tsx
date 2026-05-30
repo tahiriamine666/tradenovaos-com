@@ -729,6 +729,7 @@ export default function LearningHub() {
                       progress={progMap[lesson.id]}
                       onSave={toggleSave}
                       onComplete={toggleComplete}
+                      onOpen={openLesson}
                     />
                   </motion.div>
                 ))}
