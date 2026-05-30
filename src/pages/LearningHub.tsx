@@ -148,9 +148,10 @@ function AIAssistant({ lessons }: { lessons: Lesson[] }) {
 }
 
 // ── Lesson Card ───────────────────────────────────────────────────────────────
-function LessonCard({ lesson, progress, onSave, onComplete }: {
+function LessonCard({ lesson, progress, onSave, onComplete, onOpen }: {
   lesson: Lesson; progress: Progress | undefined;
   onSave: (id: string) => void; onComplete: (id: string) => void;
+  onOpen: (lesson: Lesson) => void;
 }) {
   const pct       = progress?.progress_pct ?? 0;
   const done      = progress?.completed ?? false;
@@ -159,6 +160,7 @@ function LessonCard({ lesson, progress, onSave, onComplete }: {
 
   return (
     <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+      onClick={() => onOpen(lesson)}
       className="group flex items-start gap-3.5 p-4 rounded-2xl border border-border bg-card hover:border-border/60 hover:shadow-sm transition-all cursor-pointer">
 
       <Thumb lesson={lesson}/>
@@ -214,9 +216,10 @@ function LessonCard({ lesson, progress, onSave, onComplete }: {
                   <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500"/>
                 </div>
               ) : (
-                <div className="w-6 h-6 rounded-full border-2 border-border flex items-center justify-center">
-                  <Play className="h-3 w-3 text-muted-foreground/30 ml-0.5"/>
-                </div>
+                <button onClick={e => { e.stopPropagation(); onOpen(lesson); }}
+                  className="w-6 h-6 rounded-full border-2 border-border flex items-center justify-center hover:border-violet-500/40 hover:bg-violet-50 dark:hover:bg-violet-500/10 transition-colors">
+                  <Play className="h-3 w-3 text-muted-foreground/60 ml-0.5"/>
+                </button>
               )}
             </div>
             <span className="text-[9px] font-bold text-violet-500 dark:text-violet-400">+{lesson.xp_reward} XP</span>
@@ -231,6 +234,207 @@ function LessonCard({ lesson, progress, onSave, onComplete }: {
         )}
       </div>
     </motion.div>
+  );
+}
+
+// ── Lesson Detail Drawer ──────────────────────────────────────────────────────
+function LessonDetailDrawer({ lesson, progress, gradient, onClose, onComplete, onSave, nextLesson, onOpen }: {
+  lesson: Lesson;
+  progress: Progress | undefined;
+  gradient: string;
+  onClose: () => void;
+  onComplete: (id: string) => void;
+  onSave: (id: string) => void;
+  nextLesson: Lesson | null;
+  onOpen: (lesson: Lesson) => void;
+}) {
+  const done  = progress?.completed ?? false;
+  const saved = progress?.saved ?? false;
+  const pct   = progress?.progress_pct ?? 0;
+  const isPro = lesson.is_premium || lesson.is_pro;
+
+  const DIFF_COLOR: Record<string, string> = {
+    beginner:     'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20',
+    intermediate: 'text-foreground/70 bg-muted border-border',
+    advanced:     'text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-500/10 border-violet-200 dark:border-violet-500/20',
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex" onClick={onClose}>
+      <motion.div
+        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        className="flex-1 bg-black/50 dark:bg-black/60 backdrop-blur-sm"
+      />
+      <motion.div
+        initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+        transition={{ type: 'spring', damping: 30, stiffness: 320 }}
+        className="relative w-full sm:w-[520px] h-full bg-background border-l border-border flex flex-col overflow-hidden shadow-2xl"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex-shrink-0 border-b border-border">
+          <div className={`h-1.5 bg-gradient-to-r ${gradient}`}/>
+          <div className="flex items-start justify-between gap-3 px-5 pt-4 pb-4">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                <span className="text-[10px] font-semibold text-muted-foreground bg-muted border border-border px-2 py-0.5 rounded-md">
+                  {lesson.category}
+                </span>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border capitalize ${DIFF_COLOR[lesson.difficulty] ?? 'bg-muted border-border text-muted-foreground'}`}>
+                  {lesson.difficulty}
+                </span>
+                {isPro && (
+                  <span className="flex items-center gap-0.5 text-[9px] font-black bg-violet-100 dark:bg-violet-500/15 text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-500/20 px-1.5 py-0.5 rounded-full">
+                    <Lock className="h-2.5 w-2.5"/> PRO
+                  </span>
+                )}
+                {done && (
+                  <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                    <CheckCircle2 className="h-3.5 w-3.5"/> Completed
+                  </span>
+                )}
+              </div>
+              <h2 className="text-lg font-black text-foreground leading-tight">{lesson.title}</h2>
+              <div className="flex items-center gap-3 mt-1.5 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1"><Clock className="h-3 w-3"/> {lesson.read_time_min} min read</span>
+                <span className="text-violet-500 dark:text-violet-400 font-bold">+{lesson.xp_reward} XP</span>
+              </div>
+            </div>
+            <button onClick={onClose}
+              className="p-1.5 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground transition-colors flex-shrink-0 mt-0.5">
+              <X className="h-4 w-4"/>
+            </button>
+          </div>
+
+          {pct > 0 && (
+            <div className="px-5 pb-3">
+              <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
+                <span>Progress</span>
+                <span className="font-bold">{pct}%</span>
+              </div>
+              <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                <div className={`h-full rounded-full transition-all ${done ? 'bg-emerald-500' : 'bg-violet-500'}`}
+                  style={{ width: `${pct}%` }}/>
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center gap-2 px-5 pb-4">
+            <button
+              onClick={() => onComplete(lesson.id)}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-black transition-all ${
+                done
+                  ? 'bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400'
+                  : 'bg-violet-600 hover:bg-violet-500 text-white shadow-lg shadow-violet-500/20'
+              }`}>
+              <CheckCircle2 className="h-4 w-4"/>
+              {done ? 'Completed ✓' : 'Mark as Completed'}
+            </button>
+            <button
+              onClick={() => onSave(lesson.id)}
+              className={`px-4 py-2.5 rounded-xl border text-sm font-bold transition-all ${
+                saved
+                  ? 'bg-violet-50 dark:bg-violet-500/10 border-violet-200 dark:border-violet-500/20 text-violet-600 dark:text-violet-400'
+                  : 'border-border text-muted-foreground hover:bg-muted hover:text-foreground'
+              }`}>
+              {saved ? <BookmarkCheck className="h-4 w-4"/> : <Bookmark className="h-4 w-4"/>}
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto">
+          {(lesson.tags ?? []).length > 0 && (
+            <div className="flex flex-wrap gap-1.5 px-5 pt-4">
+              {(lesson.tags ?? []).map(tag => (
+                <span key={tag} className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted border border-border text-muted-foreground">
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {lesson.description && (
+            <div className="px-5 pt-4 pb-2">
+              <p className="text-sm text-muted-foreground leading-relaxed">{lesson.description}</p>
+            </div>
+          )}
+
+          <div className="mx-5 border-t border-border my-3"/>
+
+          <div className="px-5 pb-6">
+            {lesson.content ? (
+              <div className="prose-sm space-y-3">
+                {lesson.content.split('\n').map((line, i) => {
+                  if (line.startsWith('## ')) {
+                    return <h3 key={i} className="text-base font-black text-foreground mt-5 mb-2 first:mt-0">{line.replace('## ', '')}</h3>;
+                  }
+                  if (line.startsWith('**') && line.endsWith('**')) {
+                    return <p key={i} className="text-sm font-bold text-foreground">{line.replace(/\*\*/g, '')}</p>;
+                  }
+                  if (line.startsWith('- ')) {
+                    return (
+                      <div key={i} className="flex items-start gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-violet-500 mt-1.5 flex-shrink-0"/>
+                        <p className="text-sm text-foreground/75 leading-relaxed">{line.replace('- ', '')}</p>
+                      </div>
+                    );
+                  }
+                  if (/^[1-5]\. /.test(line)) {
+                    const num = line.split('. ')[0];
+                    const text = line.split('. ').slice(1).join('. ');
+                    return (
+                      <div key={i} className="flex items-start gap-3">
+                        <span className="text-[10px] font-black text-violet-500 dark:text-violet-400 bg-violet-100 dark:bg-violet-500/15 w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">{num}</span>
+                        <p className="text-sm text-foreground/75 leading-relaxed">{text}</p>
+                      </div>
+                    );
+                  }
+                  if (line.startsWith('|') && line.endsWith('|')) return null;
+                  if (line.trim() === '' || line.startsWith('---')) {
+                    return <div key={i} className="h-2"/>;
+                  }
+                  if (line.includes('**')) {
+                    const parts = line.split('**');
+                    return (
+                      <p key={i} className="text-sm text-foreground/75 leading-relaxed">
+                        {parts.map((part, j) =>
+                          j % 2 === 1
+                            ? <span key={j} className="font-bold text-foreground">{part}</span>
+                            : part
+                        )}
+                      </p>
+                    );
+                  }
+                  return (
+                    <p key={i} className="text-sm text-foreground/75 leading-relaxed">{line}</p>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <BookOpen className="h-10 w-10 text-muted-foreground/20 mb-3"/>
+                <p className="text-sm text-muted-foreground">Lesson content coming soon</p>
+                <p className="text-xs text-muted-foreground/60 mt-1">Check back later</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {nextLesson && (
+          <div className="flex-shrink-0 border-t border-border bg-muted/30 px-5 py-4">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Up Next</p>
+            <button
+              onClick={() => onOpen(nextLesson)}
+              className="w-full flex items-center gap-3 p-3 rounded-xl border border-border bg-background hover:bg-muted/50 hover:border-border/60 transition-all text-left group">
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold text-foreground truncate">{nextLesson.title}</p>
+                <p className="text-[10px] text-muted-foreground">{nextLesson.category} · {nextLesson.read_time_min} min</p>
+              </div>
+              <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0"/>
+            </button>
+          </div>
+        )}
+      </motion.div>
+    </div>
   );
 }
 
