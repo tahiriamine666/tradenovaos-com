@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import {
   Search, BookOpen, Clock, Bookmark, BookmarkCheck, CheckCircle2,
   Sparkles, ChevronRight, Play, Lock, Flame, Trophy,
-  RefreshCw, RotateCcw, ChevronDown, Zap, Filter,
+  RefreshCw, RotateCcw, ChevronDown, Zap, Filter, X,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
