@@ -452,6 +452,16 @@ export default function LearningHub() {
   const [activeCat,  setActiveCat]  = useState('');
   const [filterDiff, setFilterDiff] = useState('');
   const [showMore,   setShowMore]   = useState(10);
+  const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
+  const [lessonLoading,  setLessonLoading]  = useState(false);
+
+  const openLesson = async (lesson: Lesson) => {
+    setLessonLoading(true);
+    const { data } = await supabase.from('lessons').select('*').eq('id', lesson.id).single();
+    setSelectedLesson((data as Lesson) ?? lesson);
+    setLessonLoading(false);
+  };
+  const closeLesson = () => setSelectedLesson(null);
 
   const load = useCallback(async () => {
     if (!user) return;
