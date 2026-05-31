@@ -30,7 +30,7 @@ const DIFF_CLS: Record<string,string> = {
   intermediate: 'text-foreground/70 bg-muted border-border',
   advanced:     'text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-500/10 border-violet-200 dark:border-violet-500/20',
 };
-const ease = [0.22,1,0.36,1];
+const ease: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 // ── Ask backend AI (shared by all assistants) ────────────────────────────────
 async function askLessonAI(question: string): Promise<string> {
