@@ -1,19 +1,40 @@
-## Scope
-Single-file change to `src/pages/LearningHub.tsx`. Adds a slide-in lesson detail drawer per the uploaded `LESSON_DETAIL_DRAWER_PROMPT.txt` spec. No route/page added. No other file touched.
+# Learning Hub V3 — Full Replacement
 
-## Changes
+The uploaded spec replaces `src/pages/LearningHub.tsx` with a state-driven hub/lesson view. Two issues with the spec as-written must be addressed before/during implementation:
 
-1. **Imports** — add `X` to the lucide-react import (rest are already imported: `BookOpen, Lock, Bookmark, BookmarkCheck, CheckCircle2, Clock, ChevronRight, RefreshCw, Play`).
+1. **Missing DB objects.** The spec references a `learning_categories` table, three `lessons` columns (`key_takeaways`, `sections`, `quiz_questions`), and a `get_leaderboard()` RPC — none exist in the current schema.
+2. **Direct Anthropic call with no key.** `LessonAIAssistant` POSTs to `api.anthropic.com` from the browser with no Authorization header. This will fail and would expose any key if added. The project already has an `ai-learning-assistant` edge function wired to Lovable AI Gateway — we'll use that instead.
 
-2. **`LessonDetailDrawer` component** — add above `LearningHub`, exactly as in the spec (header with category/difficulty/PRO/done badges, progress bar, Complete + Save buttons, scrollable tags/description/markdown-rendered content, footer "Up Next" linking to the next lesson by `order_index` in `lessons`).
+## Step 1 — Migration
 
-3. **`LearningHub` state** — add `selectedLesson` and `lessonLoading`.
+Single migration creating the missing pieces:
 
-4. **Handlers** — add `openLesson(lesson)` that fetches the full row from `lessons` (so `content` is hydrated) and sets state; add `closeLesson()`.
+- `learning_categories` table: `id`, `name` (unique, matches `lessons.category`), `emoji`, `gradient` (tailwind class string), `description`, `order_index`, timestamps. Public-read RLS (`USING (true)`), no write policies. GRANT `SELECT` to `anon`+`authenticated`, ALL to `service_role`.
+- Add to `lessons`: `key_takeaways text[] default '{}'`, `sections jsonb default '[]'`, `quiz_questions jsonb default '[]'`.
+- `get_leaderboard()` RPC: returns top 20 from `learning_stats` joined to `profiles` → `user_id, display_name, xp_total, streak_days, level` (level = `floor(xp_total/500)+1`). `SECURITY DEFINER`, `SET search_path = public`, GRANT EXECUTE to `authenticated`.
+- Seed `learning_categories` with the distinct existing `lessons.category` values, default emoji `📚` and a neutral gradient (`from-slate-700 to-slate-500`) so the user can curate later.
 
-5. **`LessonCard` wiring** — add `onOpen` to its props interface; outer wrapper becomes clickable with `cursor-pointer` and `onClick={() => onOpen(lesson)}`; the existing Play button calls `onOpen(lesson)` with `e.stopPropagation()`. Pass `onOpen={openLesson}` where `LessonCard` is rendered. Save/Complete buttons keep their existing `stopPropagation` so they don't trigger open.
+## Step 2 — Replace `src/pages/LearningHub.tsx`
 
-6. **Render drawer + loading overlay** — at the end of `LearningHub`'s return, add the two `AnimatePresence` blocks from the spec (loading toast + `LessonDetailDrawer`), wired to `progMap`, `GRADIENT_MAP`, `toggleSave`, `toggleComplete`, and `lessons` for the "next lesson".
+Drop the file in verbatim from the spec (lines 30–end of the uploaded prompt), with these required deviations:
 
-## Not changing
-Supabase `load()`, category filtering, tabs/search/difficulty, progress/XP/stats logic, AI assistant, leaderboard, hero, any other file or route.
+- **AI assistant:** Replace the `fetch('https://api.anthropic.com/...')` block in `LessonAIAssistant.ask` with:
+  ```ts
+  const { data, error } = await supabase.functions.invoke('ai-learning-assistant', {
+    body: { question: `${ctx}\n\nInstruction: ${prompt}` }
+  });
+  setAnswer(error ? 'Connection error. Try again.' : (data?.answer ?? 'Could not get response.'));
+  ```
+  No other change to that component.
+- **Lesson select:** when loading a lesson, also select the new `key_takeaways, sections, quiz_questions` columns so the typed `Lesson` interface is satisfied.
+- Keep all other spec behavior unchanged: hub/lesson view switching, breadcrumb, sections sidebar, tabs (Lesson/Examples/Practice/Notes/Resources), progress ring, prev/next within category, save/complete buttons, XP + streak via `learning_stats`, leaderboard via `get_leaderboard()` RPC.
+
+## Step 3 — Verification
+
+- Confirm `/app` Learning Hub loads, categories render, clicking a lesson opens the detail view, Back returns to hub.
+- Confirm Save / Mark Completed persist via `lesson_progress`.
+- Confirm AI quick-action returns a response through the edge function.
+
+## Not touching
+
+Route registration, `AppLayout`, auth, any other page, the `ai-learning-assistant` edge function itself, and the `lesson_progress` / `learning_stats` tables.

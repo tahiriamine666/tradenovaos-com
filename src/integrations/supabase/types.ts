@@ -188,6 +188,39 @@ export type Database = {
         }
         Relationships: []
       }
+      learning_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          emoji: string
+          gradient: string
+          id: string
+          name: string
+          order_index: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          emoji?: string
+          gradient?: string
+          id?: string
+          name: string
+          order_index?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          emoji?: string
+          gradient?: string
+          id?: string
+          name?: string
+          order_index?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       learning_stats: {
         Row: {
           current_focus: string | null
@@ -264,8 +297,11 @@ export type Database = {
           id: string
           is_premium: boolean
           is_pro: boolean
+          key_takeaways: string[]
           order_index: number
+          quiz_questions: Json
           read_time_min: number
+          sections: Json
           slug: string
           subcategory: string | null
           tags: string[]
@@ -283,8 +319,11 @@ export type Database = {
           id?: string
           is_premium?: boolean
           is_pro?: boolean
+          key_takeaways?: string[]
           order_index?: number
+          quiz_questions?: Json
           read_time_min?: number
+          sections?: Json
           slug: string
           subcategory?: string | null
           tags?: string[]
@@ -302,8 +341,11 @@ export type Database = {
           id?: string
           is_premium?: boolean
           is_pro?: boolean
+          key_takeaways?: string[]
           order_index?: number
+          quiz_questions?: Json
           read_time_min?: number
+          sections?: Json
           slug?: string
           subcategory?: string | null
           tags?: string[]
@@ -954,6 +996,16 @@ export type Database = {
       get_admin_analytics: { Args: { days_back?: number }; Returns: Json }
       get_admin_stats: { Args: never; Returns: Json }
       get_admin_users_list: { Args: never; Returns: Json }
+      get_leaderboard: {
+        Args: never
+        Returns: {
+          display_name: string
+          level: number
+          streak_days: number
+          user_id: string
+          xp_total: number
+        }[]
+      }
       get_my_profile: { Args: never; Returns: Json }
       get_user_plan_info: { Args: never; Returns: Json }
       is_admin:
