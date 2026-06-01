@@ -289,6 +289,7 @@ export type Database = {
       }
       lessons: {
         Row: {
+          callouts: Json
           category: string
           content: string | null
           created_at: string
@@ -311,6 +312,7 @@ export type Database = {
           xp_reward: number
         }
         Insert: {
+          callouts?: Json
           category: string
           content?: string | null
           created_at?: string
@@ -333,6 +335,7 @@ export type Database = {
           xp_reward?: number
         }
         Update: {
+          callouts?: Json
           category?: string
           content?: string | null
           created_at?: string
