@@ -13,12 +13,15 @@ import { toast } from '@/hooks/use-toast';
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Category { id:string; name:string; emoji:string; gradient:string; description:string; order_index:number; }
 interface LessonSection { title:string; order:number; }
+interface Callout { type:'tip'|'warning'|'important'; title:string; text:string; }
+interface QuizQuestion { id:number; question:string; options:string[]; correct:number; explanation:string; }
 interface Lesson {
   id:string; slug:string; title:string; description:string; category:string;
   subcategory:string|null; difficulty:string; read_time_min:number; tags:string[];
   xp_reward:number; order_index:number; is_premium:boolean; is_pro:boolean;
   thumbnail_url:string|null; video_url:string|null; content:string|null;
-  key_takeaways:string[]; sections:LessonSection[]; quiz_questions:any[];
+  key_takeaways:string[]; sections:LessonSection[]; quiz_questions:QuizQuestion[];
+  callouts:Callout[];
 }
 interface Progress { lesson_id:string; progress_pct:number; completed:boolean; saved:boolean; notes:string|null; }
 interface Stats { xp_total:number; streak_days:number; hours_studied:number; current_focus:string|null; }
