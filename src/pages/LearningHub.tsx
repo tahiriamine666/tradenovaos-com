@@ -943,10 +943,10 @@ export default function LearningHub() {
       gradient={catGrad[selectedLesson.category]??'from-slate-800 to-slate-600'}
       allLessons={lessons}
       progMap={progMap}
-      catLessonsIdx={lessons.filter(l=>l.category===selectedLesson.category).findIndex(l=>l.id===selectedLesson.id)}
       onBack={backToHub}
       onComplete={toggleComplete}
       onSave={toggleSave}
+      onNavigate={openLesson}
     />
   );
 
