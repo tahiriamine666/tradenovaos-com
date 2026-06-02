@@ -7,6 +7,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import PasswordStrength, { checkPasswordStrength } from '@/components/PasswordStrength';
+import { lovable } from '@/integrations/lovable/index';
+
+async function handleGoogle() {
+  const result = await lovable.auth.signInWithOAuth('google', {
+    redirect_uri: window.location.origin + '/app',
+  });
+  if (result.error) toast.error(result.error.message ?? 'Google sign-in failed');
+}
 
 export default function Signup() {
   const [email, setEmail] = useState('');
