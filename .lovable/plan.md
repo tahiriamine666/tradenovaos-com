@@ -1,43 +1,57 @@
 ## Goal
 
-Replace **only** the `LessonPage` function in `src/pages/LearningHub.tsx` with the V2 layout from the uploaded spec (top-bar breadcrumb + actions, header card with chart thumbnail, tabbed content with rich Lesson/Examples/Practice/Notes/Resources, bottom prev/next nav, right sidebar with animated progress ring, course roadmap, AI tutor, resources). Keep the rest of the file untouched.
+Fill the 25 empty lessons with rich, trader-grade content using Lovable AI, then apply the small frontend safety fixes from the uploaded prompt so the LessonPage renders that content correctly.
 
-## Required deviations from the literal spec
+## Why the upload alone isn't enough
 
-These are necessary to compile and to keep app conventions:
-
-1. **AI call** — the spec posts directly to `api.anthropic.com` with no auth (would fail and leak any key). Replace the `askAI` fetch with the existing edge function used everywhere else in this file:
-   ```ts
-   const answer = await askLessonAI(`${ctx}\n\nInstruction: ${prompt}`);
-   setAiAnswer(answer);
-   ```
-2. **`lesson.callouts`** — spec reads this field but it doesn't exist on `Lesson` or in the DB. Add a `callouts jsonb default '[]'` column to `lessons` (migration) and add `callouts: Callout[]` to the `Lesson` interface. Existing rows get `[]` so the spec's `Array.isArray` check passes.
-3. **Prev/Next navigation** — spec leaves `onClick={() => {}}` on the bottom buttons. To make them actually work, add one new prop `onNavigate: (lesson: Lesson) => void` to `LessonPage` and pass `openLesson` from the parent. Same callback drives the Course Roadmap rows and the Related Lessons list (currently dead clicks).
-4. **Top-level imports** — add `Bookmark`-already-present check; the spec's icon list is already a subset of what's imported, plus `AnimatePresence` (already imported). No new icons needed.
-5. **New interfaces** — add `Callout` and `QuizQuestion` next to the existing types, as the spec instructs.
-
-## Migration
-
-Single migration:
-
-```sql
-ALTER TABLE public.lessons
-  ADD COLUMN IF NOT EXISTS callouts jsonb NOT NULL DEFAULT '[]'::jsonb;
-```
-
-No new tables, no policy changes, no grants needed (existing `lessons public read` policy + existing grants cover it).
+The uploaded prompt assumes Supabase already has `content`, `key_takeaways`, `callouts`, and `quiz_questions` for every lesson. The DB has 25 rows — all empty on those fields. So no matter what the frontend does, the lesson view falls back to "Content being prepared". We need to generate and write the content first.
 
 ## Steps
 
-1. Run the migration above; wait for types regen.
-2. In `src/pages/LearningHub.tsx`:
-   - Add `callouts: Callout[]` to the `Lesson` interface.
-   - Add `Callout` and `QuizQuestion` interfaces.
-   - Replace the entire `LessonPage` function (lines ~161–480) with the V2 implementation from the spec, applying the three deviations above (`askLessonAI`, `onNavigate` prop, callouts already typed).
-   - Update the single call site in `LearningHub` to pass `onNavigate={openLesson}`.
-   - Ensure the lesson select query in `load`/`openLesson` also pulls `callouts` (add to the column list).
-3. Verify in the preview: hub still loads, opening a lesson shows the new layout, all 5 tabs work, quiz submit/reset works, notes save, prev/next jumps between lessons, AI tutor returns answers via the edge function.
+### 1. Generate lesson content with Lovable AI (offline, one-time)
+
+Run a sandbox script (`code--exec` + `lovable_ai.py` skill) that:
+
+- Reads all 25 lessons (`id, slug, title, category, subcategory, difficulty, tags, read_time_min`).
+- For each lesson, calls `google/gemini-2.5-pro` via the AI Gateway with a structured tool schema that returns:
+  - `content` — markdown body (~600–1100 words) using `## headings`, `**bold**`, `- bullets`, `1. numbered`, and the spec's `| table |` syntax. Real trading detail (e.g. for "ICT Liquidity Concepts" → buy-side/sell-side liquidity, stop hunts, examples on NAS100/Gold).
+  - `key_takeaways` — 5–7 short strings.
+  - `callouts` — 2–3 items, each `{ type: 'tip'|'warning'|'important', title, text }`.
+  - `quiz_questions` — 4 items, each `{ id, question, options[4], correct, explanation }`.
+- Difficulty-aware prompt (beginner vs intermediate vs advanced).
+- Writes results to `/tmp/lessons_content.json`, then issues a single `UPDATE … FROM (VALUES …)` via the insert tool to populate all 25 rows in one shot.
+- Includes a retry-on-429 with the script's built-in delay.
+
+No schema change — `content`, `key_takeaways`, `callouts`, `quiz_questions` columns already exist.
+
+### 2. Frontend safety fixes in `src/pages/LearningHub.tsx`
+
+Apply the uploaded prompt's FIX 1–3 (FIX 4 — the full LessonPage rewrite — is already in place from the previous turn, so skip it):
+
+- **FIX 1** — replace `supabase.from('lessons').select('*')` (line 854) with an explicit column list that includes `content, key_takeaways, sections, quiz_questions, callouts`. (Currently `select('*')` works, but being explicit guards against future schema drift and matches the spec.)
+- **FIX 2** — change `openLesson` (line 932) to be `async` and re-fetch the full lesson by id from Supabase before navigating, so a freshly updated row never shows stale list data:
+  ```ts
+  const openLesson = async (l: Lesson) => {
+    const { data } = await supabase.from('lessons').select('*').eq('id', l.id).single();
+    setSelectedLesson((data as Lesson) ?? l);
+    setView('lesson');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  ```
+  Update the two call sites that don't await it (Continue button, related-lessons click) — fine to leave unawaited; React state still updates.
+- **FIX 3** — `Lesson` interface and `Callout`/`QuizQuestion` types are already present from prior work; just verify and leave them.
+
+### 3. Verify
+
+- `psql` check: all 25 lessons now have non-empty `content`, ≥1 callout, ≥4 quiz questions, ≥5 takeaways.
+- Preview: open 2–3 lessons across categories — content renders, callouts inject around H2 #2 and #4, takeaways grid shows, quiz tab functional.
 
 ## Not touching
 
-`GradientThumb`, `MarkdownContent`, `LessonAIAssistant`, `HubAI`, the main `LearningHub` hub view, data loading (`load`, `upsertProg`, `toggleSave`, `toggleComplete`), auth, routes, or any other page.
+Hub view, sidebar, leaderboard, AI tutor edge function, auth, routes, schema, RLS, or any other page. No new migration.
+
+## Technical notes
+
+- Script uses the bundled `lovable_ai.py` (copy from `knowledge://skill/ai-gateway/scripts/lovable_ai.py` to `/tmp/`), called per-lesson with `--schema` for structured JSON output.
+- ~25 sequential calls @ ~1s delay ≈ 1–2 min. Output JSON is then merged into a single `UPDATE public.lessons SET … FROM (VALUES …) AS v(id, content, key_takeaways, callouts, quiz_questions) WHERE lessons.id = v.id::uuid;` via the data-change tool.
+- `key_takeaways` is `text[]` — pass as Postgres array literal. `callouts` and `quiz_questions` are `jsonb` — pass as JSON strings cast to jsonb.
