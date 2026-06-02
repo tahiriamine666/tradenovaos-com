@@ -100,6 +100,11 @@ export default function Login() {
               {loading ? 'Signing in…' : 'Sign in'}
             </Button>
           </form>
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
+            <div className="relative flex justify-center text-xs"><span className="bg-background px-2 text-muted-foreground">OR</span></div>
+          </div>
+          <GoogleButton label="Continue with Google" />
           <p className="text-center text-sm text-muted-foreground mt-6">
             Don't have an account?{' '}
             <Link to="/signup" className="text-primary hover:underline font-medium">
