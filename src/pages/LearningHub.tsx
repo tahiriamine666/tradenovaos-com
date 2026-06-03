@@ -6,9 +6,10 @@ import {
   Search, Clock, Bookmark, BookmarkCheck, CheckCircle2,
   Sparkles, ChevronRight, ChevronLeft, Play, Lock, Flame,
   Trophy, RefreshCw, RotateCcw, ChevronDown, BookOpen,
-  Check, Target, Brain, FileText, Zap, X,
+  Check, Target, Brain, FileText, Zap, X, Circle, Crown,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Category { id:string; name:string; emoji:string; gradient:string; description:string; order_index:number; }
