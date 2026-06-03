@@ -1160,38 +1160,6 @@ export default function LearningHub() {
               )}
             </div>
 
-            {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">{[1, 2, 3, 4].map(i => <div key={i} className="h-32 bg-muted/30 rounded-2xl animate-pulse" />)}</div>
-            ) : (
-              <div>
-                <h3 className="text-base font-black text-foreground mb-3">Your Course Roadmap</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {catCounts.map(cat => {
-                    const ls = lessons.filter(l => l.category === cat.name);
-                    const done = ls.filter(l => progMap[l.id]?.completed).length;
-                    const pct = ls.length ? Math.round((done / ls.length) * 100) : 0;
-                    const next = ls.find(l => !progMap[l.id]?.completed);
-                    return (
-                      <button key={cat.id} onClick={() => next && openLesson(next)}
-                        className="text-left p-4 rounded-2xl border border-border bg-card hover:border-violet-500/40 hover:shadow-sm transition-all group">
-                        <div className="flex items-start gap-3 mb-3">
-                          <span className="text-2xl">{cat.emoji}</span>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-black text-foreground">{cat.name}</p>
-                            <p className="text-[11px] text-muted-foreground">{done}/{ls.length} lessons completed</p>
-                          </div>
-                          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-violet-500 group-hover:translate-x-0.5 transition-all" />
-                        </div>
-                        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full bg-violet-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
-                        </div>
-                        <p className="text-[10px] font-bold text-muted-foreground mt-2">{pct}% complete{next ? ` · Next: ${next.title}` : ' · 🎉 All done'}</p>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <HubAI lessons={lessons} />
