@@ -827,7 +827,158 @@ function HubAI({ lessons }: { lessons:Lesson[] }) {
   );
 }
 
+// ── COURSE SIDEBAR ────────────────────────────────────────────────────────────
+function CourseSidebar({
+  categories, lessons, progMap, selectedLessonId, onSelect, search, onSearch,
+}: {
+  categories: (Category & { count: number })[];
+  lessons: Lesson[];
+  progMap: Record<string, Progress>;
+  selectedLessonId: string | null;
+  onSelect: (l: Lesson) => void;
+  search: string;
+  onSearch: (s: string) => void;
+}) {
+  const lessonsByCat = useMemo(() => {
+    const m: Record<string, Lesson[]> = {};
+    lessons.forEach(l => { (m[l.category] = m[l.category] || []).push(l); });
+    Object.values(m).forEach(arr => arr.sort((a, b) => a.order_index - b.order_index));
+    return m;
+  }, [lessons]);
+
+  const catStats = (catName: string) => {
+    const ls = lessonsByCat[catName] || [];
+    const done = ls.filter(l => progMap[l.id]?.completed).length;
+    return { total: ls.length, done, pct: ls.length ? Math.round((done / ls.length) * 100) : 0 };
+  };
+
+  const selectedCat = lessons.find(l => l.id === selectedLessonId)?.category;
+  const [open, setOpen] = useState<Record<string, boolean>>({});
+
+  // Auto-open category containing selected lesson, default first cat open
+  useEffect(() => {
+    setOpen(prev => {
+      const next = { ...prev };
+      if (selectedCat && !(selectedCat in next)) next[selectedCat] = true;
+      if (categories[0] && Object.keys(next).length === 0) next[categories[0].name] = true;
+      return next;
+    });
+  }, [selectedCat, categories]);
+
+  const filterMatch = (l: Lesson) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return l.title.toLowerCase().includes(q) || (l.tags || []).some(t => t.toLowerCase().includes(q));
+  };
+
+  return (
+    <aside className="w-72 flex-shrink-0 hidden lg:flex flex-col rounded-2xl border border-border bg-card overflow-hidden self-start sticky top-4 max-h-[calc(100vh-2rem)]">
+      <div className="p-3 border-b border-border">
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/50 pointer-events-none" />
+          <input
+            value={search}
+            onChange={e => onSearch(e.target.value)}
+            placeholder="Search lessons..."
+            className="w-full pl-8 pr-3 py-2 text-xs bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-violet-500/40"
+          />
+        </div>
+        <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mt-3 px-1">Categories</p>
+      </div>
+
+      <div className="flex-1 overflow-y-auto py-1">
+        {categories.map(cat => {
+          const ls = (lessonsByCat[cat.name] || []).filter(filterMatch);
+          const stats = catStats(cat.name);
+          const isOpen = !!open[cat.name] || (!!search.trim() && ls.length > 0);
+          const hasSelected = ls.some(l => l.id === selectedLessonId);
+
+          return (
+            <div key={cat.id} className="px-2">
+              <button
+                onClick={() => setOpen(o => ({ ...o, [cat.name]: !isOpen }))}
+                className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left transition-colors ${
+                  hasSelected ? 'bg-violet-500/10 text-violet-600 dark:text-violet-400' : 'hover:bg-muted text-foreground'
+                }`}
+              >
+                <ChevronRight className={`h-3.5 w-3.5 transition-transform flex-shrink-0 ${isOpen ? 'rotate-90' : ''} ${hasSelected ? 'text-violet-500' : 'text-muted-foreground'}`} />
+                <span className="text-base flex-shrink-0">{cat.emoji}</span>
+                <span className="text-xs font-bold flex-1 truncate">{cat.name}</span>
+                <span className="text-[9px] font-bold text-muted-foreground flex-shrink-0">{stats.done}/{stats.total}</span>
+              </button>
+
+              {stats.total > 0 && (
+                <div className="mx-2.5 mb-1 h-0.5 bg-muted rounded-full overflow-hidden">
+                  <div className="h-full bg-violet-500 rounded-full transition-all" style={{ width: `${stats.pct}%` }} />
+                </div>
+              )}
+
+              <AnimatePresence initial={false}>
+                {isOpen && ls.length > 0 && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.18, ease }}
+                    className="overflow-hidden"
+                  >
+                    <div className="ml-3 pl-3 border-l border-border my-1 space-y-0.5">
+                      {ls.map(l => {
+                        const p = progMap[l.id];
+                        const done = p?.completed ?? false;
+                        const inProg = !done && (p?.progress_pct ?? 0) > 0;
+                        const locked = l.is_premium || l.is_pro;
+                        const active = l.id === selectedLessonId;
+                        return (
+                          <button
+                            key={l.id}
+                            onClick={() => onSelect(l)}
+                            className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-md text-left text-xs transition-colors group ${
+                              active
+                                ? 'bg-violet-600 text-white font-bold'
+                                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                            }`}
+                          >
+                            <span className="flex-1 truncate leading-tight">{l.title}</span>
+                            <span className="flex-shrink-0">
+                              {locked ? (
+                                <Lock className={`h-3 w-3 ${active ? 'text-white/80' : 'text-amber-500'}`} />
+                              ) : done ? (
+                                <CheckCircle2 className={`h-3.5 w-3.5 ${active ? 'text-white' : 'text-emerald-500'}`} />
+                              ) : inProg ? (
+                                <div className={`h-2.5 w-2.5 rounded-full ${active ? 'bg-white' : 'bg-violet-500'} animate-pulse`} />
+                              ) : (
+                                <Circle className={`h-3 w-3 ${active ? 'text-white/70' : 'text-muted-foreground/40'}`} />
+                              )}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="p-3 border-t border-border bg-gradient-to-br from-violet-500/10 to-violet-600/5">
+        <div className="flex items-center gap-2 mb-1.5">
+          <Crown className="h-3.5 w-3.5 text-violet-500" />
+          <p className="text-xs font-black text-foreground">Upgrade to Pro</p>
+        </div>
+        <p className="text-[10px] text-muted-foreground mb-2 leading-snug">Unlock all courses, AI tutor, and more.</p>
+        <button className="w-full bg-violet-600 hover:bg-violet-500 text-white text-[10px] font-black py-2 rounded-lg transition-colors">
+          Start 7-day free trial
+        </button>
+      </div>
+    </aside>
+  );
+}
+
 // ── MAIN COMPONENT ────────────────────────────────────────────────────────────
+
 export default function LearningHub() {
   const { user } = useAuth();
 
