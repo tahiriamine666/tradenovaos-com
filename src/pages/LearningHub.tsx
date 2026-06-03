@@ -6,9 +6,10 @@ import {
   Search, Clock, Bookmark, BookmarkCheck, CheckCircle2,
   Sparkles, ChevronRight, ChevronLeft, Play, Lock, Flame,
   Trophy, RefreshCw, RotateCcw, ChevronDown, BookOpen,
-  Check, Target, Brain, FileText, Zap, X,
+  Check, Target, Brain, FileText, Zap, X, Circle, Crown,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface Category { id:string; name:string; emoji:string; gradient:string; description:string; order_index:number; }
@@ -826,7 +827,158 @@ function HubAI({ lessons }: { lessons:Lesson[] }) {
   );
 }
 
+// ── COURSE SIDEBAR ────────────────────────────────────────────────────────────
+function CourseSidebar({
+  categories, lessons, progMap, selectedLessonId, onSelect, search, onSearch,
+}: {
+  categories: (Category & { count: number })[];
+  lessons: Lesson[];
+  progMap: Record<string, Progress>;
+  selectedLessonId: string | null;
+  onSelect: (l: Lesson) => void;
+  search: string;
+  onSearch: (s: string) => void;
+}) {
+  const lessonsByCat = useMemo(() => {
+    const m: Record<string, Lesson[]> = {};
+    lessons.forEach(l => { (m[l.category] = m[l.category] || []).push(l); });
+    Object.values(m).forEach(arr => arr.sort((a, b) => a.order_index - b.order_index));
+    return m;
+  }, [lessons]);
+
+  const catStats = (catName: string) => {
+    const ls = lessonsByCat[catName] || [];
+    const done = ls.filter(l => progMap[l.id]?.completed).length;
+    return { total: ls.length, done, pct: ls.length ? Math.round((done / ls.length) * 100) : 0 };
+  };
+
+  const selectedCat = lessons.find(l => l.id === selectedLessonId)?.category;
+  const [open, setOpen] = useState<Record<string, boolean>>({});
+
+  // Auto-open category containing selected lesson, default first cat open
+  useEffect(() => {
+    setOpen(prev => {
+      const next = { ...prev };
+      if (selectedCat && !(selectedCat in next)) next[selectedCat] = true;
+      if (categories[0] && Object.keys(next).length === 0) next[categories[0].name] = true;
+      return next;
+    });
+  }, [selectedCat, categories]);
+
+  const filterMatch = (l: Lesson) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return l.title.toLowerCase().includes(q) || (l.tags || []).some(t => t.toLowerCase().includes(q));
+  };
+
+  return (
+    <aside className="w-72 flex-shrink-0 hidden lg:flex flex-col rounded-2xl border border-border bg-card overflow-hidden self-start sticky top-4 max-h-[calc(100vh-2rem)]">
+      <div className="p-3 border-b border-border">
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground/50 pointer-events-none" />
+          <input
+            value={search}
+            onChange={e => onSearch(e.target.value)}
+            placeholder="Search lessons..."
+            className="w-full pl-8 pr-3 py-2 text-xs bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:border-violet-500/40"
+          />
+        </div>
+        <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mt-3 px-1">Categories</p>
+      </div>
+
+      <div className="flex-1 overflow-y-auto py-1">
+        {categories.map(cat => {
+          const ls = (lessonsByCat[cat.name] || []).filter(filterMatch);
+          const stats = catStats(cat.name);
+          const isOpen = !!open[cat.name] || (!!search.trim() && ls.length > 0);
+          const hasSelected = ls.some(l => l.id === selectedLessonId);
+
+          return (
+            <div key={cat.id} className="px-2">
+              <button
+                onClick={() => setOpen(o => ({ ...o, [cat.name]: !isOpen }))}
+                className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left transition-colors ${
+                  hasSelected ? 'bg-violet-500/10 text-violet-600 dark:text-violet-400' : 'hover:bg-muted text-foreground'
+                }`}
+              >
+                <ChevronRight className={`h-3.5 w-3.5 transition-transform flex-shrink-0 ${isOpen ? 'rotate-90' : ''} ${hasSelected ? 'text-violet-500' : 'text-muted-foreground'}`} />
+                <span className="text-base flex-shrink-0">{cat.emoji}</span>
+                <span className="text-xs font-bold flex-1 truncate">{cat.name}</span>
+                <span className="text-[9px] font-bold text-muted-foreground flex-shrink-0">{stats.done}/{stats.total}</span>
+              </button>
+
+              {stats.total > 0 && (
+                <div className="mx-2.5 mb-1 h-0.5 bg-muted rounded-full overflow-hidden">
+                  <div className="h-full bg-violet-500 rounded-full transition-all" style={{ width: `${stats.pct}%` }} />
+                </div>
+              )}
+
+              <AnimatePresence initial={false}>
+                {isOpen && ls.length > 0 && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.18, ease }}
+                    className="overflow-hidden"
+                  >
+                    <div className="ml-3 pl-3 border-l border-border my-1 space-y-0.5">
+                      {ls.map(l => {
+                        const p = progMap[l.id];
+                        const done = p?.completed ?? false;
+                        const inProg = !done && (p?.progress_pct ?? 0) > 0;
+                        const locked = l.is_premium || l.is_pro;
+                        const active = l.id === selectedLessonId;
+                        return (
+                          <button
+                            key={l.id}
+                            onClick={() => onSelect(l)}
+                            className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-md text-left text-xs transition-colors group ${
+                              active
+                                ? 'bg-violet-600 text-white font-bold'
+                                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                            }`}
+                          >
+                            <span className="flex-1 truncate leading-tight">{l.title}</span>
+                            <span className="flex-shrink-0">
+                              {locked ? (
+                                <Lock className={`h-3 w-3 ${active ? 'text-white/80' : 'text-amber-500'}`} />
+                              ) : done ? (
+                                <CheckCircle2 className={`h-3.5 w-3.5 ${active ? 'text-white' : 'text-emerald-500'}`} />
+                              ) : inProg ? (
+                                <div className={`h-2.5 w-2.5 rounded-full ${active ? 'bg-white' : 'bg-violet-500'} animate-pulse`} />
+                              ) : (
+                                <Circle className={`h-3 w-3 ${active ? 'text-white/70' : 'text-muted-foreground/40'}`} />
+                              )}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="p-3 border-t border-border bg-gradient-to-br from-violet-500/10 to-violet-600/5">
+        <div className="flex items-center gap-2 mb-1.5">
+          <Crown className="h-3.5 w-3.5 text-violet-500" />
+          <p className="text-xs font-black text-foreground">Upgrade to Pro</p>
+        </div>
+        <p className="text-[10px] text-muted-foreground mb-2 leading-snug">Unlock all courses, AI tutor, and more.</p>
+        <button className="w-full bg-violet-600 hover:bg-violet-500 text-white text-[10px] font-black py-2 rounded-lg transition-colors">
+          Start 7-day free trial
+        </button>
+      </div>
+    </aside>
+  );
+}
+
 // ── MAIN COMPONENT ────────────────────────────────────────────────────────────
+
 export default function LearningHub() {
   const { user } = useAuth();
 
@@ -936,246 +1088,137 @@ export default function LearningHub() {
   };
   const backToHub=()=>{ setView('hub'); setSelectedLesson(null); };
 
-  if(view==='lesson'&&selectedLesson) return(
-    <LessonPage
-      lesson={selectedLesson}
-      progress={progMap[selectedLesson.id]}
-      gradient={catGrad[selectedLesson.category]??'from-slate-800 to-slate-600'}
-      allLessons={lessons}
+  const sidebar = (
+    <CourseSidebar
+      categories={catCounts}
+      lessons={lessons}
       progMap={progMap}
-      onBack={backToHub}
-      onComplete={toggleComplete}
-      onSave={toggleSave}
-      onNavigate={openLesson}
+      selectedLessonId={selectedLesson?.id ?? null}
+      onSelect={openLesson}
+      search={search}
+      onSearch={setSearch}
     />
   );
 
-  return(
-    <motion.div initial={{opacity:0}} animate={{opacity:1}} className="space-y-6">
+  return (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-5 items-start">
+      {sidebar}
 
-      <div className="rounded-3xl border border-border bg-card overflow-hidden">
-        <div className="flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-border">
-          <div className="flex-1 p-6">
-            <p className="text-sm text-muted-foreground mb-0.5">Welcome back,</p>
-            <h2 className="text-2xl font-black text-foreground mb-1">{user?.email?.split('@')[0]??'Trader'} 👋</h2>
-            <p className="text-xs text-muted-foreground mb-4">Keep learning, keep growing.</p>
-            {stats.streak_days>0&&(
-              <div className="inline-flex items-center gap-1.5 bg-violet-100 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/20 text-violet-700 dark:text-violet-400 rounded-full px-3 py-1.5 text-xs font-black">
-                <Flame className="h-3.5 w-3.5"/> {stats.streak_days} DAY STREAK
-              </div>
-            )}
-          </div>
-          {[
-            {label:'Courses Completed',value:`${completedCount}`,sub:`of ${lessons.length}`},
-            {label:'Hours Studied',value:`${stats.hours_studied.toFixed(1)}h`,sub:'Total'},
-            {label:'XP Points',value:`${stats.xp_total} XP`,sub:`Level ${Math.floor(stats.xp_total/200)+1}`},
-          ].map(s=>(
-            <div key={s.label} className="flex-1 p-5">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-2">{s.label}</p>
-              <p className="text-2xl font-black text-foreground">{s.value}</p>
-              <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1 font-semibold">{s.sub}</p>
-              <div className="mt-2 h-1 bg-muted rounded-full overflow-hidden">
-                <div className="h-full bg-violet-500 rounded-full" style={{width:`${Math.min(100,(completedCount/Math.max(lessons.length,1))*100)}%`}}/>
-              </div>
-            </div>
-          ))}
-        </div>
-        {nextLesson&&(
-          <div className="flex items-center gap-4 px-6 py-3.5 bg-violet-50 dark:bg-violet-500/5 border-t border-violet-200 dark:border-violet-500/15 flex-wrap">
-            <Sparkles className="h-4 w-4 text-violet-500 flex-shrink-0"/>
-            <p className="text-xs font-semibold text-violet-600 dark:text-violet-400 flex-shrink-0">AI Recommendation</p>
-            <p className="text-xs text-muted-foreground flex-shrink-0">Next lesson for you:</p>
-            <p className="text-sm font-black text-foreground flex-1 min-w-0 truncate">{nextLesson.title}</p>
-            <button onClick={()=>openLesson(nextLesson)}
-              className="flex items-center gap-1.5 bg-violet-600 hover:bg-violet-500 text-white px-4 py-2 rounded-xl text-xs font-black shadow-md shadow-violet-500/20 transition-all flex-shrink-0">
-              Continue Learning
-            </button>
-          </div>
-        )}
-      </div>
-
-      {catCounts.length>0&&(
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-base font-black text-foreground">Explore by Category</h3>
-            {activeCat&&<button onClick={()=>{setActiveCat('');setShowMore(10);}} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"><RotateCcw className="h-3 w-3"/> All</button>}
-          </div>
-          <div className="flex gap-3 overflow-x-auto pb-2">
-            {catCounts.map(cat=>(
-              <motion.button key={cat.id}
-                onClick={()=>{setActiveCat(prev=>prev===cat.name?'':cat.name);setShowMore(10);}}
-                whileHover={{scale:1.02}} whileTap={{scale:0.98}}
-                className={`flex-shrink-0 flex items-center gap-3 px-4 py-3 rounded-2xl border transition-all ${activeCat===cat.name?'bg-violet-600 border-violet-600 text-white shadow-lg shadow-violet-500/20':'bg-card border-border hover:border-border/60 hover:shadow-sm'}`}>
-                <span className="text-xl">{cat.emoji}</span>
-                <div className="text-left">
-                  <p className={`text-xs font-black whitespace-nowrap ${activeCat===cat.name?'text-white':'text-foreground'}`}>{cat.name}</p>
-                  <p className={`text-[10px] ${activeCat===cat.name?'text-white/70':'text-muted-foreground'}`}>{cat.count} lessons</p>
+      <div className="flex-1 min-w-0 space-y-6">
+        {view === 'lesson' && selectedLesson ? (
+          <LessonPage
+            lesson={selectedLesson}
+            progress={progMap[selectedLesson.id]}
+            gradient={catGrad[selectedLesson.category] ?? 'from-slate-800 to-slate-600'}
+            allLessons={lessons}
+            progMap={progMap}
+            onBack={backToHub}
+            onComplete={toggleComplete}
+            onSave={toggleSave}
+            onNavigate={openLesson}
+          />
+        ) : (
+          <>
+            <div className="rounded-3xl border border-border bg-card overflow-hidden">
+              <div className="flex flex-col sm:flex-row divide-y sm:divide-y-0 sm:divide-x divide-border">
+                <div className="flex-1 p-6">
+                  <p className="text-sm text-muted-foreground mb-0.5">Welcome back,</p>
+                  <h2 className="text-2xl font-black text-foreground mb-1">{user?.email?.split('@')[0] ?? 'Trader'} 👋</h2>
+                  <p className="text-xs text-muted-foreground mb-4">Pick a lesson from the course tree to begin.</p>
+                  {stats.streak_days > 0 && (
+                    <div className="inline-flex items-center gap-1.5 bg-violet-100 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/20 text-violet-700 dark:text-violet-400 rounded-full px-3 py-1.5 text-xs font-black">
+                      <Flame className="h-3.5 w-3.5" /> {stats.streak_days} DAY STREAK
+                    </div>
+                  )}
                 </div>
-              </motion.button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <div className="flex gap-5 items-start">
-        <div className="flex-1 min-w-0 space-y-4">
-          <div className="flex gap-1 p-1 rounded-xl bg-muted border border-border">
-            {([{id:'all',label:'All Lessons',count:lessons.length},{id:'in_progress',label:'In Progress',count:inProgCount},{id:'completed',label:'Completed',count:completedCount},{id:'saved',label:'Saved',count:savedCount}] as const).map(t=>(
-              <button key={t.id} onClick={()=>{setActiveTab(t.id);setShowMore(10);}}
-                className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${activeTab===t.id?'bg-background text-foreground shadow-sm':'text-muted-foreground hover:text-foreground hover:bg-background/60'}`}>
-                {t.label}
-                {t.count>0&&<span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full ${activeTab===t.id?'bg-violet-600 text-white':'bg-muted-foreground/15 text-muted-foreground'}`}>{t.count}</span>}
-              </button>
-            ))}
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="relative flex-1 min-w-[180px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 pointer-events-none"/>
-              <input value={search} onChange={e=>{setSearch(e.target.value);setShowMore(10);}}
-                placeholder="Search lessons, concepts, tags..."
-                className="w-full pl-9 pr-4 py-2 bg-background border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-violet-500/40"/>
-            </div>
-            <select value={filterDiff} onChange={e=>{setFilterDiff(e.target.value);setShowMore(10);}}
-              className="text-xs text-muted-foreground bg-background border border-border rounded-xl px-3 py-2 focus:outline-none cursor-pointer">
-              <option value="">All Levels</option>
-              <option value="beginner">Beginner</option>
-              <option value="intermediate">Intermediate</option>
-              <option value="advanced">Advanced</option>
-            </select>
-            {hasFilters&&(
-              <button onClick={()=>{setSearch('');setActiveCat('');setFilterDiff('');setActiveTab('all');setShowMore(10);}}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border text-muted-foreground text-xs font-semibold hover:bg-muted transition-colors">
-                <RotateCcw className="h-3.5 w-3.5"/> Reset
-              </button>
-            )}
-            <span className="text-xs text-muted-foreground ml-auto">{filtered.length} lessons</span>
-          </div>
-          {loading?(
-            <div className="space-y-3">{[1,2,3,4].map(i=><div key={i} className="h-24 bg-muted/30 rounded-2xl animate-pulse"/>)}</div>
-          ):lessons.length===0?(
-            <div className="flex flex-col items-center justify-center py-20 text-center rounded-2xl border border-dashed border-border">
-              <BookOpen className="h-10 w-10 text-muted-foreground/20 mb-3"/>
-              <p className="text-sm font-bold text-foreground mb-1">No lessons available</p>
-              <p className="text-xs text-muted-foreground">Content will appear here once added by admin.</p>
-            </div>
-          ):filtered.length===0&&activeCat?(
-            <div className="flex flex-col items-center justify-center py-16 text-center rounded-2xl border border-dashed border-border bg-muted/20">
-              <span className="text-4xl mb-3">{catCounts.find(c=>c.name===activeCat)?.emoji??'📚'}</span>
-              <p className="text-sm font-bold text-foreground mb-1">No lessons found in "{activeCat}" yet</p>
-              <p className="text-xs text-muted-foreground mb-4">More content being added soon.</p>
-              <button onClick={()=>{setActiveCat('');setShowMore(10);}} className="text-xs text-violet-500 dark:text-violet-400 hover:opacity-70 transition-opacity border border-violet-200 dark:border-violet-500/20 px-3 py-1.5 rounded-lg">← View all lessons</button>
-            </div>
-          ):filtered.length===0?(
-            <div className="flex flex-col items-center justify-center py-16 text-center rounded-2xl border border-dashed border-border bg-muted/20">
-              <Search className="h-8 w-8 text-muted-foreground/20 mb-3"/>
-              <p className="text-sm font-bold text-foreground mb-1">No lessons match</p>
-              <button onClick={()=>{setSearch('');setActiveCat('');setFilterDiff('');setActiveTab('all');setShowMore(10);}} className="mt-3 text-xs text-violet-500 dark:text-violet-400 hover:opacity-70 transition-opacity">Clear filters →</button>
-            </div>
-          ):(
-            <>
-              <div className="space-y-3">
-                {filtered.slice(0,showMore).map((lesson,i)=>{
-                  const prog=progMap[lesson.id];
-                  const done=prog?.completed??false;
-                  const saved=prog?.saved??false;
-                  const pct=prog?.progress_pct??0;
-                  const isPro=lesson.is_premium||lesson.is_pro;
-                  return(
-                    <motion.div key={lesson.id} initial={{opacity:0,y:6}} animate={{opacity:1,y:0}} transition={{delay:i*0.025,ease}}
-                      onClick={()=>openLesson(lesson)}
-                      className="group flex items-start gap-3.5 p-4 rounded-2xl border border-border bg-card hover:border-border/60 hover:shadow-sm transition-all cursor-pointer">
-                      <GradientThumb lesson={lesson} gradient={catGrad[lesson.category]??'from-slate-800 to-slate-600'}/>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start gap-2">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap mb-1">
-                              <h3 className={`text-sm font-black ${done?'text-muted-foreground line-through':'text-foreground'}`}>{lesson.title}</h3>
-                              {isPro&&<span className="flex items-center gap-0.5 text-[9px] font-black bg-violet-100 dark:bg-violet-500/15 text-violet-600 dark:text-violet-400 border border-violet-200 dark:border-violet-500/20 px-1.5 py-0.5 rounded-full flex-shrink-0"><Lock className="h-2.5 w-2.5"/> PRO</span>}
-                              {done&&<CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0"/>}
-                            </div>
-                            <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{lesson.description}</p>
-                            <div className="flex items-center gap-2 flex-wrap">
-                              {(lesson.tags??[]).slice(0,3).map(t=><span key={t} className="text-[9px] font-medium px-1.5 py-0.5 rounded-md bg-muted border border-border text-muted-foreground">{t}</span>)}
-                              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border capitalize ${DIFF_CLS[lesson.difficulty]??'bg-muted border-border text-muted-foreground'}`}>{lesson.difficulty}</span>
-                              <span className="flex items-center gap-1 text-[10px] text-muted-foreground"><Clock className="h-3 w-3"/> {lesson.read_time_min} min</span>
-                            </div>
-                          </div>
-                          <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button onClick={e=>{e.stopPropagation();toggleSave(lesson.id);}} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
-                                {saved?<BookmarkCheck className="h-3.5 w-3.5 text-violet-500"/>:<Bookmark className="h-3.5 w-3.5"/>}
-                              </button>
-                              <button onClick={e=>{e.stopPropagation();toggleComplete(lesson.id);}} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-                                <CheckCircle2 className={`h-3.5 w-3.5 ${done?'text-emerald-500':'text-muted-foreground'}`}/>
-                              </button>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className={`text-xs font-black ${done?'text-emerald-600 dark:text-emerald-400':pct>0?'text-foreground':'text-muted-foreground/30'}`}>{pct}%</span>
-                              {done?(
-                                <div className="w-6 h-6 rounded-full bg-emerald-100 dark:bg-emerald-500/15 flex items-center justify-center"><CheckCircle2 className="h-3.5 w-3.5 text-emerald-500"/></div>
-                              ):(
-                                <div className="w-6 h-6 rounded-full border-2 border-border flex items-center justify-center"><Play className="h-3 w-3 text-muted-foreground/30 ml-0.5"/></div>
-                              )}
-                            </div>
-                            <span className="text-[9px] font-bold text-violet-500 dark:text-violet-400">+{lesson.xp_reward} XP</span>
-                          </div>
-                        </div>
-                        {pct>0&&<div className="mt-2 h-1 bg-muted rounded-full overflow-hidden"><motion.div initial={{width:0}} animate={{width:`${pct}%`}} transition={{duration:0.6,ease}} className={`h-full rounded-full ${done?'bg-emerald-500':'bg-violet-500'}`}/></div>}
-                      </div>
-                    </motion.div>
-                  );
-                })}
+                {[
+                  { label: 'Courses Completed', value: `${completedCount}`, sub: `of ${lessons.length}` },
+                  { label: 'Hours Studied', value: `${stats.hours_studied.toFixed(1)}h`, sub: 'Total' },
+                  { label: 'XP Points', value: `${stats.xp_total} XP`, sub: `Level ${Math.floor(stats.xp_total / 200) + 1}` },
+                ].map(s => (
+                  <div key={s.label} className="flex-1 p-5">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold mb-2">{s.label}</p>
+                    <p className="text-2xl font-black text-foreground">{s.value}</p>
+                    <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1 font-semibold">{s.sub}</p>
+                    <div className="mt-2 h-1 bg-muted rounded-full overflow-hidden">
+                      <div className="h-full bg-violet-500 rounded-full" style={{ width: `${Math.min(100, (completedCount / Math.max(lessons.length, 1)) * 100)}%` }} />
+                    </div>
+                  </div>
+                ))}
               </div>
-              {filtered.length>showMore&&(
-                <div className="text-center pt-2">
-                  <button onClick={()=>setShowMore(n=>n+10)} className="flex items-center gap-2 mx-auto px-6 py-3 rounded-xl border border-border text-muted-foreground text-sm font-semibold hover:bg-muted hover:text-foreground transition-all">
-                    Load more lessons <ChevronDown className="h-4 w-4"/>
+              {nextLesson && (
+                <div className="flex items-center gap-4 px-6 py-3.5 bg-violet-50 dark:bg-violet-500/5 border-t border-violet-200 dark:border-violet-500/15 flex-wrap">
+                  <Sparkles className="h-4 w-4 text-violet-500 flex-shrink-0" />
+                  <p className="text-xs font-semibold text-violet-600 dark:text-violet-400 flex-shrink-0">AI Recommendation</p>
+                  <p className="text-xs text-muted-foreground flex-shrink-0">Next lesson for you:</p>
+                  <p className="text-sm font-black text-foreground flex-1 min-w-0 truncate">{nextLesson.title}</p>
+                  <button onClick={() => openLesson(nextLesson)}
+                    className="flex items-center gap-1.5 bg-violet-600 hover:bg-violet-500 text-white px-4 py-2 rounded-xl text-xs font-black shadow-md shadow-violet-500/20 transition-all flex-shrink-0">
+                    Continue Learning
                   </button>
                 </div>
               )}
-            </>
-          )}
-        </div>
+            </div>
 
-        <div className="w-72 flex-shrink-0 space-y-4 hidden lg:block">
-          <HubAI lessons={lessons}/>
-          <div className="rounded-2xl border border-border bg-card p-4">
-            <p className="text-xs font-black text-foreground mb-4">Your Progress</p>
-            <div className="space-y-3">
-              {[{label:'Lessons Done',val:completedCount,total:Math.max(lessons.length,1),color:'bg-emerald-500'},{label:'XP Earned',val:stats.xp_total,total:Math.max(stats.xp_total,500),color:'bg-violet-500',suffix:' XP'}].map(s=>(
-                <div key={s.label}>
-                  <div className="flex justify-between text-[10px] mb-1"><span className="text-muted-foreground">{s.label}</span><span className="font-bold text-foreground">{s.val}{(s as any).suffix??''}</span></div>
-                  <div className="h-1.5 bg-muted rounded-full overflow-hidden"><motion.div initial={{width:0}} animate={{width:`${Math.min(100,(s.val/s.total)*100)}%`}} transition={{duration:0.8,ease}} className={`h-full rounded-full ${s.color}`}/></div>
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">{[1, 2, 3, 4].map(i => <div key={i} className="h-32 bg-muted/30 rounded-2xl animate-pulse" />)}</div>
+            ) : (
+              <div>
+                <h3 className="text-base font-black text-foreground mb-3">Your Course Roadmap</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {catCounts.map(cat => {
+                    const ls = lessons.filter(l => l.category === cat.name);
+                    const done = ls.filter(l => progMap[l.id]?.completed).length;
+                    const pct = ls.length ? Math.round((done / ls.length) * 100) : 0;
+                    const next = ls.find(l => !progMap[l.id]?.completed);
+                    return (
+                      <button key={cat.id} onClick={() => next && openLesson(next)}
+                        className="text-left p-4 rounded-2xl border border-border bg-card hover:border-violet-500/40 hover:shadow-sm transition-all group">
+                        <div className="flex items-start gap-3 mb-3">
+                          <span className="text-2xl">{cat.emoji}</span>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-black text-foreground">{cat.name}</p>
+                            <p className="text-[11px] text-muted-foreground">{done}/{ls.length} lessons completed</p>
+                          </div>
+                          <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-violet-500 group-hover:translate-x-0.5 transition-all" />
+                        </div>
+                        <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                          <div className="h-full bg-violet-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
+                        </div>
+                        <p className="text-[10px] font-bold text-muted-foreground mt-2">{pct}% complete{next ? ` · Next: ${next.title}` : ' · 🎉 All done'}</p>
+                      </button>
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
-            <div className="mt-4 pt-3 border-t border-border">
-              <div className="flex justify-between text-[10px] mb-1.5"><span className="font-bold text-muted-foreground">Weekly Goal</span><span className="text-muted-foreground">{Math.round(stats.hours_studied*60)} / 300 min</span></div>
-              <div className="h-2 bg-muted rounded-full overflow-hidden"><motion.div initial={{width:0}} animate={{width:`${Math.min(100,(stats.hours_studied*60/300)*100)}%`}} transition={{duration:0.8}} className="h-full bg-emerald-500 rounded-full"/></div>
-              <p className="text-[9px] text-emerald-600 dark:text-emerald-400 mt-1 font-semibold">{Math.round((stats.hours_studied*60/300)*100)}%</p>
-            </div>
-          </div>
-          <div className="rounded-2xl border border-border bg-card p-4">
-            <p className="text-xs font-black text-foreground mb-3 flex items-center gap-1.5"><Trophy className="h-3.5 w-3.5 text-violet-500"/> Top Students</p>
-            {leaderboard.length===0?(
-              <div className="text-center py-4"><p className="text-xs text-muted-foreground">Complete lessons to appear here</p></div>
-            ):(
-              <div className="space-y-2.5">
-                {leaderboard.map((e,i)=>{const isYou=e.user_id===user?.id;return(
-                  <div key={e.user_id} className="flex items-center gap-3">
-                    <span className={`text-sm font-black w-4 flex-shrink-0 ${i===0?'text-violet-500':'text-muted-foreground/50'}`}>{i+1}</span>
-                    <div className={`w-7 h-7 rounded-full border flex items-center justify-center flex-shrink-0 ${isYou?'bg-emerald-100 dark:bg-emerald-500/15 border-emerald-200 dark:border-emerald-500/20':'bg-muted border-border'}`}>
-                      <span className={`text-[10px] font-black ${isYou?'text-emerald-600 dark:text-emerald-400':'text-foreground'}`}>{isYou?'You':e.display_name.slice(0,2).toUpperCase()}</span>
-                    </div>
-                    <div className="flex-1 min-w-0"><p className={`text-xs font-bold truncate ${isYou?'text-emerald-600 dark:text-emerald-400':'text-foreground'}`}>{isYou?'You':e.display_name}</p><p className="text-[9px] text-muted-foreground">Level {e.level}</p></div>
-                    <span className={`text-[10px] font-black flex-shrink-0 ${isYou?'text-emerald-600 dark:text-emerald-400':'text-violet-500 dark:text-violet-400'}`}>{e.xp_total.toLocaleString()} XP</span>
-                  </div>
-                );})}
               </div>
             )}
-          </div>
-        </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <HubAI lessons={lessons} />
+              <div className="rounded-2xl border border-border bg-card p-4">
+                <p className="text-xs font-black text-foreground mb-3 flex items-center gap-1.5"><Trophy className="h-3.5 w-3.5 text-violet-500" /> Top Students</p>
+                {leaderboard.length === 0 ? (
+                  <div className="text-center py-4"><p className="text-xs text-muted-foreground">Complete lessons to appear here</p></div>
+                ) : (
+                  <div className="space-y-2.5">
+                    {leaderboard.map((e, i) => { const isYou = e.user_id === user?.id; return (
+                      <div key={e.user_id} className="flex items-center gap-3">
+                        <span className={`text-sm font-black w-4 flex-shrink-0 ${i === 0 ? 'text-violet-500' : 'text-muted-foreground/50'}`}>{i + 1}</span>
+                        <div className={`w-7 h-7 rounded-full border flex items-center justify-center flex-shrink-0 ${isYou ? 'bg-emerald-100 dark:bg-emerald-500/15 border-emerald-200 dark:border-emerald-500/20' : 'bg-muted border-border'}`}>
+                          <span className={`text-[10px] font-black ${isYou ? 'text-emerald-600 dark:text-emerald-400' : 'text-foreground'}`}>{isYou ? 'You' : e.display_name.slice(0, 2).toUpperCase()}</span>
+                        </div>
+                        <div className="flex-1 min-w-0"><p className={`text-xs font-bold truncate ${isYou ? 'text-emerald-600 dark:text-emerald-400' : 'text-foreground'}`}>{isYou ? 'You' : e.display_name}</p><p className="text-[9px] text-muted-foreground">Level {e.level}</p></div>
+                        <span className={`text-[10px] font-black flex-shrink-0 ${isYou ? 'text-emerald-600 dark:text-emerald-400' : 'text-violet-500 dark:text-violet-400'}`}>{e.xp_total.toLocaleString()} XP</span>
+                      </div>
+                    ); })}
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </motion.div>
   );
 }
+
