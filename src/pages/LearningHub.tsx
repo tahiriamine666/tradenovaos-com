@@ -674,12 +674,6 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
     advanced:     'bg-violet-100 dark:bg-violet-500/15 text-violet-700 dark:text-violet-400 border-violet-200 dark:border-violet-500/25',
   };
 
-  const calloutCfg = (type: string) => ({
-    tip:       { bg:'bg-amber-50 dark:bg-amber-500/8',    border:'border-amber-200 dark:border-amber-500/20',    icon:'⭐', color:'text-amber-700 dark:text-amber-400' },
-    warning:   { bg:'bg-red-50 dark:bg-red-500/8',        border:'border-red-200 dark:border-red-500/20',        icon:'⚠️', color:'text-red-700 dark:text-red-400' },
-    important: { bg:'bg-violet-50 dark:bg-violet-500/8',  border:'border-violet-200 dark:border-violet-500/20',  icon:'📌', color:'text-violet-700 dark:text-violet-400' },
-  }[type] ?? { bg:'bg-muted', border:'border-border', icon:'ℹ️', color:'text-foreground' });
-
   const saveNotes = async () => {
     if (!user) return;
     setSavingNotes(true);
@@ -702,52 +696,6 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
     finally { setAiLoading(false); }
   };
 
-  const renderContent = () => {
-    if (!lesson.content) return (
-      <div className="flex flex-col items-center py-12 text-center rounded-2xl border border-dashed border-border bg-muted/20">
-        <BookOpen className="h-10 w-10 text-muted-foreground/20 mb-3"/>
-        <p className="text-sm text-muted-foreground">Content coming soon for this lesson</p>
-      </div>
-    );
-    const lines = lesson.content.split('\n');
-    let cIdx = 0;
-    const els: React.ReactNode[] = [];
-    lines.forEach((line, i) => {
-      if (line.startsWith('## ') && cIdx < callouts.length && i > 2) {
-        const c = callouts[cIdx++];
-        const s = calloutCfg(c.type);
-        els.push(
-          <div key={`c${i}`} className={`rounded-2xl border ${s.border} ${s.bg} px-5 py-4 my-1 flex items-start gap-3`}>
-            <span className="text-lg flex-shrink-0 mt-0.5">{s.icon}</span>
-            <div>
-              <p className={`text-sm font-bold ${s.color} mb-0.5`}>{c.title}</p>
-              <p className={`text-sm leading-relaxed ${s.color} opacity-90`}>{c.text}</p>
-            </div>
-          </div>
-        );
-      }
-      if (line.startsWith('## '))
-        els.push(<h3 key={i} className="text-lg font-black text-foreground mt-7 mb-2 first:mt-0 pb-2 border-b border-border">{line.replace('## ','')}</h3>);
-      else if (line.startsWith('**') && line.endsWith('**') && !line.slice(2,-2).includes('**'))
-        els.push(<p key={i} className="text-sm font-bold text-foreground mt-4">{line.slice(2,-2)}</p>);
-      else if (line.startsWith('- '))
-        els.push(<div key={i} className="flex items-start gap-2.5 ml-1"><div className="w-1.5 h-1.5 rounded-full bg-violet-500 mt-2 flex-shrink-0"/><p className="text-sm text-foreground/75 leading-relaxed">{line.slice(2)}</p></div>);
-      else if (/^\d+\. /.test(line)) {
-        const num = line.split('. ')[0]; const txt = line.split('. ').slice(1).join('. ');
-        els.push(<div key={i} className="flex items-start gap-3 ml-1"><span className="text-[10px] font-black text-violet-500 dark:text-violet-400 bg-violet-100 dark:bg-violet-500/15 w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">{num}</span><p className="text-sm text-foreground/75 leading-relaxed">{txt}</p></div>);
-      } else if (line.startsWith('|') && !line.includes('---')) {
-        const cells = line.split('|').filter(c=>c.trim());
-        if (cells.length) els.push(<div key={i} className="flex border border-border rounded-xl overflow-hidden my-0.5">{cells.map((c,j)=><div key={j} className={`flex-1 px-3 py-2 text-xs ${j===0?'font-bold bg-muted/50 text-foreground':'text-foreground/70'} ${j<cells.length-1?'border-r border-border':''}`}>{c.trim()}</div>)}</div>);
-      } else if (line.trim()==='' || line.startsWith('---'))
-        els.push(<div key={i} className="h-1.5"/>);
-      else if (line.includes('**')) {
-        const parts = line.split('**');
-        els.push(<p key={i} className="text-sm text-foreground/75 leading-relaxed">{parts.map((p,j)=>j%2===1?<span key={j} className="font-bold text-foreground">{p}</span>:p)}</p>);
-      } else
-        els.push(<p key={i} className="text-sm text-foreground/75 leading-relaxed">{line}</p>);
-    });
-    return <div className="space-y-2">{els}</div>;
-  };
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-0">
