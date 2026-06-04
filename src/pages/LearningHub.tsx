@@ -161,6 +161,479 @@ function LessonAIAssistant({ lesson }: { lesson:Lesson }) {
   );
 }
 
+// ── Rich visual helpers ───────────────────────────────────────────────────────
+function CalloutBox({ type, title, text }: { type: string; title: string; text: string }) {
+  const cfg = ({
+    tip:       { bg:'bg-amber-50 dark:bg-amber-500/8',   border:'border-amber-200 dark:border-amber-500/25',   icon:'💡', color:'text-amber-700 dark:text-amber-400' },
+    warning:   { bg:'bg-red-50 dark:bg-red-500/8',       border:'border-red-200 dark:border-red-500/25',       icon:'⚠️', color:'text-red-700 dark:text-red-400' },
+    important: { bg:'bg-violet-50 dark:bg-violet-500/8', border:'border-violet-200 dark:border-violet-500/25', icon:'📌', color:'text-violet-700 dark:text-violet-400' },
+  } as Record<string, { bg:string; border:string; icon:string; color:string }>)[type] ?? { bg:'bg-muted', border:'border-border', icon:'ℹ️', color:'text-foreground' };
+  return (
+    <div className={`rounded-2xl border ${cfg.border} ${cfg.bg} px-5 py-4 flex items-start gap-3`}>
+      <span className="text-xl flex-shrink-0 mt-0.5">{cfg.icon}</span>
+      <div>
+        <p className={`text-sm font-bold ${cfg.color} mb-1`}>{title}</p>
+        <p className={`text-sm leading-relaxed ${cfg.color} opacity-85`}>{text}</p>
+      </div>
+    </div>
+  );
+}
+
+function FormulaBox({ formula, label }: { formula: string; label?: string }) {
+  return (
+    <div className="rounded-2xl border-2 border-violet-300 dark:border-violet-500/40 bg-violet-50 dark:bg-violet-500/8 p-5 text-center my-2">
+      {label && <p className="text-[10px] font-black text-violet-500 dark:text-violet-400 uppercase tracking-widest mb-2">{label}</p>}
+      <p className="text-2xl font-black text-violet-700 dark:text-violet-300 font-mono">{formula}</p>
+    </div>
+  );
+}
+
+function ComparisonCard({ leftLabel, leftItems, rightLabel, rightItems, leftColor, rightColor }: {
+  leftLabel: string; leftItems: string[]; leftColor: 'emerald'|'red';
+  rightLabel: string; rightItems: string[]; rightColor: 'emerald'|'red';
+}) {
+  const colorCls = {
+    emerald: { border:'border-emerald-200 dark:border-emerald-500/25', bg:'bg-emerald-50 dark:bg-emerald-500/8', title:'text-emerald-700 dark:text-emerald-400', dot:'bg-emerald-500' },
+    red:     { border:'border-red-200 dark:border-red-500/25',         bg:'bg-red-50 dark:bg-red-500/8',         title:'text-red-700 dark:text-red-400',         dot:'bg-red-500' },
+  };
+  const lc = colorCls[leftColor]; const rc = colorCls[rightColor];
+  return (
+    <div className="grid grid-cols-2 gap-3 my-2">
+      <div className={`rounded-2xl border ${lc.border} ${lc.bg} p-4`}>
+        <p className={`text-sm font-black ${lc.title} mb-3`}>{leftLabel}</p>
+        <div className="space-y-2">
+          {leftItems.map((item, i) => (
+            <div key={i} className="flex items-start gap-2">
+              <div className={`w-1.5 h-1.5 rounded-full ${lc.dot} mt-1.5 flex-shrink-0`}/>
+              <p className="text-xs text-foreground/75 leading-snug">{item}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className={`rounded-2xl border ${rc.border} ${rc.bg} p-4`}>
+        <p className={`text-sm font-black ${rc.title} mb-3`}>{rightLabel}</p>
+        <div className="space-y-2">
+          {rightItems.map((item, i) => (
+            <div key={i} className="flex items-start gap-2">
+              <div className={`w-1.5 h-1.5 rounded-full ${rc.dot} mt-1.5 flex-shrink-0`}/>
+              <p className="text-xs text-foreground/75 leading-snug">{item}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DataTable({ headers, rows }: { headers: string[]; rows: string[][] }) {
+  return (
+    <div className="rounded-2xl border border-border overflow-hidden my-2">
+      <table className="w-full text-xs">
+        <thead>
+          <tr className="bg-muted/60 border-b border-border">
+            {headers.map((h, i) => (
+              <th key={i} className={`px-4 py-2.5 text-left font-black text-foreground ${i > 0 ? 'text-center' : ''}`}>{h}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, ri) => (
+            <tr key={ri} className={`border-b border-border last:border-0 ${ri % 2 === 0 ? '' : 'bg-muted/20'}`}>
+              {row.map((cell, ci) => (
+                <td key={ci} className={`px-4 py-2.5 text-foreground/80 ${ci > 0 ? 'text-center font-semibold' : 'font-medium'}`}>{cell}</td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function RRVisual({ ratio, risk, reward }: { ratio: string; risk: number; reward: number }) {
+  const pct = Math.min(95, (reward / (risk + reward)) * 100);
+  return (
+    <div className="rounded-2xl border border-border bg-card p-4 my-1">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-sm font-black text-foreground">R:R {ratio}</p>
+        <span className="text-xs font-bold text-violet-500 dark:text-violet-400">Risk ${risk} → Reward ${reward}</span>
+      </div>
+      <div className="h-8 rounded-xl overflow-hidden flex">
+        <div className="bg-red-500/20 border border-red-200 dark:border-red-500/30 flex items-center justify-center"
+          style={{ width: `${100 - pct}%` }}>
+          <span className="text-[10px] font-black text-red-600 dark:text-red-400">Risk</span>
+        </div>
+        <div className="bg-emerald-500/20 border border-emerald-200 dark:border-emerald-500/30 flex items-center justify-center flex-1">
+          <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400">Reward ×{reward/risk}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ChecklistItem({ label, checked }: { label: string; checked: boolean }) {
+  return (
+    <div className="flex items-center gap-3 py-2 border-b border-border last:border-0">
+      <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${
+        checked
+          ? 'bg-emerald-100 dark:bg-emerald-500/15 border-2 border-emerald-500'
+          : 'bg-red-100 dark:bg-red-500/15 border-2 border-red-400'
+      }`}>
+        {checked
+          ? <Check className="h-3 w-3 text-emerald-600 dark:text-emerald-400" strokeWidth={3}/>
+          : <X className="h-3 w-3 text-red-600 dark:text-red-400" strokeWidth={3}/>
+        }
+      </div>
+      <p className={`text-sm ${checked ? 'text-foreground' : 'text-foreground/70'}`}>{label}</p>
+    </div>
+  );
+}
+
+function PositionSizeCalculator() {
+  const [account,  setAccount]  = React.useState('10000');
+  const [riskPct,  setRiskPct]  = React.useState('1');
+  const [stopPts,  setStopPts]  = React.useState('20');
+
+  const riskAmount = (parseFloat(account)||0) * (parseFloat(riskPct)||0) / 100;
+  const posSize    = stopPts && parseFloat(stopPts) > 0 ? riskAmount / parseFloat(stopPts) : 0;
+
+  return (
+    <div className="rounded-2xl border-2 border-violet-200 dark:border-violet-500/30 bg-gradient-to-br from-violet-50 to-violet-50/30 dark:from-violet-500/8 dark:to-violet-500/3 p-5 my-2">
+      <div className="flex items-center gap-2 mb-4">
+        <div className="w-7 h-7 rounded-xl bg-violet-600 flex items-center justify-center flex-shrink-0">
+          <Zap className="h-3.5 w-3.5 text-white"/>
+        </div>
+        <p className="text-sm font-black text-foreground">Position Size Calculator</p>
+        <span className="text-[9px] font-bold bg-violet-100 dark:bg-violet-500/15 text-violet-600 dark:text-violet-400 px-1.5 py-0.5 rounded-full border border-violet-200 dark:border-violet-500/20 ml-auto">INTERACTIVE</span>
+      </div>
+      <div className="grid grid-cols-3 gap-3 mb-4">
+        {[
+          { label:'Account Size ($)', value:account, setter:setAccount, placeholder:'10000' },
+          { label:'Risk %',           value:riskPct,  setter:setRiskPct,  placeholder:'1' },
+          { label:'Stop Distance (pts)', value:stopPts, setter:setStopPts, placeholder:'20' },
+        ].map(f => (
+          <div key={f.label}>
+            <p className="text-[10px] font-bold text-muted-foreground mb-1">{f.label}</p>
+            <input
+              type="number" value={f.value} placeholder={f.placeholder}
+              onChange={e => f.setter(e.target.value)}
+              className="w-full text-sm bg-background border border-border rounded-xl px-3 py-2 text-foreground font-mono focus:outline-none focus:border-violet-500/50"/>
+          </div>
+        ))}
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-xl bg-background border border-border p-3 text-center">
+          <p className="text-[10px] font-bold text-muted-foreground mb-1">Risk Amount</p>
+          <p className="text-xl font-black text-foreground">${riskAmount.toFixed(2)}</p>
+        </div>
+        <div className="rounded-xl bg-violet-600 p-3 text-center">
+          <p className="text-[10px] font-bold text-white/70 mb-1">Position Size</p>
+          <p className="text-xl font-black text-white">${posSize.toFixed(2)}<span className="text-sm font-medium">/pt</span></p>
+        </div>
+      </div>
+      <p className="text-[10px] text-muted-foreground text-center mt-3">
+        If stopped out, you lose exactly ${riskAmount.toFixed(2)} ({riskPct}% of account)
+      </p>
+    </div>
+  );
+}
+
+// ── Rich content renderer ─────────────────────────────────────────────────────
+function renderRichContent(lesson: Lesson, callouts: Callout[]) {
+  if (lesson.slug === 'risk-position-sizing') {
+    return (
+      <div className="space-y-8">
+        <section>
+          <h3 className="text-lg font-black text-foreground pb-2 border-b border-border mb-4">1. What is Position Sizing?</h3>
+          <p className="text-sm text-foreground/75 leading-relaxed mb-4">
+            Position sizing is the process of calculating exactly how many units, lots, or contracts to trade
+            based on a predetermined risk amount. It answers the question every trader must ask before every trade:
+            <span className="font-bold text-foreground"> How much do I risk?</span>
+          </p>
+          <p className="text-sm text-foreground/75 leading-relaxed mb-4">
+            Without position sizing, trading is gambling. With it, trading becomes a system — where your edge
+            plays out over hundreds of trades and capital compounds safely.
+          </p>
+          <CalloutBox type="important" title="The Professional Standard"
+            text="Professional prop traders risk 0.25%–0.5% per trade. Retail traders risk 2–5%. This single difference is why professionals survive and retail accounts blow up." />
+        </section>
+
+        <section>
+          <h3 className="text-lg font-black text-foreground pb-2 border-b border-border mb-4">2. Why Position Sizing Matters</h3>
+          <ComparisonCard
+            leftLabel="✅ Professional Trader (0.5% risk)"
+            leftColor="emerald"
+            leftItems={[
+              "10 consecutive losses = -5% drawdown",
+              "Account recovers with 1 good week",
+              "Emotional state: calm, process-focused",
+              "Long-term: account grows steadily"
+            ]}
+            rightLabel="❌ Retail Trader (5% risk)"
+            rightColor="red"
+            rightItems={[
+              "10 consecutive losses = -50% drawdown",
+              "Needs 100% gain just to break even",
+              "Emotional state: desperate, revenge trading",
+              "Long-term: account blown"
+            ]}
+          />
+          <p className="text-sm text-foreground/60 text-center mt-3 italic">Same strategy. Different position sizing. Completely different outcomes.</p>
+        </section>
+
+        <section>
+          <h3 className="text-lg font-black text-foreground pb-2 border-b border-border mb-4">3. Risk Per Trade</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+            {[
+              { pct:'0.25%', label:'Conservative', desc:'Funded accounts, drawdown periods', color:'bg-blue-50 dark:bg-blue-500/8 border-blue-200 dark:border-blue-500/20 text-blue-700 dark:text-blue-400' },
+              { pct:'0.5%',  label:'Standard Pro',  desc:'Funded accounts, ongoing', color:'bg-violet-50 dark:bg-violet-500/8 border-violet-200 dark:border-violet-500/20 text-violet-700 dark:text-violet-400' },
+              { pct:'1%',    label:'Aggressive Pro', desc:'Personal accounts only', color:'bg-amber-50 dark:bg-amber-500/8 border-amber-200 dark:border-amber-500/20 text-amber-700 dark:text-amber-400' },
+              { pct:'2%+',   label:'Retail Default', desc:'Account blown eventually', color:'bg-red-50 dark:bg-red-500/8 border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400' },
+            ].map(r => (
+              <div key={r.pct} className={`rounded-2xl border p-3 text-center ${r.color}`}>
+                <p className="text-2xl font-black mb-1">{r.pct}</p>
+                <p className="text-[10px] font-black uppercase tracking-wider mb-1">{r.label}</p>
+                <p className="text-[10px] opacity-70 leading-snug">{r.desc}</p>
+              </div>
+            ))}
+          </div>
+          <DataTable
+            headers={['Account Size', '0.25% Risk', '0.5% Risk', '1% Risk']}
+            rows={[
+              ['$5,000',   '$12.50', '$25',   '$50'],
+              ['$10,000',  '$25',    '$50',   '$100'],
+              ['$25,000',  '$62.50', '$125',  '$250'],
+              ['$50,000',  '$125',   '$250',  '$500'],
+              ['$100,000', '$250',   '$500',  '$1,000'],
+            ]}
+          />
+        </section>
+
+        <section>
+          <h3 className="text-lg font-black text-foreground pb-2 border-b border-border mb-4">4. Position Size Formula</h3>
+          <FormulaBox formula="Position Size = Risk Amount ÷ Stop Loss Distance" label="The Core Formula"/>
+          <div className="space-y-3 mt-4">
+            {[
+              { title:'Example 1 — NAS100', account:'$10,000', risk:'1%', riskAmt:'$100', entry:'19,500', stop:'19,470', distance:'30 pts', size:'$100 ÷ 30 = $3.33/pt' },
+              { title:'Example 2 — Gold',   account:'$10,000', risk:'1%', riskAmt:'$100', entry:'2,350',  stop:'2,340',  distance:'10 pts', size:'$100 ÷ 10 = $10/pt' },
+              { title:'Example 3 — Funded $50K', account:'$50,000', risk:'0.5%', riskAmt:'$250', entry:'20,000', stop:'19,975', distance:'25 pts', size:'$250 ÷ 25 = $10/pt' },
+            ].map(ex => (
+              <div key={ex.title} className="rounded-2xl border border-border bg-card p-4">
+                <p className="text-sm font-black text-foreground mb-3">{ex.title}</p>
+                <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 text-center mb-3">
+                  {[
+                    ['Account',  ex.account],
+                    ['Risk %',   ex.risk],
+                    ['Risk $',   ex.riskAmt],
+                    ['Entry',    ex.entry],
+                    ['Stop',     ex.stop],
+                    ['Distance', ex.distance],
+                  ].map(([l,v]) => (
+                    <div key={l} className="bg-muted/40 rounded-xl p-2">
+                      <p className="text-[9px] text-muted-foreground font-semibold uppercase">{l}</p>
+                      <p className="text-xs font-black text-foreground">{v}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="rounded-xl bg-violet-600 text-white px-4 py-2 text-center">
+                  <span className="text-[10px] font-bold text-white/70 mr-2">Position Size =</span>
+                  <span className="text-sm font-black">{ex.size}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-5">
+            <PositionSizeCalculator/>
+          </div>
+          <CalloutBox type="tip" title="Calculate Before You Click"
+            text="Before clicking buy or sell, open a calculator. Enter: account size × risk % = risk amount. Then: risk amount ÷ stop distance = position size. This 10-second habit saves accounts." />
+        </section>
+
+        <section>
+          <h3 className="text-lg font-black text-foreground pb-2 border-b border-border mb-4">5. Risk-to-Reward (R:R)</h3>
+          <p className="text-sm text-foreground/75 leading-relaxed mb-4">
+            R:R = (Target Distance) ÷ (Stop Distance). The higher your R:R, the lower your required win rate to be profitable.
+          </p>
+          <div className="space-y-2 mb-4">
+            <RRVisual ratio="1:1" risk={100} reward={100}/>
+            <RRVisual ratio="1:2" risk={100} reward={200}/>
+            <RRVisual ratio="1:3" risk={100} reward={300}/>
+            <RRVisual ratio="1:5" risk={100} reward={500}/>
+          </div>
+          <DataTable
+            headers={['R:R Ratio', 'Risk $100', 'Reward', 'Min Win Rate Needed']}
+            rows={[
+              ['1:1', '$100', '$100', '51%'],
+              ['1:2', '$100', '$200', '34%'],
+              ['1:3', '$100', '$300', '26%'],
+              ['1:5', '$100', '$500', '17%'],
+            ]}
+          />
+          <div className="mt-4 rounded-2xl border border-emerald-200 dark:border-emerald-500/25 bg-emerald-50 dark:bg-emerald-500/5 p-4">
+            <p className="text-sm font-black text-emerald-700 dark:text-emerald-400 mb-2">The Math Proof</p>
+            <p className="text-sm text-emerald-800 dark:text-emerald-300/80 leading-relaxed">
+              At 1:3 R:R with 40% win rate: 40 wins × $300 = $12,000 profit. 60 losses × $100 = $6,000 loss. <strong>Net: +$6,000 per 100 trades.</strong>
+              At 1:0.5 R:R with 65% win rate: 65 wins × $50 = $3,250. 35 losses × $100 = $3,500. <strong>Net: -$250 (losing at 65% win rate!).</strong>
+            </p>
+          </div>
+        </section>
+
+        <section>
+          <h3 className="text-lg font-black text-foreground pb-2 border-b border-border mb-4">6. Common Position Sizing Mistakes</h3>
+          <div className="rounded-2xl border border-border bg-card p-5">
+            <ChecklistItem checked={false} label="Risking too much per trade (2–5% instead of 0.5–1%)"/>
+            <ChecklistItem checked={false} label="Increasing size after losses to 'make it back' faster"/>
+            <ChecklistItem checked={false} label="Revenge trading with oversized positions after a bad day"/>
+            <ChecklistItem checked={false} label="No stop loss — 'I will manually close if it goes wrong'"/>
+            <ChecklistItem checked={false} label="Random lot sizes based on gut feeling"/>
+            <ChecklistItem checked={false} label="Ignoring volatility — same size on slow market and NFP"/>
+            <ChecklistItem checked={false} label="Skipping the calculation — sizing after entry"/>
+          </div>
+          <CalloutBox type="warning" title="Never Increase Size After Losses"
+            text="The urge to size up after a loss to 'make it back' is the #1 account killer. Your position size is determined by math and rules — never by recent results or emotions." />
+        </section>
+
+        <section>
+          <h3 className="text-lg font-black text-foreground pb-2 border-b border-border mb-4">7. Prop Firm Risk Model</h3>
+          <DataTable
+            headers={['Phase', 'Recommended Risk', 'Reason']}
+            rows={[
+              ['Challenge Phase',    '0.5–1%',    'Need to reach target'],
+              ['Verification Phase', '0.5%',      'Protect challenge gains'],
+              ['Funded — Month 1',   '0.25–0.5%', 'Prove consistency first'],
+              ['Funded — Ongoing',   '0.5%',      'Sustainable long-term'],
+            ]}
+          />
+          <div className="mt-4 rounded-2xl border border-border bg-card p-5">
+            <p className="text-sm font-black text-foreground mb-3">Daily Loss Limit Math — $100K Account</p>
+            <div className="grid grid-cols-3 gap-3 text-center">
+              {[
+                { label:'Daily Limit (4%)', value:'$4,000', color:'text-red-500' },
+                { label:'Risk Per Trade (0.5%)', value:'$500', color:'text-violet-500 dark:text-violet-400' },
+                { label:'Trades to Hit Limit', value:'8 losses', color:'text-foreground' },
+              ].map(s => (
+                <div key={s.label} className="rounded-xl bg-muted/40 p-3">
+                  <p className={`text-xl font-black ${s.color}`}>{s.value}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{s.label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h3 className="text-lg font-black text-foreground pb-2 border-b border-border mb-4">8. Practical Example</h3>
+          <div className="rounded-2xl border-2 border-violet-200 dark:border-violet-500/30 bg-card overflow-hidden">
+            <div className="bg-violet-50 dark:bg-violet-500/8 px-5 py-4 border-b border-violet-200 dark:border-violet-500/20">
+              <p className="text-sm font-black text-violet-700 dark:text-violet-400">Scenario</p>
+              <p className="text-xs text-foreground/70 mt-0.5">$50,000 funded account · NAS100 · Bullish FVG at London open</p>
+            </div>
+            <div className="p-5">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+                {[
+                  ['Account', '$50,000'], ['Risk %', '0.5%'], ['Entry', '19,850'], ['Stop', '19,840'],
+                ].map(([l,v]) => (
+                  <div key={l} className="text-center bg-muted/30 rounded-xl p-3">
+                    <p className="text-[10px] text-muted-foreground uppercase font-semibold">{l}</p>
+                    <p className="text-sm font-black text-foreground">{v}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="space-y-3">
+                {[
+                  { step:'Step 1', label:'Calculate Risk Amount', formula:'$50,000 × 0.5% = $250' },
+                  { step:'Step 2', label:'Calculate Position Size', formula:'$250 ÷ 10 points = $25 per point' },
+                  { step:'Step 3', label:'Verify R:R (target 30 pts)', formula:'30 pts × $25 = $750 reward → 1:3 R:R ✅' },
+                ].map(s => (
+                  <div key={s.step} className="flex items-center gap-4 p-4 rounded-xl border border-border bg-muted/20">
+                    <span className="text-[10px] font-black text-violet-500 dark:text-violet-400 bg-violet-100 dark:bg-violet-500/15 px-2 py-1 rounded-lg flex-shrink-0">{s.step}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] text-muted-foreground">{s.label}</p>
+                      <p className="text-sm font-black text-foreground">{s.formula}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-2 gap-3 mt-4">
+                <div className="rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/25 p-3 text-center">
+                  <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mb-1">If Trade Wins</p>
+                  <p className="text-xl font-black text-emerald-700 dark:text-emerald-400">+$750</p>
+                  <p className="text-[10px] text-emerald-600/70 dark:text-emerald-400/70">+1.5% of account</p>
+                </div>
+                <div className="rounded-xl bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/25 p-3 text-center">
+                  <p className="text-[10px] font-bold text-red-600 dark:text-red-400 mb-1">If Trade Loses</p>
+                  <p className="text-xl font-black text-red-700 dark:text-red-400">-$250</p>
+                  <p className="text-[10px] text-red-600/70 dark:text-red-400/70">-0.5% of account</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h3 className="text-lg font-black text-foreground pb-2 border-b border-border mb-4">9. Pre-Trade Checklist</h3>
+          <div className="rounded-2xl border border-border bg-card p-5">
+            <ChecklistItem checked={true} label="Stop loss defined and placed on chart"/>
+            <ChecklistItem checked={true} label="Take profit target defined and placed on chart"/>
+            <ChecklistItem checked={true} label="Risk amount calculated (account × risk %)"/>
+            <ChecklistItem checked={true} label="Position size calculated (risk amount ÷ stop distance)"/>
+            <ChecklistItem checked={true} label="R:R is acceptable (minimum 1:1.5)"/>
+            <ChecklistItem checked={true} label="Daily loss limit checked — room available"/>
+            <ChecklistItem checked={true} label="Setup meets all entry criteria (not FOMO)"/>
+            <ChecklistItem checked={true} label="Trade is during a killzone"/>
+          </div>
+          <p className="text-xs text-center text-muted-foreground mt-2 italic">If any item cannot be checked — do not take the trade.</p>
+        </section>
+      </div>
+    );
+  }
+
+  // Default fallback — markdown-style renderer with callouts
+  const content = lesson.content;
+  if (!content || content.trim().length < 50) return (
+    <div className="flex flex-col items-center py-12 text-center rounded-2xl border border-dashed border-border bg-muted/20">
+      <BookOpen className="h-10 w-10 text-muted-foreground/20 mb-3"/>
+      <p className="text-sm font-bold text-foreground mb-1">Content being prepared</p>
+      <p className="text-xs text-muted-foreground">Use the AI Tutor to learn about this topic.</p>
+    </div>
+  );
+
+  const lines = content.split('\n');
+  let cIdx = 0, headingCount = 0;
+  const els: React.ReactNode[] = [];
+  lines.forEach((line, i) => {
+    if (line.startsWith('## ')) {
+      headingCount++;
+      if ((headingCount === 2 || headingCount === 4) && cIdx < callouts.length) {
+        const c = callouts[cIdx++];
+        els.push(<CalloutBox key={`c${i}`} type={c.type} title={c.title} text={c.text}/>);
+      }
+      els.push(<h3 key={i} className="text-lg font-black text-foreground mt-7 mb-3 first:mt-0 pb-2 border-b border-border">{line.replace('## ','')}</h3>);
+    } else if (line.startsWith('**') && line.endsWith('**') && !line.slice(2,-2).includes('**'))
+      els.push(<p key={i} className="text-sm font-bold text-foreground mt-4 mb-1">{line.slice(2,-2)}</p>);
+    else if (line.startsWith('- '))
+      els.push(<div key={i} className="flex items-start gap-2.5 ml-1"><div className="w-1.5 h-1.5 rounded-full bg-violet-500 mt-2 flex-shrink-0"/><p className="text-sm text-foreground/75 leading-relaxed">{line.slice(2)}</p></div>);
+    else if (/^\d+\. /.test(line)) {
+      const num=line.split('. ')[0]; const txt=line.split('. ').slice(1).join('. ');
+      els.push(<div key={i} className="flex items-start gap-3 ml-1"><span className="text-[10px] font-black text-violet-500 dark:text-violet-400 bg-violet-100 dark:bg-violet-500/15 w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">{num}</span><p className="text-sm text-foreground/75 leading-relaxed">{txt}</p></div>);
+    } else if (line.startsWith('|') && !line.includes('---')) {
+      const cells=line.split('|').filter(c=>c.trim());
+      if(cells.length) els.push(<div key={i} className="flex border border-border rounded-xl overflow-hidden my-0.5">{cells.map((c,j)=><div key={j} className={`flex-1 px-3 py-2 text-xs ${j===0?'font-bold bg-muted/50 text-foreground':'text-foreground/70'} ${j<cells.length-1?'border-r border-border':''}`}>{c.trim()}</div>)}</div>);
+    } else if (line.trim()==='' || line.startsWith('---'))
+      els.push(<div key={i} className="h-1.5"/>);
+    else if (line.includes('**')) {
+      const parts=line.split('**');
+      els.push(<p key={i} className="text-sm text-foreground/75 leading-relaxed">{parts.map((p,j)=>j%2===1?<span key={j} className="font-bold text-foreground">{p}</span>:p)}</p>);
+    } else
+      els.push(<p key={i} className="text-sm text-foreground/75 leading-relaxed">{line}</p>);
+  });
+  while (cIdx < callouts.length) {
+    const c = callouts[cIdx++];
+    els.push(<CalloutBox key={`ce${cIdx}`} type={c.type} title={c.title} text={c.text}/>);
+  }
+  return <div className="space-y-2">{els}</div>;
+}
+
 // ── LESSON PAGE ───────────────────────────────────────────────────────────────
 function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, onComplete, onSave, onNavigate }: {
   lesson: Lesson; progress: Progress|undefined; gradient: string;
@@ -201,12 +674,6 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
     advanced:     'bg-violet-100 dark:bg-violet-500/15 text-violet-700 dark:text-violet-400 border-violet-200 dark:border-violet-500/25',
   };
 
-  const calloutCfg = (type: string) => ({
-    tip:       { bg:'bg-amber-50 dark:bg-amber-500/8',    border:'border-amber-200 dark:border-amber-500/20',    icon:'⭐', color:'text-amber-700 dark:text-amber-400' },
-    warning:   { bg:'bg-red-50 dark:bg-red-500/8',        border:'border-red-200 dark:border-red-500/20',        icon:'⚠️', color:'text-red-700 dark:text-red-400' },
-    important: { bg:'bg-violet-50 dark:bg-violet-500/8',  border:'border-violet-200 dark:border-violet-500/20',  icon:'📌', color:'text-violet-700 dark:text-violet-400' },
-  }[type] ?? { bg:'bg-muted', border:'border-border', icon:'ℹ️', color:'text-foreground' });
-
   const saveNotes = async () => {
     if (!user) return;
     setSavingNotes(true);
@@ -229,52 +696,6 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
     finally { setAiLoading(false); }
   };
 
-  const renderContent = () => {
-    if (!lesson.content) return (
-      <div className="flex flex-col items-center py-12 text-center rounded-2xl border border-dashed border-border bg-muted/20">
-        <BookOpen className="h-10 w-10 text-muted-foreground/20 mb-3"/>
-        <p className="text-sm text-muted-foreground">Content coming soon for this lesson</p>
-      </div>
-    );
-    const lines = lesson.content.split('\n');
-    let cIdx = 0;
-    const els: React.ReactNode[] = [];
-    lines.forEach((line, i) => {
-      if (line.startsWith('## ') && cIdx < callouts.length && i > 2) {
-        const c = callouts[cIdx++];
-        const s = calloutCfg(c.type);
-        els.push(
-          <div key={`c${i}`} className={`rounded-2xl border ${s.border} ${s.bg} px-5 py-4 my-1 flex items-start gap-3`}>
-            <span className="text-lg flex-shrink-0 mt-0.5">{s.icon}</span>
-            <div>
-              <p className={`text-sm font-bold ${s.color} mb-0.5`}>{c.title}</p>
-              <p className={`text-sm leading-relaxed ${s.color} opacity-90`}>{c.text}</p>
-            </div>
-          </div>
-        );
-      }
-      if (line.startsWith('## '))
-        els.push(<h3 key={i} className="text-lg font-black text-foreground mt-7 mb-2 first:mt-0 pb-2 border-b border-border">{line.replace('## ','')}</h3>);
-      else if (line.startsWith('**') && line.endsWith('**') && !line.slice(2,-2).includes('**'))
-        els.push(<p key={i} className="text-sm font-bold text-foreground mt-4">{line.slice(2,-2)}</p>);
-      else if (line.startsWith('- '))
-        els.push(<div key={i} className="flex items-start gap-2.5 ml-1"><div className="w-1.5 h-1.5 rounded-full bg-violet-500 mt-2 flex-shrink-0"/><p className="text-sm text-foreground/75 leading-relaxed">{line.slice(2)}</p></div>);
-      else if (/^\d+\. /.test(line)) {
-        const num = line.split('. ')[0]; const txt = line.split('. ').slice(1).join('. ');
-        els.push(<div key={i} className="flex items-start gap-3 ml-1"><span className="text-[10px] font-black text-violet-500 dark:text-violet-400 bg-violet-100 dark:bg-violet-500/15 w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">{num}</span><p className="text-sm text-foreground/75 leading-relaxed">{txt}</p></div>);
-      } else if (line.startsWith('|') && !line.includes('---')) {
-        const cells = line.split('|').filter(c=>c.trim());
-        if (cells.length) els.push(<div key={i} className="flex border border-border rounded-xl overflow-hidden my-0.5">{cells.map((c,j)=><div key={j} className={`flex-1 px-3 py-2 text-xs ${j===0?'font-bold bg-muted/50 text-foreground':'text-foreground/70'} ${j<cells.length-1?'border-r border-border':''}`}>{c.trim()}</div>)}</div>);
-      } else if (line.trim()==='' || line.startsWith('---'))
-        els.push(<div key={i} className="h-1.5"/>);
-      else if (line.includes('**')) {
-        const parts = line.split('**');
-        els.push(<p key={i} className="text-sm text-foreground/75 leading-relaxed">{parts.map((p,j)=>j%2===1?<span key={j} className="font-bold text-foreground">{p}</span>:p)}</p>);
-      } else
-        els.push(<p key={i} className="text-sm text-foreground/75 leading-relaxed">{line}</p>);
-    });
-    return <div className="space-y-2">{els}</div>;
-  };
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-0">
@@ -378,7 +799,7 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
             {tab === 'lesson' && (
               <motion.div key="lesson" initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} transition={{ duration: 0.15 }} className="space-y-5">
                 <div className="rounded-2xl border border-border bg-card p-6">
-                  {renderContent()}
+                  {renderRichContent(lesson, callouts)}
                 </div>
 
                 {takeaways.length > 0 && (
