@@ -799,7 +799,7 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
             {tab === 'lesson' && (
               <motion.div key="lesson" initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} transition={{ duration: 0.15 }} className="space-y-5">
                 <div className="rounded-2xl border border-border bg-card p-6">
-                  {renderContent()}
+                  {renderRichContent(lesson, callouts)}
                 </div>
 
                 {takeaways.length > 0 && (
