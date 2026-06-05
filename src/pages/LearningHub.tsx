@@ -1510,25 +1510,90 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
 
             {tab === 'resources' && (
               <motion.div key="resources" initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} transition={{ duration: 0.15 }} className="space-y-4">
-                <div className="rounded-2xl border border-border bg-card p-5">
-                  <p className="text-sm font-black text-foreground mb-4 flex items-center gap-2"><BookOpen className="h-4 w-4 text-violet-500"/> Downloads</p>
-                  <div className="space-y-2">
-                    {[
-                      { icon:'📄', label:`${lesson.title} Cheat Sheet`, type:'PDF' },
-                      { icon:'✅', label:`${lesson.category} Guide`,     type:'PDF' },
-                      { icon:'📋', label:`${lesson.title} Checklist`,    type:'PDF' },
-                    ].map(r => (
-                      <div key={r.label} className="flex items-center gap-3 px-4 py-3.5 rounded-xl border border-border bg-muted/20 hover:bg-muted/40 transition-colors">
-                        <span className="text-xl">{r.icon}</span>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-foreground truncate">{r.label}</p>
-                          <p className="text-[10px] text-muted-foreground">{r.type}</p>
-                        </div>
-                        <span className="text-[10px] font-bold text-violet-500 dark:text-violet-400 hover:opacity-70 cursor-pointer transition-opacity">Download</span>
+                {lesson.slug === 'risk-position-sizing' ? (
+                  <>
+                    <div className="rounded-2xl border border-border bg-card p-5">
+                      <p className="text-sm font-black text-foreground mb-4 flex items-center gap-2"><BookOpen className="h-4 w-4 text-violet-500"/> Downloads</p>
+                      <div className="space-y-2">
+                        {[
+                          {icon:'📊',label:'Position Sizing Cheat Sheet',desc:'Formula, examples, and quick reference table — 1 page'},
+                          {icon:'📋',label:'Daily Risk Checklist',desc:'Pre-trade checklist — print and keep at your desk'},
+                          {icon:'📘',label:'Risk Management PDF Guide',desc:'Complete guide: position sizing, R:R, drawdown — 12 pages'},
+                          {icon:'🏆',label:'Funded Account Survival Guide',desc:'Challenge rules, risk model, payout strategy — 8 pages'},
+                        ].map(r=>(
+                          <div key={r.label} className="flex items-center gap-3 px-4 py-3.5 rounded-xl border border-border bg-muted/20 hover:bg-muted/40 transition-colors group cursor-pointer">
+                            <span className="text-2xl flex-shrink-0">{r.icon}</span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-foreground truncate">{r.label}</p>
+                              <p className="text-[10px] text-muted-foreground">{r.desc}</p>
+                            </div>
+                            <span className="text-[10px] font-bold text-violet-500 dark:text-violet-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">Download →</span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    </div>
+                    <div className="rounded-2xl border border-border bg-card p-5">
+                      <p className="text-sm font-black text-foreground mb-4">Pre-Trade Checklist</p>
+                      <p className="text-xs text-muted-foreground mb-4">Run through this before every single trade. If any item fails — do not enter.</p>
+                      <div className="space-y-0">
+                        {[
+                          'Risk amount calculated (account × risk %)',
+                          'Stop loss defined and placed on chart',
+                          'Position size calculated (risk ÷ stop distance)',
+                          'Take profit target defined',
+                          'R:R verified — minimum 1:1.5',
+                          'Daily loss limit checked — room available',
+                          'Entry criteria fully met (not FOMO)',
+                          'Trade is during a killzone',
+                        ].map((item,i)=>(
+                          <div key={i} className="flex items-center gap-3 py-2.5 border-b border-border last:border-0">
+                            <div className="w-5 h-5 rounded border-2 border-border flex-shrink-0"/>
+                            <p className="text-sm text-foreground/75">{item}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="rounded-2xl border border-border bg-card p-5">
+                      <p className="text-sm font-black text-foreground mb-4">Key Formulas — Quick Reference</p>
+                      <div className="space-y-3">
+                        {[
+                          {label:'Risk Amount', formula:'Account Balance × Risk %'},
+                          {label:'Position Size', formula:'Risk Amount ÷ Stop Distance'},
+                          {label:'R:R Ratio', formula:'Target Distance ÷ Stop Distance'},
+                          {label:'Breakeven WR', formula:'1 ÷ (1 + R:R) × 100'},
+                          {label:'Recovery Needed', formula:'Loss % ÷ (1 − Loss %) × 100'},
+                        ].map(f=>(
+                          <div key={f.label} className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-muted/30 border border-border">
+                            <span className="text-[10px] font-black text-muted-foreground w-28 flex-shrink-0">{f.label}</span>
+                            <span className="text-sm font-mono font-bold text-foreground">{f.formula}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="rounded-2xl border border-border bg-card p-5">
+                      <p className="text-sm font-black text-foreground mb-4 flex items-center gap-2"><BookOpen className="h-4 w-4 text-violet-500"/> Downloads</p>
+                      <div className="space-y-2">
+                        {[
+                          { icon:'📄', label:`${lesson.title} Cheat Sheet`, type:'PDF' },
+                          { icon:'✅', label:`${lesson.category} Guide`,     type:'PDF' },
+                          { icon:'📋', label:`${lesson.title} Checklist`,    type:'PDF' },
+                        ].map(r => (
+                          <div key={r.label} className="flex items-center gap-3 px-4 py-3.5 rounded-xl border border-border bg-muted/20 hover:bg-muted/40 transition-colors">
+                            <span className="text-xl">{r.icon}</span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-foreground truncate">{r.label}</p>
+                              <p className="text-[10px] text-muted-foreground">{r.type}</p>
+                            </div>
+                            <span className="text-[10px] font-bold text-violet-500 dark:text-violet-400 hover:opacity-70 cursor-pointer transition-opacity">Download</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
                 <div className="rounded-2xl border border-border bg-card p-5">
                   <p className="text-sm font-black text-foreground mb-3">Related Lessons</p>
                   <div className="space-y-1.5">
