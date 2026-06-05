@@ -1391,7 +1391,9 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
 
             {tab === 'practice' && (
               <motion.div key="practice" initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} transition={{ duration: 0.15 }} className="space-y-4">
-                {quizQs.length > 0 ? (
+                {lesson.slug === 'risk-position-sizing' ? (
+                  <PositionSizingPractice onComplete={()=>onComplete(lesson.id)}/>
+                ) : quizQs.length > 0 ? (
                   <>
                     <div className="flex items-center justify-between">
                       <p className="text-base font-black text-foreground flex items-center gap-2"><Target className="h-5 w-5 text-violet-500"/> Knowledge Check</p>
