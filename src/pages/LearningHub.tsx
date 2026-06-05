@@ -1018,51 +1018,160 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
         {/* ════ LEFT ════ */}
         <div className="flex-1 min-w-0 space-y-0">
 
-          {/* Header card */}
-          <div className="rounded-2xl border border-border bg-card overflow-hidden mb-5">
-            <div className="flex gap-0 flex-col sm:flex-row">
-              <div className={`flex-shrink-0 bg-gradient-to-br ${gradient} flex flex-col items-center justify-center p-5 text-center`}
-                style={{ width: 220, minHeight: 180 }}>
-                <p className="text-[9px] font-black text-white/35 uppercase tracking-widest mb-2">{lesson.category}</p>
-                <p className="text-xl font-black text-white leading-tight uppercase text-center mb-3">
-                  {lesson.subcategory || lesson.tags?.[0] || lesson.category}
-                </p>
-                {lesson.tags?.[0] && (
-                  <span className="text-[10px] font-bold text-white/60 bg-white/10 border border-white/15 px-3 py-1 rounded-full">
-                    {lesson.tags[0]}
-                  </span>
-                )}
-              </div>
-              <div className="flex-1 p-5">
-                <span className="inline-block text-[11px] font-bold bg-violet-100 dark:bg-violet-500/15 text-violet-700 dark:text-violet-400 border border-violet-200 dark:border-violet-500/20 px-2.5 py-1 rounded-lg mb-3">
-                  {lesson.category}
-                </span>
-                <h1 className="text-2xl font-black text-foreground mb-1.5">{lesson.title}</h1>
-                <p className="text-sm text-muted-foreground leading-relaxed mb-4">{lesson.description}</p>
-                <div className="flex items-center gap-3 flex-wrap mb-4">
-                  <span className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border capitalize ${diffCls[lesson.difficulty] ?? 'bg-muted border-border text-muted-foreground'}`}>
-                    {lesson.difficulty}
-                  </span>
-                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Clock className="h-3.5 w-3.5"/> {lesson.read_time_min} min
-                  </span>
-                  <span className="flex items-center gap-1.5 text-xs font-bold text-amber-500">
-                    <Zap className="h-3.5 w-3.5"/> +{lesson.xp_reward} XP
-                  </span>
-                </div>
-                <div>
-                  <div className="flex justify-between text-[11px] text-muted-foreground mb-1.5">
-                    <span>Your Progress</span>
-                    <span className={`font-bold ${done ? 'text-emerald-500' : ''}`}>{pct}%</span>
+          {/* ── PREMIUM LESSON HERO ── */}
+          {(() => {
+            const accentBar = ({
+              'ICT Concepts':        'from-violet-600 to-violet-400',
+              'SMC':                 'from-blue-600 to-blue-400',
+              'Fundamentals':        'from-amber-600 to-amber-400',
+              'Price Action':        'from-emerald-600 to-emerald-400',
+              'Risk Management':     'from-red-600 to-red-400',
+              'Trading Psychology':  'from-pink-600 to-pink-400',
+              'Replay Drills':       'from-teal-600 to-teal-400',
+              'Prop Firm Strategies':'from-yellow-600 to-yellow-400',
+            } as Record<string,string>)[lesson.category] ?? 'from-violet-600 to-violet-400';
+            const panelGrad = ({
+              'ICT Concepts':        'from-violet-900 via-violet-800 to-violet-700',
+              'SMC':                 'from-blue-900 via-blue-800 to-blue-700',
+              'Fundamentals':        'from-amber-900 via-amber-800 to-amber-700',
+              'Price Action':        'from-emerald-900 via-emerald-800 to-emerald-700',
+              'Risk Management':     'from-red-900 via-red-800 to-red-700',
+              'Trading Psychology':  'from-pink-900 via-pink-800 to-pink-700',
+              'Replay Drills':       'from-teal-900 via-teal-800 to-teal-700',
+              'Prop Firm Strategies':'from-yellow-900 via-yellow-800 to-yellow-700',
+            } as Record<string,string>)[lesson.category] ?? 'from-violet-900 via-violet-800 to-violet-700';
+            return (
+              <div className="rounded-2xl border border-border bg-card overflow-hidden mb-5">
+                <div className={`h-1 w-full bg-gradient-to-r ${accentBar}`}/>
+                <div className="p-5 sm:p-6">
+                  <div className="flex flex-col lg:flex-row gap-6">
+                    {/* LEFT: Visual */}
+                    <div className={`flex-shrink-0 rounded-2xl bg-gradient-to-br ${panelGrad} flex flex-col justify-between p-5 overflow-hidden`} style={{width:220, minHeight:260}}>
+                      <div className="space-y-2">
+                        <span className="inline-flex items-center text-[10px] font-black text-white/80 bg-white/10 border border-white/15 px-2.5 py-1 rounded-full">{lesson.category}</span>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border capitalize ${
+                            lesson.difficulty==='beginner' ? 'bg-emerald-500/20 border-emerald-400/30 text-emerald-300'
+                            : lesson.difficulty==='advanced' ? 'bg-violet-500/20 border-violet-400/30 text-violet-300'
+                            : 'bg-white/10 border-white/15 text-white/60'
+                          }`}>{lesson.difficulty}</span>
+                          <span className="text-[10px] text-white/50 flex items-center gap-1"><Clock className="h-3 w-3"/>{lesson.read_time_min}m</span>
+                        </div>
+                      </div>
+                      <div className="flex-1 flex items-center justify-center py-3">
+                        <LessonInfographic lesson={lesson}/>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black text-amber-300 flex items-center gap-1"><Zap className="h-3 w-3"/>+{lesson.xp_reward} XP</span>
+                        {done && <span className="text-[10px] font-black text-emerald-300 flex items-center gap-1"><CheckCircle2 className="h-3 w-3"/>Done</span>}
+                      </div>
+                    </div>
+
+                    {/* CENTER: Title + outcomes */}
+                    <div className="flex-1 min-w-0 flex flex-col gap-4">
+                      <div>
+                        <h1 className="text-2xl sm:text-3xl font-black text-foreground leading-tight mb-2">{lesson.title}</h1>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{lesson.description}</p>
+                      </div>
+                      {(lesson.learning_outcomes ?? []).length > 0 && (
+                        <div>
+                          <p className="text-xs font-black text-foreground uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                            <Target className="h-3.5 w-3.5 text-violet-500"/> After this lesson you will be able to:
+                          </p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                            {(lesson.learning_outcomes ?? []).map((outcome, i) => (
+                              <div key={i} className="flex items-start gap-2">
+                                <div className="w-4 h-4 rounded-full bg-violet-100 dark:bg-violet-500/15 border border-violet-200 dark:border-violet-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                  <Check className="h-2.5 w-2.5 text-violet-600 dark:text-violet-400" strokeWidth={3}/>
+                                </div>
+                                <p className="text-xs text-foreground/75 leading-snug">{outcome}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {(lesson.tags ?? []).length > 0 && (
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {(lesson.tags ?? []).map(tag => (
+                            <span key={tag} className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted border border-border text-muted-foreground">{tag}</span>
+                          ))}
+                        </div>
+                      )}
+                      <div className="flex items-center gap-4 pt-1 flex-wrap">
+                        {[
+                          { icon:'👥', value:'2.4k+', label:'Completed' },
+                          { icon:'⭐', value:'4.8',   label:'Rating' },
+                          { icon:'🕐', value:`${lesson.read_time_min} min`, label:'Read time' },
+                          { icon:'📊', value: lesson.difficulty === 'beginner' ? 'Beginner' : lesson.difficulty === 'advanced' ? 'Advanced' : 'Intermediate', label:'Level' },
+                        ].map(s => (
+                          <div key={s.label} className="flex items-center gap-1.5">
+                            <span className="text-sm">{s.icon}</span>
+                            <div>
+                              <p className="text-xs font-black text-foreground leading-none">{s.value}</p>
+                              <p className="text-[9px] text-muted-foreground leading-none mt-0.5">{s.label}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* RIGHT: Progress + actions */}
+                    <div className="flex flex-col items-center gap-4 flex-shrink-0 lg:w-44">
+                      <div className="relative">
+                        {(()=>{
+                          const r=44, circ=2*Math.PI*r;
+                          const color=done?'#10b981':'#7c3aed';
+                          return (
+                            <svg className="-rotate-90" viewBox="0 0 100 100" width="100" height="100">
+                              <circle cx="50" cy="50" r={r} fill="none" strokeWidth="7" className="stroke-muted"/>
+                              <motion.circle cx="50" cy="50" r={r} fill="none" stroke={color} strokeWidth="7"
+                                strokeDasharray={circ}
+                                initial={{strokeDashoffset:circ}}
+                                animate={{strokeDashoffset:circ*(1-pct/100)}}
+                                transition={{duration:1.4,ease}}
+                                strokeLinecap="round"/>
+                            </svg>
+                          );
+                        })()}
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <span className={`text-xl font-black ${done?'text-emerald-500':'text-foreground'}`}>{pct}%</span>
+                          <span className="text-[9px] text-muted-foreground">{done?'Complete':'Progress'}</span>
+                        </div>
+                      </div>
+                      <div className="w-full space-y-2 text-center">
+                        <div className="rounded-xl bg-muted/40 border border-border p-2.5">
+                          <p className="text-base font-black text-amber-500">+{lesson.xp_reward}</p>
+                          <p className="text-[9px] text-muted-foreground font-semibold uppercase">XP Reward</p>
+                        </div>
+                      </div>
+                      <div className="w-full space-y-2">
+                        <button onClick={() => onComplete(lesson.id)}
+                          className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-black transition-all shadow-md ${done ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-violet-600 hover:bg-violet-500 text-white shadow-violet-500/20'}`}>
+                          <CheckCircle2 className="h-3.5 w-3.5"/>
+                          {done ? '✓ Completed' : 'Mark Complete'}
+                        </button>
+                        <button onClick={() => onSave(lesson.id)}
+                          className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold border transition-all ${saved ? 'border-violet-200 dark:border-violet-500/30 bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400' : 'border-border text-muted-foreground hover:bg-muted'}`}>
+                          {saved ? <><BookmarkCheck className="h-3.5 w-3.5"/> Saved</> : <><Bookmark className="h-3.5 w-3.5"/> Save Lesson</>}
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="h-2 bg-muted rounded-full overflow-hidden">
-                    <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.8 }}
-                      className={`h-full rounded-full ${done ? 'bg-emerald-500' : 'bg-violet-500'}`}/>
+                  <div className="mt-5 pt-4 border-t border-border">
+                    <div className="flex justify-between text-[11px] text-muted-foreground mb-1.5">
+                      <span className="font-semibold">Lesson Progress</span>
+                      <span className={`font-black ${done?'text-emerald-500':''}`}>{pct}%</span>
+                    </div>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <motion.div initial={{width:0}} animate={{width:`${pct}%`}}
+                        transition={{duration:0.8,ease}}
+                        className={`h-full rounded-full ${done?'bg-emerald-500':'bg-violet-500'}`}/>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+            );
+          })()}
 
           {/* Tabs */}
           <div className="flex gap-0 border-b border-border mb-6">
