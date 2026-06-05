@@ -299,6 +299,7 @@ export type Database = {
           is_premium: boolean
           is_pro: boolean
           key_takeaways: string[]
+          learning_outcomes: string[]
           order_index: number
           quiz_questions: Json
           read_time_min: number
@@ -322,6 +323,7 @@ export type Database = {
           is_premium?: boolean
           is_pro?: boolean
           key_takeaways?: string[]
+          learning_outcomes?: string[]
           order_index?: number
           quiz_questions?: Json
           read_time_min?: number
@@ -345,6 +347,7 @@ export type Database = {
           is_premium?: boolean
           is_pro?: boolean
           key_takeaways?: string[]
+          learning_outcomes?: string[]
           order_index?: number
           quiz_questions?: Json
           read_time_min?: number
