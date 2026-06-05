@@ -634,6 +634,302 @@ function renderRichContent(lesson: Lesson, callouts: Callout[]) {
   return <div className="space-y-2">{els}</div>;
 }
 
+// ── Lesson infographic (visual concept diagram per lesson) ────────────────────
+function LessonInfographic({ lesson }: { lesson: Lesson }) {
+  if (lesson.slug === 'risk-position-sizing') {
+    const steps = [
+      { icon:'🏦', label:'Account',      value:'$10,000' },
+      { icon:'⚡', label:'Risk %',       value:'× 1%' },
+      { icon:'💰', label:'Risk Amount',  value:'= $100' },
+      { icon:'📐', label:'Stop Distance',value:'÷ 20 pts' },
+      { icon:'🎯', label:'Position Size', value:'= $5/pt' },
+    ];
+    return (
+      <div className="flex items-center gap-0 flex-wrap justify-center">
+        {steps.map((s, i) => (
+          <React.Fragment key={s.label}>
+            <div className="flex flex-col items-center gap-1 px-2">
+              <div className="w-10 h-10 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-lg">{s.icon}</div>
+              <p className="text-[9px] font-bold text-white/50 uppercase tracking-wider">{s.label}</p>
+              <p className="text-xs font-black text-white">{s.value}</p>
+            </div>
+            {i < steps.length - 1 && <ChevronRight className="h-4 w-4 text-white/30 flex-shrink-0"/>}
+          </React.Fragment>
+        ))}
+      </div>
+    );
+  }
+  if (lesson.slug === 'risk-drawdown-control') {
+    const zones = [
+      { range:'0–5%',  label:'Safe',     color:'bg-emerald-500/80', w:'25%' },
+      { range:'5–10%', label:'Warning',  color:'bg-amber-400/80', w:'50%' },
+      { range:'10–15%',label:'Danger',   color:'bg-orange-500/80', w:'75%' },
+      { range:'15%+',  label:'Critical', color:'bg-red-500/80', w:'100%' },
+    ];
+    return (
+      <div className="w-full space-y-1.5">
+        <p className="text-[9px] font-black text-white/40 uppercase tracking-widest text-center mb-2">Drawdown Zones</p>
+        {zones.map(z => (
+          <div key={z.range} className="flex items-center gap-2">
+            <span className="text-[9px] text-white/50 w-12 text-right flex-shrink-0">{z.range}</span>
+            <div className="flex-1 h-4 rounded-lg overflow-hidden bg-white/5">
+              <div className={`h-full ${z.color} rounded-lg flex items-center justify-center`} style={{ width: z.w }}>
+                <span className="text-[8px] font-black text-white px-1">{z.label}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  if (lesson.slug === 'ict-fair-value-gap') {
+    return (
+      <div className="flex flex-col items-center gap-2 w-full">
+        <p className="text-[9px] font-black text-white/40 uppercase tracking-widest">3-Candle FVG Structure</p>
+        <div className="flex items-end gap-2 justify-center">
+          <div className="flex flex-col items-center gap-1"><div className="w-4 h-16 bg-red-400/80 rounded-sm"/><p className="text-[8px] text-white/50 font-bold">C1</p></div>
+          <div className="flex flex-col items-center gap-1"><div className="w-6 h-24 bg-emerald-400/90 rounded-sm border-2 border-emerald-300/50"/><p className="text-[8px] text-white/50 font-bold">C2</p></div>
+          <div className="flex flex-col items-center gap-1"><div className="w-4 h-12 bg-emerald-300/70 rounded-sm"/><p className="text-[8px] text-white/50 font-bold">C3</p></div>
+          <div className="flex flex-col items-center gap-1 ml-1">
+            <div className="border-l-2 border-dashed border-violet-400/70 h-6 flex items-center"><div className="w-8 h-0 border-t-2 border-dashed border-violet-400/70"/></div>
+            <p className="text-[8px] text-violet-300 font-black">FVG</p>
+          </div>
+        </div>
+        <p className="text-[9px] text-white/40 text-center">C1 High ↔ C3 Low = Imbalance Zone</p>
+      </div>
+    );
+  }
+  if (lesson.slug === 'ict-order-blocks') {
+    return (
+      <div className="flex flex-col items-center gap-2 w-full">
+        <p className="text-[9px] font-black text-white/40 uppercase tracking-widest mb-1">Bullish Order Block</p>
+        <div className="flex items-end gap-1.5 justify-center">
+          {[
+            {h:12, c:'bg-red-400/70', badge:false},
+            {h:16, c:'bg-red-400/80', badge:false},
+            {h:20, c:'bg-red-500/90 border-2 border-amber-300/60', badge:true},
+            {h:32, c:'bg-emerald-400/80', badge:false},
+            {h:40, c:'bg-emerald-500/90', badge:false},
+            {h:36, c:'bg-emerald-400/80', badge:false},
+          ].map((b,i)=>(
+            <div key={i} className="flex flex-col items-center gap-1">
+              <div className={`w-5 ${b.c} rounded-sm`} style={{height:`${b.h*2}px`}}/>
+              {b.badge&&<p className="text-[8px] text-amber-300 font-black">OB</p>}
+            </div>
+          ))}
+        </div>
+        <p className="text-[9px] text-white/40 text-center">Last bearish candle before bullish displacement</p>
+      </div>
+    );
+  }
+  const CAT_VISUAL: Record<string, { lines: string[] }> = {
+    'ICT Concepts':       { lines:['Liquidity → Manipulation → Distribution','Smart Money Protocol'] },
+    'SMC':                { lines:['Market Structure → OBs → FVGs','Institutional Flow Reading'] },
+    'Fundamentals':       { lines:['News → USD Impact → Correlation','Macro → Micro → Entry'] },
+    'Price Action':       { lines:['Structure → Pattern → Entry','Read Price, Not Indicators'] },
+    'Risk Management':    { lines:['Capital First → Process → Profit','Position Size → R:R → Survive'] },
+    'Trading Psychology': { lines:['Process Over Results','Discipline → Consistency → Edge'] },
+    'Replay Drills':      { lines:['See It → Identify → Execute','Deliberate Practice Builds Edge'] },
+    'Prop Firm Strategies':{ lines:['Rules → Risk → Consistency','Pass → Fund → Scale → Withdraw'] },
+  };
+  const v = CAT_VISUAL[lesson.category] ?? { lines:['Learn','Apply','Improve'] };
+  const emoji = ({
+    'ICT Concepts':'🎯','SMC':'🏦','Fundamentals':'📰','Price Action':'📈',
+    'Risk Management':'🛡️','Trading Psychology':'🧠','Replay Drills':'🎮','Prop Firm Strategies':'🏆'
+  } as Record<string,string>)[lesson.category] ?? '📚';
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 w-full h-full py-2">
+      <div className="text-3xl">{emoji}</div>
+      {v.lines.map((line,i)=>(
+        <p key={i} className={`text-xs font-bold ${i===0?'text-white/80':'text-white/50'} text-center leading-snug`}>{line}</p>
+      ))}
+    </div>
+  );
+}
+
+// ── Position Sizing interactive practice ─────────────────────────────────────
+function PositionSizingPractice({ onComplete }: { onComplete: ()=>void }) {
+  const [step, setStep] = useState(0);
+  const [answers, setAnswers] = useState<Record<number,string>>({});
+  const [checked, setChecked] = useState<Record<number,boolean>>({});
+  const [score, setScore] = useState(0);
+  const [done, setDone] = useState(false);
+
+  const exercises = [
+    { id:0, type:'calc' as const, title:'Exercise 1 — Calculate Risk Amount',
+      scenario:'Account: $5,000 · Risk: 1% · Stop Loss: 25 points',
+      question:'What is your risk amount in dollars?',
+      fields:[
+        {label:'Account Size', value:'$5,000', editable:false},
+        {label:'Risk %', value:'1%', editable:false},
+        {label:'Risk Amount', value:'', editable:true},
+      ],
+      correct:'50', display:'$50', hint:'$5,000 × 1% = $50', xp:20 },
+    { id:1, type:'calc' as const, title:'Exercise 2 — Calculate Position Size',
+      scenario:'Account: $20,000 · Risk: 0.5% · Stop Loss: 50 points',
+      question:'What is your position size ($ per point)?',
+      fields:[
+        {label:'Risk Amount', value:'$100', editable:false},
+        {label:'Stop Distance', value:'50 pts', editable:false},
+        {label:'Position Size', value:'', editable:true},
+      ],
+      correct:'2', display:'$2 per point', hint:'$100 ÷ 50 = $2 per point', xp:20 },
+    { id:2, type:'mcq' as const, title:'Exercise 3 — Choose the Correct R:R',
+      scenario:'Entry: 20,000 · Stop: 19,980 (20 pts) · Target: 20,060 (60 pts)',
+      question:'What is the R:R ratio on this trade?',
+      options:['1:1','1:2','1:3','1:4'],
+      correct:'1:3', hint:'R:R = Target ÷ Stop = 60 ÷ 20 = 3 → 1:3', xp:20 },
+    { id:3, type:'mcq' as const, title:'Exercise 4 — Funded Account Decision',
+      scenario:'Funded $100,000 · Daily limit hit at -$3,500 · A+ setup just appeared',
+      question:'What should you do?',
+      options:[
+        "Take the setup — it's A+ quality",
+        'Reduce size to half and take it',
+        'Stop trading for the day — daily limit is non-negotiable',
+        'Take it with extra size to recover the daily loss',
+      ],
+      correct:'Stop trading for the day — daily limit is non-negotiable',
+      hint:'Daily loss limits exist precisely for this moment. No exception ever.', xp:20 },
+    { id:4, type:'mcq' as const, title:'Exercise 5 — Minimum Acceptable R:R',
+      scenario:'You analyze a trade and calculate 1:1.2 R:R.',
+      question:'Should you take this trade?',
+      options:[
+        'Yes — any positive R:R is acceptable',
+        'Yes — if the setup looks good enough',
+        'No — minimum acceptable R:R is 1:1.5',
+        'Yes — 1:1.2 is close enough to 1:1.5',
+      ],
+      correct:'No — minimum acceptable R:R is 1:1.5',
+      hint:'Professional minimum is 1:1.5. Below this, consistent profitability requires an unrealistically high win rate.', xp:20 },
+  ];
+
+  const current = exercises[step];
+  const isLast = step === exercises.length - 1;
+
+  const checkAnswer = () => {
+    const ans = answers[current.id]?.trim().replace(/[$,\s]/g,'') ?? '';
+    const isCorrect = current.type === 'mcq'
+      ? answers[current.id] === current.correct
+      : ans === current.correct.replace(/[$,\s]/g,'');
+    setChecked(p => ({...p, [current.id]: isCorrect}));
+    if (isCorrect) setScore(s => s + current.xp);
+  };
+
+  if (done) return (
+    <div className="rounded-2xl border border-violet-200 dark:border-violet-500/25 bg-violet-50 dark:bg-violet-500/5 p-8 text-center space-y-4">
+      <div className="text-5xl">🎯</div>
+      <p className="text-2xl font-black text-foreground">Practice Complete!</p>
+      <p className="text-sm text-muted-foreground">You earned <span className="font-black text-amber-500">{score} XP</span> out of {exercises.reduce((s,e)=>s+e.xp,0)} possible</p>
+      <div className="flex items-center justify-center gap-2">
+        {exercises.map(e => (
+          <div key={e.id} className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black ${checked[e.id] ? 'bg-emerald-500 text-white' : 'bg-red-100 dark:bg-red-500/15 text-red-500 border border-red-200 dark:border-red-500/25'}`}>
+            {checked[e.id] ? '✓' : '✗'}
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-muted-foreground">Score: {Object.values(checked).filter(Boolean).length}/{exercises.length} correct</p>
+      <div className="flex items-center justify-center gap-3 pt-2">
+        <button onClick={()=>{setStep(0);setAnswers({});setChecked({});setScore(0);setDone(false);}}
+          className="px-5 py-2.5 rounded-xl border border-border text-muted-foreground text-xs font-bold hover:bg-muted transition-all">Try Again</button>
+        <button onClick={onComplete}
+          className="px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-black transition-all shadow-md shadow-violet-500/20">Mark Lesson Complete ✓</button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <div className="flex justify-between text-xs text-muted-foreground mb-2">
+          <span>Exercise {step+1} of {exercises.length}</span>
+          <span className="font-bold text-amber-500">{score} XP earned</span>
+        </div>
+        <div className="flex gap-1.5 mt-2">
+          {exercises.map((e,i)=>(
+            <div key={e.id} className={`h-1.5 flex-1 rounded-full transition-all ${i < step ? 'bg-emerald-500' : i === step ? 'bg-violet-500' : 'bg-muted'}`}/>
+          ))}
+        </div>
+      </div>
+      <div className="rounded-2xl border border-border bg-card overflow-hidden">
+        <div className="px-5 py-4 border-b border-border bg-muted/30 flex items-center gap-3">
+          <div className="w-7 h-7 rounded-xl bg-violet-600 flex items-center justify-center text-white text-xs font-black flex-shrink-0">{step+1}</div>
+          <p className="text-sm font-black text-foreground">{current.title}</p>
+          <span className="ml-auto text-[10px] font-bold text-violet-500 dark:text-violet-400 border border-violet-200 dark:border-violet-500/25 px-1.5 py-0.5 rounded-full">+{current.xp} XP</span>
+        </div>
+        <div className="p-5 space-y-4">
+          <div className="rounded-xl bg-muted/30 border border-border px-4 py-2.5">
+            <p className="text-xs text-muted-foreground"><span className="font-bold text-foreground">Scenario: </span>{current.scenario}</p>
+          </div>
+          <p className="text-sm font-bold text-foreground">{current.question}</p>
+          {current.type === 'calc' && (
+            <div className="grid grid-cols-3 gap-3">
+              {current.fields!.map((f,fi)=>(
+                <div key={fi}>
+                  <p className="text-[10px] text-muted-foreground font-semibold mb-1">{f.label}</p>
+                  {f.editable ? (
+                    <input value={answers[current.id] ?? ''}
+                      onChange={e=>setAnswers(p=>({...p,[current.id]:e.target.value}))}
+                      placeholder="Your answer" disabled={current.id in checked}
+                      className="w-full text-sm bg-background border-2 border-violet-300 dark:border-violet-500/40 rounded-xl px-3 py-2 text-foreground font-mono font-black focus:outline-none focus:border-violet-500 disabled:opacity-60"/>
+                  ) : (
+                    <div className="bg-muted/40 border border-border rounded-xl px-3 py-2 text-sm font-black text-foreground/70">{f.value}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          {current.type === 'mcq' && (
+            <div className="space-y-2">
+              {current.options!.map(opt=>{
+                const isSelected = answers[current.id] === opt;
+                const wasChecked = current.id in checked;
+                const isCorrect = opt === current.correct;
+                let cls = 'border-border bg-muted/30 text-foreground/70 hover:bg-muted';
+                if (wasChecked) {
+                  if (isCorrect) cls = 'border-emerald-300 dark:border-emerald-500/40 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400';
+                  else if (isSelected) cls = 'border-red-300 dark:border-red-500/40 bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400';
+                  else cls = 'border-border bg-muted/20 text-muted-foreground opacity-50';
+                } else if (isSelected) cls = 'border-violet-400 dark:border-violet-500/50 bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400';
+                return (
+                  <button key={opt} disabled={wasChecked}
+                    onClick={()=>setAnswers(p=>({...p,[current.id]:opt}))}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-medium text-left transition-all disabled:cursor-default ${cls}`}>
+                    <span className="w-5 h-5 rounded-full border-2 flex items-center justify-center text-[9px] font-black flex-shrink-0">{['A','B','C','D'][current.options!.indexOf(opt)]}</span>
+                    {opt}
+                    {wasChecked && isCorrect && <Check className="h-4 w-4 ml-auto flex-shrink-0"/>}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          {current.id in checked && (
+            <motion.div initial={{opacity:0,y:4}} animate={{opacity:1,y:0}}
+              className={`rounded-xl border p-3 text-sm ${checked[current.id] ? 'border-emerald-200 dark:border-emerald-500/25 bg-emerald-50 dark:bg-emerald-500/5 text-emerald-700 dark:text-emerald-400' : 'border-red-200 dark:border-red-500/25 bg-red-50 dark:bg-red-500/5 text-red-700 dark:text-red-400'}`}>
+              <span className="font-black">{checked[current.id] ? '✅ Correct! ' : `❌ Incorrect — Correct answer: ${current.display ?? current.correct}. `}</span>
+              {current.hint}
+            </motion.div>
+          )}
+          <div className="flex items-center justify-between pt-2">
+            <button disabled={step===0} onClick={()=>setStep(s=>s-1)}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-border text-muted-foreground text-xs font-bold hover:bg-muted transition-all disabled:opacity-30">
+              <ChevronLeft className="h-3.5 w-3.5"/> Back
+            </button>
+            {!(current.id in checked) ? (
+              <button disabled={!answers[current.id]} onClick={checkAnswer}
+                className="px-6 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-black transition-all shadow-md shadow-violet-500/20 disabled:opacity-40">Check Answer</button>
+            ) : (
+              <button onClick={()=>{ if (isLast) setDone(true); else setStep(s=>s+1); }}
+                className="flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-black transition-all shadow-md shadow-violet-500/20">
+                {isLast ? 'See Results' : 'Next Exercise'} <ChevronRight className="h-3.5 w-3.5"/>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── LESSON PAGE ───────────────────────────────────────────────────────────────
 function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, onComplete, onSave, onNavigate }: {
   lesson: Lesson; progress: Progress|undefined; gradient: string;
