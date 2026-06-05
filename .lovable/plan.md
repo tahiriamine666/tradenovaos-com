@@ -1,33 +1,36 @@
-# Lesson Page V2 — Rich Visual Upgrade
+# Lesson Hero Redesign + Position Sizing Tab Content
 
-Apply the uploaded `LESSON_PAGE_V2_PROMPT` spec to `src/pages/LearningHub.tsx`. Sidebar, hub overview, data loading, progress, quiz, notes, resources, and right sidebar are NOT touched.
+Apply both uploaded specs to `src/pages/LearningHub.tsx`. Single-file change.
 
-## Changes (one file: `src/pages/LearningHub.tsx`)
+## 1. Lesson type + query
+- Add `learning_outcomes: string[]` to the `Lesson` interface.
+- Include `learning_outcomes` in the initial `lessons` select (the detail re-fetch already uses `select('*')`).
 
-1. **Imports** — add `X` and `Zap` from `lucide-react`.
+## 2. New helper component
+Add `LessonInfographic({ lesson })` above `LessonContent` per spec. Renders per-slug diagrams (Position Sizing flow, Drawdown zones, FVG 3-candle, Order Blocks), with a generic per-category fallback (icon + 2 lines).
 
-2. **Add 7 visual helper components** (above `LessonPage`):
-   - `CalloutBox` — tip / warning / important boxes with icon + colored border
-   - `FormulaBox` — bordered formula display
-   - `ComparisonCard` — two-column emerald vs red comparison
-   - `DataTable` — themed table for headers + rows
-   - `RRVisual` — risk/reward bar visualization
-   - `ChecklistItem` — green check / red X row
-   - `PositionSizeCalculator` — interactive (Account × Risk % ÷ Stop = Position Size)
+## 3. Premium 3-column lesson hero
+Replace the existing lesson header card in `LessonContent` with the spec's hero:
+- Top accent bar colored by category
+- Left visual panel (220px) with category gradient, badges, `<LessonInfographic/>`, XP + Done indicator
+- Center: title, description, "After this lesson you will be able to:" outcomes grid, tags, stats row (completed/rating/time/level)
+- Right: animated SVG progress ring (framer-motion), XP card, Mark Complete + Save buttons
+- Bottom: full-width animated progress bar
+- Remove the duplicate Save / Mark Complete buttons that currently sit above the header card; keep the breadcrumb.
 
-3. **Replace the existing `renderContent` helper inside `LessonPage`** with `renderRichContent(lesson, callouts)`:
-   - If `lesson.slug === 'risk-position-sizing'` → return the full 9-section custom layout (What is Position Sizing, Why It Matters, Risk Per Trade tiers + table, Formula + examples + interactive calculator, R:R visuals + math proof, Mistakes checklist, Prop Firm Risk Model, Practical Example walkthrough, Pre-Trade Checklist).
-   - Otherwise → fall back to the existing enhanced markdown parser (headings, bold, lists, numbered, tables, callouts inserted at heading 2 & 4).
+## 4. Rich tabs for `risk-position-sizing`
+Inside `LessonContent`, gate by `lesson.slug === 'risk-position-sizing'` to render custom content; all other lessons keep current rendering.
 
-4. **Lesson tab render** — wrap call in:
-   ```tsx
-   <div className="rounded-2xl border border-border bg-card p-6">
-     {renderRichContent(lesson, callouts)}
-   </div>
-   ```
+- **Examples tab** — 3 worked examples (NAS100 $10K personal, EURUSD $100K prop, BTC failure case) with stat grids, computation breakdown, and an outcome callout.
+- **Practice tab** — interactive scenario quiz: 3 scenarios where user inputs/selects the right position size, with instant feedback (correct/incorrect, math explanation) and a progress tracker.
+- **Notes tab** — structured note-taking panel: pre-filled key formulas, editable personal notes textarea (persisted via existing `notes` upsert), and a "copy formula" helper.
+- **Resources tab** — curated link list: position size calculators, risk management articles, recommended books, downloadable PDF cheat sheet, with proper external-link styling and icons.
+
+## 5. Imports
+Ensure from `lucide-react`: `Target, Clock, Zap, Check, CheckCircle2, Bookmark, BookmarkCheck, ChevronRight` (add any missing). `motion` already imported.
 
 ## Not changed
-CourseSidebar, HubOverview, Supabase queries, toggleComplete/Save, upsertProg, Key Takeaways, Quiz, Notes, Resources, LessonRightSidebar.
+CourseSidebar, HubOverview, Supabase schema, progress/save logic, Quiz tab, AI Tutor, right sidebar.
 
 ## Notes
-Spec uses raw Tailwind color utilities (emerald/red/violet/amber). This deviates from our semantic-token rule, but the prompt is explicit and the colors are intentional for status/semantic meaning (success, danger, warning, highlight) and already include dark-mode variants. Will follow the spec verbatim.
+Spec uses raw Tailwind status colors (violet/emerald/amber/red) for semantic meaning with dark-mode variants — followed verbatim as in the previous Position Sizing pass.
