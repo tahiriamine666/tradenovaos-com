@@ -1217,33 +1217,175 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
 
             {tab === 'examples' && (
               <motion.div key="examples" initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} transition={{ duration: 0.15 }} className="space-y-5">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {[
-                    { label:'Bullish Setup ↑', bg:'from-emerald-900 to-emerald-700', tag:'VALID', desc:`Price leaves a gap up and returns to fill it. This is a Bullish ${lesson.title}.` },
-                    { label:'Bearish Setup ↓', bg:'from-red-900 to-red-800',          tag:'VALID', desc:`Price leaves a gap down and returns to fill it. This is a Bearish ${lesson.title}.` },
-                  ].map(ex => (
-                    <div key={ex.label} className="rounded-2xl border border-border bg-card overflow-hidden">
-                      <div className={`bg-gradient-to-br ${ex.bg} h-44 flex items-center justify-center`}>
-                        <div className="text-center">
-                          <p className="text-white/50 text-xs uppercase tracking-widest mb-1">{lesson.tags?.[0] || lesson.category}</p>
-                          <div className="text-2xl font-black text-white">{ex.label}</div>
-                          <span className="mt-2 inline-block text-[10px] font-black text-white/70 bg-white/10 border border-white/20 px-2.5 py-1 rounded-full">{ex.tag}</span>
+                {lesson.slug === 'risk-position-sizing' ? (
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-black text-foreground mb-1">Real Trading Examples</h3>
+                      <p className="text-sm text-muted-foreground">See exactly how position sizing works — and what happens when it is ignored.</p>
+                    </div>
+
+                    {/* Example 1 */}
+                    <div className="rounded-2xl border border-border bg-card overflow-hidden">
+                      <div className="flex items-center gap-3 px-5 py-3.5 border-b border-border bg-muted/30">
+                        <div className="w-6 h-6 rounded-full bg-violet-600 flex items-center justify-center text-white text-xs font-black flex-shrink-0">1</div>
+                        <p className="text-sm font-black text-foreground">NAS100 — $10,000 Personal Account</p>
+                      </div>
+                      <div className="p-5">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+                          {[
+                            {l:'Account', v:'$10,000', c:'text-foreground'},
+                            {l:'Risk %',  v:'1%',      c:'text-violet-600 dark:text-violet-400'},
+                            {l:'Stop',    v:'20 pts',  c:'text-foreground'},
+                            {l:'Risk $',  v:'$100',    c:'text-emerald-600 dark:text-emerald-400'},
+                          ].map(s=>(
+                            <div key={s.l} className="bg-muted/40 rounded-xl p-3 text-center">
+                              <p className="text-[9px] text-muted-foreground uppercase font-semibold">{s.l}</p>
+                              <p className={`text-lg font-black ${s.c}`}>{s.v}</p>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="rounded-xl bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/25 p-4 mb-4">
+                          <p className="text-[10px] font-black text-violet-500 dark:text-violet-400 uppercase tracking-widest mb-2">Calculation</p>
+                          <div className="flex items-center gap-2 flex-wrap text-sm font-mono">
+                            <span className="bg-background border border-border rounded-lg px-2.5 py-1 text-foreground font-black">$10,000 × 1%</span>
+                            <span className="text-muted-foreground">=</span>
+                            <span className="bg-background border border-border rounded-lg px-2.5 py-1 text-foreground font-black">$100 risk</span>
+                            <span className="text-muted-foreground">÷</span>
+                            <span className="bg-background border border-border rounded-lg px-2.5 py-1 text-foreground font-black">20 pts</span>
+                            <span className="text-muted-foreground">=</span>
+                            <span className="bg-violet-600 text-white rounded-lg px-3 py-1 font-black">$5 / point</span>
+                          </div>
+                        </div>
+                        <div className="rounded-xl border border-border overflow-hidden">
+                          <div className="grid grid-cols-3 bg-muted/50 border-b border-border text-center">
+                            {['Outcome','P&L','Account'].map(h=>(
+                              <div key={h} className="px-3 py-2 text-[10px] font-black text-muted-foreground uppercase">{h}</div>
+                            ))}
+                          </div>
+                          {[
+                            {o:'Trade Wins (+40 pts)',  pnl:'+$200', acc:'$10,200', cls:'text-emerald-600 dark:text-emerald-400'},
+                            {o:'Trade Loses (-20 pts)', pnl:'-$100', acc:'$9,900',  cls:'text-red-600 dark:text-red-400'},
+                          ].map(r=>(
+                            <div key={r.o} className="grid grid-cols-3 text-center border-b border-border last:border-0 text-xs">
+                              <div className="px-3 py-2.5 text-foreground/70 text-left">{r.o}</div>
+                              <div className={`px-3 py-2.5 font-black ${r.cls}`}>{r.pnl}</div>
+                              <div className="px-3 py-2.5 text-foreground font-semibold">{r.acc}</div>
+                            </div>
+                          ))}
                         </div>
                       </div>
-                      <div className="px-4 py-3 border-t border-border">
-                        <p className="text-xs text-muted-foreground leading-relaxed">{ex.desc}</p>
+                    </div>
+
+                    {/* Example 2 */}
+                    <div className="rounded-2xl border border-border bg-card overflow-hidden">
+                      <div className="flex items-center gap-3 px-5 py-3.5 border-b border-border bg-muted/30">
+                        <div className="w-6 h-6 rounded-full bg-violet-600 flex items-center justify-center text-white text-xs font-black flex-shrink-0">2</div>
+                        <p className="text-sm font-black text-foreground">Gold — $50,000 Funded Account</p>
+                        <span className="ml-auto text-[10px] font-bold bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20 px-2 py-0.5 rounded-full">FUNDED</span>
+                      </div>
+                      <div className="p-5">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+                          {[
+                            {l:'Account', v:'$50,000', c:'text-foreground'},
+                            {l:'Risk %',  v:'0.5%',    c:'text-violet-600 dark:text-violet-400'},
+                            {l:'Stop',    v:'15 pts',  c:'text-foreground'},
+                            {l:'Risk $',  v:'$250',    c:'text-emerald-600 dark:text-emerald-400'},
+                          ].map(s=>(
+                            <div key={s.l} className="bg-muted/40 rounded-xl p-3 text-center">
+                              <p className="text-[9px] text-muted-foreground uppercase font-semibold">{s.l}</p>
+                              <p className={`text-lg font-black ${s.c}`}>{s.v}</p>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="rounded-xl bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/25 p-4">
+                          <p className="text-[10px] font-black text-violet-500 dark:text-violet-400 uppercase tracking-widest mb-2">Calculation</p>
+                          <div className="flex items-center gap-2 flex-wrap text-sm font-mono">
+                            <span className="bg-background border border-border rounded-lg px-2.5 py-1 font-black">$50,000 × 0.5%</span>
+                            <span className="text-muted-foreground">=</span>
+                            <span className="bg-background border border-border rounded-lg px-2.5 py-1 font-black">$250 risk</span>
+                            <span className="text-muted-foreground">÷</span>
+                            <span className="bg-background border border-border rounded-lg px-2.5 py-1 font-black">15 pts</span>
+                            <span className="text-muted-foreground">=</span>
+                            <span className="bg-violet-600 text-white rounded-lg px-3 py-1 font-black">$16.67 / point</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-                <div className="rounded-2xl border border-border bg-card p-5">
-                  <p className="text-sm font-black text-foreground mb-2">Real Chart Examples</p>
-                  <p className="text-xs text-muted-foreground mb-4">Use the AI assistant to get specific chart examples for this concept.</p>
-                  <button onClick={() => { askAI(`Give me a detailed step-by-step example of ${lesson.title} on Gold (XAUUSD) chart. Include: exact price levels, which candles form the pattern, entry price, stop loss, take profit, and final outcome.`, 'example'); setTab('lesson'); }}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-black transition-colors shadow-md shadow-violet-500/20">
-                    <Sparkles className="h-3.5 w-3.5"/> Generate AI Chart Example
-                  </button>
-                </div>
+
+                    {/* Trader A vs B */}
+                    <div>
+                      <h4 className="text-base font-black text-foreground mb-3">Why Trader A Survives and Trader B Blows Up</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {[
+                          { label:'✅ Trader A — 0.5% Risk', border:'border-emerald-200 dark:border-emerald-500/25', bg:'bg-emerald-50 dark:bg-emerald-500/5', title:'text-emerald-700 dark:text-emerald-400',
+                            rows:[['Trade 1','Win','+$500'],['Trade 2','Loss','-$250'],['Trade 3','Loss','-$250'],['Trade 4','Win','+$500'],['Trade 5','Win','+$500']],
+                            result:'+$1,000', resultColor:'text-emerald-600 dark:text-emerald-400',
+                            note:'10 consecutive losses = only -5% drawdown. Account survives.' },
+                          { label:'❌ Trader B — 5% Risk', border:'border-red-200 dark:border-red-500/25', bg:'bg-red-50 dark:bg-red-500/5', title:'text-red-700 dark:text-red-400',
+                            rows:[['Trade 1','Win','+$5,000'],['Trade 2','Loss','-$5,000'],['Trade 3','Loss','-$5,000'],['Trade 4','Loss','-$5,000'],['Trade 5','Win','+$5,000']],
+                            result:'-$5,000', resultColor:'text-red-600 dark:text-red-400',
+                            note:'3 losses in a row = -15% drawdown. Panic sets in. Account at risk.' },
+                        ].map(trader=>(
+                          <div key={trader.label} className={`rounded-2xl border ${trader.border} ${trader.bg} overflow-hidden`}>
+                            <div className="px-4 py-3 border-b border-current border-opacity-20">
+                              <p className={`text-sm font-black ${trader.title}`}>{trader.label}</p>
+                              <p className="text-xs text-muted-foreground">$100,000 account</p>
+                            </div>
+                            <div className="p-4">
+                              <table className="w-full text-xs mb-3">
+                                <thead><tr className="border-b border-border/50">{['Trade','Result','P&L'].map(h=><th key={h} className="pb-1.5 text-left font-bold text-muted-foreground">{h}</th>)}</tr></thead>
+                                <tbody>
+                                  {trader.rows.map((r,i)=>(
+                                    <tr key={i} className="border-b border-border/30 last:border-0">
+                                      <td className="py-1.5 text-foreground/70">{r[0]}</td>
+                                      <td className={`py-1.5 font-semibold ${r[1]==='Win'?'text-emerald-600 dark:text-emerald-400':'text-red-600 dark:text-red-400'}`}>{r[1]}</td>
+                                      <td className={`py-1.5 font-black ${r[2].startsWith('+')?'text-emerald-600 dark:text-emerald-400':'text-red-600 dark:text-red-400'}`}>{r[2]}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                              <div className="flex items-center justify-between p-2.5 rounded-xl bg-background border border-border">
+                                <span className="text-xs font-bold text-muted-foreground">Net Result</span>
+                                <span className={`text-sm font-black ${trader.resultColor}`}>{trader.result}</span>
+                              </div>
+                              <p className={`text-[10px] mt-2 ${trader.title} opacity-80 leading-snug`}>{trader.note}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {[
+                        { label:'Bullish Setup ↑', bg:'from-emerald-900 to-emerald-700', tag:'VALID', desc:`Price leaves a gap up and returns to fill it. This is a Bullish ${lesson.title}.` },
+                        { label:'Bearish Setup ↓', bg:'from-red-900 to-red-800',          tag:'VALID', desc:`Price leaves a gap down and returns to fill it. This is a Bearish ${lesson.title}.` },
+                      ].map(ex => (
+                        <div key={ex.label} className="rounded-2xl border border-border bg-card overflow-hidden">
+                          <div className={`bg-gradient-to-br ${ex.bg} h-44 flex items-center justify-center`}>
+                            <div className="text-center">
+                              <p className="text-white/50 text-xs uppercase tracking-widest mb-1">{lesson.tags?.[0] || lesson.category}</p>
+                              <div className="text-2xl font-black text-white">{ex.label}</div>
+                              <span className="mt-2 inline-block text-[10px] font-black text-white/70 bg-white/10 border border-white/20 px-2.5 py-1 rounded-full">{ex.tag}</span>
+                            </div>
+                          </div>
+                          <div className="px-4 py-3 border-t border-border">
+                            <p className="text-xs text-muted-foreground leading-relaxed">{ex.desc}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="rounded-2xl border border-border bg-card p-5">
+                      <p className="text-sm font-black text-foreground mb-2">Real Chart Examples</p>
+                      <p className="text-xs text-muted-foreground mb-4">Use the AI assistant to get specific chart examples for this concept.</p>
+                      <button onClick={() => { askAI(`Give me a detailed step-by-step example of ${lesson.title} on Gold (XAUUSD) chart. Include: exact price levels, which candles form the pattern, entry price, stop loss, take profit, and final outcome.`, 'example'); setTab('lesson'); }}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-black transition-colors shadow-md shadow-violet-500/20">
+                        <Sparkles className="h-3.5 w-3.5"/> Generate AI Chart Example
+                      </button>
+                    </div>
+                  </>
+                )}
               </motion.div>
             )}
 
