@@ -22,7 +22,7 @@ interface Lesson {
   xp_reward:number; order_index:number; is_premium:boolean; is_pro:boolean;
   thumbnail_url:string|null; video_url:string|null; content:string|null;
   key_takeaways:string[]; sections:LessonSection[]; quiz_questions:QuizQuestion[];
-  callouts:Callout[];
+  callouts:Callout[]; learning_outcomes:string[];
 }
 interface Progress { lesson_id:string; progress_pct:number; completed:boolean; saved:boolean; notes:string|null; }
 interface Stats { xp_total:number; streak_days:number; hours_studied:number; current_focus:string|null; }
@@ -634,6 +634,302 @@ function renderRichContent(lesson: Lesson, callouts: Callout[]) {
   return <div className="space-y-2">{els}</div>;
 }
 
+// ── Lesson infographic (visual concept diagram per lesson) ────────────────────
+function LessonInfographic({ lesson }: { lesson: Lesson }) {
+  if (lesson.slug === 'risk-position-sizing') {
+    const steps = [
+      { icon:'🏦', label:'Account',      value:'$10,000' },
+      { icon:'⚡', label:'Risk %',       value:'× 1%' },
+      { icon:'💰', label:'Risk Amount',  value:'= $100' },
+      { icon:'📐', label:'Stop Distance',value:'÷ 20 pts' },
+      { icon:'🎯', label:'Position Size', value:'= $5/pt' },
+    ];
+    return (
+      <div className="flex items-center gap-0 flex-wrap justify-center">
+        {steps.map((s, i) => (
+          <React.Fragment key={s.label}>
+            <div className="flex flex-col items-center gap-1 px-2">
+              <div className="w-10 h-10 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-lg">{s.icon}</div>
+              <p className="text-[9px] font-bold text-white/50 uppercase tracking-wider">{s.label}</p>
+              <p className="text-xs font-black text-white">{s.value}</p>
+            </div>
+            {i < steps.length - 1 && <ChevronRight className="h-4 w-4 text-white/30 flex-shrink-0"/>}
+          </React.Fragment>
+        ))}
+      </div>
+    );
+  }
+  if (lesson.slug === 'risk-drawdown-control') {
+    const zones = [
+      { range:'0–5%',  label:'Safe',     color:'bg-emerald-500/80', w:'25%' },
+      { range:'5–10%', label:'Warning',  color:'bg-amber-400/80', w:'50%' },
+      { range:'10–15%',label:'Danger',   color:'bg-orange-500/80', w:'75%' },
+      { range:'15%+',  label:'Critical', color:'bg-red-500/80', w:'100%' },
+    ];
+    return (
+      <div className="w-full space-y-1.5">
+        <p className="text-[9px] font-black text-white/40 uppercase tracking-widest text-center mb-2">Drawdown Zones</p>
+        {zones.map(z => (
+          <div key={z.range} className="flex items-center gap-2">
+            <span className="text-[9px] text-white/50 w-12 text-right flex-shrink-0">{z.range}</span>
+            <div className="flex-1 h-4 rounded-lg overflow-hidden bg-white/5">
+              <div className={`h-full ${z.color} rounded-lg flex items-center justify-center`} style={{ width: z.w }}>
+                <span className="text-[8px] font-black text-white px-1">{z.label}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  if (lesson.slug === 'ict-fair-value-gap') {
+    return (
+      <div className="flex flex-col items-center gap-2 w-full">
+        <p className="text-[9px] font-black text-white/40 uppercase tracking-widest">3-Candle FVG Structure</p>
+        <div className="flex items-end gap-2 justify-center">
+          <div className="flex flex-col items-center gap-1"><div className="w-4 h-16 bg-red-400/80 rounded-sm"/><p className="text-[8px] text-white/50 font-bold">C1</p></div>
+          <div className="flex flex-col items-center gap-1"><div className="w-6 h-24 bg-emerald-400/90 rounded-sm border-2 border-emerald-300/50"/><p className="text-[8px] text-white/50 font-bold">C2</p></div>
+          <div className="flex flex-col items-center gap-1"><div className="w-4 h-12 bg-emerald-300/70 rounded-sm"/><p className="text-[8px] text-white/50 font-bold">C3</p></div>
+          <div className="flex flex-col items-center gap-1 ml-1">
+            <div className="border-l-2 border-dashed border-violet-400/70 h-6 flex items-center"><div className="w-8 h-0 border-t-2 border-dashed border-violet-400/70"/></div>
+            <p className="text-[8px] text-violet-300 font-black">FVG</p>
+          </div>
+        </div>
+        <p className="text-[9px] text-white/40 text-center">C1 High ↔ C3 Low = Imbalance Zone</p>
+      </div>
+    );
+  }
+  if (lesson.slug === 'ict-order-blocks') {
+    return (
+      <div className="flex flex-col items-center gap-2 w-full">
+        <p className="text-[9px] font-black text-white/40 uppercase tracking-widest mb-1">Bullish Order Block</p>
+        <div className="flex items-end gap-1.5 justify-center">
+          {[
+            {h:12, c:'bg-red-400/70', badge:false},
+            {h:16, c:'bg-red-400/80', badge:false},
+            {h:20, c:'bg-red-500/90 border-2 border-amber-300/60', badge:true},
+            {h:32, c:'bg-emerald-400/80', badge:false},
+            {h:40, c:'bg-emerald-500/90', badge:false},
+            {h:36, c:'bg-emerald-400/80', badge:false},
+          ].map((b,i)=>(
+            <div key={i} className="flex flex-col items-center gap-1">
+              <div className={`w-5 ${b.c} rounded-sm`} style={{height:`${b.h*2}px`}}/>
+              {b.badge&&<p className="text-[8px] text-amber-300 font-black">OB</p>}
+            </div>
+          ))}
+        </div>
+        <p className="text-[9px] text-white/40 text-center">Last bearish candle before bullish displacement</p>
+      </div>
+    );
+  }
+  const CAT_VISUAL: Record<string, { lines: string[] }> = {
+    'ICT Concepts':       { lines:['Liquidity → Manipulation → Distribution','Smart Money Protocol'] },
+    'SMC':                { lines:['Market Structure → OBs → FVGs','Institutional Flow Reading'] },
+    'Fundamentals':       { lines:['News → USD Impact → Correlation','Macro → Micro → Entry'] },
+    'Price Action':       { lines:['Structure → Pattern → Entry','Read Price, Not Indicators'] },
+    'Risk Management':    { lines:['Capital First → Process → Profit','Position Size → R:R → Survive'] },
+    'Trading Psychology': { lines:['Process Over Results','Discipline → Consistency → Edge'] },
+    'Replay Drills':      { lines:['See It → Identify → Execute','Deliberate Practice Builds Edge'] },
+    'Prop Firm Strategies':{ lines:['Rules → Risk → Consistency','Pass → Fund → Scale → Withdraw'] },
+  };
+  const v = CAT_VISUAL[lesson.category] ?? { lines:['Learn','Apply','Improve'] };
+  const emoji = ({
+    'ICT Concepts':'🎯','SMC':'🏦','Fundamentals':'📰','Price Action':'📈',
+    'Risk Management':'🛡️','Trading Psychology':'🧠','Replay Drills':'🎮','Prop Firm Strategies':'🏆'
+  } as Record<string,string>)[lesson.category] ?? '📚';
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 w-full h-full py-2">
+      <div className="text-3xl">{emoji}</div>
+      {v.lines.map((line,i)=>(
+        <p key={i} className={`text-xs font-bold ${i===0?'text-white/80':'text-white/50'} text-center leading-snug`}>{line}</p>
+      ))}
+    </div>
+  );
+}
+
+// ── Position Sizing interactive practice ─────────────────────────────────────
+function PositionSizingPractice({ onComplete }: { onComplete: ()=>void }) {
+  const [step, setStep] = useState(0);
+  const [answers, setAnswers] = useState<Record<number,string>>({});
+  const [checked, setChecked] = useState<Record<number,boolean>>({});
+  const [score, setScore] = useState(0);
+  const [done, setDone] = useState(false);
+
+  const exercises = [
+    { id:0, type:'calc' as const, title:'Exercise 1 — Calculate Risk Amount',
+      scenario:'Account: $5,000 · Risk: 1% · Stop Loss: 25 points',
+      question:'What is your risk amount in dollars?',
+      fields:[
+        {label:'Account Size', value:'$5,000', editable:false},
+        {label:'Risk %', value:'1%', editable:false},
+        {label:'Risk Amount', value:'', editable:true},
+      ],
+      correct:'50', display:'$50', hint:'$5,000 × 1% = $50', xp:20 },
+    { id:1, type:'calc' as const, title:'Exercise 2 — Calculate Position Size',
+      scenario:'Account: $20,000 · Risk: 0.5% · Stop Loss: 50 points',
+      question:'What is your position size ($ per point)?',
+      fields:[
+        {label:'Risk Amount', value:'$100', editable:false},
+        {label:'Stop Distance', value:'50 pts', editable:false},
+        {label:'Position Size', value:'', editable:true},
+      ],
+      correct:'2', display:'$2 per point', hint:'$100 ÷ 50 = $2 per point', xp:20 },
+    { id:2, type:'mcq' as const, title:'Exercise 3 — Choose the Correct R:R',
+      scenario:'Entry: 20,000 · Stop: 19,980 (20 pts) · Target: 20,060 (60 pts)',
+      question:'What is the R:R ratio on this trade?',
+      options:['1:1','1:2','1:3','1:4'],
+      correct:'1:3', hint:'R:R = Target ÷ Stop = 60 ÷ 20 = 3 → 1:3', xp:20 },
+    { id:3, type:'mcq' as const, title:'Exercise 4 — Funded Account Decision',
+      scenario:'Funded $100,000 · Daily limit hit at -$3,500 · A+ setup just appeared',
+      question:'What should you do?',
+      options:[
+        "Take the setup — it's A+ quality",
+        'Reduce size to half and take it',
+        'Stop trading for the day — daily limit is non-negotiable',
+        'Take it with extra size to recover the daily loss',
+      ],
+      correct:'Stop trading for the day — daily limit is non-negotiable',
+      hint:'Daily loss limits exist precisely for this moment. No exception ever.', xp:20 },
+    { id:4, type:'mcq' as const, title:'Exercise 5 — Minimum Acceptable R:R',
+      scenario:'You analyze a trade and calculate 1:1.2 R:R.',
+      question:'Should you take this trade?',
+      options:[
+        'Yes — any positive R:R is acceptable',
+        'Yes — if the setup looks good enough',
+        'No — minimum acceptable R:R is 1:1.5',
+        'Yes — 1:1.2 is close enough to 1:1.5',
+      ],
+      correct:'No — minimum acceptable R:R is 1:1.5',
+      hint:'Professional minimum is 1:1.5. Below this, consistent profitability requires an unrealistically high win rate.', xp:20 },
+  ];
+
+  const current = exercises[step];
+  const isLast = step === exercises.length - 1;
+
+  const checkAnswer = () => {
+    const ans = answers[current.id]?.trim().replace(/[$,\s]/g,'') ?? '';
+    const isCorrect = current.type === 'mcq'
+      ? answers[current.id] === current.correct
+      : ans === current.correct.replace(/[$,\s]/g,'');
+    setChecked(p => ({...p, [current.id]: isCorrect}));
+    if (isCorrect) setScore(s => s + current.xp);
+  };
+
+  if (done) return (
+    <div className="rounded-2xl border border-violet-200 dark:border-violet-500/25 bg-violet-50 dark:bg-violet-500/5 p-8 text-center space-y-4">
+      <div className="text-5xl">🎯</div>
+      <p className="text-2xl font-black text-foreground">Practice Complete!</p>
+      <p className="text-sm text-muted-foreground">You earned <span className="font-black text-amber-500">{score} XP</span> out of {exercises.reduce((s,e)=>s+e.xp,0)} possible</p>
+      <div className="flex items-center justify-center gap-2">
+        {exercises.map(e => (
+          <div key={e.id} className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black ${checked[e.id] ? 'bg-emerald-500 text-white' : 'bg-red-100 dark:bg-red-500/15 text-red-500 border border-red-200 dark:border-red-500/25'}`}>
+            {checked[e.id] ? '✓' : '✗'}
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-muted-foreground">Score: {Object.values(checked).filter(Boolean).length}/{exercises.length} correct</p>
+      <div className="flex items-center justify-center gap-3 pt-2">
+        <button onClick={()=>{setStep(0);setAnswers({});setChecked({});setScore(0);setDone(false);}}
+          className="px-5 py-2.5 rounded-xl border border-border text-muted-foreground text-xs font-bold hover:bg-muted transition-all">Try Again</button>
+        <button onClick={onComplete}
+          className="px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-black transition-all shadow-md shadow-violet-500/20">Mark Lesson Complete ✓</button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <div className="flex justify-between text-xs text-muted-foreground mb-2">
+          <span>Exercise {step+1} of {exercises.length}</span>
+          <span className="font-bold text-amber-500">{score} XP earned</span>
+        </div>
+        <div className="flex gap-1.5 mt-2">
+          {exercises.map((e,i)=>(
+            <div key={e.id} className={`h-1.5 flex-1 rounded-full transition-all ${i < step ? 'bg-emerald-500' : i === step ? 'bg-violet-500' : 'bg-muted'}`}/>
+          ))}
+        </div>
+      </div>
+      <div className="rounded-2xl border border-border bg-card overflow-hidden">
+        <div className="px-5 py-4 border-b border-border bg-muted/30 flex items-center gap-3">
+          <div className="w-7 h-7 rounded-xl bg-violet-600 flex items-center justify-center text-white text-xs font-black flex-shrink-0">{step+1}</div>
+          <p className="text-sm font-black text-foreground">{current.title}</p>
+          <span className="ml-auto text-[10px] font-bold text-violet-500 dark:text-violet-400 border border-violet-200 dark:border-violet-500/25 px-1.5 py-0.5 rounded-full">+{current.xp} XP</span>
+        </div>
+        <div className="p-5 space-y-4">
+          <div className="rounded-xl bg-muted/30 border border-border px-4 py-2.5">
+            <p className="text-xs text-muted-foreground"><span className="font-bold text-foreground">Scenario: </span>{current.scenario}</p>
+          </div>
+          <p className="text-sm font-bold text-foreground">{current.question}</p>
+          {current.type === 'calc' && (
+            <div className="grid grid-cols-3 gap-3">
+              {current.fields!.map((f,fi)=>(
+                <div key={fi}>
+                  <p className="text-[10px] text-muted-foreground font-semibold mb-1">{f.label}</p>
+                  {f.editable ? (
+                    <input value={answers[current.id] ?? ''}
+                      onChange={e=>setAnswers(p=>({...p,[current.id]:e.target.value}))}
+                      placeholder="Your answer" disabled={current.id in checked}
+                      className="w-full text-sm bg-background border-2 border-violet-300 dark:border-violet-500/40 rounded-xl px-3 py-2 text-foreground font-mono font-black focus:outline-none focus:border-violet-500 disabled:opacity-60"/>
+                  ) : (
+                    <div className="bg-muted/40 border border-border rounded-xl px-3 py-2 text-sm font-black text-foreground/70">{f.value}</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          {current.type === 'mcq' && (
+            <div className="space-y-2">
+              {current.options!.map(opt=>{
+                const isSelected = answers[current.id] === opt;
+                const wasChecked = current.id in checked;
+                const isCorrect = opt === current.correct;
+                let cls = 'border-border bg-muted/30 text-foreground/70 hover:bg-muted';
+                if (wasChecked) {
+                  if (isCorrect) cls = 'border-emerald-300 dark:border-emerald-500/40 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400';
+                  else if (isSelected) cls = 'border-red-300 dark:border-red-500/40 bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400';
+                  else cls = 'border-border bg-muted/20 text-muted-foreground opacity-50';
+                } else if (isSelected) cls = 'border-violet-400 dark:border-violet-500/50 bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400';
+                return (
+                  <button key={opt} disabled={wasChecked}
+                    onClick={()=>setAnswers(p=>({...p,[current.id]:opt}))}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-medium text-left transition-all disabled:cursor-default ${cls}`}>
+                    <span className="w-5 h-5 rounded-full border-2 flex items-center justify-center text-[9px] font-black flex-shrink-0">{['A','B','C','D'][current.options!.indexOf(opt)]}</span>
+                    {opt}
+                    {wasChecked && isCorrect && <Check className="h-4 w-4 ml-auto flex-shrink-0"/>}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          {current.id in checked && (
+            <motion.div initial={{opacity:0,y:4}} animate={{opacity:1,y:0}}
+              className={`rounded-xl border p-3 text-sm ${checked[current.id] ? 'border-emerald-200 dark:border-emerald-500/25 bg-emerald-50 dark:bg-emerald-500/5 text-emerald-700 dark:text-emerald-400' : 'border-red-200 dark:border-red-500/25 bg-red-50 dark:bg-red-500/5 text-red-700 dark:text-red-400'}`}>
+              <span className="font-black">{checked[current.id] ? '✅ Correct! ' : `❌ Incorrect — Correct answer: ${current.display ?? current.correct}. `}</span>
+              {current.hint}
+            </motion.div>
+          )}
+          <div className="flex items-center justify-between pt-2">
+            <button disabled={step===0} onClick={()=>setStep(s=>s-1)}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-border text-muted-foreground text-xs font-bold hover:bg-muted transition-all disabled:opacity-30">
+              <ChevronLeft className="h-3.5 w-3.5"/> Back
+            </button>
+            {!(current.id in checked) ? (
+              <button disabled={!answers[current.id]} onClick={checkAnswer}
+                className="px-6 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-black transition-all shadow-md shadow-violet-500/20 disabled:opacity-40">Check Answer</button>
+            ) : (
+              <button onClick={()=>{ if (isLast) setDone(true); else setStep(s=>s+1); }}
+                className="flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-black transition-all shadow-md shadow-violet-500/20">
+                {isLast ? 'See Results' : 'Next Exercise'} <ChevronRight className="h-3.5 w-3.5"/>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── LESSON PAGE ───────────────────────────────────────────────────────────────
 function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, onComplete, onSave, onNavigate }: {
   lesson: Lesson; progress: Progress|undefined; gradient: string;
@@ -714,16 +1010,6 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-border text-muted-foreground text-xs font-bold hover:bg-muted hover:text-foreground transition-all">
             <ChevronLeft className="h-3.5 w-3.5"/> Back to Lessons
           </button>
-          <button onClick={() => onSave(lesson.id)}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all ${saved ? 'bg-muted border-border text-foreground' : 'border-border text-muted-foreground hover:bg-muted'}`}>
-            {saved ? <BookmarkCheck className="h-3.5 w-3.5 text-violet-500"/> : <Bookmark className="h-3.5 w-3.5"/>}
-            Save Lesson
-          </button>
-          <button onClick={() => onComplete(lesson.id)}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black transition-all shadow-md ${done ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-violet-600 hover:bg-violet-500 text-white shadow-violet-500/20'}`}>
-            <CheckCircle2 className="h-3.5 w-3.5"/>
-            {done ? '✓ Mark as Completed' : 'Mark as Completed'}
-          </button>
         </div>
       </div>
 
@@ -732,51 +1018,160 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
         {/* ════ LEFT ════ */}
         <div className="flex-1 min-w-0 space-y-0">
 
-          {/* Header card */}
-          <div className="rounded-2xl border border-border bg-card overflow-hidden mb-5">
-            <div className="flex gap-0 flex-col sm:flex-row">
-              <div className={`flex-shrink-0 bg-gradient-to-br ${gradient} flex flex-col items-center justify-center p-5 text-center`}
-                style={{ width: 220, minHeight: 180 }}>
-                <p className="text-[9px] font-black text-white/35 uppercase tracking-widest mb-2">{lesson.category}</p>
-                <p className="text-xl font-black text-white leading-tight uppercase text-center mb-3">
-                  {lesson.subcategory || lesson.tags?.[0] || lesson.category}
-                </p>
-                {lesson.tags?.[0] && (
-                  <span className="text-[10px] font-bold text-white/60 bg-white/10 border border-white/15 px-3 py-1 rounded-full">
-                    {lesson.tags[0]}
-                  </span>
-                )}
-              </div>
-              <div className="flex-1 p-5">
-                <span className="inline-block text-[11px] font-bold bg-violet-100 dark:bg-violet-500/15 text-violet-700 dark:text-violet-400 border border-violet-200 dark:border-violet-500/20 px-2.5 py-1 rounded-lg mb-3">
-                  {lesson.category}
-                </span>
-                <h1 className="text-2xl font-black text-foreground mb-1.5">{lesson.title}</h1>
-                <p className="text-sm text-muted-foreground leading-relaxed mb-4">{lesson.description}</p>
-                <div className="flex items-center gap-3 flex-wrap mb-4">
-                  <span className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border capitalize ${diffCls[lesson.difficulty] ?? 'bg-muted border-border text-muted-foreground'}`}>
-                    {lesson.difficulty}
-                  </span>
-                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <Clock className="h-3.5 w-3.5"/> {lesson.read_time_min} min
-                  </span>
-                  <span className="flex items-center gap-1.5 text-xs font-bold text-amber-500">
-                    <Zap className="h-3.5 w-3.5"/> +{lesson.xp_reward} XP
-                  </span>
-                </div>
-                <div>
-                  <div className="flex justify-between text-[11px] text-muted-foreground mb-1.5">
-                    <span>Your Progress</span>
-                    <span className={`font-bold ${done ? 'text-emerald-500' : ''}`}>{pct}%</span>
+          {/* ── PREMIUM LESSON HERO ── */}
+          {(() => {
+            const accentBar = ({
+              'ICT Concepts':        'from-violet-600 to-violet-400',
+              'SMC':                 'from-blue-600 to-blue-400',
+              'Fundamentals':        'from-amber-600 to-amber-400',
+              'Price Action':        'from-emerald-600 to-emerald-400',
+              'Risk Management':     'from-red-600 to-red-400',
+              'Trading Psychology':  'from-pink-600 to-pink-400',
+              'Replay Drills':       'from-teal-600 to-teal-400',
+              'Prop Firm Strategies':'from-yellow-600 to-yellow-400',
+            } as Record<string,string>)[lesson.category] ?? 'from-violet-600 to-violet-400';
+            const panelGrad = ({
+              'ICT Concepts':        'from-violet-900 via-violet-800 to-violet-700',
+              'SMC':                 'from-blue-900 via-blue-800 to-blue-700',
+              'Fundamentals':        'from-amber-900 via-amber-800 to-amber-700',
+              'Price Action':        'from-emerald-900 via-emerald-800 to-emerald-700',
+              'Risk Management':     'from-red-900 via-red-800 to-red-700',
+              'Trading Psychology':  'from-pink-900 via-pink-800 to-pink-700',
+              'Replay Drills':       'from-teal-900 via-teal-800 to-teal-700',
+              'Prop Firm Strategies':'from-yellow-900 via-yellow-800 to-yellow-700',
+            } as Record<string,string>)[lesson.category] ?? 'from-violet-900 via-violet-800 to-violet-700';
+            return (
+              <div className="rounded-2xl border border-border bg-card overflow-hidden mb-5">
+                <div className={`h-1 w-full bg-gradient-to-r ${accentBar}`}/>
+                <div className="p-5 sm:p-6">
+                  <div className="flex flex-col lg:flex-row gap-6">
+                    {/* LEFT: Visual */}
+                    <div className={`flex-shrink-0 rounded-2xl bg-gradient-to-br ${panelGrad} flex flex-col justify-between p-5 overflow-hidden`} style={{width:220, minHeight:260}}>
+                      <div className="space-y-2">
+                        <span className="inline-flex items-center text-[10px] font-black text-white/80 bg-white/10 border border-white/15 px-2.5 py-1 rounded-full">{lesson.category}</span>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={`text-[10px] font-black px-2 py-0.5 rounded-full border capitalize ${
+                            lesson.difficulty==='beginner' ? 'bg-emerald-500/20 border-emerald-400/30 text-emerald-300'
+                            : lesson.difficulty==='advanced' ? 'bg-violet-500/20 border-violet-400/30 text-violet-300'
+                            : 'bg-white/10 border-white/15 text-white/60'
+                          }`}>{lesson.difficulty}</span>
+                          <span className="text-[10px] text-white/50 flex items-center gap-1"><Clock className="h-3 w-3"/>{lesson.read_time_min}m</span>
+                        </div>
+                      </div>
+                      <div className="flex-1 flex items-center justify-center py-3">
+                        <LessonInfographic lesson={lesson}/>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black text-amber-300 flex items-center gap-1"><Zap className="h-3 w-3"/>+{lesson.xp_reward} XP</span>
+                        {done && <span className="text-[10px] font-black text-emerald-300 flex items-center gap-1"><CheckCircle2 className="h-3 w-3"/>Done</span>}
+                      </div>
+                    </div>
+
+                    {/* CENTER: Title + outcomes */}
+                    <div className="flex-1 min-w-0 flex flex-col gap-4">
+                      <div>
+                        <h1 className="text-2xl sm:text-3xl font-black text-foreground leading-tight mb-2">{lesson.title}</h1>
+                        <p className="text-sm text-muted-foreground leading-relaxed">{lesson.description}</p>
+                      </div>
+                      {(lesson.learning_outcomes ?? []).length > 0 && (
+                        <div>
+                          <p className="text-xs font-black text-foreground uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                            <Target className="h-3.5 w-3.5 text-violet-500"/> After this lesson you will be able to:
+                          </p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                            {(lesson.learning_outcomes ?? []).map((outcome, i) => (
+                              <div key={i} className="flex items-start gap-2">
+                                <div className="w-4 h-4 rounded-full bg-violet-100 dark:bg-violet-500/15 border border-violet-200 dark:border-violet-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                                  <Check className="h-2.5 w-2.5 text-violet-600 dark:text-violet-400" strokeWidth={3}/>
+                                </div>
+                                <p className="text-xs text-foreground/75 leading-snug">{outcome}</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {(lesson.tags ?? []).length > 0 && (
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {(lesson.tags ?? []).map(tag => (
+                            <span key={tag} className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted border border-border text-muted-foreground">{tag}</span>
+                          ))}
+                        </div>
+                      )}
+                      <div className="flex items-center gap-4 pt-1 flex-wrap">
+                        {[
+                          { icon:'👥', value:'2.4k+', label:'Completed' },
+                          { icon:'⭐', value:'4.8',   label:'Rating' },
+                          { icon:'🕐', value:`${lesson.read_time_min} min`, label:'Read time' },
+                          { icon:'📊', value: lesson.difficulty === 'beginner' ? 'Beginner' : lesson.difficulty === 'advanced' ? 'Advanced' : 'Intermediate', label:'Level' },
+                        ].map(s => (
+                          <div key={s.label} className="flex items-center gap-1.5">
+                            <span className="text-sm">{s.icon}</span>
+                            <div>
+                              <p className="text-xs font-black text-foreground leading-none">{s.value}</p>
+                              <p className="text-[9px] text-muted-foreground leading-none mt-0.5">{s.label}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* RIGHT: Progress + actions */}
+                    <div className="flex flex-col items-center gap-4 flex-shrink-0 lg:w-44">
+                      <div className="relative">
+                        {(()=>{
+                          const r=44, circ=2*Math.PI*r;
+                          const color=done?'#10b981':'#7c3aed';
+                          return (
+                            <svg className="-rotate-90" viewBox="0 0 100 100" width="100" height="100">
+                              <circle cx="50" cy="50" r={r} fill="none" strokeWidth="7" className="stroke-muted"/>
+                              <motion.circle cx="50" cy="50" r={r} fill="none" stroke={color} strokeWidth="7"
+                                strokeDasharray={circ}
+                                initial={{strokeDashoffset:circ}}
+                                animate={{strokeDashoffset:circ*(1-pct/100)}}
+                                transition={{duration:1.4,ease}}
+                                strokeLinecap="round"/>
+                            </svg>
+                          );
+                        })()}
+                        <div className="absolute inset-0 flex flex-col items-center justify-center">
+                          <span className={`text-xl font-black ${done?'text-emerald-500':'text-foreground'}`}>{pct}%</span>
+                          <span className="text-[9px] text-muted-foreground">{done?'Complete':'Progress'}</span>
+                        </div>
+                      </div>
+                      <div className="w-full space-y-2 text-center">
+                        <div className="rounded-xl bg-muted/40 border border-border p-2.5">
+                          <p className="text-base font-black text-amber-500">+{lesson.xp_reward}</p>
+                          <p className="text-[9px] text-muted-foreground font-semibold uppercase">XP Reward</p>
+                        </div>
+                      </div>
+                      <div className="w-full space-y-2">
+                        <button onClick={() => onComplete(lesson.id)}
+                          className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-black transition-all shadow-md ${done ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-violet-600 hover:bg-violet-500 text-white shadow-violet-500/20'}`}>
+                          <CheckCircle2 className="h-3.5 w-3.5"/>
+                          {done ? '✓ Completed' : 'Mark Complete'}
+                        </button>
+                        <button onClick={() => onSave(lesson.id)}
+                          className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-xs font-bold border transition-all ${saved ? 'border-violet-200 dark:border-violet-500/30 bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400' : 'border-border text-muted-foreground hover:bg-muted'}`}>
+                          {saved ? <><BookmarkCheck className="h-3.5 w-3.5"/> Saved</> : <><Bookmark className="h-3.5 w-3.5"/> Save Lesson</>}
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                  <div className="h-2 bg-muted rounded-full overflow-hidden">
-                    <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.8 }}
-                      className={`h-full rounded-full ${done ? 'bg-emerald-500' : 'bg-violet-500'}`}/>
+                  <div className="mt-5 pt-4 border-t border-border">
+                    <div className="flex justify-between text-[11px] text-muted-foreground mb-1.5">
+                      <span className="font-semibold">Lesson Progress</span>
+                      <span className={`font-black ${done?'text-emerald-500':''}`}>{pct}%</span>
+                    </div>
+                    <div className="h-2 bg-muted rounded-full overflow-hidden">
+                      <motion.div initial={{width:0}} animate={{width:`${pct}%`}}
+                        transition={{duration:0.8,ease}}
+                        className={`h-full rounded-full ${done?'bg-emerald-500':'bg-violet-500'}`}/>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
+            );
+          })()}
 
           {/* Tabs */}
           <div className="flex gap-0 border-b border-border mb-6">
@@ -822,39 +1217,183 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
 
             {tab === 'examples' && (
               <motion.div key="examples" initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} transition={{ duration: 0.15 }} className="space-y-5">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {[
-                    { label:'Bullish Setup ↑', bg:'from-emerald-900 to-emerald-700', tag:'VALID', desc:`Price leaves a gap up and returns to fill it. This is a Bullish ${lesson.title}.` },
-                    { label:'Bearish Setup ↓', bg:'from-red-900 to-red-800',          tag:'VALID', desc:`Price leaves a gap down and returns to fill it. This is a Bearish ${lesson.title}.` },
-                  ].map(ex => (
-                    <div key={ex.label} className="rounded-2xl border border-border bg-card overflow-hidden">
-                      <div className={`bg-gradient-to-br ${ex.bg} h-44 flex items-center justify-center`}>
-                        <div className="text-center">
-                          <p className="text-white/50 text-xs uppercase tracking-widest mb-1">{lesson.tags?.[0] || lesson.category}</p>
-                          <div className="text-2xl font-black text-white">{ex.label}</div>
-                          <span className="mt-2 inline-block text-[10px] font-black text-white/70 bg-white/10 border border-white/20 px-2.5 py-1 rounded-full">{ex.tag}</span>
+                {lesson.slug === 'risk-position-sizing' ? (
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-lg font-black text-foreground mb-1">Real Trading Examples</h3>
+                      <p className="text-sm text-muted-foreground">See exactly how position sizing works — and what happens when it is ignored.</p>
+                    </div>
+
+                    {/* Example 1 */}
+                    <div className="rounded-2xl border border-border bg-card overflow-hidden">
+                      <div className="flex items-center gap-3 px-5 py-3.5 border-b border-border bg-muted/30">
+                        <div className="w-6 h-6 rounded-full bg-violet-600 flex items-center justify-center text-white text-xs font-black flex-shrink-0">1</div>
+                        <p className="text-sm font-black text-foreground">NAS100 — $10,000 Personal Account</p>
+                      </div>
+                      <div className="p-5">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+                          {[
+                            {l:'Account', v:'$10,000', c:'text-foreground'},
+                            {l:'Risk %',  v:'1%',      c:'text-violet-600 dark:text-violet-400'},
+                            {l:'Stop',    v:'20 pts',  c:'text-foreground'},
+                            {l:'Risk $',  v:'$100',    c:'text-emerald-600 dark:text-emerald-400'},
+                          ].map(s=>(
+                            <div key={s.l} className="bg-muted/40 rounded-xl p-3 text-center">
+                              <p className="text-[9px] text-muted-foreground uppercase font-semibold">{s.l}</p>
+                              <p className={`text-lg font-black ${s.c}`}>{s.v}</p>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="rounded-xl bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/25 p-4 mb-4">
+                          <p className="text-[10px] font-black text-violet-500 dark:text-violet-400 uppercase tracking-widest mb-2">Calculation</p>
+                          <div className="flex items-center gap-2 flex-wrap text-sm font-mono">
+                            <span className="bg-background border border-border rounded-lg px-2.5 py-1 text-foreground font-black">$10,000 × 1%</span>
+                            <span className="text-muted-foreground">=</span>
+                            <span className="bg-background border border-border rounded-lg px-2.5 py-1 text-foreground font-black">$100 risk</span>
+                            <span className="text-muted-foreground">÷</span>
+                            <span className="bg-background border border-border rounded-lg px-2.5 py-1 text-foreground font-black">20 pts</span>
+                            <span className="text-muted-foreground">=</span>
+                            <span className="bg-violet-600 text-white rounded-lg px-3 py-1 font-black">$5 / point</span>
+                          </div>
+                        </div>
+                        <div className="rounded-xl border border-border overflow-hidden">
+                          <div className="grid grid-cols-3 bg-muted/50 border-b border-border text-center">
+                            {['Outcome','P&L','Account'].map(h=>(
+                              <div key={h} className="px-3 py-2 text-[10px] font-black text-muted-foreground uppercase">{h}</div>
+                            ))}
+                          </div>
+                          {[
+                            {o:'Trade Wins (+40 pts)',  pnl:'+$200', acc:'$10,200', cls:'text-emerald-600 dark:text-emerald-400'},
+                            {o:'Trade Loses (-20 pts)', pnl:'-$100', acc:'$9,900',  cls:'text-red-600 dark:text-red-400'},
+                          ].map(r=>(
+                            <div key={r.o} className="grid grid-cols-3 text-center border-b border-border last:border-0 text-xs">
+                              <div className="px-3 py-2.5 text-foreground/70 text-left">{r.o}</div>
+                              <div className={`px-3 py-2.5 font-black ${r.cls}`}>{r.pnl}</div>
+                              <div className="px-3 py-2.5 text-foreground font-semibold">{r.acc}</div>
+                            </div>
+                          ))}
                         </div>
                       </div>
-                      <div className="px-4 py-3 border-t border-border">
-                        <p className="text-xs text-muted-foreground leading-relaxed">{ex.desc}</p>
+                    </div>
+
+                    {/* Example 2 */}
+                    <div className="rounded-2xl border border-border bg-card overflow-hidden">
+                      <div className="flex items-center gap-3 px-5 py-3.5 border-b border-border bg-muted/30">
+                        <div className="w-6 h-6 rounded-full bg-violet-600 flex items-center justify-center text-white text-xs font-black flex-shrink-0">2</div>
+                        <p className="text-sm font-black text-foreground">Gold — $50,000 Funded Account</p>
+                        <span className="ml-auto text-[10px] font-bold bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20 px-2 py-0.5 rounded-full">FUNDED</span>
+                      </div>
+                      <div className="p-5">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+                          {[
+                            {l:'Account', v:'$50,000', c:'text-foreground'},
+                            {l:'Risk %',  v:'0.5%',    c:'text-violet-600 dark:text-violet-400'},
+                            {l:'Stop',    v:'15 pts',  c:'text-foreground'},
+                            {l:'Risk $',  v:'$250',    c:'text-emerald-600 dark:text-emerald-400'},
+                          ].map(s=>(
+                            <div key={s.l} className="bg-muted/40 rounded-xl p-3 text-center">
+                              <p className="text-[9px] text-muted-foreground uppercase font-semibold">{s.l}</p>
+                              <p className={`text-lg font-black ${s.c}`}>{s.v}</p>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="rounded-xl bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/25 p-4">
+                          <p className="text-[10px] font-black text-violet-500 dark:text-violet-400 uppercase tracking-widest mb-2">Calculation</p>
+                          <div className="flex items-center gap-2 flex-wrap text-sm font-mono">
+                            <span className="bg-background border border-border rounded-lg px-2.5 py-1 font-black">$50,000 × 0.5%</span>
+                            <span className="text-muted-foreground">=</span>
+                            <span className="bg-background border border-border rounded-lg px-2.5 py-1 font-black">$250 risk</span>
+                            <span className="text-muted-foreground">÷</span>
+                            <span className="bg-background border border-border rounded-lg px-2.5 py-1 font-black">15 pts</span>
+                            <span className="text-muted-foreground">=</span>
+                            <span className="bg-violet-600 text-white rounded-lg px-3 py-1 font-black">$16.67 / point</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-                <div className="rounded-2xl border border-border bg-card p-5">
-                  <p className="text-sm font-black text-foreground mb-2">Real Chart Examples</p>
-                  <p className="text-xs text-muted-foreground mb-4">Use the AI assistant to get specific chart examples for this concept.</p>
-                  <button onClick={() => { askAI(`Give me a detailed step-by-step example of ${lesson.title} on Gold (XAUUSD) chart. Include: exact price levels, which candles form the pattern, entry price, stop loss, take profit, and final outcome.`, 'example'); setTab('lesson'); }}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-black transition-colors shadow-md shadow-violet-500/20">
-                    <Sparkles className="h-3.5 w-3.5"/> Generate AI Chart Example
-                  </button>
-                </div>
+
+                    {/* Trader A vs B */}
+                    <div>
+                      <h4 className="text-base font-black text-foreground mb-3">Why Trader A Survives and Trader B Blows Up</h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {[
+                          { label:'✅ Trader A — 0.5% Risk', border:'border-emerald-200 dark:border-emerald-500/25', bg:'bg-emerald-50 dark:bg-emerald-500/5', title:'text-emerald-700 dark:text-emerald-400',
+                            rows:[['Trade 1','Win','+$500'],['Trade 2','Loss','-$250'],['Trade 3','Loss','-$250'],['Trade 4','Win','+$500'],['Trade 5','Win','+$500']],
+                            result:'+$1,000', resultColor:'text-emerald-600 dark:text-emerald-400',
+                            note:'10 consecutive losses = only -5% drawdown. Account survives.' },
+                          { label:'❌ Trader B — 5% Risk', border:'border-red-200 dark:border-red-500/25', bg:'bg-red-50 dark:bg-red-500/5', title:'text-red-700 dark:text-red-400',
+                            rows:[['Trade 1','Win','+$5,000'],['Trade 2','Loss','-$5,000'],['Trade 3','Loss','-$5,000'],['Trade 4','Loss','-$5,000'],['Trade 5','Win','+$5,000']],
+                            result:'-$5,000', resultColor:'text-red-600 dark:text-red-400',
+                            note:'3 losses in a row = -15% drawdown. Panic sets in. Account at risk.' },
+                        ].map(trader=>(
+                          <div key={trader.label} className={`rounded-2xl border ${trader.border} ${trader.bg} overflow-hidden`}>
+                            <div className="px-4 py-3 border-b border-current border-opacity-20">
+                              <p className={`text-sm font-black ${trader.title}`}>{trader.label}</p>
+                              <p className="text-xs text-muted-foreground">$100,000 account</p>
+                            </div>
+                            <div className="p-4">
+                              <table className="w-full text-xs mb-3">
+                                <thead><tr className="border-b border-border/50">{['Trade','Result','P&L'].map(h=><th key={h} className="pb-1.5 text-left font-bold text-muted-foreground">{h}</th>)}</tr></thead>
+                                <tbody>
+                                  {trader.rows.map((r,i)=>(
+                                    <tr key={i} className="border-b border-border/30 last:border-0">
+                                      <td className="py-1.5 text-foreground/70">{r[0]}</td>
+                                      <td className={`py-1.5 font-semibold ${r[1]==='Win'?'text-emerald-600 dark:text-emerald-400':'text-red-600 dark:text-red-400'}`}>{r[1]}</td>
+                                      <td className={`py-1.5 font-black ${r[2].startsWith('+')?'text-emerald-600 dark:text-emerald-400':'text-red-600 dark:text-red-400'}`}>{r[2]}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                              <div className="flex items-center justify-between p-2.5 rounded-xl bg-background border border-border">
+                                <span className="text-xs font-bold text-muted-foreground">Net Result</span>
+                                <span className={`text-sm font-black ${trader.resultColor}`}>{trader.result}</span>
+                              </div>
+                              <p className={`text-[10px] mt-2 ${trader.title} opacity-80 leading-snug`}>{trader.note}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {[
+                        { label:'Bullish Setup ↑', bg:'from-emerald-900 to-emerald-700', tag:'VALID', desc:`Price leaves a gap up and returns to fill it. This is a Bullish ${lesson.title}.` },
+                        { label:'Bearish Setup ↓', bg:'from-red-900 to-red-800',          tag:'VALID', desc:`Price leaves a gap down and returns to fill it. This is a Bearish ${lesson.title}.` },
+                      ].map(ex => (
+                        <div key={ex.label} className="rounded-2xl border border-border bg-card overflow-hidden">
+                          <div className={`bg-gradient-to-br ${ex.bg} h-44 flex items-center justify-center`}>
+                            <div className="text-center">
+                              <p className="text-white/50 text-xs uppercase tracking-widest mb-1">{lesson.tags?.[0] || lesson.category}</p>
+                              <div className="text-2xl font-black text-white">{ex.label}</div>
+                              <span className="mt-2 inline-block text-[10px] font-black text-white/70 bg-white/10 border border-white/20 px-2.5 py-1 rounded-full">{ex.tag}</span>
+                            </div>
+                          </div>
+                          <div className="px-4 py-3 border-t border-border">
+                            <p className="text-xs text-muted-foreground leading-relaxed">{ex.desc}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="rounded-2xl border border-border bg-card p-5">
+                      <p className="text-sm font-black text-foreground mb-2">Real Chart Examples</p>
+                      <p className="text-xs text-muted-foreground mb-4">Use the AI assistant to get specific chart examples for this concept.</p>
+                      <button onClick={() => { askAI(`Give me a detailed step-by-step example of ${lesson.title} on Gold (XAUUSD) chart. Include: exact price levels, which candles form the pattern, entry price, stop loss, take profit, and final outcome.`, 'example'); setTab('lesson'); }}
+                        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-black transition-colors shadow-md shadow-violet-500/20">
+                        <Sparkles className="h-3.5 w-3.5"/> Generate AI Chart Example
+                      </button>
+                    </div>
+                  </>
+                )}
               </motion.div>
             )}
 
             {tab === 'practice' && (
               <motion.div key="practice" initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} transition={{ duration: 0.15 }} className="space-y-4">
-                {quizQs.length > 0 ? (
+                {lesson.slug === 'risk-position-sizing' ? (
+                  <PositionSizingPractice onComplete={()=>onComplete(lesson.id)}/>
+                ) : quizQs.length > 0 ? (
                   <>
                     <div className="flex items-center justify-between">
                       <p className="text-base font-black text-foreground flex items-center gap-2"><Target className="h-5 w-5 text-violet-500"/> Knowledge Check</p>
@@ -946,8 +1485,15 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
                 <div className="rounded-2xl border border-border bg-card p-5">
                   <p className="text-sm font-black text-foreground mb-1 flex items-center gap-2"><FileText className="h-4 w-4 text-violet-500"/> My Notes</p>
                   <p className="text-xs text-muted-foreground mb-4">Notes are saved to your account and visible only to you.</p>
+                  {lesson.slug === 'risk-position-sizing' && !notes && (
+                    <button
+                      onClick={()=>setNotes(`# My Position Sizing Rules\n\n## Account Details\n- Account type: \n- Account size: $\n- Platform: \n\n## Risk Rules\n- Max risk per trade: %  ($)\n- Daily loss limit: %  ($)\n- Weekly loss limit: %  ($)\n- Monthly max drawdown: %\n\n## Trading Rules\n- Preferred R:R minimum: 1:\n- Max trades per day: \n- Instruments I trade: \n\n## Funded Account Rules (if applicable)\n- Firm name: \n- Daily drawdown limit: %\n- Max drawdown limit: %\n- Profit target: %\n\n## My Position Size Formula\nRisk Amount = Account × Risk %\nPosition Size = Risk Amount ÷ Stop Distance\n\n## Lessons Learned\n1. \n2. \n3. `)}
+                      className="w-full mb-4 py-2.5 rounded-xl border border-violet-200 dark:border-violet-500/25 bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 text-xs font-bold hover:bg-violet-100 dark:hover:bg-violet-500/15 transition-colors flex items-center justify-center gap-2">
+                      <FileText className="h-3.5 w-3.5"/> Load "My Position Sizing Rules" Template
+                    </button>
+                  )}
                   <textarea value={notes} onChange={e => setNotes(e.target.value)}
-                    placeholder={`Your notes for "${lesson.title}"...\n\n💡 Tips:\n- Write key concepts in your own words\n- Note your questions to research later\n- Record real chart examples you spot\n- Write what you would do differently`}
+                    placeholder={lesson.slug === 'risk-position-sizing' ? 'Write your personal risk rules, position sizing limits, and lessons learned...\n\nTip: Click "Load Template" above for a structured starting point.' : `Your notes for "${lesson.title}"...\n\n💡 Tips:\n- Write key concepts in your own words\n- Note your questions to research later\n- Record real chart examples you spot\n- Write what you would do differently`}
                     rows={14}
                     className="w-full text-sm bg-background border border-border rounded-xl px-4 py-3.5 text-foreground placeholder:text-muted-foreground/25 focus:outline-none focus:border-violet-500/40 resize-none leading-relaxed font-mono"/>
                   <div className="flex items-center justify-between mt-3">
@@ -964,25 +1510,90 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
 
             {tab === 'resources' && (
               <motion.div key="resources" initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} transition={{ duration: 0.15 }} className="space-y-4">
-                <div className="rounded-2xl border border-border bg-card p-5">
-                  <p className="text-sm font-black text-foreground mb-4 flex items-center gap-2"><BookOpen className="h-4 w-4 text-violet-500"/> Downloads</p>
-                  <div className="space-y-2">
-                    {[
-                      { icon:'📄', label:`${lesson.title} Cheat Sheet`, type:'PDF' },
-                      { icon:'✅', label:`${lesson.category} Guide`,     type:'PDF' },
-                      { icon:'📋', label:`${lesson.title} Checklist`,    type:'PDF' },
-                    ].map(r => (
-                      <div key={r.label} className="flex items-center gap-3 px-4 py-3.5 rounded-xl border border-border bg-muted/20 hover:bg-muted/40 transition-colors">
-                        <span className="text-xl">{r.icon}</span>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-foreground truncate">{r.label}</p>
-                          <p className="text-[10px] text-muted-foreground">{r.type}</p>
-                        </div>
-                        <span className="text-[10px] font-bold text-violet-500 dark:text-violet-400 hover:opacity-70 cursor-pointer transition-opacity">Download</span>
+                {lesson.slug === 'risk-position-sizing' ? (
+                  <>
+                    <div className="rounded-2xl border border-border bg-card p-5">
+                      <p className="text-sm font-black text-foreground mb-4 flex items-center gap-2"><BookOpen className="h-4 w-4 text-violet-500"/> Downloads</p>
+                      <div className="space-y-2">
+                        {[
+                          {icon:'📊',label:'Position Sizing Cheat Sheet',desc:'Formula, examples, and quick reference table — 1 page'},
+                          {icon:'📋',label:'Daily Risk Checklist',desc:'Pre-trade checklist — print and keep at your desk'},
+                          {icon:'📘',label:'Risk Management PDF Guide',desc:'Complete guide: position sizing, R:R, drawdown — 12 pages'},
+                          {icon:'🏆',label:'Funded Account Survival Guide',desc:'Challenge rules, risk model, payout strategy — 8 pages'},
+                        ].map(r=>(
+                          <div key={r.label} className="flex items-center gap-3 px-4 py-3.5 rounded-xl border border-border bg-muted/20 hover:bg-muted/40 transition-colors group cursor-pointer">
+                            <span className="text-2xl flex-shrink-0">{r.icon}</span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-foreground truncate">{r.label}</p>
+                              <p className="text-[10px] text-muted-foreground">{r.desc}</p>
+                            </div>
+                            <span className="text-[10px] font-bold text-violet-500 dark:text-violet-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">Download →</span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    </div>
+                    <div className="rounded-2xl border border-border bg-card p-5">
+                      <p className="text-sm font-black text-foreground mb-4">Pre-Trade Checklist</p>
+                      <p className="text-xs text-muted-foreground mb-4">Run through this before every single trade. If any item fails — do not enter.</p>
+                      <div className="space-y-0">
+                        {[
+                          'Risk amount calculated (account × risk %)',
+                          'Stop loss defined and placed on chart',
+                          'Position size calculated (risk ÷ stop distance)',
+                          'Take profit target defined',
+                          'R:R verified — minimum 1:1.5',
+                          'Daily loss limit checked — room available',
+                          'Entry criteria fully met (not FOMO)',
+                          'Trade is during a killzone',
+                        ].map((item,i)=>(
+                          <div key={i} className="flex items-center gap-3 py-2.5 border-b border-border last:border-0">
+                            <div className="w-5 h-5 rounded border-2 border-border flex-shrink-0"/>
+                            <p className="text-sm text-foreground/75">{item}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="rounded-2xl border border-border bg-card p-5">
+                      <p className="text-sm font-black text-foreground mb-4">Key Formulas — Quick Reference</p>
+                      <div className="space-y-3">
+                        {[
+                          {label:'Risk Amount', formula:'Account Balance × Risk %'},
+                          {label:'Position Size', formula:'Risk Amount ÷ Stop Distance'},
+                          {label:'R:R Ratio', formula:'Target Distance ÷ Stop Distance'},
+                          {label:'Breakeven WR', formula:'1 ÷ (1 + R:R) × 100'},
+                          {label:'Recovery Needed', formula:'Loss % ÷ (1 − Loss %) × 100'},
+                        ].map(f=>(
+                          <div key={f.label} className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-muted/30 border border-border">
+                            <span className="text-[10px] font-black text-muted-foreground w-28 flex-shrink-0">{f.label}</span>
+                            <span className="text-sm font-mono font-bold text-foreground">{f.formula}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="rounded-2xl border border-border bg-card p-5">
+                      <p className="text-sm font-black text-foreground mb-4 flex items-center gap-2"><BookOpen className="h-4 w-4 text-violet-500"/> Downloads</p>
+                      <div className="space-y-2">
+                        {[
+                          { icon:'📄', label:`${lesson.title} Cheat Sheet`, type:'PDF' },
+                          { icon:'✅', label:`${lesson.category} Guide`,     type:'PDF' },
+                          { icon:'📋', label:`${lesson.title} Checklist`,    type:'PDF' },
+                        ].map(r => (
+                          <div key={r.label} className="flex items-center gap-3 px-4 py-3.5 rounded-xl border border-border bg-muted/20 hover:bg-muted/40 transition-colors">
+                            <span className="text-xl">{r.icon}</span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-foreground truncate">{r.label}</p>
+                              <p className="text-[10px] text-muted-foreground">{r.type}</p>
+                            </div>
+                            <span className="text-[10px] font-bold text-violet-500 dark:text-violet-400 hover:opacity-70 cursor-pointer transition-opacity">Download</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
                 <div className="rounded-2xl border border-border bg-card p-5">
                   <p className="text-sm font-black text-foreground mb-3">Related Lessons</p>
                   <div className="space-y-1.5">
