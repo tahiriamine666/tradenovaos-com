@@ -1010,16 +1010,6 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
             className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-border text-muted-foreground text-xs font-bold hover:bg-muted hover:text-foreground transition-all">
             <ChevronLeft className="h-3.5 w-3.5"/> Back to Lessons
           </button>
-          <button onClick={() => onSave(lesson.id)}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl border text-xs font-bold transition-all ${saved ? 'bg-muted border-border text-foreground' : 'border-border text-muted-foreground hover:bg-muted'}`}>
-            {saved ? <BookmarkCheck className="h-3.5 w-3.5 text-violet-500"/> : <Bookmark className="h-3.5 w-3.5"/>}
-            Save Lesson
-          </button>
-          <button onClick={() => onComplete(lesson.id)}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-black transition-all shadow-md ${done ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-500/20' : 'bg-violet-600 hover:bg-violet-500 text-white shadow-violet-500/20'}`}>
-            <CheckCircle2 className="h-3.5 w-3.5"/>
-            {done ? '✓ Mark as Completed' : 'Mark as Completed'}
-          </button>
         </div>
       </div>
 
