@@ -1485,8 +1485,15 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
                 <div className="rounded-2xl border border-border bg-card p-5">
                   <p className="text-sm font-black text-foreground mb-1 flex items-center gap-2"><FileText className="h-4 w-4 text-violet-500"/> My Notes</p>
                   <p className="text-xs text-muted-foreground mb-4">Notes are saved to your account and visible only to you.</p>
+                  {lesson.slug === 'risk-position-sizing' && !notes && (
+                    <button
+                      onClick={()=>setNotes(`# My Position Sizing Rules\n\n## Account Details\n- Account type: \n- Account size: $\n- Platform: \n\n## Risk Rules\n- Max risk per trade: %  ($)\n- Daily loss limit: %  ($)\n- Weekly loss limit: %  ($)\n- Monthly max drawdown: %\n\n## Trading Rules\n- Preferred R:R minimum: 1:\n- Max trades per day: \n- Instruments I trade: \n\n## Funded Account Rules (if applicable)\n- Firm name: \n- Daily drawdown limit: %\n- Max drawdown limit: %\n- Profit target: %\n\n## My Position Size Formula\nRisk Amount = Account × Risk %\nPosition Size = Risk Amount ÷ Stop Distance\n\n## Lessons Learned\n1. \n2. \n3. `)}
+                      className="w-full mb-4 py-2.5 rounded-xl border border-violet-200 dark:border-violet-500/25 bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 text-xs font-bold hover:bg-violet-100 dark:hover:bg-violet-500/15 transition-colors flex items-center justify-center gap-2">
+                      <FileText className="h-3.5 w-3.5"/> Load "My Position Sizing Rules" Template
+                    </button>
+                  )}
                   <textarea value={notes} onChange={e => setNotes(e.target.value)}
-                    placeholder={`Your notes for "${lesson.title}"...\n\n💡 Tips:\n- Write key concepts in your own words\n- Note your questions to research later\n- Record real chart examples you spot\n- Write what you would do differently`}
+                    placeholder={lesson.slug === 'risk-position-sizing' ? 'Write your personal risk rules, position sizing limits, and lessons learned...\n\nTip: Click "Load Template" above for a structured starting point.' : `Your notes for "${lesson.title}"...\n\n💡 Tips:\n- Write key concepts in your own words\n- Note your questions to research later\n- Record real chart examples you spot\n- Write what you would do differently`}
                     rows={14}
                     className="w-full text-sm bg-background border border-border rounded-xl px-4 py-3.5 text-foreground placeholder:text-muted-foreground/25 focus:outline-none focus:border-violet-500/40 resize-none leading-relaxed font-mono"/>
                   <div className="flex items-center justify-between mt-3">
