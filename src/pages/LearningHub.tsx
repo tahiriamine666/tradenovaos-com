@@ -22,7 +22,7 @@ interface Lesson {
   xp_reward:number; order_index:number; is_premium:boolean; is_pro:boolean;
   thumbnail_url:string|null; video_url:string|null; content:string|null;
   key_takeaways:string[]; sections:LessonSection[]; quiz_questions:QuizQuestion[];
-  callouts:Callout[];
+  callouts:Callout[]; learning_outcomes:string[];
 }
 interface Progress { lesson_id:string; progress_pct:number; completed:boolean; saved:boolean; notes:string|null; }
 interface Stats { xp_total:number; streak_days:number; hours_studied:number; current_focus:string|null; }
