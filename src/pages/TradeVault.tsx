@@ -1301,6 +1301,16 @@ Trade: ${trade.pair} ${trade.side?.toUpperCase()} ${trade.outcome?.toUpperCase()
           />
         )}
       </AnimatePresence>
+
+      {/* Import CSV Dialog */}
+      <Dialog open={importOpen} onOpenChange={setImportOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Import Trades</DialogTitle>
+          </DialogHeader>
+          <CSVImport onImportComplete={() => { setImportOpen(false); load(); }} />
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 }
