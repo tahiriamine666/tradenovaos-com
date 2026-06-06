@@ -1910,6 +1910,85 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
                       </div>
                     </div>
                   </>
+                ) : lesson.slug === 'risk-drawdown-control' ? (
+                  <>
+                    <div className="rounded-2xl border border-border bg-card p-5">
+                      <p className="text-sm font-black text-foreground mb-4 flex items-center gap-2">
+                        <BookOpen className="h-4 w-4 text-violet-500"/> Downloads
+                      </p>
+                      <div className="space-y-2">
+                        {[
+                          {icon:'📊',label:'Drawdown Recovery Cheat Sheet',    desc:'Quick reference — levels, actions, rules — 1 page'},
+                          {icon:'📋',label:'Daily Loss Checklist',              desc:'Print and check before every session'},
+                          {icon:'📘',label:'Risk Reduction Guide',              desc:'Step-by-step guide to reducing risk during drawdown'},
+                          {icon:'🏆',label:'Funded Account Recovery Plan',      desc:'Prop firm-specific recovery protocol — 6 pages'},
+                          {icon:'🧠',label:'Trading Psychology Recovery Guide', desc:'Emotional reset framework after losing streaks'},
+                        ].map(r=>(
+                          <div key={r.label} className="flex items-center gap-3 px-4 py-3.5 rounded-xl border border-border bg-muted/20 hover:bg-muted/40 transition-colors group cursor-pointer">
+                            <span className="text-2xl flex-shrink-0">{r.icon}</span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-foreground truncate">{r.label}</p>
+                              <p className="text-[10px] text-muted-foreground">{r.desc}</p>
+                            </div>
+                            <span className="text-[10px] font-bold text-violet-500 dark:text-violet-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">Download →</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-border bg-card p-5">
+                      <p className="text-sm font-black text-foreground mb-2">Before Trading During Recovery</p>
+                      <p className="text-xs text-muted-foreground mb-4">Complete this checklist every session while in drawdown. One unchecked item = postpone trading.</p>
+                      <div className="space-y-0">
+                        {[
+                          'Daily loss limit noted in writing before opening charts',
+                          'Risk per trade reduced to drawdown tier level',
+                          'All previous losing trades reviewed — patterns identified',
+                          'Written session plan completed — only A+ setups defined',
+                          'Emotion check: calm and process-focused (not P&L focused)',
+                          'Maximum trade count for today set (2–3 only)',
+                          'Recovery plan confirmed — no impulse trades',
+                        ].map((item,i)=>(
+                          <div key={i} className="flex items-center gap-3 py-2.5 border-b border-border last:border-0">
+                            <div className="w-5 h-5 rounded border-2 border-border flex-shrink-0"/>
+                            <p className="text-sm text-foreground/75">{item}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-border bg-card p-5">
+                      <p className="text-sm font-black text-foreground mb-4">Recovery Math — Quick Reference</p>
+                      <DataTable
+                        headers={['Drawdown', 'Account $100K', 'Gain to Recover']}
+                        rows={[
+                          ['5%',  '$95,000', '5.3%'],
+                          ['10%', '$90,000', '11.1%'],
+                          ['15%', '$85,000', '17.6%'],
+                          ['20%', '$80,000', '25.0%'],
+                          ['30%', '$70,000', '42.9%'],
+                          ['50%', '$50,000', '100.0%'],
+                        ]}
+                      />
+                    </div>
+
+                    <div className="rounded-2xl border border-border bg-card p-5">
+                      <p className="text-sm font-black text-foreground mb-4">Loss Streak Rules — Quick Reference</p>
+                      <div className="space-y-2">
+                        {[
+                          {trigger:'After 2 losses', action:'Reduce risk by 25%',   color:'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400'},
+                          {trigger:'After 3 losses', action:'Reduce risk by 50%',   color:'bg-orange-100 dark:bg-orange-500/15 text-orange-700 dark:text-orange-400'},
+                          {trigger:'After 4 losses', action:'Stop and review journal', color:'bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400'},
+                          {trigger:'Daily limit hit', action:'Stop immediately — no exceptions', color:'bg-red-200 dark:bg-red-500/20 text-red-800 dark:text-red-300'},
+                        ].map(r=>(
+                          <div key={r.trigger} className="flex items-center gap-3 px-4 py-3 rounded-xl border border-border">
+                            <span className={`text-[10px] font-black px-2.5 py-1 rounded-lg flex-shrink-0 ${r.color}`}>{r.trigger}</span>
+                            <span className="text-sm font-semibold text-foreground">{r.action}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
                 ) : (
                   <>
                     <div className="rounded-2xl border border-border bg-card p-5">
