@@ -483,11 +483,13 @@ function TradingDashboardInner() {
           {active === 'admin' && <AdminPanel />}
 
 
-          {active === 'import' && (
+
+          {active === 'calendar' && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <CSVImport onImportComplete={fetchDashboardData} />
+              <TradingCalendar dark={dark} />
             </motion.div>
           )}
+
       </div>
     </AppLayout>
   );
