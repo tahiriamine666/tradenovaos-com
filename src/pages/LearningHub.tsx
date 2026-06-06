@@ -1824,6 +1824,13 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
                       <FileText className="h-3.5 w-3.5"/> Load "My Position Sizing Rules" Template
                     </button>
                   )}
+                  {lesson.slug === 'risk-drawdown-control' && !notes && (
+                    <button
+                      onClick={()=>setNotes(`# My Drawdown Recovery Rules\n\n## Account Settings\n- Account type: \n- Account size: $\n- Platform: \n\n## Loss Limits\n- Maximum daily loss: %  ($)\n- Maximum weekly loss: %  ($)\n- Maximum monthly drawdown: %\n\n## Loss Streak Rules\n- After 2 consecutive losses: \n- After 3 consecutive losses: \n- After 4 consecutive losses: \n- When I stop trading immediately: \n\n## Drawdown Response by Level\n- 0–5% (Green): \n- 5–10% (Yellow): \n- 10–15% (Red): \n- 15%+ (Danger): \n\n## My Recovery Strategy\n1. \n2. \n3. \n4. \n5. \n\n## Recovery Checklist\n☐ Risk reduced\n☐ Reviewed all losing trades\n☐ Identified mistake patterns\n☐ Trading plan updated\n☐ Emotions checked\n\n## Lessons Learned from Drawdowns\n1. \n2. \n3. `)}
+                      className="w-full mb-4 py-2.5 rounded-xl border border-violet-200 dark:border-violet-500/25 bg-violet-50 dark:bg-violet-500/[0.08] text-violet-600 dark:text-violet-400 text-xs font-bold hover:bg-violet-100 dark:hover:bg-violet-500/[0.12] transition-colors flex items-center justify-center gap-2">
+                      <FileText className="h-3.5 w-3.5"/> Load "My Drawdown Recovery Rules" Template
+                    </button>
+                  )}
                   <textarea value={notes} onChange={e => setNotes(e.target.value)}
                     placeholder={lesson.slug === 'risk-position-sizing' ? 'Write your personal risk rules, position sizing limits, and lessons learned...\n\nTip: Click "Load Template" above for a structured starting point.' : `Your notes for "${lesson.title}"...\n\n💡 Tips:\n- Write key concepts in your own words\n- Note your questions to research later\n- Record real chart examples you spot\n- Write what you would do differently`}
                     rows={14}
