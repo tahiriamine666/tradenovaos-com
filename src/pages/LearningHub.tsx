@@ -747,6 +747,173 @@ function LessonInfographic({ lesson }: { lesson: Lesson }) {
   );
 }
 
+// ── Drawdown Recovery interactive practice ───────────────────────────────────
+function DrawdownPractice({ onComplete }: { onComplete: ()=>void }) {
+  const [step,    setStep]    = useState(0);
+  const [answers, setAnswers] = useState<Record<number,string>>({});
+  const [checked, setChecked] = useState<Record<number,boolean>>({});
+  const [score,   setScore]   = useState(0);
+  const [done,    setDone]    = useState(false);
+
+  const exercises = [
+    { id:0, type:'calc' as const, xp:20,
+      title:'Exercise 1 — Calculate Current Balance',
+      scenario:'Account Peak: $10,000 · Drawdown: 10%',
+      question:'What is the current account balance?',
+      inputLabel:'Current Balance ($)', correct:'9000', display:'$9,000',
+      hint:'$10,000 × (1 − 10%) = $10,000 × 0.90 = $9,000' },
+    { id:1, type:'mcq' as const, xp:20,
+      title:'Exercise 2 — Correct Response to 3 Losses',
+      scenario:'You have lost 3 trades in a row on your personal account.',
+      question:'What is the professional response?',
+      options:['Increase risk to recover faster','Reduce risk by 50% and review trades','Double lot size on the next trade','Keep the same risk — streaks always reverse'],
+      correct:'Reduce risk by 50% and review trades',
+      hint:'After 3 consecutive losses, professional rule: cut risk by 50% and review before the next trade.' },
+    { id:2, type:'calc' as const, xp:20,
+      title:'Exercise 3 — Calculate Drawdown Percentage',
+      scenario:'Account: $50,000 · Current Balance: $45,000',
+      question:'What is the drawdown percentage?',
+      inputLabel:'Drawdown %', correct:'10', display:'10%',
+      hint:'DD% = (50,000 − 45,000) ÷ 50,000 × 100 = 5,000 ÷ 50,000 × 100 = 10%' },
+    { id:3, type:'mcq' as const, xp:20,
+      title:'Exercise 4 — Recovery Math',
+      scenario:'Your account suffered a 20% drawdown.',
+      question:'What percentage gain is needed to fully recover?',
+      options:['20%','22%','25%','30%'], correct:'25%',
+      hint:'After 20% loss: $10,000 → $8,000. To recover $2,000 from $8,000: $2,000 ÷ $8,000 = 25%.' },
+    { id:4, type:'mcq' as const, xp:20,
+      title:'Exercise 5 — Funded Account Drawdown',
+      scenario:'Funded $100K · Max drawdown: 10% · Current drawdown: 8% · Daily loss limit: 4%',
+      question:'How much room do you have before violating the max drawdown rule?',
+      options:['$4,000','$2,000','$8,000','$1,000'], correct:'$2,000',
+      hint:'Max: 10% of $100K = $10,000. Current: 8% = $8,000. Remaining: $10,000 − $8,000 = $2,000.' },
+  ];
+
+  const current = exercises[step];
+  const isLast  = step === exercises.length - 1;
+
+  const checkAnswer = () => {
+    const raw = (answers[current.id] ?? '').trim().replace(/[$,%\s]/g,'');
+    const correct = current.correct.replace(/[$,%\s]/g,'');
+    const isOk = current.type === 'mcq' ? answers[current.id] === current.correct : raw === correct;
+    setChecked(p => ({...p, [current.id]: isOk}));
+    if (isOk) setScore(s => s + current.xp);
+  };
+
+  if (done) return (
+    <div className="rounded-2xl border border-violet-200 dark:border-violet-500/25 bg-violet-50 dark:bg-violet-500/5 p-8 text-center space-y-4">
+      <div className="text-5xl">📊</div>
+      <p className="text-2xl font-black text-foreground">Practice Complete!</p>
+      <p className="text-sm text-muted-foreground">You scored <span className="font-black text-amber-500">{score} XP</span> out of {exercises.reduce((s,e)=>s+e.xp,0)} possible</p>
+      <div className="flex items-center justify-center gap-2">
+        {exercises.map(e=>(
+          <div key={e.id} className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black ${checked[e.id]?'bg-emerald-500 text-white':'bg-red-100 dark:bg-red-500/15 text-red-500 border border-red-200 dark:border-red-500/25'}`}>
+            {checked[e.id]?'✓':'✗'}
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-muted-foreground">{Object.values(checked).filter(Boolean).length}/{exercises.length} correct</p>
+      <div className="flex items-center justify-center gap-3 pt-2">
+        <button onClick={()=>{setStep(0);setAnswers({});setChecked({});setScore(0);setDone(false);}}
+          className="px-5 py-2.5 rounded-xl border border-border text-muted-foreground text-xs font-bold hover:bg-muted transition-all">
+          Try Again
+        </button>
+        <button onClick={onComplete}
+          className="px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-black transition-all shadow-md shadow-violet-500/20">
+          Mark Lesson Complete ✓
+        </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <div className="flex justify-between text-xs text-muted-foreground mb-2">
+          <span>Exercise {step+1} of {exercises.length}</span>
+          <span className="font-bold text-amber-500">{score} XP earned</span>
+        </div>
+        <div className="h-2 bg-muted rounded-full overflow-hidden mb-2">
+          <div className="h-full bg-violet-500 rounded-full transition-all" style={{width:`${(step/exercises.length)*100}%`}}/>
+        </div>
+        <div className="flex gap-1.5">
+          {exercises.map((_,i)=>(
+            <div key={i} className={`h-1.5 flex-1 rounded-full transition-all ${i<step?'bg-emerald-500':i===step?'bg-violet-500':'bg-muted'}`}/>
+          ))}
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-border bg-card overflow-hidden">
+        <div className="px-5 py-4 border-b border-border bg-muted/30 flex items-center gap-3">
+          <div className="w-7 h-7 rounded-xl bg-violet-600 flex items-center justify-center text-white text-xs font-black flex-shrink-0">{step+1}</div>
+          <p className="text-sm font-black text-foreground">{current.title}</p>
+          <span className="ml-auto text-[10px] font-bold text-violet-500 dark:text-violet-400 border border-violet-200 dark:border-violet-500/25 px-1.5 py-0.5 rounded-full">+{current.xp} XP</span>
+        </div>
+        <div className="p-5 space-y-4">
+          <div className="rounded-xl bg-muted/30 border border-border px-4 py-2.5">
+            <p className="text-xs text-muted-foreground"><span className="font-bold text-foreground">Scenario: </span>{current.scenario}</p>
+          </div>
+          <p className="text-sm font-bold text-foreground">{current.question}</p>
+
+          {current.type === 'calc' && (
+            <div>
+              <p className="text-[10px] text-muted-foreground font-semibold mb-1.5">{current.inputLabel}</p>
+              <input value={answers[current.id]??''} onChange={e=>setAnswers(p=>({...p,[current.id]:e.target.value}))}
+                placeholder="Your answer..." disabled={current.id in checked}
+                className="w-full text-sm bg-background border-2 border-violet-300 dark:border-violet-500/40 rounded-xl px-4 py-2.5 text-foreground font-mono font-black focus:outline-none focus:border-violet-500 disabled:opacity-60 max-w-xs"/>
+            </div>
+          )}
+
+          {current.type === 'mcq' && (
+            <div className="space-y-2">
+              {current.options!.map(opt=>{
+                const isSel=answers[current.id]===opt; const wasChk=current.id in checked; const isOk=opt===current.correct;
+                let cls='border-border bg-muted/30 text-foreground/70 hover:bg-muted';
+                if(wasChk){if(isOk)cls='border-emerald-300 dark:border-emerald-500/40 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400';else if(isSel)cls='border-red-300 dark:border-red-500/40 bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400';else cls='border-border bg-muted/20 text-muted-foreground opacity-50';}
+                else if(isSel)cls='border-violet-400 dark:border-violet-500/50 bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-400';
+                return(
+                  <button key={opt} disabled={wasChk} onClick={()=>setAnswers(p=>({...p,[current.id]:opt}))}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-medium text-left transition-all disabled:cursor-default ${cls}`}>
+                    <span className="w-5 h-5 rounded-full border-2 flex items-center justify-center text-[9px] font-black flex-shrink-0">{['A','B','C','D'][current.options!.indexOf(opt)]}</span>
+                    {opt}
+                    {wasChk&&isOk&&<Check className="h-4 w-4 ml-auto flex-shrink-0"/>}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {current.id in checked && (
+            <motion.div initial={{opacity:0,y:4}} animate={{opacity:1,y:0}}
+              className={`rounded-xl border p-3 text-sm ${checked[current.id]?'border-emerald-200 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/5 text-emerald-700 dark:text-emerald-400':'border-red-200 dark:border-red-500/20 bg-red-50 dark:bg-red-500/5 text-red-700 dark:text-red-400'}`}>
+              <span className="font-black">{checked[current.id]?'✅ Correct! ':`❌ Incorrect — Answer: ${current.display??current.correct}. `}</span>
+              {current.hint}
+            </motion.div>
+          )}
+
+          <div className="flex items-center justify-between pt-2">
+            <button disabled={step===0} onClick={()=>setStep(s=>s-1)}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-border text-muted-foreground text-xs font-bold hover:bg-muted transition-all disabled:opacity-30">
+              <ChevronLeft className="h-3.5 w-3.5"/> Back
+            </button>
+            {!(current.id in checked)?(
+              <button disabled={!answers[current.id]} onClick={checkAnswer}
+                className="px-6 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-black transition-all shadow-md shadow-violet-500/20 disabled:opacity-40">
+                Check Answer
+              </button>
+            ):(
+              <button onClick={()=>isLast?setDone(true):setStep(s=>s+1)}
+                className="flex items-center gap-1.5 px-6 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-black transition-all shadow-md shadow-violet-500/20">
+                {isLast?'See Results':'Next Exercise'}<ChevronRight className="h-3.5 w-3.5"/>
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Position Sizing interactive practice ─────────────────────────────────────
 function PositionSizingPractice({ onComplete }: { onComplete: ()=>void }) {
   const [step, setStep] = useState(0);
