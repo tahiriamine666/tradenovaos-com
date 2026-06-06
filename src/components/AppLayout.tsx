@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   BarChart3, BookOpen, Brain, CalendarDays, CircleDollarSign,
   LayoutDashboard, Menu, PlayCircle, Settings, Shield, Target,
-  Upload, X, ChevronRight,
+  X, ChevronRight,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
