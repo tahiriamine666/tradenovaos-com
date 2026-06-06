@@ -1203,6 +1203,11 @@ Trade: ${trade.pair} ${trade.side?.toUpperCase()} ${trade.outcome?.toUpperCase()
               <CalendarDays className="h-3.5 w-3.5"/> Calendar
             </button>
           </div>
+          <motion.button onClick={() => setImportOpen(true)}
+            whileHover={{scale:1.02}} whileTap={{scale:0.98}}
+            className="flex items-center gap-2 bg-white/[0.03] hover:bg-white/[0.06] text-white border border-white/[0.08] px-4 py-2.5 rounded-xl font-bold text-sm transition-all">
+            <Upload className="h-4 w-4"/> Import Trades
+          </motion.button>
           <motion.button onClick={() => { setEditTrade(null); setModalOpen(true); }}
             whileHover={{scale:1.02}} whileTap={{scale:0.98}}
             className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-lg shadow-violet-500/20">
