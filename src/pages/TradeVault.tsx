@@ -10,6 +10,8 @@ import {
   RotateCcw, SlidersHorizontal,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import CSVImport from '@/components/CSVImport';
 
 // Helper: get a signed URL for a private trade-screenshots object.
 async function getSignedUrl(path: string): Promise<string | null> {
@@ -1106,6 +1108,7 @@ export default function TradeVault() {
   const [editTrade,  setEditTrade]  = useState<Trade|null>(null);
   const [viewTrade,  setViewTrade]  = useState<Trade|null>(null);
   const [view,       setView]       = useState<'table'|'calendar'>('table');
+  const [importOpen, setImportOpen] = useState(false);
   const [filters,    setFilters]    = useState<Filters>(EMPTY_FILTERS);
 
   const load = useCallback(async () => {
@@ -1202,6 +1205,11 @@ Trade: ${trade.pair} ${trade.side?.toUpperCase()} ${trade.outcome?.toUpperCase()
               <CalendarDays className="h-3.5 w-3.5"/> Calendar
             </button>
           </div>
+          <motion.button onClick={() => setImportOpen(true)}
+            whileHover={{scale:1.02}} whileTap={{scale:0.98}}
+            className="flex items-center gap-2 bg-white/[0.03] hover:bg-white/[0.06] text-white border border-white/[0.08] px-4 py-2.5 rounded-xl font-bold text-sm transition-all">
+            <Upload className="h-4 w-4"/> Import Trades
+          </motion.button>
           <motion.button onClick={() => { setEditTrade(null); setModalOpen(true); }}
             whileHover={{scale:1.02}} whileTap={{scale:0.98}}
             className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-all shadow-lg shadow-violet-500/20">
@@ -1295,6 +1303,16 @@ Trade: ${trade.pair} ${trade.side?.toUpperCase()} ${trade.outcome?.toUpperCase()
           />
         )}
       </AnimatePresence>
+
+      {/* Import CSV Dialog */}
+      <Dialog open={importOpen} onOpenChange={setImportOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Import Trades</DialogTitle>
+          </DialogHeader>
+          <CSVImport onImportComplete={() => { setImportOpen(false); load(); }} />
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 }

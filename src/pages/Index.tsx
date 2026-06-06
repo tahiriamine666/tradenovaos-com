@@ -14,7 +14,7 @@ import PricingPage from '@/pages/PricingPage';
 import { TradeDialogProvider, useTradeDialog, useTradesChanged, useNavigationEvent } from '@/contexts/TradeDialogContext';
 import LearningHub from '@/pages/LearningHub';
 import TraderScore from '@/components/TraderScore';
-import CSVImport from '@/components/CSVImport';
+
 import AppLayout, { BASE_ITEMS, ADMIN_ITEM } from '@/components/AppLayout';
 import AdminPanel from '@/pages/AdminPanel';
 const sidebarItems = [...BASE_ITEMS, ADMIN_ITEM];
@@ -483,11 +483,13 @@ function TradingDashboardInner() {
           {active === 'admin' && <AdminPanel />}
 
 
-          {active === 'import' && (
+
+          {active === 'calendar' && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <CSVImport onImportComplete={fetchDashboardData} />
+              <TradingCalendar dark={dark} />
             </motion.div>
           )}
+
       </div>
     </AppLayout>
   );
