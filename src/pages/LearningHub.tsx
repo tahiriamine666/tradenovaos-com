@@ -1723,6 +1723,8 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
               <motion.div key="practice" initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} transition={{ duration: 0.15 }} className="space-y-4">
                 {lesson.slug === 'risk-position-sizing' ? (
                   <PositionSizingPractice onComplete={()=>onComplete(lesson.id)}/>
+                ) : lesson.slug === 'risk-drawdown-control' ? (
+                  <DrawdownPractice onComplete={()=>onComplete(lesson.id)}/>
                 ) : quizQs.length > 0 ? (
                   <>
                     <div className="flex items-center justify-between">
