@@ -10,6 +10,8 @@ import {
   RotateCcw, SlidersHorizontal,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import CSVImport from '@/components/CSVImport';
 
 // Helper: get a signed URL for a private trade-screenshots object.
 async function getSignedUrl(path: string): Promise<string | null> {
