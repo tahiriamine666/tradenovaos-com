@@ -1106,6 +1106,7 @@ export default function TradeVault() {
   const [editTrade,  setEditTrade]  = useState<Trade|null>(null);
   const [viewTrade,  setViewTrade]  = useState<Trade|null>(null);
   const [view,       setView]       = useState<'table'|'calendar'>('table');
+  const [importOpen, setImportOpen] = useState(false);
   const [filters,    setFilters]    = useState<Filters>(EMPTY_FILTERS);
 
   const load = useCallback(async () => {
