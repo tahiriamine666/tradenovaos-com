@@ -54,6 +54,9 @@ export default {
         surface: {
           DEFAULT: "hsl(var(--surface))",
           foreground: "hsl(var(--surface-foreground))",
+          1: "hsl(var(--surface-1))",
+          2: "hsl(var(--surface-2))",
+          3: "hsl(var(--surface-3))",
         },
         success: {
           DEFAULT: "hsl(var(--success))",
@@ -62,6 +65,10 @@ export default {
         warning: {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
+        },
+        danger: {
+          DEFAULT: "hsl(var(--danger))",
+          foreground: "hsl(var(--danger-foreground))",
         },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
