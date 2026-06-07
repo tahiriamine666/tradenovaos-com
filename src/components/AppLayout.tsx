@@ -2,12 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  BarChart3, BookOpen, Brain, CalendarDays, CircleDollarSign,
-  LayoutDashboard, Menu, PlayCircle, Settings, Shield, Target,
-  X, ChevronRight,
+  ArrowLeft, BarChart3, BookOpen, Brain, CalendarDays, CheckCircle2, ChevronRight,
+  Circle, CircleDollarSign, LayoutDashboard, Lock, Menu, PlayCircle, Search,
+  Settings, Shield, Target, X,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useLearningNav, type LearningTreeLesson } from '@/contexts/LearningNavContext';
 
 export const ADMIN_ITEM = { id: 'admin', label: 'Admin Panel', icon: Shield };
 import { Button } from '@/components/ui/button';
