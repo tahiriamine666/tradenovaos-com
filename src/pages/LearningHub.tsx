@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLearningNav } from '@/contexts/LearningNavContext';
 import {
   Search, Clock, Bookmark, BookmarkCheck, CheckCircle2,
   Sparkles, ChevronRight, ChevronLeft, Play, Lock, Flame,
