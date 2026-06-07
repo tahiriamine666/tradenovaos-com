@@ -85,57 +85,219 @@ function SidebarUser({ onNavigate }: { onNavigate: (id: string) => void }) {
   );
 }
 
+function CourseTreeNav({
+  onBack,
+}: {
+  onBack: () => void;
+}) {
+  const { tree } = useLearningNav();
+  const [open, setOpen] = useState<Record<string, boolean>>({});
+
+  // Auto-open category that contains the selected lesson; otherwise first cat.
+  useEffect(() => {
+    if (!tree) return;
+    const selectedCat = tree.lessons.find((l) => l.id === tree.selectedLessonId)?.category;
+    setOpen((prev) => {
+      const next = { ...prev };
+      if (selectedCat && !(selectedCat in next)) next[selectedCat] = true;
+      if (Object.keys(next).length === 0 && tree.categories[0]) {
+        next[tree.categories[0].name] = true;
+      }
+      return next;
+    });
+  }, [tree?.selectedLessonId, tree?.categories.length]);
+
+  if (!tree) {
+    return (
+      <div className="px-3 py-6 text-xs text-muted-foreground">
+        Loading lessons…
+      </div>
+    );
+  }
+
+  const search = tree.search.trim().toLowerCase();
+  const matches = (l: LearningTreeLesson) =>
+    !search || l.title.toLowerCase().includes(search);
+
+  const lessonsByCat: Record<string, LearningTreeLesson[]> = {};
+  tree.lessons.forEach((l) => {
+    (lessonsByCat[l.category] = lessonsByCat[l.category] || []).push(l);
+  });
+  Object.values(lessonsByCat).forEach((arr) =>
+    arr.sort((a, b) => a.order_index - b.order_index),
+  );
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex items-center gap-2 px-3 pt-3 pb-2 flex-shrink-0">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="h-3.5 w-3.5" />
+          All apps
+        </button>
+      </div>
+
+      <div className="px-3 pb-3 flex-shrink-0">
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+          <input
+            value={tree.search}
+            onChange={(e) => tree.setSearch(e.target.value)}
+            placeholder="Search lessons…"
+            className="w-full pl-8 pr-3 py-2 text-xs bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/40"
+          />
+        </div>
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mt-3 px-1">
+          Course library
+        </p>
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-2 pb-3">
+        {tree.categories.map((cat) => {
+          const ls = (lessonsByCat[cat.name] || []).filter(matches);
+          if (ls.length === 0 && search) return null;
+          const done = ls.filter((l) => tree.progress[l.id]?.completed).length;
+          const isOpen = !!open[cat.name] || (!!search && ls.length > 0);
+          const hasSelected = ls.some((l) => l.id === tree.selectedLessonId);
+          return (
+            <div key={cat.id} className="mb-0.5">
+              <button
+                onClick={() =>
+                  setOpen((o) => ({ ...o, [cat.name]: !isOpen }))
+                }
+                className={cx(
+                  'w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-xs font-medium transition-colors',
+                  hasSelected
+                    ? 'text-primary'
+                    : 'text-foreground hover:bg-muted',
+                )}
+              >
+                <ChevronRight
+                  className={cx(
+                    'h-3.5 w-3.5 flex-shrink-0 text-muted-foreground transition-transform',
+                    isOpen && 'rotate-90',
+                  )}
+                />
+                {cat.emoji && (
+                  <span className="text-sm flex-shrink-0">{cat.emoji}</span>
+                )}
+                <span className="flex-1 truncate">{cat.name}</span>
+                <span className="text-[10px] text-muted-foreground tabular-nums">
+                  {done}/{ls.length || (lessonsByCat[cat.name] || []).length}
+                </span>
+              </button>
+
+              <AnimatePresence initial={false}>
+                {isOpen && ls.length > 0 && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.18 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="ml-3 pl-3 border-l border-border my-1 space-y-0.5">
+                      {ls.map((l) => {
+                        const p = tree.progress[l.id];
+                        const isDone = p?.completed ?? false;
+                        const inProg = !isDone && (p?.progress_pct ?? 0) > 0;
+                        const locked = l.is_premium || l.is_pro;
+                        const active = l.id === tree.selectedLessonId;
+                        return (
+                          <button
+                            key={l.id}
+                            onClick={() => tree.onSelect(l)}
+                            className={cx(
+                              'w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-left text-xs transition-colors',
+                              active
+                                ? 'bg-primary text-primary-foreground font-medium'
+                                : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                            )}
+                          >
+                            <span className="flex-1 truncate leading-snug">
+                              {l.title}
+                            </span>
+                            <span className="flex-shrink-0">
+                              {locked ? (
+                                <Lock className={cx('h-3 w-3', active ? 'text-primary-foreground/80' : 'text-muted-foreground')} />
+                              ) : isDone ? (
+                                <CheckCircle2 className={cx('h-3.5 w-3.5', active ? 'text-primary-foreground' : 'text-success')} />
+                              ) : inProg ? (
+                                <div className={cx('h-2 w-2 rounded-full', active ? 'bg-primary-foreground' : 'bg-primary')} />
+                              ) : (
+                                <Circle className="h-3 w-3 text-muted-foreground/50" />
+                              )}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function SidebarContent({ active, onNavigate }: {
   active: string; onNavigate: (id: string) => void;
 }) {
-  const { profile } = useProfile();
   const { user } = useAuth();
+  const { tree } = useLearningNav();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [forceMainNav, setForceMainNav] = useState(false);
+
   useEffect(() => {
     if (!user) { setIsAdmin(false); return; }
     supabase.rpc('is_admin').then(({ data }) => setIsAdmin(!!data));
   }, [user]);
+
+  // Reset the "All apps" override whenever the active route changes.
+  useEffect(() => { setForceMainNav(false); }, [active]);
+
   const items = isAdmin ? [...BASE_ITEMS, ADMIN_ITEM] : BASE_ITEMS;
+  const showCourseTree = active === 'resources' && !!tree && !forceMainNav;
 
   return (
     <div className="flex flex-col h-full">
       <div className="p-5 pb-4 flex-shrink-0"><Logo /></div>
 
-      <div className="px-3 flex-1 overflow-y-auto">
-        <nav className="space-y-0.5">
-          {items.map((item) => {
-            const Icon = item.icon;
-            const sel  = active === item.id;
-            const isAdminItem = item.id === 'admin';
-            return (
-              <button key={item.id} onClick={() => onNavigate(item.id)}
-                className={cx(
-                  'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all',
-                  sel
-                    ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
-                    : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                )}>
-                <Icon className="h-4 w-4 flex-shrink-0" />
-                <span className="flex-1">{item.label}</span>
-                {isAdminItem && !sel && (
-                  <span className="text-[9px] font-semibold tracking-wider px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-500 border border-amber-500/20">ADMIN</span>
-                )}
-              </button>
-            );
-          })}
-        </nav>
-      </div>
+      {showCourseTree ? (
+        <CourseTreeNav onBack={() => setForceMainNav(true)} />
+      ) : (
+        <div className="px-3 flex-1 overflow-y-auto">
+          <nav className="space-y-0.5">
+            {items.map((item) => {
+              const Icon = item.icon;
+              const sel  = active === item.id;
+              const isAdminItem = item.id === 'admin';
+              return (
+                <button key={item.id} onClick={() => onNavigate(item.id)}
+                  className={cx(
+                    'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all',
+                    sel
+                      ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                  )}>
+                  <Icon className="h-4 w-4 flex-shrink-0" />
+                  <span className="flex-1">{item.label}</span>
+                  {isAdminItem && !sel && (
+                    <span className="text-[9px] font-semibold tracking-wider px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">ADMIN</span>
+                  )}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+      )}
 
-      <div className="p-4 flex-shrink-0 space-y-3">
-        {(profile?.plan_type ?? 'free') === 'free' && (
-          <div className="rounded-xl bg-primary/10 border border-primary/20 p-4">
-            <p className="font-heading font-semibold text-sm text-foreground">Upgrade to Pro</p>
-            <p className="text-xs text-muted-foreground mt-1 mb-3">Unlock AI, CSV import, playbooks</p>
-            <Button size="sm" className="w-full rounded-xl h-8 text-xs" onClick={() => onNavigate('pricing')}>
-              Start 7-day free trial
-            </Button>
-          </div>
-        )}
+      <div className="p-4 flex-shrink-0">
         <SidebarUser onNavigate={onNavigate} />
       </div>
     </div>
