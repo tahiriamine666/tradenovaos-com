@@ -81,10 +81,15 @@
 
     --surface: 240 12% 12%;
     --surface-foreground: 210 40% 98%;
+    --surface-1: 240 12% 10%;
+    --surface-2: 240 12% 13%;
+    --surface-3: 240 11% 16%;
     --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
+    --danger: 0 72% 51%;
+    --danger-foreground: 0 0% 100%;
   }
 }
 
