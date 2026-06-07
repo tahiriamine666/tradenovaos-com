@@ -2564,23 +2564,12 @@ export default function LearningHub() {
     return () => setTree(null);
   }, [categories, lessons, progMap, selectedLesson?.id, search, setTree]);
 
-  const sidebar = (
-    <div className="lg:hidden">
-      <CourseSidebar
-        categories={catCounts}
-        lessons={lessons}
-        progMap={progMap}
-        selectedLessonId={selectedLesson?.id ?? null}
-        onSelect={openLesson}
-        search={search}
-        onSearch={setSearch}
-      />
-    </div>
-  );
+  // Course tree now lives in the global AppLayout sidebar (desktop) and
+  // mobile drawer — both consume `useLearningNav`. No in-page sidebar
+  // needed; gives the lesson content the full width.
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-5 items-start">
-      {sidebar}
 
       <div className="flex-1 min-w-0 space-y-6">
         {view === 'lesson' && selectedLesson ? (
