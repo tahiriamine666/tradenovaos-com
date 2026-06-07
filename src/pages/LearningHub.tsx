@@ -2539,16 +2539,43 @@ export default function LearningHub() {
   };
   const backToHub=()=>{ setView('hub'); setSelectedLesson(null); };
 
+  // Publish course tree to the global app sidebar (AppLayout consumes it
+  // when the user is on the Learning Hub route). The in-page CourseSidebar
+  // stays as the mobile fallback (hidden on lg+).
+  const { setTree } = useLearningNav();
+  useEffect(() => {
+    setTree({
+      categories: categories.map(c => ({ id: c.id, name: c.name, emoji: c.emoji })),
+      lessons: lessons.map(l => ({
+        id: l.id, title: l.title, category: l.category,
+        order_index: l.order_index, is_premium: l.is_premium, is_pro: l.is_pro,
+      })),
+      progress: Object.fromEntries(
+        Object.entries(progMap).map(([k, v]) => [k, { completed: v.completed, progress_pct: v.progress_pct }]),
+      ),
+      selectedLessonId: selectedLesson?.id ?? null,
+      onSelect: (l) => {
+        const full = lessons.find(x => x.id === l.id);
+        if (full) openLesson(full);
+      },
+      search,
+      setSearch,
+    });
+    return () => setTree(null);
+  }, [categories, lessons, progMap, selectedLesson?.id, search, setTree]);
+
   const sidebar = (
-    <CourseSidebar
-      categories={catCounts}
-      lessons={lessons}
-      progMap={progMap}
-      selectedLessonId={selectedLesson?.id ?? null}
-      onSelect={openLesson}
-      search={search}
-      onSearch={setSearch}
-    />
+    <div className="lg:hidden">
+      <CourseSidebar
+        categories={catCounts}
+        lessons={lessons}
+        progMap={progMap}
+        selectedLessonId={selectedLesson?.id ?? null}
+        onSelect={openLesson}
+        search={search}
+        onSearch={setSearch}
+      />
+    </div>
   );
 
   return (
