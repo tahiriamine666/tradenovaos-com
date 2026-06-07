@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useLearningNav } from '@/contexts/LearningNavContext';
 import {
   Search, Clock, Bookmark, BookmarkCheck, CheckCircle2,
   Sparkles, ChevronRight, ChevronLeft, Play, Lock, Flame,
@@ -2538,21 +2539,37 @@ export default function LearningHub() {
   };
   const backToHub=()=>{ setView('hub'); setSelectedLesson(null); };
 
-  const sidebar = (
-    <CourseSidebar
-      categories={catCounts}
-      lessons={lessons}
-      progMap={progMap}
-      selectedLessonId={selectedLesson?.id ?? null}
-      onSelect={openLesson}
-      search={search}
-      onSearch={setSearch}
-    />
-  );
+  // Publish course tree to the global app sidebar (AppLayout consumes it
+  // when the user is on the Learning Hub route). The in-page CourseSidebar
+  // stays as the mobile fallback (hidden on lg+).
+  const { setTree } = useLearningNav();
+  useEffect(() => {
+    setTree({
+      categories: categories.map(c => ({ id: c.id, name: c.name, emoji: c.emoji })),
+      lessons: lessons.map(l => ({
+        id: l.id, title: l.title, category: l.category,
+        order_index: l.order_index, is_premium: l.is_premium, is_pro: l.is_pro,
+      })),
+      progress: Object.fromEntries(
+        Object.entries(progMap).map(([k, v]) => [k, { completed: v.completed, progress_pct: v.progress_pct }]),
+      ),
+      selectedLessonId: selectedLesson?.id ?? null,
+      onSelect: (l) => {
+        const full = lessons.find(x => x.id === l.id);
+        if (full) openLesson(full);
+      },
+      search,
+      setSearch,
+    });
+    return () => setTree(null);
+  }, [categories, lessons, progMap, selectedLesson?.id, search, setTree]);
+
+  // Course tree now lives in the global AppLayout sidebar (desktop) and
+  // mobile drawer — both consume `useLearningNav`. No in-page sidebar
+  // needed; gives the lesson content the full width.
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-5 items-start">
-      {sidebar}
 
       <div className="flex-1 min-w-0 space-y-6">
         {view === 'lesson' && selectedLesson ? (
