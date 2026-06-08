@@ -1874,7 +1874,7 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
                     className="w-full text-sm bg-background border border-border rounded-xl px-4 py-3.5 text-foreground placeholder:text-muted-foreground/25 focus:outline-none focus:border-violet-500/40 resize-none leading-relaxed font-mono"/>
                   <div className="flex items-center justify-between mt-3">
                     <p className="text-[10px] text-muted-foreground/50">{notes.length} characters</p>
-                    <button onClick={saveNotes} disabled={savingNotes}
+                    <button onClick={() => saveNotes()} disabled={savingNotes}
                       className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-black transition-colors shadow-md shadow-violet-500/20 disabled:opacity-40">
                       {savingNotes ? <RefreshCw className="h-3.5 w-3.5 animate-spin"/> : <Check className="h-3.5 w-3.5"/>}
                       {savingNotes ? 'Saving...' : 'Save Notes'}
