@@ -1138,7 +1138,7 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
     advanced:     'bg-violet-100 dark:bg-violet-500/15 text-violet-700 dark:text-violet-400 border-violet-200 dark:border-violet-500/25',
   };
 
-  const saveNotes = async () => {
+  const saveNotes = useCallback(async (silent = false) => {
     if (!user) return;
     setSavingNotes(true);
     await supabase.from('lesson_progress').upsert({
@@ -1147,8 +1147,44 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
       updated_at: new Date().toISOString(),
     }, { onConflict: 'user_id,lesson_id' });
     setSavingNotes(false);
-    toast({ title: 'Notes saved ✓' });
+    if (!silent) toast({ title: 'Notes saved ✓' });
+  }, [user, lesson.id, pct, done, saved, notes]);
+
+  // Debounced auto-save: 1.5s after the user stops typing.
+  useEffect(() => {
+    if (!user) return;
+    if (notes === (progress?.notes ?? '')) return;
+    const t = setTimeout(() => saveNotes(true), 1500);
+    return () => clearTimeout(t);
+  }, [notes, user, progress?.notes, saveNotes]);
+
+  // Real downloads built from lesson + notes (no fake files).
+  const downloadFile = (filename: string, contents: string) => {
+    const blob = new Blob([contents], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
+  const lessonSummaryMd = () => {
+    const parts: string[] = [];
+    parts.push(`# ${lesson.title}\n`);
+    parts.push(`_${lesson.category} · ${lesson.difficulty} · ${lesson.read_time_min} min_\n`);
+    if (lesson.description) parts.push(`\n${lesson.description}\n`);
+    if ((lesson.learning_outcomes ?? []).length) {
+      parts.push(`\n## Learning Outcomes\n`);
+      lesson.learning_outcomes!.forEach(o => parts.push(`- ${o}\n`));
+    }
+    if ((lesson.key_takeaways ?? []).length) {
+      parts.push(`\n## Key Takeaways\n`);
+      lesson.key_takeaways!.forEach(t => parts.push(`- ${t}\n`));
+    }
+    if (lesson.content) parts.push(`\n## Lesson\n\n${lesson.content}\n`);
+    parts.push(`\n---\nExported from TradeNova Learning Hub\n`);
+    return parts.join('');
+  };
+  const slug = lesson.slug || lesson.id;
 
   const askAI = async (prompt: string, mode: string) => {
     setAiMode(mode); setAiLoading(true); setAiAnswer('');
