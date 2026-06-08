@@ -1138,7 +1138,7 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
     advanced:     'bg-violet-100 dark:bg-violet-500/15 text-violet-700 dark:text-violet-400 border-violet-200 dark:border-violet-500/25',
   };
 
-  const saveNotes = async () => {
+  const saveNotes = useCallback(async (silent = false) => {
     if (!user) return;
     setSavingNotes(true);
     await supabase.from('lesson_progress').upsert({
@@ -1147,8 +1147,44 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
       updated_at: new Date().toISOString(),
     }, { onConflict: 'user_id,lesson_id' });
     setSavingNotes(false);
-    toast({ title: 'Notes saved ✓' });
+    if (!silent) toast({ title: 'Notes saved ✓' });
+  }, [user, lesson.id, pct, done, saved, notes]);
+
+  // Debounced auto-save: 1.5s after the user stops typing.
+  useEffect(() => {
+    if (!user) return;
+    if (notes === (progress?.notes ?? '')) return;
+    const t = setTimeout(() => saveNotes(true), 1500);
+    return () => clearTimeout(t);
+  }, [notes, user, progress?.notes, saveNotes]);
+
+  // Real downloads built from lesson + notes (no fake files).
+  const downloadFile = (filename: string, contents: string) => {
+    const blob = new Blob([contents], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
+  const lessonSummaryMd = () => {
+    const parts: string[] = [];
+    parts.push(`# ${lesson.title}\n`);
+    parts.push(`_${lesson.category} · ${lesson.difficulty} · ${lesson.read_time_min} min_\n`);
+    if (lesson.description) parts.push(`\n${lesson.description}\n`);
+    if ((lesson.learning_outcomes ?? []).length) {
+      parts.push(`\n## Learning Outcomes\n`);
+      lesson.learning_outcomes!.forEach(o => parts.push(`- ${o}\n`));
+    }
+    if ((lesson.key_takeaways ?? []).length) {
+      parts.push(`\n## Key Takeaways\n`);
+      lesson.key_takeaways!.forEach(t => parts.push(`- ${t}\n`));
+    }
+    if (lesson.content) parts.push(`\n## Lesson\n\n${lesson.content}\n`);
+    parts.push(`\n---\nExported from TradeNova Learning Hub\n`);
+    return parts.join('');
+  };
+  const slug = lesson.slug || lesson.id;
 
   const askAI = async (prompt: string, mode: string) => {
     setAiMode(mode); setAiLoading(true); setAiAnswer('');
@@ -1838,7 +1874,7 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
                     className="w-full text-sm bg-background border border-border rounded-xl px-4 py-3.5 text-foreground placeholder:text-muted-foreground/25 focus:outline-none focus:border-violet-500/40 resize-none leading-relaxed font-mono"/>
                   <div className="flex items-center justify-between mt-3">
                     <p className="text-[10px] text-muted-foreground/50">{notes.length} characters</p>
-                    <button onClick={saveNotes} disabled={savingNotes}
+                    <button onClick={() => saveNotes()} disabled={savingNotes}
                       className="flex items-center gap-2 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-black transition-colors shadow-md shadow-violet-500/20 disabled:opacity-40">
                       {savingNotes ? <RefreshCw className="h-3.5 w-3.5 animate-spin"/> : <Check className="h-3.5 w-3.5"/>}
                       {savingNotes ? 'Saving...' : 'Save Notes'}
@@ -1850,171 +1886,49 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
 
             {tab === 'resources' && (
               <motion.div key="resources" initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} transition={{ duration: 0.15 }} className="space-y-4">
-                {lesson.slug === 'risk-position-sizing' ? (
-                  <>
-                    <div className="rounded-2xl border border-border bg-card p-5">
-                      <p className="text-sm font-black text-foreground mb-4 flex items-center gap-2"><BookOpen className="h-4 w-4 text-violet-500"/> Downloads</p>
-                      <div className="space-y-2">
-                        {[
-                          {icon:'📊',label:'Position Sizing Cheat Sheet',desc:'Formula, examples, and quick reference table — 1 page'},
-                          {icon:'📋',label:'Daily Risk Checklist',desc:'Pre-trade checklist — print and keep at your desk'},
-                          {icon:'📘',label:'Risk Management PDF Guide',desc:'Complete guide: position sizing, R:R, drawdown — 12 pages'},
-                          {icon:'🏆',label:'Funded Account Survival Guide',desc:'Challenge rules, risk model, payout strategy — 8 pages'},
-                        ].map(r=>(
-                          <div key={r.label} className="flex items-center gap-3 px-4 py-3.5 rounded-xl border border-border bg-muted/20 hover:bg-muted/40 transition-colors group cursor-pointer">
-                            <span className="text-2xl flex-shrink-0">{r.icon}</span>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold text-foreground truncate">{r.label}</p>
-                              <p className="text-[10px] text-muted-foreground">{r.desc}</p>
-                            </div>
-                            <span className="text-[10px] font-bold text-violet-500 dark:text-violet-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">Download →</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="rounded-2xl border border-border bg-card p-5">
-                      <p className="text-sm font-black text-foreground mb-4">Pre-Trade Checklist</p>
-                      <p className="text-xs text-muted-foreground mb-4">Run through this before every single trade. If any item fails — do not enter.</p>
-                      <div className="space-y-0">
-                        {[
-                          'Risk amount calculated (account × risk %)',
-                          'Stop loss defined and placed on chart',
-                          'Position size calculated (risk ÷ stop distance)',
-                          'Take profit target defined',
-                          'R:R verified — minimum 1:1.5',
-                          'Daily loss limit checked — room available',
-                          'Entry criteria fully met (not FOMO)',
-                          'Trade is during a killzone',
-                        ].map((item,i)=>(
-                          <div key={i} className="flex items-center gap-3 py-2.5 border-b border-border last:border-0">
-                            <div className="w-5 h-5 rounded border-2 border-border flex-shrink-0"/>
-                            <p className="text-sm text-foreground/75">{item}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="rounded-2xl border border-border bg-card p-5">
-                      <p className="text-sm font-black text-foreground mb-4">Key Formulas — Quick Reference</p>
-                      <div className="space-y-3">
-                        {[
-                          {label:'Risk Amount', formula:'Account Balance × Risk %'},
-                          {label:'Position Size', formula:'Risk Amount ÷ Stop Distance'},
-                          {label:'R:R Ratio', formula:'Target Distance ÷ Stop Distance'},
-                          {label:'Breakeven WR', formula:'1 ÷ (1 + R:R) × 100'},
-                          {label:'Recovery Needed', formula:'Loss % ÷ (1 − Loss %) × 100'},
-                        ].map(f=>(
-                          <div key={f.label} className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-muted/30 border border-border">
-                            <span className="text-[10px] font-black text-muted-foreground w-28 flex-shrink-0">{f.label}</span>
-                            <span className="text-sm font-mono font-bold text-foreground">{f.formula}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                ) : lesson.slug === 'risk-drawdown-control' ? (
-                  <>
-                    <div className="rounded-2xl border border-border bg-card p-5">
-                      <p className="text-sm font-black text-foreground mb-4 flex items-center gap-2">
-                        <BookOpen className="h-4 w-4 text-violet-500"/> Downloads
-                      </p>
-                      <div className="space-y-2">
-                        {[
-                          {icon:'📊',label:'Drawdown Recovery Cheat Sheet',    desc:'Quick reference — levels, actions, rules — 1 page'},
-                          {icon:'📋',label:'Daily Loss Checklist',              desc:'Print and check before every session'},
-                          {icon:'📘',label:'Risk Reduction Guide',              desc:'Step-by-step guide to reducing risk during drawdown'},
-                          {icon:'🏆',label:'Funded Account Recovery Plan',      desc:'Prop firm-specific recovery protocol — 6 pages'},
-                          {icon:'🧠',label:'Trading Psychology Recovery Guide', desc:'Emotional reset framework after losing streaks'},
-                        ].map(r=>(
-                          <div key={r.label} className="flex items-center gap-3 px-4 py-3.5 rounded-xl border border-border bg-muted/20 hover:bg-muted/40 transition-colors group cursor-pointer">
-                            <span className="text-2xl flex-shrink-0">{r.icon}</span>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold text-foreground truncate">{r.label}</p>
-                              <p className="text-[10px] text-muted-foreground">{r.desc}</p>
-                            </div>
-                            <span className="text-[10px] font-bold text-violet-500 dark:text-violet-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">Download →</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl border border-border bg-card p-5">
-                      <p className="text-sm font-black text-foreground mb-2">Before Trading During Recovery</p>
-                      <p className="text-xs text-muted-foreground mb-4">Complete this checklist every session while in drawdown. One unchecked item = postpone trading.</p>
-                      <div className="space-y-0">
-                        {[
-                          'Daily loss limit noted in writing before opening charts',
-                          'Risk per trade reduced to drawdown tier level',
-                          'All previous losing trades reviewed — patterns identified',
-                          'Written session plan completed — only A+ setups defined',
-                          'Emotion check: calm and process-focused (not P&L focused)',
-                          'Maximum trade count for today set (2–3 only)',
-                          'Recovery plan confirmed — no impulse trades',
-                        ].map((item,i)=>(
-                          <div key={i} className="flex items-center gap-3 py-2.5 border-b border-border last:border-0">
-                            <div className="w-5 h-5 rounded border-2 border-border flex-shrink-0"/>
-                            <p className="text-sm text-foreground/75">{item}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl border border-border bg-card p-5">
-                      <p className="text-sm font-black text-foreground mb-4">Recovery Math — Quick Reference</p>
-                      <DataTable
-                        headers={['Drawdown', 'Account $100K', 'Gain to Recover']}
-                        rows={[
-                          ['5%',  '$95,000', '5.3%'],
-                          ['10%', '$90,000', '11.1%'],
-                          ['15%', '$85,000', '17.6%'],
-                          ['20%', '$80,000', '25.0%'],
-                          ['30%', '$70,000', '42.9%'],
-                          ['50%', '$50,000', '100.0%'],
-                        ]}
-                      />
-                    </div>
-
-                    <div className="rounded-2xl border border-border bg-card p-5">
-                      <p className="text-sm font-black text-foreground mb-4">Loss Streak Rules — Quick Reference</p>
-                      <div className="space-y-2">
-                        {[
-                          {trigger:'After 2 losses', action:'Reduce risk by 25%',   color:'bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-400'},
-                          {trigger:'After 3 losses', action:'Reduce risk by 50%',   color:'bg-orange-100 dark:bg-orange-500/15 text-orange-700 dark:text-orange-400'},
-                          {trigger:'After 4 losses', action:'Stop and review journal', color:'bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400'},
-                          {trigger:'Daily limit hit', action:'Stop immediately — no exceptions', color:'bg-red-200 dark:bg-red-500/20 text-red-800 dark:text-red-300'},
-                        ].map(r=>(
-                          <div key={r.trigger} className="flex items-center gap-3 px-4 py-3 rounded-xl border border-border">
-                            <span className={`text-[10px] font-black px-2.5 py-1 rounded-lg flex-shrink-0 ${r.color}`}>{r.trigger}</span>
-                            <span className="text-sm font-semibold text-foreground">{r.action}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="rounded-2xl border border-border bg-card p-5">
-                      <p className="text-sm font-black text-foreground mb-4 flex items-center gap-2"><BookOpen className="h-4 w-4 text-violet-500"/> Downloads</p>
-                      <div className="space-y-2">
-                        {[
-                          { icon:'📄', label:`${lesson.title} Cheat Sheet`, type:'PDF' },
-                          { icon:'✅', label:`${lesson.category} Guide`,     type:'PDF' },
-                          { icon:'📋', label:`${lesson.title} Checklist`,    type:'PDF' },
-                        ].map(r => (
-                          <div key={r.label} className="flex items-center gap-3 px-4 py-3.5 rounded-xl border border-border bg-muted/20 hover:bg-muted/40 transition-colors">
-                            <span className="text-xl">{r.icon}</span>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-semibold text-foreground truncate">{r.label}</p>
-                              <p className="text-[10px] text-muted-foreground">{r.type}</p>
-                            </div>
-                            <span className="text-[10px] font-bold text-violet-500 dark:text-violet-400 hover:opacity-70 cursor-pointer transition-opacity">Download</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
                 <div className="rounded-2xl border border-border bg-card p-5">
-                  <p className="text-sm font-black text-foreground mb-3">Related Lessons</p>
+                  <p className="text-sm font-bold text-foreground mb-1 flex items-center gap-2"><BookOpen className="h-4 w-4 text-violet-500"/> Downloads</p>
+                  <p className="text-xs text-muted-foreground mb-4">Files generated from this lesson and your own notes — saved to your device.</p>
+                  <div className="space-y-2">
+                    {/* Real download — lesson summary */}
+                    <button
+                      onClick={() => downloadFile(`${slug}-summary.md`, lessonSummaryMd())}
+                      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-border bg-background hover:bg-muted/40 transition-colors text-left">
+                      <FileText className="h-4 w-4 text-violet-500 flex-shrink-0"/>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-foreground truncate">Lesson Summary</p>
+                        <p className="text-[11px] text-muted-foreground">Outcomes, takeaways and content · .md</p>
+                      </div>
+                      <span className="text-[10px] font-semibold text-violet-500">Download</span>
+                    </button>
+
+                    {/* Real download — user notes (disabled when empty) */}
+                    <button
+                      onClick={() => notes.trim() && downloadFile(`${slug}-notes.md`, `# Notes — ${lesson.title}\n\n${notes}\n`)}
+                      disabled={!notes.trim()}
+                      className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-border bg-background hover:bg-muted/40 transition-colors text-left disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-background">
+                      <FileText className="h-4 w-4 text-violet-500 flex-shrink-0"/>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-foreground truncate">My Notes Export</p>
+                        <p className="text-[11px] text-muted-foreground">{notes.trim() ? `${notes.length} characters · .md` : 'Write a note first to enable export'}</p>
+                      </div>
+                      <span className="text-[10px] font-semibold text-violet-500">{notes.trim() ? 'Download' : 'Empty'}</span>
+                    </button>
+
+                    {/* Unavailable file — disabled, no fake link */}
+                    <div className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-dashed border-border bg-muted/20 opacity-70">
+                      <BookOpen className="h-4 w-4 text-muted-foreground flex-shrink-0"/>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-muted-foreground truncate">Printable Cheat Sheet (PDF)</p>
+                        <p className="text-[11px] text-muted-foreground">Curated single-page reference</p>
+                      </div>
+                      <span className="text-[10px] font-semibold text-muted-foreground">File unavailable</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl border border-border bg-card p-5">
+                  <p className="text-sm font-bold text-foreground mb-3">Related Lessons</p>
                   <div className="space-y-1.5">
                     {allLessons.filter(l => l.category === lesson.category && l.id !== lesson.id).slice(0, 5).map(l => {
                       const p = progMap[l.id];
