@@ -1205,7 +1205,7 @@ export default function TradeVault() {
           <DialogHeader>
             <DialogTitle>Import Trades</DialogTitle>
           </DialogHeader>
-          <CSVImport onComplete={() => { setImportOpen(false); load(); }} />
+          <CSVImport onImportComplete={() => { setImportOpen(false); load(); }} />
         </DialogContent>
       </Dialog>
     </div>
