@@ -374,8 +374,9 @@ function TradingDashboardInner() {
   }, [user]);
 
   const { totalPnl, tradesCount, winRate, recentTrades, equityData, setupData } = useMemo(() => {
-    const pnl = allTrades.reduce((sum, t) => sum + (t.result ?? 0), 0);
-    const wins = allTrades.filter((t) => (t.result ?? 0) > 0).length;
+    const pnlOf = (t: any) => Number(t.result ?? t.pnl ?? 0);
+    const pnl = allTrades.reduce((sum, t) => sum + pnlOf(t), 0);
+    const wins = allTrades.filter((t) => pnlOf(t) > 0).length;
     const wr = allTrades.length > 0 ? Math.round((wins / allTrades.length) * 100) : 0;
 
     // Equity curve: ascending by trade_date, cumulative result
@@ -386,7 +387,7 @@ function TradingDashboardInner() {
     });
     let cum = 0;
     const equity = ascending.map((t) => {
-      cum += t.result ?? 0;
+      cum += pnlOf(t);
       const d = new Date(t.trade_date);
       const day = isNaN(d.getTime())
         ? String(t.trade_date)
@@ -398,7 +399,7 @@ function TradingDashboardInner() {
     const setupMap: Record<string, number> = {};
     allTrades.forEach((t) => {
       const name = (t.setup && String(t.setup).trim()) || 'Unknown';
-      setupMap[name] = (setupMap[name] ?? 0) + (t.result ?? 0);
+      setupMap[name] = (setupMap[name] ?? 0) + pnlOf(t);
     });
     const setups = Object.entries(setupMap)
       .map(([name, value]) => ({ name, value: Number(value.toFixed(2)) }))
