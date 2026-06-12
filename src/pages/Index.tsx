@@ -266,7 +266,7 @@ function TradingCalendar({ dark }: { dark: boolean }) {
       (data ?? []).forEach((t) => {
         const day = getTradeDateDay(t.trade_date);
         if (!grouped[day]) grouped[day] = { pnl: 0, trades: 0 };
-        grouped[day].pnl += t.result ?? 0;
+        grouped[day].pnl += (t as any).result ?? (t as any).pnl ?? 0;
         grouped[day].trades += 1;
       });
       setDayMap(grouped);
