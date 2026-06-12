@@ -257,7 +257,7 @@ function TradingCalendar({ dark }: { dark: boolean }) {
       const monthEnd = `${year}-${String(month + 1).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
       const { data } = await supabase
         .from('trades')
-        .select('trade_date, result, pnl')
+        .select('trade_date, result')
         .eq('user_id', user.id)
         .gte('trade_date', monthStart)
         .lte('trade_date', monthEnd);
