@@ -91,29 +91,31 @@ function EdgeAnalytics({ dark, user }: { dark: boolean; user: any }) {
   }, [user]);
 
   const metrics = useMemo(() => {
-    const wins = trades.filter(t => (t.result ?? 0) > 0);
-    const losses = trades.filter(t => (t.result ?? 0) < 0);
-    const totalPnl = trades.reduce((s, t) => s + (t.result ?? 0), 0);
+    const pnlOf = (t: any) => Number(t.result ?? t.pnl ?? 0);
+    const wins = trades.filter(t => pnlOf(t) > 0);
+    const losses = trades.filter(t => pnlOf(t) < 0);
+    const totalPnl = trades.reduce((s, t) => s + pnlOf(t), 0);
     const winRate = trades.length > 0 ? Math.round((wins.length / trades.length) * 100) : 0;
-    const avgWin = wins.length > 0 ? wins.reduce((s, t) => s + (t.result ?? 0), 0) / wins.length : 0;
-    const avgLoss = losses.length > 0 ? losses.reduce((s, t) => s + (t.result ?? 0), 0) / losses.length : 0;
-    const best = trades.length > 0 ? Math.max(...trades.map(t => t.result ?? 0)) : 0;
-    const worst = trades.length > 0 ? Math.min(...trades.map(t => t.result ?? 0)) : 0;
+    const avgWin = wins.length > 0 ? wins.reduce((s, t) => s + pnlOf(t), 0) / wins.length : 0;
+    const avgLoss = losses.length > 0 ? losses.reduce((s, t) => s + pnlOf(t), 0) / losses.length : 0;
+    const best = trades.length > 0 ? Math.max(...trades.map(pnlOf)) : 0;
+    const worst = trades.length > 0 ? Math.min(...trades.map(pnlOf)) : 0;
 
     const bySide: Record<string, { count: number; pnl: number }> = {};
     const bySetup: Record<string, { count: number; pnl: number; wins: number }> = {};
     trades.forEach(t => {
+      const p = pnlOf(t);
       const side = (t.side || 'Unknown').toLowerCase();
       if (!bySide[side]) bySide[side] = { count: 0, pnl: 0 };
       bySide[side].count++;
-      bySide[side].pnl += t.result ?? 0;
+      bySide[side].pnl += p;
 
       const setup = t.setup?.trim();
       if (setup) {
         if (!bySetup[setup]) bySetup[setup] = { count: 0, pnl: 0, wins: 0 };
         bySetup[setup].count++;
-        bySetup[setup].pnl += t.result ?? 0;
-        if ((t.result ?? 0) > 0) bySetup[setup].wins++;
+        bySetup[setup].pnl += p;
+        if (p > 0) bySetup[setup].wins++;
       }
     });
 
