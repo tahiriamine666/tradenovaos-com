@@ -91,29 +91,31 @@ function EdgeAnalytics({ dark, user }: { dark: boolean; user: any }) {
   }, [user]);
 
   const metrics = useMemo(() => {
-    const wins = trades.filter(t => (t.result ?? 0) > 0);
-    const losses = trades.filter(t => (t.result ?? 0) < 0);
-    const totalPnl = trades.reduce((s, t) => s + (t.result ?? 0), 0);
+    const pnlOf = (t: any) => Number(t.result ?? t.pnl ?? 0);
+    const wins = trades.filter(t => pnlOf(t) > 0);
+    const losses = trades.filter(t => pnlOf(t) < 0);
+    const totalPnl = trades.reduce((s, t) => s + pnlOf(t), 0);
     const winRate = trades.length > 0 ? Math.round((wins.length / trades.length) * 100) : 0;
-    const avgWin = wins.length > 0 ? wins.reduce((s, t) => s + (t.result ?? 0), 0) / wins.length : 0;
-    const avgLoss = losses.length > 0 ? losses.reduce((s, t) => s + (t.result ?? 0), 0) / losses.length : 0;
-    const best = trades.length > 0 ? Math.max(...trades.map(t => t.result ?? 0)) : 0;
-    const worst = trades.length > 0 ? Math.min(...trades.map(t => t.result ?? 0)) : 0;
+    const avgWin = wins.length > 0 ? wins.reduce((s, t) => s + pnlOf(t), 0) / wins.length : 0;
+    const avgLoss = losses.length > 0 ? losses.reduce((s, t) => s + pnlOf(t), 0) / losses.length : 0;
+    const best = trades.length > 0 ? Math.max(...trades.map(pnlOf)) : 0;
+    const worst = trades.length > 0 ? Math.min(...trades.map(pnlOf)) : 0;
 
     const bySide: Record<string, { count: number; pnl: number }> = {};
     const bySetup: Record<string, { count: number; pnl: number; wins: number }> = {};
     trades.forEach(t => {
+      const p = pnlOf(t);
       const side = (t.side || 'Unknown').toLowerCase();
       if (!bySide[side]) bySide[side] = { count: 0, pnl: 0 };
       bySide[side].count++;
-      bySide[side].pnl += t.result ?? 0;
+      bySide[side].pnl += p;
 
       const setup = t.setup?.trim();
       if (setup) {
         if (!bySetup[setup]) bySetup[setup] = { count: 0, pnl: 0, wins: 0 };
         bySetup[setup].count++;
-        bySetup[setup].pnl += t.result ?? 0;
-        if ((t.result ?? 0) > 0) bySetup[setup].wins++;
+        bySetup[setup].pnl += p;
+        if (p > 0) bySetup[setup].wins++;
       }
     });
 
@@ -264,7 +266,7 @@ function TradingCalendar({ dark }: { dark: boolean }) {
       (data ?? []).forEach((t) => {
         const day = getTradeDateDay(t.trade_date);
         if (!grouped[day]) grouped[day] = { pnl: 0, trades: 0 };
-        grouped[day].pnl += t.result ?? 0;
+        grouped[day].pnl += (t as any).result ?? (t as any).pnl ?? 0;
         grouped[day].trades += 1;
       });
       setDayMap(grouped);
@@ -372,8 +374,9 @@ function TradingDashboardInner() {
   }, [user]);
 
   const { totalPnl, tradesCount, winRate, recentTrades, equityData, setupData } = useMemo(() => {
-    const pnl = allTrades.reduce((sum, t) => sum + (t.result ?? 0), 0);
-    const wins = allTrades.filter((t) => (t.result ?? 0) > 0).length;
+    const pnlOf = (t: any) => Number(t.result ?? t.pnl ?? 0);
+    const pnl = allTrades.reduce((sum, t) => sum + pnlOf(t), 0);
+    const wins = allTrades.filter((t) => pnlOf(t) > 0).length;
     const wr = allTrades.length > 0 ? Math.round((wins / allTrades.length) * 100) : 0;
 
     // Equity curve: ascending by trade_date, cumulative result
@@ -384,7 +387,7 @@ function TradingDashboardInner() {
     });
     let cum = 0;
     const equity = ascending.map((t) => {
-      cum += t.result ?? 0;
+      cum += pnlOf(t);
       const d = new Date(t.trade_date);
       const day = isNaN(d.getTime())
         ? String(t.trade_date)
@@ -396,7 +399,7 @@ function TradingDashboardInner() {
     const setupMap: Record<string, number> = {};
     allTrades.forEach((t) => {
       const name = (t.setup && String(t.setup).trim()) || 'Unknown';
-      setupMap[name] = (setupMap[name] ?? 0) + (t.result ?? 0);
+      setupMap[name] = (setupMap[name] ?? 0) + pnlOf(t);
     });
     const setups = Object.entries(setupMap)
       .map(([name, value]) => ({ name, value: Number(value.toFixed(2)) }))
