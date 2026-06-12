@@ -542,6 +542,56 @@ export type Database = {
         }
         Relationships: []
       }
+      replay_screenshots: {
+        Row: {
+          annotations: Json
+          created_at: string
+          file_name: string | null
+          file_size: number | null
+          id: string
+          mime_type: string | null
+          order_index: number
+          session_id: string | null
+          storage_path: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          annotations?: Json
+          created_at?: string
+          file_name?: string | null
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          order_index?: number
+          session_id?: string | null
+          storage_path: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          annotations?: Json
+          created_at?: string
+          file_name?: string | null
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          order_index?: number
+          session_id?: string | null
+          storage_path?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "replay_screenshots_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "replay_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       replay_sessions: {
         Row: {
           ai_review: Json
