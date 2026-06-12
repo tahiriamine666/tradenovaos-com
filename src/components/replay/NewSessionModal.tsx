@@ -52,14 +52,17 @@ export function NewSessionModal({ open, onOpenChange, onCreated, uploadFirst }: 
     setBusy(true);
     try {
       let chart_path: string | null = null;
+      let uploaded: { size: number; type: string; name: string } | null = null;
       if (file) {
         const ext = file.name.split(".").pop() || "png";
-        const path = `replay/${user.id}/${crypto.randomUUID()}.${ext}`;
+        // RLS requires first folder = auth.uid()
+        const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
         const { error: upErr } = await supabase.storage
-          .from("trade-screenshots")
+          .from("setup-screenshots")
           .upload(path, file, { upsert: false, contentType: file.type });
         if (upErr) throw upErr;
         chart_path = path;
+        uploaded = { size: file.size, type: file.type, name: file.name };
       }
 
       const { data, error } = await supabase
@@ -77,6 +80,20 @@ export function NewSessionModal({ open, onOpenChange, onCreated, uploadFirst }: 
         .select("id")
         .single();
       if (error) throw error;
+
+      if (chart_path && uploaded) {
+        await supabase.from("replay_screenshots").insert({
+          user_id: user.id,
+          session_id: data.id,
+          storage_path: chart_path,
+          file_name: uploaded.name,
+          file_size: uploaded.size,
+          mime_type: uploaded.type,
+          annotations: [],
+          order_index: 0,
+        });
+      }
+
       toast({ title: "Replay created" });
       onCreated(data.id);
       onOpenChange(false);
@@ -86,6 +103,7 @@ export function NewSessionModal({ open, onOpenChange, onCreated, uploadFirst }: 
       setBusy(false);
     }
   };
+
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

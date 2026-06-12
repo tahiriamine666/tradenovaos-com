@@ -33,11 +33,17 @@ import { cn } from "@/lib/utils";
 
 async function signUrl(path: string | null | undefined): Promise<string | null> {
   if (!path) return null;
-  const { data } = await supabase.storage
-    .from("trade-screenshots")
-    .createSignedUrl(path, 3600);
-  return data?.signedUrl ?? null;
+  // New replay uploads live in setup-screenshots (path starts with user.id).
+  // Legacy uploads live in trade-screenshots at "replay/<user.id>/...".
+  const primaryBucket = path.startsWith("replay/") ? "trade-screenshots" : "setup-screenshots";
+  const fallbackBucket = primaryBucket === "setup-screenshots" ? "trade-screenshots" : "setup-screenshots";
+  const tryBucket = async (b: string) => {
+    const { data } = await supabase.storage.from(b).createSignedUrl(path, 3600);
+    return data?.signedUrl ?? null;
+  };
+  return (await tryBucket(primaryBucket)) ?? (await tryBucket(fallbackBucket));
 }
+
 
 function normalize(row: any): ReplaySession {
   return {
@@ -190,19 +196,41 @@ export default function ReplayStudio() {
     patchActive({ trades: { ...(active.trades ?? {}), annotations: a } });
   };
 
-  // Chart upload (replace)
+  // Chart upload (replace) — uses setup-screenshots with user.id as first folder
   const [uploading, setUploading] = React.useState(false);
   const uploadChart = async (file: File) => {
     if (!user || !active) return;
+    if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+      toast({ title: "Invalid file type", description: "Please upload a JPG, PNG, or WebP image", variant: "destructive" });
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Maximum file size is 10MB", variant: "destructive" });
+      return;
+    }
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop() || "png";
-      const path = `replay/${user.id}/${crypto.randomUUID()}.${ext}`;
-      const { error } = await supabase.storage
-        .from("trade-screenshots")
-        .upload(path, file, { upsert: false, contentType: file.type });
-      if (error) throw error;
+      const ext = file.name.split(".").pop() ?? "png";
+      const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("setup-screenshots")
+        .upload(path, file, { upsert: false, contentType: file.type, cacheControl: "3600" });
+      if (upErr) throw upErr;
+
       await patchActive({ trades: { ...(active.trades ?? {}), chart_path: path } });
+
+      const { error: dbErr } = await supabase.from("replay_screenshots").insert({
+        user_id: user.id,
+        session_id: active.id,
+        storage_path: path,
+        file_name: file.name,
+        file_size: file.size,
+        mime_type: file.type,
+        annotations: [],
+        order_index: 0,
+      });
+      if (dbErr) console.error("replay_screenshots insert error:", dbErr);
+
       const u = await signUrl(path);
       setImageUrl(u);
       toast({ title: "Chart uploaded" });
@@ -212,6 +240,7 @@ export default function ReplayStudio() {
       setUploading(false);
     }
   };
+
 
   // Mistakes
   const toggleMistake = (m: string) => {
