@@ -1,65 +1,77 @@
-# Replay Studio Upload Fix
+# Edge Analytics UI Fix
 
-## Root cause (verified against the live database)
+Data logic stays untouched. Only the visual layer of the Edge Analytics page changes.
 
-The attached prompt claims three Supabase fixes are already in place. Two of them are **not** in the project:
+## Scope
 
-1. Bucket `setup-screenshots` — **does not exist**. Only `avatars` and `trade-screenshots` exist.
-2. Table `replay_screenshots` — **does not exist**. Only `replay_sessions` exists.
-3. `replay_sessions` policies — already correct (`auth.uid() = user_id`, scoped to authenticated via `auth.uid()`).
+- `src/components/AnalyticsMetrics.tsx` (the 12 KPI cards rendered via `<AnalyticsMetrics />` on the Edge Analytics tab)
+- `src/pages/Index.tsx` → only the two "Performance by Side" / "Performance by Setup" card rows inside `EdgeAnalytics`
 
-The actual reason uploads fail today: `ReplayStudio.tsx` and `NewSessionModal.tsx` upload to `trade-screenshots` at path `replay/${user.id}/<uuid>.ext`. The bucket's RLS policy requires `(storage.foldername(name))[1] = auth.uid()::text` — i.e. the **first** folder must be the user's UUID. Because the first folder is the literal string `replay`, every insert is rejected by RLS and the upload silently fails.
+Nothing else (Dashboard, Trade Vault, Command Center, Mind Journal, Replay, etc.) is touched.
 
-To follow the attached prompt exactly, we must also provision the missing bucket and table.
+## Changes
 
-## Plan
+### 1. `AnalyticsMetrics.tsx` — replace `MetricCard`
 
-### 1. Database migration
+Remove the right-side colored icon container (`rounded-xl bg-primary/10 p-3`) and the `highlight` color tiers. New card layout per the spec:
 
-- Create private bucket `setup-screenshots` (public = false).
-- Add 4 `storage.objects` policies for `setup-screenshots` (SELECT/INSERT/UPDATE/DELETE) scoped to `authenticated` with `(storage.foldername(name))[1] = auth.uid()::text`.
-- Create table `public.replay_screenshots`:
-  - `id uuid pk`, `user_id uuid not null → auth.users`, `session_id uuid null → replay_sessions(id) on delete cascade`, `storage_path text not null`, `file_name text`, `file_size bigint`, `mime_type text`, `annotations jsonb default '[]'`, `order_index int default 0`, `created_at`, `updated_at`.
-  - GRANTs: `SELECT, INSERT, UPDATE, DELETE` to `authenticated`; `ALL` to `service_role` (no `anon`).
-  - Enable RLS, 4 policies: `auth.uid() = user_id` for all commands.
-  - `updated_at` trigger using existing `public.set_updated_at()`.
-  - Index on `(user_id, session_id, order_index)`.
+- Card: `border-0 shadow-sm bg-card`, padding `p-5`
+- Top row: title (left, muted xs) + icon (right, `h-4 w-4 text-muted-foreground/40`, `strokeWidth={1.5}`), no background behind icon
+- Value: `text-2xl font-bold tabular-nums`, color driven by a new `positive?: boolean` prop (`true` → emerald, `false` → red, `undefined` → foreground)
+- Hint: muted xs under the value
 
-### 2. Frontend changes (only Replay Studio files)
+Update the 12 metric entries to pass `positive` exactly as specified:
 
-**`src/components/replay/NewSessionModal.tsx`**
-- Switch upload bucket from `trade-screenshots` to `setup-screenshots`.
-- Change storage path from `replay/${user.id}/<uuid>.ext` to `${user.id}/${Date.now()}-<rand>.ext` (satisfies RLS: first folder = user.id).
-- After session insert succeeds, also insert a `replay_screenshots` row with `user_id`, `session_id`, `storage_path`, `file_name`, `file_size`, `mime_type`, `annotations: []`, `order_index: 0`.
+```
+Net P&L         positive={net_pnl >= 0}
+Win Rate        positive={win_rate >= 50}
+Profit Factor   (no positive)
+Expectancy      positive={expectancy >= 0}
+Avg Win         positive={true}
+Avg Loss        positive={avg_loss >= 0}   // already 0/negative value, follows spec
+Avg R:R         (no positive)
+Gross Profit    positive={true}
+Gross Loss      positive={gross_loss >= 0}
+Best Trade      positive={true}
+Worst Trade     positive={worst_trade >= 0}
+Std Deviation   (no positive)
+```
 
-**`src/pages/ReplayStudio.tsx`**
-- Add `uploadReplayScreenshot(file, sessionId)` helper that exactly matches the attached prompt (path `${user.id}/<file>`, bucket `setup-screenshots`, signed URL, insert into `replay_screenshots`, validation for jpg/png/webp and 10 MB).
-- Replace existing inline `uploadChart` with a call to that helper; on success patch `active.trades.chart_path` to the new path and set `imageUrl`.
-- Update `signUrl()` to point at `setup-screenshots`. For backwards compatibility with sessions created before this fix, fall back to `trade-screenshots` when a signed URL on `setup-screenshots` is not available (covers historical paths starting with `replay/`).
-- Keep all `replay_sessions` inserts/updates including `user_id` (already the case).
-- Wire a `loadSessionScreenshots(sessionId)` call when active session changes, so reload shows any extra screenshots stored in `replay_screenshots` (currently we only use the single chart_path on `trades`).
+Drop the bottom "Profit Factor explanation" decorative card to keep the page minimal and trader-focused (matches the "no decorative cards" rule used in earlier phases). Keep all calculations exactly as today.
 
-**`src/components/replay/ChartCanvas.tsx`** (only if needed)
-- Accept the new `uploading` boolean already passed in; no behavioural changes required beyond what the prompt's loading-state UI describes (the existing button already shows an uploading state — no redesign).
+The metric calculations the prompt mentions (`profitFactor`, `expectancy`, `avgRR`, `stdDev`) already exist in this component and feed the cards — no recomputation needed.
 
-### 3. Out of scope (untouched)
+### 2. `src/pages/Index.tsx` — Performance by Side / Setup rows
 
-- Trade Vault, Mind Journal, Learning Hub, Command Center, Edge Analytics, Playbook Lab, Landing, Pricing, Payments, Admin, Auth.
-- `trade-screenshots` bucket and its policies (left intact for Trade Vault).
-- `src/integrations/supabase/{client.ts,types.ts}` (types will regenerate after the migration).
+Replace each row's wrapper from:
 
-### 4. Verification after build
+```
+<div className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+```
 
-1. Sign in, open Replay Studio → click **New Session** → upload PNG. Expect: success toast, session row created, screenshot row created in `replay_screenshots`, chart visible in canvas.
-2. Hard reload `/app` route → screenshot still renders (signed URL refreshed on mount).
-3. `psql` checks: `select count(*) from replay_screenshots where user_id = <uid>` returns expected count; storage object path begins with the user's UUID.
-4. Second user cannot list or download the first user's object (RLS).
-5. Invalid file type / >10 MB → toast error, no upload.
+to a clean divider style:
 
-## Deliverables in the final reply
+```
+<div className="flex items-center justify-between py-3 border-b border-border last:border-0">
+```
 
-1. Root cause found (above).
-2. Files changed: migration + `ReplayStudio.tsx` + `NewSessionModal.tsx` (+ tiny ChartCanvas tweak if required).
-3. RLS policies affected: 4 new `storage.objects` policies for `setup-screenshots`, 4 new policies on `replay_screenshots`. No existing policies modified.
-4. Upload flow verification: path layout, signed-URL fetch, DB insert.
-5. Final testing results from the steps above.
+- Remove the `bg-muted/30` pill
+- Keep label + count on the left, P&L on the right
+- P&L styled `text-sm font-bold tabular-nums` with emerald/red based on sign
+- No icons, no badges
+
+### 3. Imports
+
+`AnalyticsMetrics.tsx` already imports the icons it needs. Add `Activity` and `CircleDollarSign` only if we change icon set — current icons already cover all 12 metrics, so no new imports required.
+
+## Out of scope
+
+- Data fetching, Supabase queries, RLS
+- The legacy `MetricCard` defined inside `Index.tsx` (unused by Edge Analytics now that `AnalyticsMetrics` renders the KPIs)
+- All other pages
+
+## Verification
+
+- Open `/app` → Edge Analytics tab
+- Confirm: no purple icon squares, icons sit top-right and look faint, values colored only when meaningful, Performance by Side/Setup render as flat divider rows
+- Values match before/after (calculations unchanged)

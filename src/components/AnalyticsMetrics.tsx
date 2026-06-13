@@ -38,28 +38,26 @@ function fmt(val: number | null, prefix = '$'): string {
 }
 
 function MetricCard({
-  title, value, hint, icon: Icon, highlight,
+  title, value, hint, icon: Icon, positive,
 }: {
   title: string; value: string; hint: string;
-  icon: React.ElementType; highlight?: 'green' | 'red' | 'neutral';
+  icon: React.ElementType; positive?: boolean;
 }) {
   const valueColor =
-    highlight === 'green' ? 'text-emerald-500' :
-    highlight === 'red' ? 'text-red-500' :
+    positive === true ? 'text-emerald-500' :
+    positive === false ? 'text-red-500' :
     'text-foreground';
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
-      <Card className="border-0 shadow-sm">
-        <CardContent className="flex items-center justify-between p-5">
-          <div>
+      <Card className="border-0 shadow-sm bg-card">
+        <CardContent className="p-5">
+          <div className="flex items-start justify-between mb-3">
             <p className="text-xs font-medium text-muted-foreground">{title}</p>
-            <p className={`text-2xl font-bold font-heading mt-0.5 ${valueColor}`}>{value}</p>
-            <p className="text-xs text-muted-foreground mt-1">{hint}</p>
+            <Icon className="h-4 w-4 text-muted-foreground/40" strokeWidth={1.5} />
           </div>
-          <div className="rounded-xl bg-primary/10 p-3 flex-shrink-0">
-            <Icon className="h-5 w-5 text-primary" />
-          </div>
+          <p className={`text-2xl font-bold tabular-nums ${valueColor}`}>{value}</p>
+          <p className="text-xs text-muted-foreground mt-1">{hint}</p>
         </CardContent>
       </Card>
     </motion.div>
@@ -140,52 +138,25 @@ export default function AnalyticsMetrics() {
   }
 
   const metrics = [
-    { title: 'Net P&L',       value: fmt(data.net_pnl),          hint: `From ${data.total_trades} trades`,         icon: TrendingUp,  highlight: data.net_pnl >= 0 ? 'green' : 'red' },
-    { title: 'Win Rate',      value: `${data.win_rate}%`,         hint: `${data.wins} wins · ${data.losses} losses`, icon: Target,      highlight: data.win_rate >= 50 ? 'green' : 'red' },
-    { title: 'Profit Factor', value: data.profit_factor != null ? `${data.profit_factor}x` : '—', hint: 'Gross profit / gross loss', icon: Activity, highlight: (data.profit_factor ?? 0) >= 1.5 ? 'green' : (data.profit_factor ?? 0) >= 1 ? 'neutral' : 'red' },
-    { title: 'Expectancy',    value: fmt(data.expectancy),        hint: 'Avg $ per trade',                           icon: DollarSign,  highlight: data.expectancy >= 0 ? 'green' : 'red' },
-    { title: 'Avg Win',       value: fmt(data.avg_win),           hint: `${data.wins} winning trades`,               icon: CheckCircle2, highlight: 'green' },
-    { title: 'Avg Loss',      value: fmt(data.avg_loss ? -data.avg_loss : 0), hint: `${data.losses} losing trades`, icon: Clock3,      highlight: 'red' },
-    { title: 'Avg R:R',       value: data.avg_rr != null ? `1:${data.avg_rr}` : '—', hint: 'Average risk/reward',  icon: LineChart,   highlight: 'neutral' },
-    { title: 'Gross Profit',  value: fmt(data.gross_profit),      hint: 'Total from winners',                        icon: TrendingUp,  highlight: 'green' },
-    { title: 'Gross Loss',    value: fmt(-data.gross_loss),       hint: 'Total from losers',                         icon: ShieldCheck, highlight: 'red' },
-    { title: 'Best Trade',    value: fmt(data.best_trade),        hint: 'Highest single result',                     icon: Zap,         highlight: 'green' },
-    { title: 'Worst Trade',   value: fmt(data.worst_trade),       hint: 'Lowest single result',                      icon: LineChart,   highlight: 'red' },
-    { title: 'Std Deviation', value: fmt(data.result_stddev),     hint: 'Result consistency',                        icon: BarChart3,   highlight: 'neutral' },
+    { title: 'Net P&L',       value: fmt(data.net_pnl),          hint: `From ${data.total_trades} trades`,         icon: TrendingUp,  positive: data.net_pnl >= 0 },
+    { title: 'Win Rate',      value: `${data.win_rate}%`,         hint: `${data.wins} wins · ${data.losses} losses`, icon: Target,      positive: data.win_rate >= 50 },
+    { title: 'Profit Factor', value: data.profit_factor != null ? `${data.profit_factor}x` : '—', hint: 'Gross profit / gross loss', icon: Activity },
+    { title: 'Expectancy',    value: fmt(data.expectancy),        hint: 'Avg $ per trade',                           icon: DollarSign,  positive: data.expectancy >= 0 },
+    { title: 'Avg Win',       value: fmt(data.avg_win),           hint: `${data.wins} winning trades`,               icon: CheckCircle2, positive: true },
+    { title: 'Avg Loss',      value: fmt(data.avg_loss ? -data.avg_loss : 0), hint: `${data.losses} losing trades`, icon: Clock3,      positive: data.avg_loss === 0 ? undefined : false },
+    { title: 'Avg R:R',       value: data.avg_rr != null ? `1:${data.avg_rr}` : '—', hint: 'Average risk/reward',  icon: LineChart },
+    { title: 'Gross Profit',  value: fmt(data.gross_profit),      hint: 'Total from winners',                        icon: TrendingUp,  positive: true },
+    { title: 'Gross Loss',    value: fmt(-data.gross_loss),       hint: 'Total from losers',                         icon: ShieldCheck, positive: data.gross_loss === 0 ? undefined : false },
+    { title: 'Best Trade',    value: fmt(data.best_trade),        hint: 'Highest single result',                     icon: Zap,         positive: true },
+    { title: 'Worst Trade',   value: fmt(data.worst_trade),       hint: 'Lowest single result',                      icon: LineChart,   positive: data.worst_trade >= 0 },
+    { title: 'Std Deviation', value: fmt(data.result_stddev),     hint: 'Result consistency',                        icon: BarChart3 },
   ];
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {metrics.map(m => (
-          <MetricCard key={m.title} {...m as any} />
-        ))}
-      </div>
-
-      {/* Profit Factor explanation */}
-      {data.profit_factor !== null && (
-        <Card className="border-0 shadow-sm">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-4 flex-wrap">
-              <div className="text-center">
-                <p className="text-xs text-muted-foreground">Profit Factor</p>
-                <p className={`text-3xl font-bold font-heading ${data.profit_factor >= 1.5 ? 'text-emerald-500' : data.profit_factor >= 1 ? 'text-amber-500' : 'text-red-500'}`}>
-                  {data.profit_factor}x
-                </p>
-              </div>
-              <div className="flex-1 text-sm text-muted-foreground">
-                {data.profit_factor >= 2
-                  ? '🟢 Excellent — for every $1 lost, you make $' + data.profit_factor
-                  : data.profit_factor >= 1.5
-                  ? '🟡 Good — consistent edge. Keep it above 1.5x.'
-                  : data.profit_factor >= 1
-                  ? '🟠 Marginal — profitable but thin edge. Focus on cutting losses.'
-                  : '🔴 Below 1 — losing more than winning. Review your setups.'}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {metrics.map(m => (
+        <MetricCard key={m.title} {...m as any} />
+      ))}
     </div>
   );
 }
