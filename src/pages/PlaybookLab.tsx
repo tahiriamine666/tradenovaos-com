@@ -487,7 +487,43 @@ export default function PlaybookLab() {
         .insert([{ ...form, user_id: user.id, rules_array: form.rules_array ?? [] } as any]);
       if (error) { toast({ title: 'Create failed', description: error.message, variant: 'destructive' }); return; }
       toast({ title: '✅ Playbook created' });
-    }
+}
+
+function ChecklistField({ field, form, setForm }: { field: 'entry_checklist'|'exit_checklist'; form: any; setForm: React.Dispatch<React.SetStateAction<any>> }) {
+  const items = (form[field] as any[]) ?? [];
+  const label = field === 'entry_checklist' ? 'Entry Checklist' : 'Exit Checklist';
+  const [input, setInput] = useState('');
+  const add = () => { if(input.trim()){ setForm((f:any)=>({...f,[field]:[...(f[field] as any[]??[]),{text:input.trim(),checked:false}]})); setInput(''); } };
+  return (
+    <div>
+      <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2 block">{label}</label>
+      <div className="flex gap-2 mb-2">
+        <input value={input} onChange={e=>setInput(e.target.value)}
+          onKeyDown={e=>{if(e.key==='Enter')add();}}
+          placeholder="Add checklist item..."
+          className="flex-1 text-sm bg-background border border-border rounded-xl px-4 py-2 text-foreground placeholder:text-muted-foreground/35 focus:outline-none focus:border-violet-500/50"/>
+        <button onClick={add} className="px-3 py-2 rounded-xl bg-muted border border-border hover:bg-muted/70 transition-colors">
+          <Plus className="h-4 w-4 text-muted-foreground"/>
+        </button>
+      </div>
+      <div className="space-y-1.5">
+        {items.map((item: any, i: number) => (
+          <div key={i} className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-border bg-muted/20">
+            <div className="w-4 h-4 rounded border-2 border-border flex-shrink-0"/>
+            <p className="text-xs text-foreground flex-1">{item.text ?? item}</p>
+            <button onClick={()=>setForm((f:any)=>({...f,[field]:(f[field] as any[]).filter((_:any,idx:number)=>idx!==i)}))}
+              className="text-muted-foreground/40 hover:text-red-500 transition-colors">
+              <X className="h-3 w-3"/>
+            </button>
+          </div>
+        ))}
+        {items.length === 0 && (
+          <p className="text-[11px] text-muted-foreground text-center py-3">No items yet — add above</p>
+        )}
+      </div>
+    </div>
+  );
+}
     setSelected(null);
     setShowNew(false);
     load();
