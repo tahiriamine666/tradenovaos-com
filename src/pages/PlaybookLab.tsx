@@ -515,7 +515,7 @@ export default function PlaybookLab() {
       // Insert
       const { error } = await supabase
         .from('playbooks')
-        .insert({ ...form, user_id: user.id, rules_array: form.rules_array ?? [] });
+        .insert([{ ...form, user_id: user.id, rules_array: form.rules_array ?? [] } as any]);
       if (error) { toast({ title: 'Create failed', description: error.message, variant: 'destructive' }); return; }
       toast({ title: '✅ Playbook created' });
     }
