@@ -155,14 +155,14 @@ function EdgeAnalytics({ dark, user }: { dark: boolean; user: any }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="border-0 shadow-sm">
           <CardHeader><CardTitle className="font-heading">Performance by Side</CardTitle><CardDescription>Long vs Short breakdown</CardDescription></CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent>
             {Object.entries(metrics.bySide).map(([side, data]) => (
-              <div key={side} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+              <div key={side} className="flex items-center justify-between py-3 border-b border-border last:border-0">
                 <div>
                   <p className="text-sm font-medium text-foreground capitalize">{side}</p>
                   <p className="text-xs text-muted-foreground">{data.count} trades</p>
                 </div>
-                <p className={cx('text-sm font-semibold', data.pnl >= 0 ? 'text-emerald-500' : 'text-red-500')}>
+                <p className={cx('text-sm font-bold tabular-nums', data.pnl >= 0 ? 'text-emerald-500' : 'text-red-500')}>
                   {formatMoney(data.pnl)}
                 </p>
               </div>
@@ -172,17 +172,17 @@ function EdgeAnalytics({ dark, user }: { dark: boolean; user: any }) {
 
         <Card className="border-0 shadow-sm">
           <CardHeader><CardTitle className="font-heading">Performance by Setup</CardTitle><CardDescription>P&L grouped by setup type</CardDescription></CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent>
             {Object.keys(metrics.bySetup).length === 0 ? (
               <p className="text-sm text-muted-foreground">No setup data available. Tag your trades with setups to see this breakdown.</p>
             ) : (
               Object.entries(metrics.bySetup).map(([setup, data]) => (
-                <div key={setup} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                <div key={setup} className="flex items-center justify-between py-3 border-b border-border last:border-0">
                   <div>
                     <p className="text-sm font-medium text-foreground">{setup}</p>
                     <p className="text-xs text-muted-foreground">{data.count} trades · {Math.round((data.wins / data.count) * 100)}% win rate</p>
                   </div>
-                  <p className={cx('text-sm font-semibold', data.pnl >= 0 ? 'text-emerald-500' : 'text-red-500')}>
+                  <p className={cx('text-sm font-bold tabular-nums', data.pnl >= 0 ? 'text-emerald-500' : 'text-red-500')}>
                     {formatMoney(data.pnl)}
                   </p>
                 </div>
