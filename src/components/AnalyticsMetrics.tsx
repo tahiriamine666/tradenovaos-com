@@ -38,28 +38,26 @@ function fmt(val: number | null, prefix = '$'): string {
 }
 
 function MetricCard({
-  title, value, hint, icon: Icon, highlight,
+  title, value, hint, icon: Icon, positive,
 }: {
   title: string; value: string; hint: string;
-  icon: React.ElementType; highlight?: 'green' | 'red' | 'neutral';
+  icon: React.ElementType; positive?: boolean;
 }) {
   const valueColor =
-    highlight === 'green' ? 'text-emerald-500' :
-    highlight === 'red' ? 'text-red-500' :
+    positive === true ? 'text-emerald-500' :
+    positive === false ? 'text-red-500' :
     'text-foreground';
 
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
-      <Card className="border-0 shadow-sm">
-        <CardContent className="flex items-center justify-between p-5">
-          <div>
+      <Card className="border-0 shadow-sm bg-card">
+        <CardContent className="p-5">
+          <div className="flex items-start justify-between mb-3">
             <p className="text-xs font-medium text-muted-foreground">{title}</p>
-            <p className={`text-2xl font-bold font-heading mt-0.5 ${valueColor}`}>{value}</p>
-            <p className="text-xs text-muted-foreground mt-1">{hint}</p>
+            <Icon className="h-4 w-4 text-muted-foreground/40" strokeWidth={1.5} />
           </div>
-          <div className="rounded-xl bg-primary/10 p-3 flex-shrink-0">
-            <Icon className="h-5 w-5 text-primary" />
-          </div>
+          <p className={`text-2xl font-bold tabular-nums ${valueColor}`}>{value}</p>
+          <p className="text-xs text-muted-foreground mt-1">{hint}</p>
         </CardContent>
       </Card>
     </motion.div>
