@@ -257,13 +257,14 @@ export function SolutionPage() {
 export function BlogPage() {
   const navigate = useNavigate();
   const posts = [
+    { title: 'Fair Value Gaps (FVG): How to identify and trade them', tag: 'Price Action', date: 'June 20, 2026', read: '9 min', href: '/blog/fair-value-gaps-guide' },
     { title: 'How to calculate your trading edge', tag: 'Analytics', date: 'May 10, 2026', read: '8 min' },
     { title: 'The psychology of losing trades', tag: 'Psychology', date: 'May 7, 2026', read: '6 min' },
     { title: 'Why most traders fail: the journaling gap', tag: 'Journaling', date: 'May 4, 2026', read: '5 min' },
     { title: 'How to pass a prop firm challenge', tag: 'Prop Firms', date: 'Apr 28, 2026', read: '10 min' },
     { title: 'Building a trading playbook from scratch', tag: 'Playbooks', date: 'Apr 22, 2026', read: '7 min' },
     { title: 'Using AI to analyze your trades', tag: 'AI', date: 'Apr 15, 2026', read: '9 min' },
-  ];
+  ] as Array<{ title: string; tag: string; date: string; read: string; href?: string }>;
   return (
     <div className="min-h-screen bg-white text-slate-900">
       <SeoHead
