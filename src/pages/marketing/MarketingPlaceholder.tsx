@@ -1,6 +1,7 @@
 import React from 'react';
-import { useParams, Navigate } from 'react-router-dom';
+import { useParams, useLocation, Navigate } from 'react-router-dom';
 import MarketingPageShell from './MarketingPageShell';
+import SeoHead from '@/components/SeoHead';
 
 type Entry = { title: string; description: string; eyebrow?: string };
 
