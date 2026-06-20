@@ -100,7 +100,7 @@ export default function PricingPage() {
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8 max-w-5xl mx-auto">
       {/* Header */}
       <div className="text-center space-y-2">
-        <h2 className="text-3xl font-bold font-heading text-foreground">Choose your plan</h2>
+        <h1 className="text-3xl font-bold font-heading text-foreground">Choose the Right Trading Plan for Your Edge</h1>
         <p className="text-muted-foreground">Instant activation by card · 7-day free trial</p>
       </div>
 
