@@ -24,10 +24,8 @@ export const BASE_ITEMS = [
   { id: 'trades',     label: 'Trade Vault',      icon: CircleDollarSign },
   { id: 'journal',    label: 'Mind Journal',     icon: BookOpen },
   { id: 'analytics',  label: 'Edge Analytics',   icon: BarChart3 },
-  { id: 'playbooks',  label: 'Playbook Lab',     icon: Target },
   { id: 'replay',     label: 'Replay Studio',    icon: PlayCircle },
   { id: 'resources',  label: 'Learning Hub',     icon: Brain },
-  { id: 'calendar',   label: 'Calendar',         icon: CalendarDays },
   { id: 'settings',   label: 'Studio Settings',  icon: Settings },
 ];
 
