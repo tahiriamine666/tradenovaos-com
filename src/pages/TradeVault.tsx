@@ -751,7 +751,7 @@ function TradeDetails({ trade, onClose, onEdit, onDuplicate, onDelete, onAIRevie
             {screenshotUrl ? (
               <button onClick={() => setZoomOpen(true)}
                 className="relative w-full rounded-md overflow-hidden border border-border group">
-                <img src={screenshotUrl} alt="chart" className="w-full object-cover max-h-[220px]" />
+                <img src={screenshotUrl} alt="Trade entry chart screenshot" className="w-full object-cover max-h-[220px]" />
                 <div className="absolute inset-0 bg-background/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-background/95 border border-border text-xs font-medium">
                     <Maximize2 className="h-3.5 w-3.5" /> View full size
