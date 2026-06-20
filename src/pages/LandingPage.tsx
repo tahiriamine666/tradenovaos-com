@@ -18,6 +18,7 @@ import {
 import MarketingNavbar from '@/components/MarketingNavbar';
 import MarketingFooter from '@/components/marketing/MarketingFooter';
 import BrokersStrip from '@/components/marketing/BrokersStrip';
+import SeoHead from '@/components/SeoHead';
 
 const EQUITY_DATA = [
   { day: 'Jan', value: 0 }, { day: 'Feb', value: 1240 }, { day: 'Mar', value: 890 },
