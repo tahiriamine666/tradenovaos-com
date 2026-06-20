@@ -10,6 +10,8 @@ import {
   Check, Target, Brain, FileText, Zap, X, Circle, Crown,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { DrillPractice, DrillExamples, DrillAnalytics, DrillAiCoach, DrillResources, type DrillConfig } from '@/components/learning/drills/ReplayDrill';
+import { usePlan } from '@/hooks/usePlan';
 
 
 // ── Types ─────────────────────────────────────────────────────────────────────
