@@ -1771,8 +1771,6 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
                   <DrawdownPractice onComplete={()=>onComplete(lesson.id)}/>
                 ) : quizQs.length > 0 ? (
                   <>
-                ) : quizQs.length > 0 ? (
-                  <>
                     <div className="flex items-center justify-between">
                       <p className="text-base font-black text-foreground flex items-center gap-2"><Target className="h-5 w-5 text-violet-500"/> Knowledge Check</p>
                       <span className="text-xs text-muted-foreground">{quizQs.length} questions</span>
