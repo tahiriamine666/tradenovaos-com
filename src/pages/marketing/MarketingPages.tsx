@@ -10,6 +10,7 @@ import {
   TrendingUp, Building2, Globe, Users,
 } from 'lucide-react';
 import MarketingNavbar from '@/components/MarketingNavbar';
+import SeoHead from '@/components/SeoHead';
 
 const ease: any = [0.22, 1, 0.36, 1];
 
