@@ -257,7 +257,7 @@ function Hero({ onSignup }: { onSignup: () => void }) {
         </motion.div>
 
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }}
-          className="flex flex-wrap justify-center gap-4 sm:gap-6 text-xs text-slate-500 mb-16">
+          className="flex flex-wrap justify-center gap-4 sm:gap-6 text-xs text-slate-700 mb-16">
           {['Free forever plan', 'No credit card required', 'Setup in 2 minutes', '143 traders trust TradeNova'].map(t => (
             <span key={t} className="flex items-center gap-1.5"><Check className="h-3 w-3 text-emerald-500" />{t}</span>
           ))}
