@@ -10,6 +10,7 @@ import {
   TrendingUp, Building2, Globe, Users,
 } from 'lucide-react';
 import MarketingNavbar from '@/components/MarketingNavbar';
+import SeoHead from '@/components/SeoHead';
 
 const ease: any = [0.22, 1, 0.36, 1];
 
@@ -106,6 +107,11 @@ export function FeaturePage() {
 
   return (
     <div className="min-h-screen bg-white text-slate-900">
+      <SeoHead
+        path={`/features/${feature}`}
+        title={`${data.title} — TradeNova OS`}
+        description={data.subtitle}
+      />
       <MarketingNavbar onLogin={() => navigate('/login')} onSignup={() => navigate('/signup')} />
       <div className="max-w-4xl mx-auto px-5 sm:px-8 pt-32 pb-24">
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease }}>
@@ -209,6 +215,11 @@ export function SolutionPage() {
   const Icon = data.icon;
   return (
     <div className="min-h-screen bg-white text-slate-900">
+      <SeoHead
+        path={`/solutions/${solution}`}
+        title={`${data.title} — TradeNova OS`}
+        description={data.subtitle}
+      />
       <MarketingNavbar onLogin={() => navigate('/login')} onSignup={() => navigate('/signup')} />
       <div className="max-w-4xl mx-auto px-5 sm:px-8 pt-32 pb-24">
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease }}>
@@ -255,6 +266,23 @@ export function BlogPage() {
   ];
   return (
     <div className="min-h-screen bg-white text-slate-900">
+      <SeoHead
+        path="/resources/blog"
+        title="Trading insights & strategies — TradeNova Blog"
+        description="Practical articles to help you improve your trading edge, psychology, and performance. Journaling, analytics, prop firms, and AI-powered review."
+        type="article"
+        jsonLd={{
+          "@context": "https://schema.org",
+          "@type": "Blog",
+          "name": "TradeNova Blog",
+          "url": "https://tradenovaos-com.lovable.app/resources/blog",
+          "blogPost": posts.map(p => ({
+            "@type": "BlogPosting",
+            "headline": p.title,
+            "datePublished": p.date,
+          })),
+        }}
+      />
       <MarketingNavbar onLogin={() => navigate('/login')} onSignup={() => navigate('/signup')} />
       <div className="max-w-4xl mx-auto px-5 sm:px-8 pt-32 pb-24">
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
@@ -297,6 +325,11 @@ export function HelpCenterPage() {
   ];
   return (
     <div className="min-h-screen bg-white text-slate-900">
+      <SeoHead
+        path="/resources/help-center"
+        title="Help Center — TradeNova OS guides & tutorials"
+        description="Find answers, setup guides, CSV import tutorials, AI Insights walkthroughs, and billing help for TradeNova OS."
+      />
       <MarketingNavbar onLogin={() => navigate('/login')} onSignup={() => navigate('/signup')} />
       <div className="max-w-4xl mx-auto px-5 sm:px-8 pt-32 pb-24">
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>

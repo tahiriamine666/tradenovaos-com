@@ -154,7 +154,7 @@ export function ChartCanvas({
           <>
             <img
               src={imageUrl}
-              alt="Chart"
+              alt="Trading chart replay screenshot with annotations"
               draggable={false}
               className="pointer-events-none absolute inset-0 h-full w-full object-contain"
             />

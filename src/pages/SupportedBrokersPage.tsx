@@ -4,6 +4,7 @@ import { ArrowRight, Check } from 'lucide-react';
 import MarketingNav from '@/components/marketing/MarketingNav';
 import MarketingFooter from '@/components/marketing/MarketingFooter';
 import BrokersStrip from '@/components/marketing/BrokersStrip';
+import SeoHead from '@/components/SeoHead';
 
 const BROKERS = [
   { name: 'MetaTrader 4', desc: 'Industry-standard FX & CFD platform' },
@@ -20,6 +21,11 @@ const BROKERS = [
 export default function SupportedBrokersPage() {
   return (
     <div className="min-h-screen bg-white text-slate-900 flex flex-col">
+      <SeoHead
+        path="/supported-brokers"
+        title="Supported Brokers & Integrations — TradeNova OS"
+        description="MT4, MT5, NinjaTrader, Interactive Brokers, TradingView, Tradovate, cTrader, Thinkorswim, and universal CSV import — connect any broker to TradeNova OS."
+      />
       <MarketingNav />
 
       <main className="flex-1">

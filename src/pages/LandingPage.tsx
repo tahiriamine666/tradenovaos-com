@@ -18,6 +18,7 @@ import {
 import MarketingNavbar from '@/components/MarketingNavbar';
 import MarketingFooter from '@/components/marketing/MarketingFooter';
 import BrokersStrip from '@/components/marketing/BrokersStrip';
+import SeoHead from '@/components/SeoHead';
 
 const EQUITY_DATA = [
   { day: 'Jan', value: 0 }, { day: 'Feb', value: 1240 }, { day: 'Mar', value: 890 },
@@ -104,7 +105,8 @@ function Navbar({ onLogin, onSignup }: { onLogin: () => void; onSignup: () => vo
           <button onClick={onLogin} className="text-sm text-slate-700 hover:text-slate-900 px-4 py-2 transition-colors">Log in</button>
           <button onClick={onSignup} className="text-sm bg-violet-600 hover:bg-violet-500 text-white px-5 py-2.5 rounded-xl font-bold transition-all hover:shadow-lg hover:shadow-violet-500/25 hover:-translate-y-px">Start Free</button>
         </div>
-        <button className="md:hidden text-slate-600 hover:text-slate-900 p-2" onClick={() => setOpen(v => !v)}>
+        <button className="md:hidden text-slate-600 hover:text-slate-900 p-2" onClick={() => setOpen(v => !v)}
+          aria-label={open ? 'Close navigation menu' : 'Open navigation menu'} aria-expanded={open}>
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </div>
@@ -975,6 +977,11 @@ export default function LandingPage() {
   const go = (path: string) => navigate(path);
   return (
     <div className="landing-light min-h-screen bg-white text-slate-900 overflow-x-hidden">
+      <SeoHead
+        path="/"
+        title="TradeNova OS — Trading journal, analytics & playbooks"
+        description="Plan trades, journal every execution, and improve with AI insights. TradeNova OS is the Trading Operating System for serious traders."
+      />
       <MarketingNavbar onLogin={() => go('/login')} onSignup={() => go('/signup')} />
       <Hero onSignup={() => go('/signup')} />
       <BrokersStrip />

@@ -571,8 +571,9 @@ function AddTradeModal({ open, onClose, onSaved, editTrade, playbooks }: {
                 <Label>Chart Screenshot</Label>
                 {form.screenshot_url && previewUrl ? (
                   <div className="relative group rounded-md overflow-hidden border border-border">
-                    <img src={previewUrl} alt="screenshot" className="w-full h-40 object-cover" />
+                    <img src={previewUrl} alt="Trade chart screenshot preview" className="w-full h-40 object-cover" />
                     <button type="button" onClick={() => set('screenshot_url', '')}
+                      aria-label="Remove chart screenshot"
                       className="absolute top-2 right-2 p-1.5 rounded-md bg-background/90 border border-border text-danger hover:bg-danger/10">
                       <X className="h-3.5 w-3.5" />
                     </button>
@@ -750,7 +751,7 @@ function TradeDetails({ trade, onClose, onEdit, onDuplicate, onDelete, onAIRevie
             {screenshotUrl ? (
               <button onClick={() => setZoomOpen(true)}
                 className="relative w-full rounded-md overflow-hidden border border-border group">
-                <img src={screenshotUrl} alt="chart" className="w-full object-cover max-h-[220px]" />
+                <img src={screenshotUrl} alt="Trade entry chart screenshot" className="w-full object-cover max-h-[220px]" />
                 <div className="absolute inset-0 bg-background/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-background/95 border border-border text-xs font-medium">
                     <Maximize2 className="h-3.5 w-3.5" /> View full size
@@ -927,7 +928,7 @@ function TradeDetails({ trade, onClose, onEdit, onDuplicate, onDelete, onAIRevie
         {/* Zoom dialog */}
         <Dialog open={zoomOpen} onOpenChange={setZoomOpen}>
           <DialogContent className="max-w-5xl p-2">
-            {screenshotUrl && <img src={screenshotUrl} alt="chart full" className="w-full h-auto rounded" />}
+            {screenshotUrl && <img src={screenshotUrl} alt="Full size trade chart screenshot" className="w-full h-auto rounded" />}
           </DialogContent>
         </Dialog>
       </SheetContent>
