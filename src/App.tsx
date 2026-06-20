@@ -69,7 +69,9 @@ const App = () => (
                     path="/app"
                     element={
                       <ProtectedApp>
-                        <Index />
+                        <TrialGate>
+                          <Index />
+                        </TrialGate>
                       </ProtectedApp>
                     }
                   />
