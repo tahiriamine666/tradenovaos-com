@@ -14,6 +14,198 @@ export type Database = {
   }
   public: {
     Tables: {
+      academy_drill_ai_reviews: {
+        Row: {
+          answer: string
+          attempt_id: string | null
+          created_at: string
+          id: string
+          lesson_id: string
+          mode: string
+          prompt: string
+          user_id: string
+        }
+        Insert: {
+          answer: string
+          attempt_id?: string | null
+          created_at?: string
+          id?: string
+          lesson_id: string
+          mode: string
+          prompt: string
+          user_id: string
+        }
+        Update: {
+          answer?: string
+          attempt_id?: string | null
+          created_at?: string
+          id?: string
+          lesson_id?: string
+          mode?: string
+          prompt?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "academy_drill_ai_reviews_attempt_id_fkey"
+            columns: ["attempt_id"]
+            isOneToOne: false
+            referencedRelation: "academy_drill_attempts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "academy_drill_ai_reviews_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      academy_drill_attempts: {
+        Row: {
+          answers: Json
+          dimension_scores: Json
+          duration_sec: number
+          id: string
+          lesson_id: string
+          max_score: number
+          passed: boolean
+          scenario_id: string
+          score: number
+          started_at: string
+          submitted_at: string
+          user_id: string
+          xp_awarded: number
+        }
+        Insert: {
+          answers?: Json
+          dimension_scores?: Json
+          duration_sec?: number
+          id?: string
+          lesson_id: string
+          max_score?: number
+          passed?: boolean
+          scenario_id: string
+          score?: number
+          started_at?: string
+          submitted_at?: string
+          user_id: string
+          xp_awarded?: number
+        }
+        Update: {
+          answers?: Json
+          dimension_scores?: Json
+          duration_sec?: number
+          id?: string
+          lesson_id?: string
+          max_score?: number
+          passed?: boolean
+          scenario_id?: string
+          score?: number
+          started_at?: string
+          submitted_at?: string
+          user_id?: string
+          xp_awarded?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "academy_drill_attempts_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      academy_drill_progress: {
+        Row: {
+          attempts: number
+          best_score: number
+          completed: boolean
+          last_attempt_at: string
+          lesson_id: string
+          scenario_id: string
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          best_score?: number
+          completed?: boolean
+          last_attempt_at?: string
+          lesson_id: string
+          scenario_id: string
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          best_score?: number
+          completed?: boolean
+          last_attempt_at?: string
+          lesson_id?: string
+          scenario_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "academy_drill_progress_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      academy_drill_scores: {
+        Row: {
+          attempts: number
+          avg_score: number
+          best_score: number
+          first_attempt_passed: boolean
+          last_score: number
+          lesson_id: string
+          strongest_dimension: string | null
+          total_time_sec: number
+          updated_at: string
+          user_id: string
+          weakest_dimension: string | null
+        }
+        Insert: {
+          attempts?: number
+          avg_score?: number
+          best_score?: number
+          first_attempt_passed?: boolean
+          last_score?: number
+          lesson_id: string
+          strongest_dimension?: string | null
+          total_time_sec?: number
+          updated_at?: string
+          user_id: string
+          weakest_dimension?: string | null
+        }
+        Update: {
+          attempts?: number
+          avg_score?: number
+          best_score?: number
+          first_attempt_passed?: boolean
+          last_score?: number
+          lesson_id?: string
+          strongest_dimension?: string | null
+          total_time_sec?: number
+          updated_at?: string
+          user_id?: string
+          weakest_dimension?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "academy_drill_scores_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_users: {
         Row: {
           created_at: string
@@ -525,6 +717,7 @@ export type Database = {
           created_at: string
           description: string | null
           difficulty: string
+          drill_config: Json
           id: string
           is_premium: boolean
           is_pro: boolean
@@ -549,6 +742,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           difficulty?: string
+          drill_config?: Json
           id?: string
           is_premium?: boolean
           is_pro?: boolean
@@ -573,6 +767,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           difficulty?: string
+          drill_config?: Json
           id?: string
           is_premium?: boolean
           is_pro?: boolean
@@ -1536,6 +1731,15 @@ export type Database = {
           trial_days?: number
         }
         Returns: undefined
+      }
+      award_drill_xp: {
+        Args: {
+          p_first_attempt_success: boolean
+          p_lesson_id: string
+          p_passed: boolean
+          p_score: number
+        }
+        Returns: number
       }
       community_user_tier: { Args: never; Returns: string }
       get_active_users_now: { Args: never; Returns: Json }
