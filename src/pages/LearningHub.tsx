@@ -1426,7 +1426,9 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
 
             {tab === 'examples' && (
               <motion.div key="examples" initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} transition={{ duration: 0.15 }} className="space-y-5">
-                {lesson.slug === 'risk-position-sizing' ? (
+                {isDrill ? (
+                  <DrillExamples lesson={lesson as any} />
+                ) : lesson.slug === 'risk-position-sizing' ? (
                   <div className="space-y-6">
                     <div>
                       <h3 className="text-lg font-black text-foreground mb-1">Real Trading Examples</h3>
