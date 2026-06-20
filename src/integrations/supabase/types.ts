@@ -542,6 +542,265 @@ export type Database = {
         }
         Relationships: []
       }
+      replay_ai_reviews: {
+        Row: {
+          created_at: string
+          emotional_discipline: string | null
+          entry_quality: string | null
+          execution_quality: string | null
+          generated_at: string
+          id: string
+          improvements: string | null
+          market_context: string | null
+          missed_opportunities: string | null
+          model: string | null
+          risk_management: string | null
+          session_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          emotional_discipline?: string | null
+          entry_quality?: string | null
+          execution_quality?: string | null
+          generated_at?: string
+          id?: string
+          improvements?: string | null
+          market_context?: string | null
+          missed_opportunities?: string | null
+          model?: string | null
+          risk_management?: string | null
+          session_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          emotional_discipline?: string | null
+          entry_quality?: string | null
+          execution_quality?: string | null
+          generated_at?: string
+          id?: string
+          improvements?: string | null
+          market_context?: string | null
+          missed_opportunities?: string | null
+          model?: string | null
+          risk_management?: string | null
+          session_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "replay_ai_reviews_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: true
+            referencedRelation: "replay_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      replay_executions: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          order_index: number
+          pnl: number | null
+          price: number | null
+          session_id: string
+          size: number | null
+          time: string
+          type: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          order_index?: number
+          pnl?: number | null
+          price?: number | null
+          session_id: string
+          size?: number | null
+          time?: string
+          type?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          order_index?: number
+          pnl?: number | null
+          price?: number | null
+          session_id?: string
+          size?: number | null
+          time?: string
+          type?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "replay_executions_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "replay_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      replay_markers: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          kind: string
+          label: string | null
+          price: number | null
+          session_id: string
+          time: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          label?: string | null
+          price?: number | null
+          session_id: string
+          time?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          label?: string | null
+          price?: number | null
+          session_id?: string
+          time?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "replay_markers_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "replay_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      replay_notes: {
+        Row: {
+          created_at: string
+          id: string
+          last_saved_at: string
+          lessons: string | null
+          mistakes: string | null
+          session_id: string
+          updated_at: string
+          user_id: string
+          what_i_saw: string | null
+          why_entered: string | null
+          why_exited: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_saved_at?: string
+          lessons?: string | null
+          mistakes?: string | null
+          session_id: string
+          updated_at?: string
+          user_id: string
+          what_i_saw?: string | null
+          why_entered?: string | null
+          why_exited?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_saved_at?: string
+          lessons?: string | null
+          mistakes?: string | null
+          session_id?: string
+          updated_at?: string
+          user_id?: string
+          what_i_saw?: string | null
+          why_entered?: string | null
+          why_exited?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "replay_notes_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: true
+            referencedRelation: "replay_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      replay_scores: {
+        Row: {
+          created_at: string
+          execution: number | null
+          final_score: number | null
+          id: string
+          plan_adherence: number | null
+          psychology: number | null
+          risk: number | null
+          session_id: string
+          tier: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          execution?: number | null
+          final_score?: number | null
+          id?: string
+          plan_adherence?: number | null
+          psychology?: number | null
+          risk?: number | null
+          session_id: string
+          tier?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          execution?: number | null
+          final_score?: number | null
+          id?: string
+          plan_adherence?: number | null
+          psychology?: number | null
+          risk?: number | null
+          session_id?: string
+          tier?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "replay_scores_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: true
+            referencedRelation: "replay_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       replay_screenshots: {
         Row: {
           annotations: Json
