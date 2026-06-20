@@ -928,7 +928,7 @@ function TradeDetails({ trade, onClose, onEdit, onDuplicate, onDelete, onAIRevie
         {/* Zoom dialog */}
         <Dialog open={zoomOpen} onOpenChange={setZoomOpen}>
           <DialogContent className="max-w-5xl p-2">
-            {screenshotUrl && <img src={screenshotUrl} alt="chart full" className="w-full h-auto rounded" />}
+            {screenshotUrl && <img src={screenshotUrl} alt="Full size trade chart screenshot" className="w-full h-auto rounded" />}
           </DialogContent>
         </Dialog>
       </SheetContent>
