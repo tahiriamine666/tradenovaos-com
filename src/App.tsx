@@ -89,6 +89,7 @@ const App = () => (
                   <Route path="/resources/:slug" element={<MarketingPlaceholder group="resource" />} />
                   <Route path="/compare/:slug" element={<MarketingPlaceholder group="compare" />} />
                   <Route path="/blog" element={<MarketingPlaceholder group="static" staticKey="blog" />} />
+                  <Route path="/blog/fair-value-gaps-guide" element={<FairValueGapsGuide />} />
                   <Route path="/contact" element={<MarketingPlaceholder group="static" staticKey="contact" />} />
                   <Route path="/careers" element={<MarketingPlaceholder group="static" staticKey="careers" />} />
                   <Route path="/privacy" element={<MarketingPlaceholder group="static" staticKey="privacy" />} />
