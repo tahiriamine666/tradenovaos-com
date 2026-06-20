@@ -21,6 +21,11 @@ const BROKERS = [
 export default function SupportedBrokersPage() {
   return (
     <div className="min-h-screen bg-white text-slate-900 flex flex-col">
+      <SeoHead
+        path="/supported-brokers"
+        title="Supported Brokers & Integrations — TradeNova OS"
+        description="MT4, MT5, NinjaTrader, Interactive Brokers, TradingView, Tradovate, cTrader, Thinkorswim, and universal CSV import — connect any broker to TradeNova OS."
+      />
       <MarketingNav />
 
       <main className="flex-1">
