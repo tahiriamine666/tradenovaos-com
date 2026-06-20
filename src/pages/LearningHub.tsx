@@ -660,7 +660,7 @@ function LessonInfographic({ lesson }: { lesson: Lesson }) {
       </div>
     );
   }
-  if (lesson.slug === 'risk-drawdown-control') {
+  if (lesson.slug === 'risk-drawdown-rules') {
     const zones = [
       { range:'0–5%',  label:'Safe',     color:'bg-emerald-500/80', w:'25%' },
       { range:'5–10%', label:'Warning',  color:'bg-amber-400/80', w:'50%' },
@@ -1559,7 +1559,7 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
                       </div>
                     </div>
                   </div>
-                ) : lesson.slug === 'risk-drawdown-control' ? (
+                ) : lesson.slug === 'risk-drawdown-rules' ? (
                   <div className="space-y-6">
                     <div>
                       <h3 className="text-lg font-black text-foreground mb-1">Real Recovery Scenarios</h3>
@@ -1760,7 +1760,7 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
               <motion.div key="practice" initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} transition={{ duration: 0.15 }} className="space-y-4">
                 {lesson.slug === 'risk-position-sizing' ? (
                   <PositionSizingPractice onComplete={()=>onComplete(lesson.id)}/>
-                ) : lesson.slug === 'risk-drawdown-control' ? (
+                ) : lesson.slug === 'risk-drawdown-rules' ? (
                   <DrawdownPractice onComplete={()=>onComplete(lesson.id)}/>
                 ) : quizQs.length > 0 ? (
                   <>
@@ -1861,7 +1861,7 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
                       <FileText className="h-3.5 w-3.5"/> Load "My Position Sizing Rules" Template
                     </button>
                   )}
-                  {lesson.slug === 'risk-drawdown-control' && !notes && (
+                  {lesson.slug === 'risk-drawdown-rules' && !notes && (
                     <button
                       onClick={()=>setNotes(`# My Drawdown Recovery Rules\n\n## Account Settings\n- Account type: \n- Account size: $\n- Platform: \n\n## Loss Limits\n- Maximum daily loss: %  ($)\n- Maximum weekly loss: %  ($)\n- Maximum monthly drawdown: %\n\n## Loss Streak Rules\n- After 2 consecutive losses: \n- After 3 consecutive losses: \n- After 4 consecutive losses: \n- When I stop trading immediately: \n\n## Drawdown Response by Level\n- 0–5% (Green): \n- 5–10% (Yellow): \n- 10–15% (Red): \n- 15%+ (Danger): \n\n## My Recovery Strategy\n1. \n2. \n3. \n4. \n5. \n\n## Recovery Checklist\n☐ Risk reduced\n☐ Reviewed all losing trades\n☐ Identified mistake patterns\n☐ Trading plan updated\n☐ Emotions checked\n\n## Lessons Learned from Drawdowns\n1. \n2. \n3. `)}
                       className="w-full mb-4 py-2.5 rounded-xl border border-violet-200 dark:border-violet-500/25 bg-violet-50 dark:bg-violet-500/[0.08] text-violet-600 dark:text-violet-400 text-xs font-bold hover:bg-violet-100 dark:hover:bg-violet-500/[0.12] transition-colors flex items-center justify-center gap-2">
