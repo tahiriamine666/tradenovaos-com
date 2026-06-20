@@ -8,6 +8,7 @@ import { PlanProvider } from "@/hooks/usePlan";
 import { ProfileProvider } from "@/hooks/useProfile";
 import { LearningNavProvider } from "@/contexts/LearningNavContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import TrialGate from "@/components/TrialGate";
 import Index from "./pages/Index.tsx";
 import Login from "./pages/Login.tsx";
 import Signup from "./pages/Signup.tsx";
@@ -68,7 +69,9 @@ const App = () => (
                     path="/app"
                     element={
                       <ProtectedApp>
-                        <Index />
+                        <TrialGate>
+                          <Index />
+                        </TrialGate>
                       </ProtectedApp>
                     }
                   />
