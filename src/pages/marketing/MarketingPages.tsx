@@ -325,6 +325,11 @@ export function HelpCenterPage() {
   ];
   return (
     <div className="min-h-screen bg-white text-slate-900">
+      <SeoHead
+        path="/resources/help-center"
+        title="Help Center — TradeNova OS guides & tutorials"
+        description="Find answers, setup guides, CSV import tutorials, AI Insights walkthroughs, and billing help for TradeNova OS."
+      />
       <MarketingNavbar onLogin={() => navigate('/login')} onSignup={() => navigate('/signup')} />
       <div className="max-w-4xl mx-auto px-5 sm:px-8 pt-32 pb-24">
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
