@@ -571,8 +571,9 @@ function AddTradeModal({ open, onClose, onSaved, editTrade, playbooks }: {
                 <Label>Chart Screenshot</Label>
                 {form.screenshot_url && previewUrl ? (
                   <div className="relative group rounded-md overflow-hidden border border-border">
-                    <img src={previewUrl} alt="screenshot" className="w-full h-40 object-cover" />
+                    <img src={previewUrl} alt="Trade chart screenshot preview" className="w-full h-40 object-cover" />
                     <button type="button" onClick={() => set('screenshot_url', '')}
+                      aria-label="Remove chart screenshot"
                       className="absolute top-2 right-2 p-1.5 rounded-md bg-background/90 border border-border text-danger hover:bg-danger/10">
                       <X className="h-3.5 w-3.5" />
                     </button>
