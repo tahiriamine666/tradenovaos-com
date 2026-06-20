@@ -1119,6 +1119,8 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
   const [aiLoading,     setAiLoading]     = useState(false);
   const [aiInput,       setAiInput]       = useState('');
   const { user } = useAuth();
+  const plan = usePlan();
+  const isDrill = lesson.category === 'Replay Drills' && !!lesson.drill_config?.scenarios?.length;
 
   const done  = progress?.completed ?? false;
   const saved = progress?.saved ?? false;
