@@ -26,6 +26,7 @@ interface Lesson {
   thumbnail_url:string|null; video_url:string|null; content:string|null;
   key_takeaways:string[]; sections:LessonSection[]; quiz_questions:QuizQuestion[];
   callouts:Callout[]; learning_outcomes:string[];
+  drill_config?: DrillConfig;
 }
 interface Progress { lesson_id:string; progress_pct:number; completed:boolean; saved:boolean; notes:string|null; }
 interface Stats { xp_total:number; streak_days:number; hours_studied:number; current_focus:string|null; }
