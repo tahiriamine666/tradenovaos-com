@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, BarChart3, BookOpen, Brain, CalendarDays, CheckCircle2, ChevronRight,
   Circle, CircleDollarSign, LayoutDashboard, Lock, Menu, PlayCircle, Search,
-  Settings, Shield, Target, X,
+  Settings, Shield, Target, Users, X,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -25,6 +25,7 @@ export const BASE_ITEMS = [
   { id: 'journal',    label: 'Mind Journal',     icon: BookOpen },
   { id: 'analytics',  label: 'Edge Analytics',   icon: BarChart3 },
   { id: 'replay',     label: 'Replay Studio',    icon: PlayCircle },
+  { id: 'community',  label: 'Community',        icon: Users },
   { id: 'resources',  label: 'Learning Hub',     icon: Brain },
   { id: 'settings',   label: 'Studio Settings',  icon: Settings },
 ];

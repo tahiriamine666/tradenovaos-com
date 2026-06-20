@@ -8,6 +8,7 @@ import PlaybookLab from '@/pages/PlaybookLab';
 import MindJournal from '@/pages/MindJournal';
 import StudioSettings from '@/pages/StudioSettings';
 import ReplayStudio from '@/pages/ReplayStudio';
+import CommunitySpace from '@/pages/CommunitySpace';
 import TradePlanWorkspace from '@/components/TradePlanWorkspace';
 import AIInsights from '@/pages/AIInsights';
 import PricingPage from '@/pages/PricingPage';
@@ -476,6 +477,8 @@ function TradingDashboardInner() {
           {active === 'ai' && <AIInsights />}
 
           {active === 'replay' && <ReplayStudio />}
+
+          {active === 'community' && <CommunitySpace />}
 
           {active === 'resources' && <LearningHub />}
 
