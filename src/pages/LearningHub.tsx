@@ -10,6 +10,8 @@ import {
   Check, Target, Brain, FileText, Zap, X, Circle, Crown,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { DrillPractice, DrillExamples, DrillAnalytics, DrillAiCoach, DrillResources, type DrillConfig } from '@/components/learning/drills/ReplayDrill';
+import { usePlan } from '@/hooks/usePlan';
 
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -24,6 +26,7 @@ interface Lesson {
   thumbnail_url:string|null; video_url:string|null; content:string|null;
   key_takeaways:string[]; sections:LessonSection[]; quiz_questions:QuizQuestion[];
   callouts:Callout[]; learning_outcomes:string[];
+  drill_config?: DrillConfig;
 }
 interface Progress { lesson_id:string; progress_pct:number; completed:boolean; saved:boolean; notes:string|null; }
 interface Stats { xp_total:number; streak_days:number; hours_studied:number; current_focus:string|null; }
@@ -1116,6 +1119,8 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
   const [aiLoading,     setAiLoading]     = useState(false);
   const [aiInput,       setAiInput]       = useState('');
   const { user } = useAuth();
+  const plan = usePlan();
+  const isDrill = lesson.category === 'Replay Drills' && !!lesson.drill_config?.scenarios?.length;
 
   const done  = progress?.completed ?? false;
   const saved = progress?.saved ?? false;
@@ -1421,7 +1426,9 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
 
             {tab === 'examples' && (
               <motion.div key="examples" initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} transition={{ duration: 0.15 }} className="space-y-5">
-                {lesson.slug === 'risk-position-sizing' ? (
+                {isDrill ? (
+                  <DrillExamples lesson={lesson as any} />
+                ) : lesson.slug === 'risk-position-sizing' ? (
                   <div className="space-y-6">
                     <div>
                       <h3 className="text-lg font-black text-foreground mb-1">Real Trading Examples</h3>
@@ -1758,7 +1765,9 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
 
             {tab === 'practice' && (
               <motion.div key="practice" initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} transition={{ duration: 0.15 }} className="space-y-4">
-                {lesson.slug === 'risk-position-sizing' ? (
+                {isDrill ? (
+                  <DrillPractice lesson={lesson as any} onCompletedLesson={() => onComplete(lesson.id)} />
+                ) : lesson.slug === 'risk-position-sizing' ? (
                   <PositionSizingPractice onComplete={()=>onComplete(lesson.id)}/>
                 ) : lesson.slug === 'risk-drawdown-rules' ? (
                   <DrawdownPractice onComplete={()=>onComplete(lesson.id)}/>
@@ -1886,6 +1895,7 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
 
             {tab === 'resources' && (
               <motion.div key="resources" initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} transition={{ duration: 0.15 }} className="space-y-4">
+                {isDrill && <DrillResources lesson={lesson as any} />}
                 <div className="rounded-2xl border border-border bg-card p-5">
                   <p className="text-sm font-bold text-foreground mb-1 flex items-center gap-2"><BookOpen className="h-4 w-4 text-violet-500"/> Downloads</p>
                   <p className="text-xs text-muted-foreground mb-4">Files generated from this lesson and your own notes — saved to your device.</p>
@@ -2065,6 +2075,13 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
               })}
             </div>
           </div>
+
+          {isDrill && (
+            <>
+              <DrillAnalytics lesson={lesson as any} />
+              <DrillAiCoach lesson={lesson as any} isPaid={plan.isPro || plan.isElite} />
+            </>
+          )}
 
           {/* AI Tutor */}
           <div className="rounded-2xl border border-border bg-card overflow-hidden">
