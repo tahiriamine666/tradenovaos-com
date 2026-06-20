@@ -8,7 +8,7 @@ import PlaybookLab from '@/pages/PlaybookLab';
 import MindJournal from '@/pages/MindJournal';
 import StudioSettings from '@/pages/StudioSettings';
 import ReplayStudio from '@/pages/ReplayStudio';
-import TradePlanWorkspace from '@/components/TradePlanWorkspace';
+import TradePlanGrid from '@/components/TradePlanGrid';
 import AIInsights from '@/pages/AIInsights';
 import PricingPage from '@/pages/PricingPage';
 import { TradeDialogProvider, useTradeDialog, useTradesChanged, useNavigationEvent } from '@/contexts/TradeDialogContext';
