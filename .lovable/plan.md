@@ -1,50 +1,45 @@
-# Fundamentals Category — Build Plan
+# SMC Category — Build Plan
 
-The Learning Hub already supports the full lesson experience (Lesson, Examples, Practice, Notes, Resources, AI Assistant, XP, progress, Supabase persistence) and is dynamic for every category. The existing `lessons` table also has a `drill_config` jsonb that we use for any tab-specific structured content. So the Fundamentals build is purely a **data seeding job** — no new tables, no new components, no UI rewrites.
+The Learning Hub renderer already handles every tab (Lesson, Examples, Practice, Notes, Resources, AI Assistant) plus XP, progress, completion, and Supabase persistence dynamically from `lessons.content`, `lessons.quiz_questions`, and `lessons.drill_config`. So SMC is a pure data-seeding job — identical pattern to the Fundamentals build.
 
 ## What gets built
 
-### 1. Seed Fundamentals category
-Insert (or upsert) the `Fundamentals` row in `learning_categories` if it doesn't exist, with:
-- name, slug, description, icon (`TrendingUp` / `Newspaper`), color token (purple accent), sort order.
+### 1. Seed SMC category
+Upsert the `SMC` row in `learning_categories` (name, slug `smc`, description, icon `Activity`/`Layers`, purple accent token, sort order after Fundamentals).
 
-### 2. Seed 4 lessons in `lessons` table
-For each lesson set `category = 'Fundamentals'`, `published = true`, plus difficulty, duration, xp:
+### 2. Seed 3 lessons in `lessons` table
+All with `category = 'SMC'`, `published = true`:
 
 | # | Title | Difficulty | Duration | XP |
 |---|---|---|---|---|
-| 1 | Trading CPI Releases | Intermediate | 20 | 100 |
-| 2 | NFP Playbook | Advanced | 25 | 120 |
-| 3 | FOMC Day Strategy | Advanced | 30 | 150 |
-| 4 | Inter-Market Correlations | Intermediate | 20 | 100 |
+| 1 | Market Structure & Breaks | Beginner–Intermediate | 25 | 100 |
+| 2 | Smart Money Order Flow | Intermediate | 30 | 120 |
+| 3 | Premium & Discount Zones | Intermediate | 20 | 100 |
 
 Each lesson populates:
 
-- **`content_md`** — full markdown for the Lesson tab covering every topic in the brief (What is CPI / NFP / FOMC / Correlation, why it matters, central bank reaction, asset-by-asset impact, hawkish vs dovish, risk model, common mistakes, professional workflow). Real explanations, no Lorem.
-- **`quiz`** (jsonb) — 5–7 scenario-based MCQs per lesson with correct answer + explanation. Used by existing Practice tab and scoring engine.
-- **`drill_config`** (jsonb) — used by Examples / Practice / Resources renderers:
-  - `examples[]` — Bullish/Bearish USD CPI, Gold reaction, Index reaction (and equivalents for NFP / FOMC / Correlations) with setup, reaction, lesson learned, optional TradingView symbol.
-  - `practice[]` — "Identify the right action" scenarios (Buy USD / Sell USD / Avoid Trading; correct reaction selection; correlation matching) with answer + rationale.
-  - `resources[]` — dynamically generated downloadables per lesson: CPI/NFP/FOMC trading checklists, risk templates, news event checklist, cheat sheet, journal worksheet, economic calendar reference (links to ForexFactory / Investing.com calendars).
-  - `ai_prompts[]` — the 6 AI buttons (Explain Simply, Create Quiz, Test My Understanding, Build Trading Plan, Give Real Example, Analyze News Scenario) with tailored system prompts per lesson topic.
+- **`content`** (markdown) — full Lesson tab: every topic from the brief (HH/HL/LH/LL, BOS, CHOCH, internal vs external, order flow phases, liquidity sweeps, inducement, equilibrium / 50% rule, premium vs discount entries, confluence, risk model, common mistakes, professional workflow).
+- **`key_takeaways`** + **`learning_outcomes`** — from the brief.
+- **`quiz_questions`** (jsonb) — 6–7 scenario-based MCQs per lesson with correct answer + explanation. Powers the Practice tab scoring engine and XP award.
+- **`drill_config`** (jsonb) — used by Examples / Practice / Resources / AI renderers:
+  - `examples[]` — Bullish trend, bearish trend, valid BOS, fake BOS, CHOCH, continuation (L1); liquidity grab, BSL/SSL sweeps, inducement, expansion (L2); discount entry, premium entry, equilibrium, good/bad trade location (L3). Each with setup, reaction, lesson, TradingView symbol (e.g. `OANDA:NAS100USD`, `OANDA:XAUUSD`, `OANDA:EURUSD`).
+  - `practice[]` — "Identify the right answer" scenarios: pick HH/HL/BOS/CHOCH/trend; pick liquidity / sweep / inducement / continuation / direction; pick premium / discount / equilibrium / best–worst entry zone. Each with answer + rationale.
+  - `resources[]` — downloadable metadata for SMC Cheat Sheet, Market Structure Guide, Liquidity Guide, Order Flow PDF, Premium/Discount Worksheet, TradingView Examples link, Replay Exercises, Checklists. Existing resources renderer handles dynamic generation + download tracking.
+  - `ai_prompts[]` — the 7 AI buttons (Explain Simply, Create Quiz, Test My Understanding, Show Real Market Example, Analyze Chart Concept, Generate Practice Questions, Build Study Plan) with tailored system prompts per lesson topic.
 
 ### 3. No schema changes
-- Notes already auto-save via existing `lesson_progress.notes` (or current notes table) — works out of the box.
-- Progress, XP, completion already tracked by existing `lesson_progress` + `learning_stats` + `award_xp` logic.
-- Resource download tracking already supported by existing resources renderer.
-- AI Assistant uses existing `ai-learning-assistant` edge function — Pro/Elite gating already in place.
+Notes auto-save, progress, XP, completion, resource download tracking, and AI Assistant (Pro/Elite gated) all work via existing tables, RPCs, and the `ai-learning-assistant` edge function.
 
 ### 4. Verify
-After seeding, hit `/learn`, open each Fundamentals lesson, confirm all 5 tabs render real content and AI buttons fire.
+Open `/learn`, expand SMC, open each lesson, confirm all 5 tabs render real content and AI buttons fire.
 
 ## Technical details
-
-- 1 `supabase--insert` call: upsert category + 4 lessons (idempotent via `ON CONFLICT (slug)`).
+- 1 `supabase--insert` call: upsert category + 3 lessons (idempotent via `ON CONFLICT (slug)`).
 - 0 migrations.
 - 0 new components.
 - 0 edited components.
 
 ## Out of scope
-- New lesson renderer (existing renderer already handles every tab).
-- Bar-by-bar replay (Fundamentals is news-driven, uses static example cards + TradingView links).
+- New lesson renderer.
+- Interactive bar-by-bar SMC charts (Practice uses MCQ + TradingView example links — same pattern as Fundamentals).
 - Admin authoring UI.
