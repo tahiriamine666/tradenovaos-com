@@ -50,9 +50,19 @@ interface Props { group: 'product' | 'solution' | 'resource' | 'compare' | 'stat
 
 export default function MarketingPlaceholder({ group, staticKey }: Props) {
   const { slug } = useParams();
+  const { pathname } = useLocation();
   const key = staticKey ?? slug ?? '';
   const map = group === 'product' ? PRODUCT : group === 'solution' ? SOLUTION : group === 'resource' ? RESOURCE : group === 'compare' ? COMPARE : STATIC;
   const entry = map[key];
   if (!entry) return <Navigate to="/" replace />;
-  return <MarketingPageShell eyebrow={entry.eyebrow ?? 'Coming soon'} title={entry.title} description={entry.description} />;
+  return (
+    <>
+      <SeoHead
+        path={pathname}
+        title={`${entry.title} — TradeNova OS`}
+        description={entry.description}
+      />
+      <MarketingPageShell eyebrow={entry.eyebrow ?? 'Coming soon'} title={entry.title} description={entry.description} />
+    </>
+  );
 }
