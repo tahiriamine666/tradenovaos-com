@@ -20,7 +20,7 @@ import SupportChat from '@/components/SupportChat';
 
 export const BASE_ITEMS = [
   { id: 'dashboard',  label: 'Command Center',  icon: LayoutDashboard },
-  
+  { id: 'plan',     label: 'Trade Plan',     icon: CalendarDays },
   { id: 'trades',     label: 'Trade Vault',      icon: CircleDollarSign },
   { id: 'journal',    label: 'Mind Journal',     icon: BookOpen },
   { id: 'analytics',  label: 'Edge Analytics',   icon: BarChart3 },
