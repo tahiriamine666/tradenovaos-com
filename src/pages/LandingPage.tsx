@@ -976,6 +976,11 @@ export default function LandingPage() {
   const go = (path: string) => navigate(path);
   return (
     <div className="landing-light min-h-screen bg-white text-slate-900 overflow-x-hidden">
+      <SeoHead
+        path="/"
+        title="TradeNova OS — Trading journal, analytics & playbooks"
+        description="Plan trades, journal every execution, and improve with AI insights. TradeNova OS is the Trading Operating System for serious traders."
+      />
       <MarketingNavbar onLogin={() => go('/login')} onSignup={() => go('/signup')} />
       <Hero onSignup={() => go('/signup')} />
       <BrokersStrip />
