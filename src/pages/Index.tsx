@@ -463,7 +463,7 @@ function TradingDashboardInner() {
             <CommandCenter onNavigate={setActive} onAddTrade={openNewTrade} />
           )}
 
-          {active === 'plan' && <TradePlanWorkspace />}
+          {active === 'plan' && <TradePlanGrid />}
 
           {active === 'trades' && <TradeVault />}
 
