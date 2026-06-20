@@ -2076,6 +2076,13 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
             </div>
           </div>
 
+          {isDrill && (
+            <>
+              <DrillAnalytics lesson={lesson as any} />
+              <DrillAiCoach lesson={lesson as any} isPaid={plan.isPro || plan.isElite} />
+            </>
+          )}
+
           {/* AI Tutor */}
           <div className="rounded-2xl border border-border bg-card overflow-hidden">
             <div className="flex items-center gap-2.5 px-4 py-3 border-b border-border">
