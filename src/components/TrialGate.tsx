@@ -1,5 +1,8 @@
 import { usePlan } from "@/hooks/usePlan";
+import { useAuth } from "@/contexts/AuthContext";
 import TrialPaywall from "./TrialPaywall";
+
+const ADMIN_EMAILS = ["tahiria740@gmail.com"];
 
 /**
  * Blocks app access when the user's 7-day trial has expired and they have
@@ -7,6 +10,12 @@ import TrialPaywall from "./TrialPaywall";
  */
 export default function TrialGate({ children }: { children: React.ReactNode }) {
   const { loading, status, trialEndsAt, isPro, isElite, plan } = usePlan();
+  const { user } = useAuth() as any;
+
+  // Admins always bypass the paywall.
+  if (user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+    return <>{children}</>;
+  }
 
   if (loading) {
     return (
