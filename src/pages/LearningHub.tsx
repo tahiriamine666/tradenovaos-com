@@ -1895,6 +1895,7 @@ function LessonPage({ lesson, progress, gradient, allLessons, progMap, onBack, o
 
             {tab === 'resources' && (
               <motion.div key="resources" initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} transition={{ duration: 0.15 }} className="space-y-4">
+                {isDrill && <DrillResources lesson={lesson as any} />}
                 <div className="rounded-2xl border border-border bg-card p-5">
                   <p className="text-sm font-bold text-foreground mb-1 flex items-center gap-2"><BookOpen className="h-4 w-4 text-violet-500"/> Downloads</p>
                   <p className="text-xs text-muted-foreground mb-4">Files generated from this lesson and your own notes — saved to your device.</p>
