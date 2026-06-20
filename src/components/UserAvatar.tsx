@@ -93,7 +93,7 @@ export default function UserAvatar({ url, displayName, email, size = 'md', edita
         {uploading ? (
           <Loader2 className={`${sz.icon} text-white animate-spin`} />
         ) : src ? (
-          <img src={src} alt={displayName ?? 'Avatar'} className="w-full h-full object-cover"
+          <img src={src} alt={`${displayName ?? 'Trader'} profile avatar`} className="w-full h-full object-cover"
             onError={() => setPreview(null)} />
         ) : (
           <span className={`${sz.text} font-bold text-white select-none`}>{ini}</span>
