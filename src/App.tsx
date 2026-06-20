@@ -18,6 +18,7 @@ import SupportedBrokersPage from "./pages/SupportedBrokersPage.tsx";
 import PublicPricingPage from "./pages/marketing/PublicPricingPage.tsx";
 import MarketingPlaceholder from "./pages/marketing/MarketingPlaceholder.tsx";
 import { FeaturePage, SolutionPage, BlogPage, HelpCenterPage } from "./pages/marketing/MarketingPages.tsx";
+import FairValueGapsGuide from "./pages/blog/FairValueGapsGuide.tsx";
 import BillingSuccess from "./pages/BillingSuccess.tsx";
 import BillingCancel from "./pages/BillingCancel.tsx";
 
