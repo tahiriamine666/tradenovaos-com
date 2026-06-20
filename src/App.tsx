@@ -18,6 +18,7 @@ import SupportedBrokersPage from "./pages/SupportedBrokersPage.tsx";
 import PublicPricingPage from "./pages/marketing/PublicPricingPage.tsx";
 import MarketingPlaceholder from "./pages/marketing/MarketingPlaceholder.tsx";
 import { FeaturePage, SolutionPage, BlogPage, HelpCenterPage } from "./pages/marketing/MarketingPages.tsx";
+import FairValueGapsGuide from "./pages/blog/FairValueGapsGuide.tsx";
 import BillingSuccess from "./pages/BillingSuccess.tsx";
 import BillingCancel from "./pages/BillingCancel.tsx";
 
@@ -88,6 +89,7 @@ const App = () => (
                   <Route path="/resources/:slug" element={<MarketingPlaceholder group="resource" />} />
                   <Route path="/compare/:slug" element={<MarketingPlaceholder group="compare" />} />
                   <Route path="/blog" element={<MarketingPlaceholder group="static" staticKey="blog" />} />
+                  <Route path="/blog/fair-value-gaps-guide" element={<FairValueGapsGuide />} />
                   <Route path="/contact" element={<MarketingPlaceholder group="static" staticKey="contact" />} />
                   <Route path="/careers" element={<MarketingPlaceholder group="static" staticKey="careers" />} />
                   <Route path="/privacy" element={<MarketingPlaceholder group="static" staticKey="privacy" />} />

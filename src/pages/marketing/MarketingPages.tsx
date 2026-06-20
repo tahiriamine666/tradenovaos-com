@@ -257,13 +257,14 @@ export function SolutionPage() {
 export function BlogPage() {
   const navigate = useNavigate();
   const posts = [
+    { title: 'Fair Value Gaps (FVG): How to identify and trade them', tag: 'Price Action', date: 'June 20, 2026', read: '9 min', href: '/blog/fair-value-gaps-guide' },
     { title: 'How to calculate your trading edge', tag: 'Analytics', date: 'May 10, 2026', read: '8 min' },
     { title: 'The psychology of losing trades', tag: 'Psychology', date: 'May 7, 2026', read: '6 min' },
     { title: 'Why most traders fail: the journaling gap', tag: 'Journaling', date: 'May 4, 2026', read: '5 min' },
     { title: 'How to pass a prop firm challenge', tag: 'Prop Firms', date: 'Apr 28, 2026', read: '10 min' },
     { title: 'Building a trading playbook from scratch', tag: 'Playbooks', date: 'Apr 22, 2026', read: '7 min' },
     { title: 'Using AI to analyze your trades', tag: 'AI', date: 'Apr 15, 2026', read: '9 min' },
-  ];
+  ] as Array<{ title: string; tag: string; date: string; read: string; href?: string }>;
   return (
     <div className="min-h-screen bg-white text-slate-900">
       <SeoHead
@@ -294,16 +295,17 @@ export function BlogPage() {
           <div className="space-y-4">
             {posts.map((p, i) => (
               <motion.div key={p.title} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
+                onClick={() => p.href && navigate(p.href)}
                 className="group flex items-center justify-between p-5 rounded-2xl border border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 cursor-pointer transition-all">
                 <div>
                   <div className="flex items-center gap-3 mb-1.5">
                     <span className="text-[10px] font-bold text-violet-600 bg-violet-500/10 px-2 py-0.5 rounded-full">{p.tag}</span>
-                    <span className="text-[11px] text-slate-500">{p.date}</span>
-                    <span className="text-[11px] text-slate-500">{p.read} read</span>
+                    <span className="text-[11px] text-slate-700">{p.date}</span>
+                    <span className="text-[11px] text-slate-700">{p.read} read</span>
                   </div>
                   <p className="text-base font-bold text-slate-900 group-hover:text-violet-700 transition-colors">{p.title}</p>
                 </div>
-                <ArrowRight className="h-4 w-4 text-slate-400 group-hover:text-violet-600 transition-colors flex-shrink-0 ml-4" />
+                <ArrowRight className="h-4 w-4 text-slate-500 group-hover:text-violet-600 transition-colors flex-shrink-0 ml-4" />
               </motion.div>
             ))}
           </div>
