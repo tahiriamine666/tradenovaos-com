@@ -1,0 +1,20 @@
+# TradeNova OS
+
+> TradeNova OS is the Trading Operating System for retail and funded traders — plan trades, journal every execution, analyze performance with AI-powered insights, and refine repeatable playbooks.
+
+TradeNova OS combines a trade journal, playbook lab, replay studio, AI insights, and a learning hub in one workspace. Built for forex, futures, crypto, and equities traders who want to improve consistency through data and structured review.
+
+## Pages
+
+- [Home](/): Product overview, features, and how TradeNova OS helps traders improve.
+- [Pricing](/pricing): Plans and pricing for Free, Pro, and Elite tiers with a 7-day free trial.
+- [Supported Brokers](/supported-brokers): Broker integrations and CSV import compatibility.
+- [Blog](/resources/blog): Trading psychology, journaling tactics, and strategy breakdowns.
+- [Help Center](/resources/help-center): Guides for getting started, importing trades, and using AI features.
+- [Contact](/contact): Reach the TradeNova team.
+
+## Optional
+
+- [Careers](/careers): Open roles at TradeNova.
+- [Privacy Policy](/privacy)
+- [Terms of Service](/terms)
