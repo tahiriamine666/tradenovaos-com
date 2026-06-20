@@ -49,8 +49,8 @@ export function ReplayCoach({ sessionId }: Props) {
       if (id === "journal" && user) {
         const { error: jErr } = await supabase.from("journal_entries").insert({
           user_id: user.id,
-          title: "Replay reflection",
-          content: text,
+          notes: text,
+          summary: "Replay reflection",
           mood: "reflective",
           entry_date: new Date().toISOString().slice(0, 10),
         });
