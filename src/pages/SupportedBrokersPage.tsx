@@ -4,6 +4,7 @@ import { ArrowRight, Check } from 'lucide-react';
 import MarketingNav from '@/components/marketing/MarketingNav';
 import MarketingFooter from '@/components/marketing/MarketingFooter';
 import BrokersStrip from '@/components/marketing/BrokersStrip';
+import SeoHead from '@/components/SeoHead';
 
 const BROKERS = [
   { name: 'MetaTrader 4', desc: 'Industry-standard FX & CFD platform' },
