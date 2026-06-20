@@ -215,6 +215,11 @@ export function SolutionPage() {
   const Icon = data.icon;
   return (
     <div className="min-h-screen bg-white text-slate-900">
+      <SeoHead
+        path={`/solutions/${solution}`}
+        title={`${data.title} — TradeNova OS`}
+        description={data.subtitle}
+      />
       <MarketingNavbar onLogin={() => navigate('/login')} onSignup={() => navigate('/signup')} />
       <div className="max-w-4xl mx-auto px-5 sm:px-8 pt-32 pb-24">
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease }}>
