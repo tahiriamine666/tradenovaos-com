@@ -10,6 +10,12 @@ const ADMIN_EMAILS = ["tahiria740@gmail.com"];
  */
 export default function TrialGate({ children }: { children: React.ReactNode }) {
   const { loading, status, trialEndsAt, isPro, isElite, plan } = usePlan();
+  const { user } = useAuth() as any;
+
+  // Admins always bypass the paywall.
+  if (user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+    return <>{children}</>;
+  }
 
   if (loading) {
     return (
