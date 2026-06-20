@@ -983,15 +983,17 @@ export default function LandingPage() {
         description="Plan trades, journal every execution, and improve with AI insights. TradeNova OS is the Trading Operating System for serious traders."
       />
       <MarketingNavbar onLogin={() => go('/login')} onSignup={() => go('/signup')} />
-      <Hero onSignup={() => go('/signup')} />
-      <BrokersStrip />
-      <StatsBar />
-      <Features />
-      <HowItWorks />
-      <DashboardShowcase onSignup={() => go('/signup')} />
-      <Testimonials />
-      <Pricing onSignup={() => go('/signup')} />
-      <FinalCTA onSignup={() => go('/signup')} />
+      <main id="main-content">
+        <Hero onSignup={() => go('/signup')} />
+        <BrokersStrip />
+        <StatsBar />
+        <Features />
+        <HowItWorks />
+        <DashboardShowcase onSignup={() => go('/signup')} />
+        <Testimonials />
+        <Pricing onSignup={() => go('/signup')} />
+        <FinalCTA onSignup={() => go('/signup')} />
+      </main>
       <MarketingFooter />
     </div>
   );
