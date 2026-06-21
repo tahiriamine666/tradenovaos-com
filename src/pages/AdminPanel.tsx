@@ -109,23 +109,29 @@ export default function AdminPanel() {
 
   useEffect(() => { if (isAdmin) load(); }, [isAdmin, load]);
 
+  const callManageSubscription = async (payload: Record<string, unknown>) => {
+    const { data, error } = await supabase.functions.invoke('admin-manage-subscription', { body: payload });
+    if (error) throw new Error(error.message || 'Request failed');
+    if (!data?.success) throw new Error(data?.error || 'Failed to update subscription');
+    return data;
+  };
+
   const upgrade = async (userId, plan) => {
     setUpgrading(userId);
     try {
-      const { error } = await supabase.rpc('admin_upgrade_user', { target_user_id: userId, new_plan: plan, trial_days: 0, notes: 'Admin manual' });
-      if (error) throw error;
-      toast({ title: `Upgraded to ${plan}!` }); load();
-    } catch (e) { toast({ title: 'Error', description: e.message, variant: 'destructive' }); }
+      await callManageSubscription({ user_id: userId, plan, status: plan === 'free' ? 'inactive' : 'active', trial_days: 0, notes: 'Admin manual' });
+      toast({ title: `✅ User upgraded to ${plan} successfully` }); load();
+    } catch (e: any) { toast({ title: 'Error', description: e.message, variant: 'destructive' }); }
     finally { setUpgrading(null); }
   };
 
   const approveReq = async (req) => {
     setUpgrading(req.id);
     try {
-      await supabase.rpc('admin_upgrade_user', { target_user_id: req.user_id, new_plan: req.requested_plan, trial_days: 14, notes: `Payoneer ref: ${req.payoneer_ref ?? 'N/A'}` });
+      await callManageSubscription({ user_id: req.user_id, plan: req.requested_plan, status: 'trialing', trial_days: 14, notes: `Payoneer ref: ${req.payoneer_ref ?? 'N/A'}` });
       await supabase.from('upgrade_requests').update({ status: 'approved', reviewed_by: user?.id, reviewed_at: new Date().toISOString() }).eq('id', req.id);
       toast({ title: `Approved → ${req.requested_plan}` }); load();
-    } catch (e) { toast({ title: 'Error', description: e.message, variant: 'destructive' }); }
+    } catch (e: any) { toast({ title: 'Error', description: e.message, variant: 'destructive' }); }
     finally { setUpgrading(null); }
   };
 
