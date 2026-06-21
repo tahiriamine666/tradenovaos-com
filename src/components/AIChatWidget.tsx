@@ -71,14 +71,41 @@ Rules:
 - End responses with a follow-up question or helpful tip when appropriate`;
 
 // ─── API call ─────────────────────────────────────────────────────────────────
-async function callAI(messages: { role: Role; content: string }[]): Promise<string> {
-  const { data, error } = await supabase.functions.invoke('ai-chat', {
-    body: { messages: messages.slice(-12) },
-  });
-  if (error) throw error;
-  if ((data as any)?.error) throw new Error((data as any).error);
-  return (data as any)?.text ?? 'Sorry, I could not generate a response.';
+interface AIResult { text: string; ok: boolean; code?: string }
+
+async function callAI(messages: { role: Role; content: string }[]): Promise<AIResult> {
+  const attempt = async (): Promise<AIResult> => {
+    const { data, error } = await supabase.functions.invoke('ai-chat', {
+      body: { messages: messages.slice(-12) },
+    });
+    if (error) {
+      console.error('[Nova] invoke error:', error);
+      return { ok: false, code: 'network', text: 'Nova is temporarily unavailable. Please try again in a few moments.' };
+    }
+    const d: any = data ?? {};
+    if (d.fallback || d.error) {
+      console.warn('[Nova] gateway fallback:', d.code, d.error);
+      const friendly =
+        d.code === 'no_credits'   ? 'Nova is paused right now — our AI credits need a top-up. Please contact support so we can restore service.'
+      : d.code === 'rate_limited' ? 'Nova is a bit busy right now. Please try again in a few seconds.'
+      : d.code === 'missing_key'  ? 'Nova is temporarily unavailable. Our team has been notified.'
+      :                             'Nova is temporarily unavailable. Please try again in a few moments.';
+      return { ok: false, code: d.code, text: friendly };
+    }
+    if (!d.text) return { ok: false, code: 'empty', text: 'Nova is temporarily unavailable. Please try again in a few moments.' };
+    return { ok: true, text: d.text };
+  };
+
+  const first = await attempt();
+  // One auto-retry on transient rate-limit / network blip
+  if (!first.ok && (first.code === 'rate_limited' || first.code === 'network')) {
+    await new Promise(r => setTimeout(r, 1200));
+    const second = await attempt();
+    if (second.ok) return second;
+  }
+  return first;
 }
+
 
 // ─── Pulse ring ───────────────────────────────────────────────────────────────
 function PulseRing() {
