@@ -1,4 +1,4 @@
-// Lovable AI-powered chat for Nova support widget
+// Nova — TradeNova AI support chat (Lovable AI Gateway)
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -16,6 +16,7 @@ TradeNova features:
 - AI Insights (Pro+): AI analyzes trade patterns
 - CSV Import (Pro+): Import from any broker
 - Trading Calendar: P&L heatmap
+- Learning Hub: Lessons across Fundamentals, SMC, ICT, Price Action, Psychology, Prop Firm
 
 Plans: Free (50 trades/mo), Pro ($29/mo), Elite ($59/mo)
 Payment: Currently via Payoneer (manual), Stripe coming soon
@@ -27,17 +28,51 @@ Rules:
 - Be warm, helpful, and professional
 - For billing/account issues, offer to escalate to human support
 - For bugs, ask for steps to reproduce
-- Never make up features that don't exist
+- Never invent features
 - If asked something outside TradeNova, redirect politely
-- End responses with a follow-up question or helpful tip when appropriate`;
+- End with a follow-up question or helpful tip when appropriate`;
+
+type ChatMsg = { role: "user" | "assistant" | "system"; content: string };
+
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method !== "POST") return json({ error: "Method not allowed", fallback: true }, 200);
 
+  const t0 = Date.now();
   try {
-    const { messages } = await req.json();
+    const body = await req.json().catch(() => ({}));
+    const messages: ChatMsg[] = Array.isArray(body?.messages) ? body.messages : [];
+    console.log("[ai-chat] request received", { msgs: messages.length });
+
     const apiKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!apiKey) throw new Error("LOVABLE_API_KEY not set");
+    if (!apiKey) {
+      console.error("[ai-chat] LOVABLE_API_KEY missing");
+      return json({
+        error: "AI key not configured",
+        code: "missing_key",
+        fallback: true,
+      });
+    }
+
+    // Sanitise + cap history (keep last 12 turns)
+    const safeMessages = messages
+      .filter((m) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
+      .slice(-12)
+      .map((m) => ({ role: m.role, content: m.content.slice(0, 4000) }));
+
+    const payload = {
+      model: "google/gemini-3-flash-preview",
+      messages: [{ role: "system", content: SYSTEM_PROMPT }, ...safeMessages],
+    };
+
+    console.log("[ai-chat] calling gateway", { model: payload.model, turns: safeMessages.length });
 
     const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -45,32 +80,52 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${apiKey}`,
       },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          ...(messages ?? []).slice(-12),
-        ],
-      }),
+      body: JSON.stringify(payload),
     });
 
+    const ms = Date.now() - t0;
+    console.log("[ai-chat] gateway responded", { status: res.status, ms });
+
     if (!res.ok) {
-      const txt = await res.text();
-      return new Response(JSON.stringify({ error: txt }), {
-        status: res.status,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      const raw = await res.text();
+      console.error("[ai-chat] gateway error", { status: res.status, body: raw.slice(0, 500) });
+
+      if (res.status === 402) {
+        return json({
+          error: "AI credits exhausted. Please add credits in Workspace → Plans & credits.",
+          code: "no_credits",
+          fallback: true,
+        });
+      }
+      if (res.status === 429) {
+        return json({
+          error: "AI rate limit hit. Please retry in a few seconds.",
+          code: "rate_limited",
+          fallback: true,
+        });
+      }
+      return json({
+        error: `AI gateway error (${res.status})`,
+        code: "gateway_error",
+        fallback: true,
       });
     }
 
     const data = await res.json();
-    const text = data.choices?.[0]?.message?.content ?? "Sorry, I could not generate a response.";
-    return new Response(JSON.stringify({ text }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    const text: string | undefined = data?.choices?.[0]?.message?.content;
+    if (!text || !text.trim()) {
+      console.error("[ai-chat] empty completion", data);
+      return json({ error: "Empty AI response", code: "empty_response", fallback: true });
+    }
+
+    console.log("[ai-chat] success", { chars: text.length, ms: Date.now() - t0 });
+    return json({ text });
   } catch (e) {
-    return new Response(JSON.stringify({ error: String(e) }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    console.error("[ai-chat] unexpected error", e);
+    return json({
+      error: e instanceof Error ? e.message : "Unknown error",
+      code: "internal_error",
+      fallback: true,
     });
   }
 });
