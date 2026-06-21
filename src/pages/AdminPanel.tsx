@@ -184,17 +184,15 @@ export default function AdminPanel() {
     if (!activateEmail.trim()) { toast({ title: 'Email required', variant: 'destructive' }); return; }
     setActivating(true);
     try {
-      const { data, error } = await supabase.rpc('admin_upgrade_by_email' as any, {
-        p_email:      activateEmail.trim(),
-        p_plan:       activatePlan,
-        p_status:     activateStatus,
-        p_trial_days: parseInt(activateTrialDays) || 0,
-        p_notes:      activateNotes.trim() || null,
+      const data = await callManageSubscription({
+        email:      activateEmail.trim(),
+        plan:       activatePlan,
+        status:     activateStatus,
+        trial_days: parseInt(activateTrialDays) || 0,
+        notes:      activateNotes.trim() || null,
       });
-      if (error) throw error;
-      if (!(data as any)?.success) throw new Error((data as any)?.error || 'Failed');
       const planLabel = activatePlan.charAt(0).toUpperCase() + activatePlan.slice(1);
-      toast({ title: `✅ User upgraded to ${planLabel} successfully!` });
+      toast({ title: `✅ User upgraded to ${planLabel} successfully!`, description: data.email ?? undefined });
       setActivateEmail(''); setActivateNotes(''); setActivateTrialDays('0'); setSearchResults([]);
       load();
     } catch (e: any) { toast({ title: 'Error', description: e.message, variant: 'destructive' }); }
@@ -215,11 +213,9 @@ export default function AdminPanel() {
   const quickUpgrade = async (userId: string, userEmail: string, plan: string) => {
     setUpgrading(userId);
     try {
-      const { data, error } = await supabase.rpc('admin_upgrade_by_email' as any, {
-        p_email: userEmail, p_plan: plan, p_status: 'active', p_trial_days: 0, p_notes: 'Quick upgrade from admin panel',
+      await callManageSubscription({
+        user_id: userId, email: userEmail, plan, status: 'active', trial_days: 0, notes: 'Quick upgrade from admin panel',
       });
-      if (error) throw error;
-      if (!(data as any)?.success) throw new Error((data as any)?.error || 'Failed');
       toast({ title: `✅ User upgraded to ${plan} successfully!` });
       load();
     } catch (e: any) { toast({ title: 'Error', description: e.message, variant: 'destructive' }); }
