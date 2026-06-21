@@ -109,23 +109,29 @@ export default function AdminPanel() {
 
   useEffect(() => { if (isAdmin) load(); }, [isAdmin, load]);
 
+  const callManageSubscription = async (payload: Record<string, unknown>) => {
+    const { data, error } = await supabase.functions.invoke('admin-manage-subscription', { body: payload });
+    if (error) throw new Error(error.message || 'Request failed');
+    if (!data?.success) throw new Error(data?.error || 'Failed to update subscription');
+    return data;
+  };
+
   const upgrade = async (userId, plan) => {
     setUpgrading(userId);
     try {
-      const { error } = await supabase.rpc('admin_upgrade_user', { target_user_id: userId, new_plan: plan, trial_days: 0, notes: 'Admin manual' });
-      if (error) throw error;
-      toast({ title: `Upgraded to ${plan}!` }); load();
-    } catch (e) { toast({ title: 'Error', description: e.message, variant: 'destructive' }); }
+      await callManageSubscription({ user_id: userId, plan, status: plan === 'free' ? 'inactive' : 'active', trial_days: 0, notes: 'Admin manual' });
+      toast({ title: `✅ User upgraded to ${plan} successfully` }); load();
+    } catch (e: any) { toast({ title: 'Error', description: e.message, variant: 'destructive' }); }
     finally { setUpgrading(null); }
   };
 
   const approveReq = async (req) => {
     setUpgrading(req.id);
     try {
-      await supabase.rpc('admin_upgrade_user', { target_user_id: req.user_id, new_plan: req.requested_plan, trial_days: 14, notes: `Payoneer ref: ${req.payoneer_ref ?? 'N/A'}` });
+      await callManageSubscription({ user_id: req.user_id, plan: req.requested_plan, status: 'trialing', trial_days: 14, notes: `Payoneer ref: ${req.payoneer_ref ?? 'N/A'}` });
       await supabase.from('upgrade_requests').update({ status: 'approved', reviewed_by: user?.id, reviewed_at: new Date().toISOString() }).eq('id', req.id);
       toast({ title: `Approved → ${req.requested_plan}` }); load();
-    } catch (e) { toast({ title: 'Error', description: e.message, variant: 'destructive' }); }
+    } catch (e: any) { toast({ title: 'Error', description: e.message, variant: 'destructive' }); }
     finally { setUpgrading(null); }
   };
 
@@ -178,17 +184,15 @@ export default function AdminPanel() {
     if (!activateEmail.trim()) { toast({ title: 'Email required', variant: 'destructive' }); return; }
     setActivating(true);
     try {
-      const { data, error } = await supabase.rpc('admin_upgrade_by_email' as any, {
-        p_email:      activateEmail.trim(),
-        p_plan:       activatePlan,
-        p_status:     activateStatus,
-        p_trial_days: parseInt(activateTrialDays) || 0,
-        p_notes:      activateNotes.trim() || null,
+      const data = await callManageSubscription({
+        email:      activateEmail.trim(),
+        plan:       activatePlan,
+        status:     activateStatus,
+        trial_days: parseInt(activateTrialDays) || 0,
+        notes:      activateNotes.trim() || null,
       });
-      if (error) throw error;
-      if (!(data as any)?.success) throw new Error((data as any)?.error || 'Failed');
       const planLabel = activatePlan.charAt(0).toUpperCase() + activatePlan.slice(1);
-      toast({ title: `✅ User upgraded to ${planLabel} successfully!` });
+      toast({ title: `✅ User upgraded to ${planLabel} successfully!`, description: data.email ?? undefined });
       setActivateEmail(''); setActivateNotes(''); setActivateTrialDays('0'); setSearchResults([]);
       load();
     } catch (e: any) { toast({ title: 'Error', description: e.message, variant: 'destructive' }); }
@@ -209,11 +213,9 @@ export default function AdminPanel() {
   const quickUpgrade = async (userId: string, userEmail: string, plan: string) => {
     setUpgrading(userId);
     try {
-      const { data, error } = await supabase.rpc('admin_upgrade_by_email' as any, {
-        p_email: userEmail, p_plan: plan, p_status: 'active', p_trial_days: 0, p_notes: 'Quick upgrade from admin panel',
+      await callManageSubscription({
+        user_id: userId, email: userEmail, plan, status: 'active', trial_days: 0, notes: 'Quick upgrade from admin panel',
       });
-      if (error) throw error;
-      if (!(data as any)?.success) throw new Error((data as any)?.error || 'Failed');
       toast({ title: `✅ User upgraded to ${plan} successfully!` });
       load();
     } catch (e: any) { toast({ title: 'Error', description: e.message, variant: 'destructive' }); }
