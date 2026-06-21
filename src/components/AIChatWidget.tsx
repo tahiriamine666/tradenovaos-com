@@ -268,17 +268,20 @@ export default function AIChatWidget() {
     const wantsHuman = /human|agent|support team|speak to someone|real person|talk to/i.test(content);
 
     let responseText: string;
+    let isError = false;
     try {
       if (wantsHuman) {
         responseText = `Of course! You can reach our team directly:\n\n- **WhatsApp:** [Chat now](https://wa.me/${WHATSAPP.replace(/\D/g, '')})\n- **Email:** ${EMAIL}\n\nWe typically respond within a few hours. Is there anything else I can help clarify in the meantime?`;
       } else {
-        // Call Claude
         const history = newMessages.map(m => ({ role: m.role, content: m.content }));
-        responseText = await callAI(history);
+        const result = await callAI(history);
+        responseText = result.text;
+        isError = !result.ok;
       }
     } catch (err) {
-      console.error('Chat error:', err);
-      responseText = 'Sorry, I had trouble connecting. Please try again or contact us directly.';
+      console.error('[Nova] Chat error:', err);
+      responseText = 'Nova is temporarily unavailable. Please try again in a few moments.';
+      isError = true;
     }
 
     const assistantMsg: Message = {
@@ -286,8 +289,9 @@ export default function AIChatWidget() {
       role: 'assistant',
       content: responseText,
       ts: Date.now(),
-      isError: responseText.includes('trouble connecting'),
+      isError,
     };
+
 
     const finalMessages = [...newMessages, assistantMsg];
     setMessages(finalMessages);
