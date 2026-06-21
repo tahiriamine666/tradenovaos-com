@@ -1384,6 +1384,39 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_overrides: {
+        Row: {
+          admin_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          plan: string
+          status: string
+          trial_days: number
+          user_id: string
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          plan: string
+          status: string
+          trial_days?: number
+          user_id: string
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          plan?: string
+          status?: string
+          trial_days?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       support_messages: {
         Row: {
           created_at: string
