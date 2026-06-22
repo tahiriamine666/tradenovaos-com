@@ -50,6 +50,23 @@ Deno.serve(async (req) => {
 
   const t0 = Date.now();
   try {
+    // Require an authenticated caller — prevents anonymous credit drain.
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return json({ error: "Unauthorized", code: "unauthorized" }, 401);
+    }
+    const sb = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } },
+    );
+    const { data: claimsData, error: claimsErr } = await sb.auth.getClaims(
+      authHeader.replace("Bearer ", ""),
+    );
+    if (claimsErr || !claimsData?.claims) {
+      return json({ error: "Unauthorized", code: "unauthorized" }, 401);
+    }
+
     const body = await req.json().catch(() => ({}));
     const messages: ChatMsg[] = Array.isArray(body?.messages) ? body.messages : [];
     console.log("[ai-chat] request received", { msgs: messages.length });
