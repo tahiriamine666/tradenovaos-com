@@ -15,7 +15,7 @@ import { usePlan } from '@/hooks/usePlan';
 
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-interface Category { id:string; name:string; emoji:string; gradient:string; description:string; order_index:number; }
+interface Category { id:string; name:string; emoji:string; gradient:string; description:string; order_index:number; is_locked?:boolean; }
 interface LessonSection { title:string; order:number; }
 interface Callout { type:'tip'|'warning'|'important'; title:string; text:string; }
 interface QuizQuestion { id:number; question:string; options:string[]; correct:number; explanation:string; }
