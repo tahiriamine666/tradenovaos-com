@@ -12,6 +12,7 @@ import { useLearningNav, type LearningTreeLesson } from '@/contexts/LearningNavC
 
 export const ADMIN_ITEM = { id: 'admin', label: 'Admin Panel', icon: Shield };
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import UserAvatar from '@/components/UserAvatar';
 import { useProfile } from '@/hooks/useProfile';
