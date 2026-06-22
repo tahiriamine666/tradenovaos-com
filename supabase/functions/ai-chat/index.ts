@@ -1,9 +1,12 @@
 // Nova — TradeNova AI support chat (Lovable AI Gateway)
+import { createClient } from "npm:@supabase/supabase-js@2";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
+
 
 const SYSTEM_PROMPT = `You are Nova, the TradeNova AI Assistant — a friendly, concise, and knowledgeable support agent for TradeNova, a premium trading SaaS.
 
@@ -47,6 +50,23 @@ Deno.serve(async (req) => {
 
   const t0 = Date.now();
   try {
+    // Require an authenticated caller — prevents anonymous credit drain.
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return json({ error: "Unauthorized", code: "unauthorized" }, 401);
+    }
+    const sb = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } },
+    );
+    const { data: claimsData, error: claimsErr } = await sb.auth.getClaims(
+      authHeader.replace("Bearer ", ""),
+    );
+    if (claimsErr || !claimsData?.claims) {
+      return json({ error: "Unauthorized", code: "unauthorized" }, 401);
+    }
+
     const body = await req.json().catch(() => ({}));
     const messages: ChatMsg[] = Array.isArray(body?.messages) ? body.messages : [];
     console.log("[ai-chat] request received", { msgs: messages.length });
