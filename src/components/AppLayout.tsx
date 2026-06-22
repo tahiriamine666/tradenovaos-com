@@ -12,6 +12,7 @@ import { useLearningNav, type LearningTreeLesson } from '@/contexts/LearningNavC
 
 export const ADMIN_ITEM = { id: 'admin', label: 'Admin Panel', icon: Shield };
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import UserAvatar from '@/components/UserAvatar';
 import { useProfile } from '@/hooks/useProfile';
@@ -91,6 +92,9 @@ function CourseTreeNav({
 }) {
   const { tree } = useLearningNav();
   const [open, setOpen] = useState<Record<string, boolean>>({});
+  const [lockedModal, setLockedModal] = useState<string | null>(null);
+  const [notifyState, setNotifyState] = useState<'idle' | 'saving' | 'done'>('idle');
+
 
   // Auto-open category that contains the selected lesson; otherwise first cat.
   useEffect(() => {
@@ -155,7 +159,24 @@ function CourseTreeNav({
 
       <div className="flex-1 overflow-y-auto px-2 pb-3">
         {tree.categories.map((cat) => {
-          const ls = (lessonsByCat[cat.name] || []).filter(matches);
+          const allLs = lessonsByCat[cat.name] || [];
+          const ls = allLs.filter(matches);
+          if (cat.is_locked) {
+            // Locked category: show name + count only, no expand, click → modal
+            return (
+              <div key={cat.id} className="mb-0.5">
+                <button
+                  onClick={() => { setLockedModal(cat.name); setNotifyState('idle'); }}
+                  className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-xs font-medium text-muted-foreground hover:bg-muted transition-colors"
+                >
+                  <Lock className="h-3.5 w-3.5 flex-shrink-0 text-primary" />
+                  {cat.emoji && <span className="text-sm flex-shrink-0 opacity-60">{cat.emoji}</span>}
+                  <span className="flex-1 truncate">{cat.name}</span>
+                  <span className="text-[10px] text-muted-foreground tabular-nums">{allLs.length}</span>
+                </button>
+              </div>
+            );
+          }
           if (ls.length === 0 && search) return null;
           const done = ls.filter((l) => tree.progress[l.id]?.completed).length;
           const isOpen = !!open[cat.name] || (!!search && ls.length > 0);
@@ -184,7 +205,7 @@ function CourseTreeNav({
                 )}
                 <span className="flex-1 truncate">{cat.name}</span>
                 <span className="text-[10px] text-muted-foreground tabular-nums">
-                  {done}/{ls.length || (lessonsByCat[cat.name] || []).length}
+                  {done}/{ls.length || allLs.length}
                 </span>
               </button>
 
@@ -240,9 +261,64 @@ function CourseTreeNav({
           );
         })}
       </div>
+
+      <LockedCategoryModal
+        categoryName={lockedModal}
+        onClose={() => setLockedModal(null)}
+        notifyState={notifyState}
+        onNotify={async () => {
+          if (notifyState !== 'idle' || !lockedModal) return;
+          setNotifyState('saving');
+          try {
+            const { data: { user: u } } = await supabase.auth.getUser();
+            await supabase.from('support_messages').insert({
+              user_id: u?.id ?? null,
+              subject: `Notify me: ${lockedModal}`,
+              message: `User requested to be notified when the "${lockedModal}" learning path is released.`,
+              status: 'new',
+            } as any);
+          } catch { /* swallow — UX is the same */ }
+          setNotifyState('done');
+        }}
+      />
     </div>
   );
 }
+
+function LockedCategoryModal({
+  categoryName, onClose, onNotify, notifyState,
+}: {
+  categoryName: string | null;
+  onClose: () => void;
+  onNotify: () => void;
+  notifyState: 'idle' | 'saving' | 'done';
+}) {
+  return (
+    <Dialog open={!!categoryName} onOpenChange={(v) => { if (!v) onClose(); }}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <div className="mb-3 flex items-center gap-2">
+            <Badge className="rounded-full bg-primary/10 text-primary hover:bg-primary/10">
+              <Lock className="mr-1 h-3 w-3" />
+              Coming soon
+            </Badge>
+          </div>
+          <DialogTitle className="font-heading text-xl">Category Locked</DialogTitle>
+          <DialogDescription className="text-sm leading-relaxed text-muted-foreground">
+            {categoryName ? <><span className="text-foreground font-medium">{categoryName}</span> — t</> : 'T'}his learning path is not available yet and will be released in a future TradeNova Academy update.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="flex-col gap-2 sm:flex-row">
+          <Button variant="ghost" onClick={onClose}>Close</Button>
+          <Button onClick={onNotify} disabled={notifyState !== 'idle'}>
+            {notifyState === 'done' ? '✓ You\'ll be notified' : notifyState === 'saving' ? 'Saving…' : 'Notify Me'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 function SidebarContent({ active, onNavigate }: {
   active: string; onNavigate: (id: string) => void;

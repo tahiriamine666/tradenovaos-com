@@ -15,7 +15,7 @@ import { usePlan } from '@/hooks/usePlan';
 
 
 // ── Types ─────────────────────────────────────────────────────────────────────
-interface Category { id:string; name:string; emoji:string; gradient:string; description:string; order_index:number; }
+interface Category { id:string; name:string; emoji:string; gradient:string; description:string; order_index:number; is_locked?:boolean; }
 interface LessonSection { title:string; order:number; }
 interface Callout { type:'tip'|'warning'|'important'; title:string; text:string; }
 interface QuizQuestion { id:number; question:string; options:string[]; correct:number; explanation:string; }
@@ -2476,7 +2476,7 @@ export default function LearningHub() {
   const { setTree } = useLearningNav();
   useEffect(() => {
     setTree({
-      categories: categories.map(c => ({ id: c.id, name: c.name, emoji: c.emoji })),
+      categories: categories.map(c => ({ id: c.id, name: c.name, emoji: c.emoji, is_locked: !!(c as any).is_locked })),
       lessons: lessons.map(l => ({
         id: l.id, title: l.title, category: l.category,
         order_index: l.order_index, is_premium: l.is_premium, is_pro: l.is_pro,
