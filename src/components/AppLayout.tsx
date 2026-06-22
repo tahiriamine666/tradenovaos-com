@@ -91,6 +91,9 @@ function CourseTreeNav({
 }) {
   const { tree } = useLearningNav();
   const [open, setOpen] = useState<Record<string, boolean>>({});
+  const [lockedModal, setLockedModal] = useState<string | null>(null);
+  const [notifyState, setNotifyState] = useState<'idle' | 'saving' | 'done'>('idle');
+
 
   // Auto-open category that contains the selected lesson; otherwise first cat.
   useEffect(() => {
