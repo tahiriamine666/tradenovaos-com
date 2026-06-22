@@ -17,6 +17,7 @@ export interface LearningTreeCategory {
   id: string;
   name: string;
   emoji?: string;
+  is_locked?: boolean;
 }
 
 export interface LearningTreeLesson {
