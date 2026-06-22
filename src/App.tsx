@@ -81,7 +81,7 @@ const App = () => (
                   <Route path="/billing/cancel" element={<ProtectedApp><BillingCancel /></ProtectedApp>} />
 
                   {/* Public marketing routes */}
-                  <Route path="/pricing" element={<PublicPricingPage />} />
+                  <Route path="/pricing" element={<Pricing />} />
                   <Route path="/supported-brokers" element={<SupportedBrokersPage />} />
                   <Route path="/features/:feature" element={<FeaturePage />} />
                   <Route path="/solutions/:solution" element={<SolutionPage />} />
