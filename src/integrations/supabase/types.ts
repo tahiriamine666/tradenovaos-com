@@ -617,6 +617,7 @@ export type Database = {
           emoji: string
           gradient: string
           id: string
+          is_locked: boolean
           name: string
           order_index: number
           updated_at: string
@@ -627,6 +628,7 @@ export type Database = {
           emoji?: string
           gradient?: string
           id?: string
+          is_locked?: boolean
           name: string
           order_index?: number
           updated_at?: string
@@ -637,6 +639,7 @@ export type Database = {
           emoji?: string
           gradient?: string
           id?: string
+          is_locked?: boolean
           name?: string
           order_index?: number
           updated_at?: string
