@@ -62,19 +62,22 @@ export async function openPaddleCheckout(opts: {
   plan: PaddlePlanId;
   userId: string;
   email: string;
+  priceId?: string;
+  theme?: "light" | "dark";
 }): Promise<void> {
   const { paddle, cfg } = await ensurePaddle();
-  const priceId = opts.plan === "pro" ? cfg.priceIds.pro : cfg.priceIds.elite;
+  const priceId =
+    opts.priceId ?? (opts.plan === "pro" ? cfg.priceIds.pro : cfg.priceIds.elite);
   if (!priceId) throw new Error(`Paddle price ID not configured for plan: ${opts.plan}`);
 
   const origin = window.location.origin;
   paddle.Checkout.open({
     items: [{ priceId, quantity: 1 }],
-    customer: { email: opts.email },
+    customer: opts.email ? { email: opts.email } : undefined,
     customData: { user_id: opts.userId, plan: opts.plan },
     settings: {
       displayMode: "overlay",
-      theme: "light",
+      theme: opts.theme ?? "light",
       successUrl: `${origin}/billing/success`,
     },
   });
