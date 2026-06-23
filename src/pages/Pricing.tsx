@@ -1,375 +1,417 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, Zap, Check, RefreshCw, Building2 } from 'lucide-react';
+import { openPaddleCheckout } from '@/lib/paddle';
+import {
+  Check, X, Sparkles, Zap, Crown, Shield, BookOpen, BarChart3, Users,
+  Play, Brain, ChevronLeft, Loader2,
+} from 'lucide-react';
 
-const PLANS = {
-  pro: {
-    name: 'TradeNova Pro',
-    monthlyUSD: 29,
-    annualUSD: 23,
+// Paddle price IDs (live)
+const PRICE_PRO_MONTHLY  = 'pri_01krsn6zcwfjq19dmnerc5hzbh';
+const PRICE_ELITE_MONTHLY = 'pri_01krsn9f8ffhffprye2zktddez';
+// Yearly IDs fall back to monthly until configured
+const PRICE_PRO_YEARLY   = PRICE_PRO_MONTHLY;
+const PRICE_ELITE_YEARLY = PRICE_ELITE_MONTHLY;
+
+type PlanId = 'free' | 'pro' | 'elite';
+type Billing = 'monthly' | 'yearly';
+
+const PLANS: Array<{
+  id: PlanId;
+  name: string;
+  icon: any;
+  tagline: string;
+  monthly: number;
+  yearly: number;
+  badge?: string;
+  cta: string;
+  features: string[];
+  highlight?: boolean;
+}> = [
+  {
+    id: 'free',
+    name: 'Free',
+    icon: Zap,
+    tagline: 'Start journaling your trades',
+    monthly: 0,
+    yearly: 0,
+    cta: 'Get Started',
     features: [
-      'Unlimited trade journaling',
-      'Edge Analytics (full)',
-      'Playbook Lab (unlimited)',
-      'Replay Studio',
-      'AI Nova assistant',
-      'CSV import',
-      'Learning Hub (all lessons)',
-      'Priority support',
+      'Dashboard',
+      'Trade Journal',
+      'Limited Learning Hub',
+      '50 Trades',
+      'Basic Analytics',
     ],
-    badge: 'Most Popular',
-    badgeColor: 'bg-violet-600',
   },
-  elite: {
-    name: 'TradeNova Elite',
-    monthlyUSD: 59,
-    annualUSD: 47,
+  {
+    id: 'pro',
+    name: 'Pro',
+    icon: Sparkles,
+    tagline: 'For serious active traders',
+    monthly: 14,
+    yearly: 11,
+    badge: 'Most Popular',
+    cta: 'Start 7-Day Free Trial',
+    highlight: true,
+    features: [
+      'Unlimited Trades',
+      'Trade Vault',
+      'Replay Studio',
+      'Learning Hub',
+      'Trade Plan',
+      'AI Reviews',
+      'Community Access',
+      'Advanced Analytics',
+    ],
+  },
+  {
+    id: 'elite',
+    name: 'Elite',
+    icon: Crown,
+    tagline: 'For funded & professional traders',
+    monthly: 28,
+    yearly: 22,
+    cta: 'Start 7-Day Free Trial',
     features: [
       'Everything in Pro',
-      'Funded Challenge mode',
-      'Advanced AI coaching',
-      'Custom playbook templates',
-      'Multi-account tracking',
-      'White-glove onboarding',
-      'Early access to new features',
-      'Dedicated success manager',
+      'Unlimited AI Usage',
+      'Elite Community',
+      'Advanced Replay Analytics',
+      'Premium Playbooks',
+      'Priority Support',
+      'Future Elite Features',
     ],
-    badge: 'Best Value',
-    badgeColor: 'bg-amber-500',
   },
-} as const;
+];
 
-const MAD_RATE = 9.70;
+const COMPARISON: Array<{ label: string; free: boolean | string; pro: boolean | string; elite: boolean | string }> = [
+  { label: 'Unlimited Trades',     free: '50 / mo', pro: true, elite: true },
+  { label: 'Replay Studio',         free: false, pro: true, elite: true },
+  { label: 'Trade Plan',            free: false, pro: true, elite: true },
+  { label: 'Trade Vault',           free: false, pro: true, elite: true },
+  { label: 'Learning Hub',          free: 'Limited', pro: true, elite: true },
+  { label: 'AI Reviews',            free: false, pro: 'Standard', elite: 'Unlimited' },
+  { label: 'Community',             free: 'Read-only', pro: true, elite: 'Elite tier' },
+  { label: 'Advanced Analytics',    free: false, pro: true, elite: true },
+  { label: 'Priority Support',      free: false, pro: false, elite: true },
+  { label: 'Unlimited AI',          free: false, pro: false, elite: true },
+];
 
-type PlanKey = keyof typeof PLANS;
+const TRUST_CARDS = [
+  { icon: BookOpen, title: 'Trade Journal',  desc: 'Log every trade with screenshots, tags, and emotion tracking.' },
+  { icon: Play,      title: 'Replay Studio',  desc: 'Re-walk past sessions bar-by-bar to study your execution.' },
+  { icon: Brain,     title: 'AI Reviews',      desc: 'Get instant feedback on your setups, exits, and discipline.' },
+  { icon: BarChart3, title: 'Learning Hub',   desc: 'Structured lessons on SMC, risk, psychology, and more.' },
+  { icon: Users,     title: 'Community',       desc: 'Join serious traders sharing setups, journals, and reviews.' },
+];
+
+const FAQS = [
+  { q: 'Can I cancel anytime?',     a: 'Yes — cancel in one click from your billing settings. No questions asked.' },
+  { q: 'Do I get a free trial?',     a: 'Yes. Pro and Elite both start with a 7-day free trial. You won\'t be charged until it ends.' },
+  { q: 'Can I upgrade later?',       a: 'Of course — upgrade from Pro to Elite anytime. Your billing prorates automatically.' },
+  { q: 'Will I lose my data if I downgrade?', a: 'Never. All your trades, journals, and playbooks stay safe in your account.' },
+];
 
 export default function Pricing() {
   const navigate = useNavigate();
-  const { user } = useAuth() as any;
+  const { user } = useAuth();
+  const [billing, setBilling] = useState<Billing>('monthly');
+  const [loadingPlan, setLoadingPlan] = useState<PlanId | null>(null);
 
-  const [selectedPlan, setSelectedPlan] = useState<PlanKey>('pro');
-  const [billing, setBilling] = useState<'monthly' | 'annual'>('annual');
-  const [currency, setCurrency] = useState<'USD' | 'MAD'>('USD');
-  const [paymentMethod, setPaymentMethod] = useState<'payoneer' | 'bank'>('payoneer');
-  const [showPromo, setShowPromo] = useState(false);
-  const [promoCode, setPromoCode] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-
-  const plan = PLANS[selectedPlan];
-  const pricePerMonth = billing === 'annual' ? plan.annualUSD : plan.monthlyUSD;
-  const totalPerYear = billing === 'annual' ? pricePerMonth * 12 : pricePerMonth;
-
-  const fmt = (usd: number) =>
-    currency === 'USD' ? `$${usd}` : `MAD ${(usd * MAD_RATE).toFixed(2)}`;
-
-  const handleSubmit = async () => {
-    if (!user) {
-      navigate('/login');
+  const handleCta = async (plan: PlanId) => {
+    if (plan === 'free') {
+      navigate(user ? '/app' : '/signup');
       return;
     }
-    setSubmitting(true);
+    if (!user) {
+      navigate(`/signup?redirect=/pricing`);
+      return;
+    }
+    const priceId =
+      plan === 'pro'
+        ? (billing === 'yearly' ? PRICE_PRO_YEARLY : PRICE_PRO_MONTHLY)
+        : (billing === 'yearly' ? PRICE_ELITE_YEARLY : PRICE_ELITE_MONTHLY);
+
+    const theme: 'light' | 'dark' =
+      document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+
     try {
-      const { error } = await supabase.from('upgrade_requests').insert({
-        user_id: user.id,
-        requested_plan: selectedPlan,
-        payment_method: paymentMethod,
-        user_message: `Plan: ${plan.name} | Billing: ${billing} | Currency: ${currency} | Amount: ${fmt(totalPerYear)} | Method: ${paymentMethod}${promoCode ? ` | Promo: ${promoCode}` : ''}`,
-        status: 'pending',
-      } as any);
-      if (error) throw error;
-      toast({
-        title: '✅ Upgrade request submitted!',
-        description: 'Our team will activate your plan after payment confirmation.',
+      setLoadingPlan(plan);
+      await openPaddleCheckout({
+        plan,
+        priceId,
+        userId: user.id,
+        email: user.email ?? '',
+        theme,
       });
-      navigate('/app');
-    } catch (err: any) {
+    } catch (e: any) {
       toast({
-        title: 'Something went wrong',
-        description: err?.message ?? 'Please try again.',
+        title: 'Could not open checkout',
+        description: e?.message ?? 'Please try again.',
         variant: 'destructive',
       });
     } finally {
-      setSubmitting(false);
+      setLoadingPlan(null);
     }
   };
 
-  const handlePayoneer = () => {
-    setPaymentMethod('payoneer');
-    handleSubmit();
-  };
-
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row bg-background">
-      {/* LEFT */}
-      <div className="w-full lg:w-[460px] flex-shrink-0 flex flex-col px-8 py-10 overflow-y-auto">
-        <div className="flex items-center gap-3 mb-10">
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Header bar */}
+      <div className="border-b border-border/60 bg-background/80 backdrop-blur sticky top-0 z-30">
+        <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
           <button
             onClick={() => navigate(-1)}
-            className="w-8 h-8 rounded-lg border border-border flex items-center justify-center hover:bg-muted transition-colors"
-            aria-label="Go back"
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
-            <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+            <ChevronLeft className="h-4 w-4" /> Back
           </button>
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-violet-600 flex items-center justify-center">
               <Zap className="h-3.5 w-3.5 text-white" />
             </div>
-            <span className="text-sm font-bold text-foreground">TradeNova</span>
+            <span className="text-sm font-bold">TradeNova</span>
           </div>
         </div>
+      </div>
 
-        <div className="flex gap-2 mb-6">
-          {(Object.entries(PLANS) as [PlanKey, typeof PLANS[PlanKey]][]).map(([key, p]) => (
+      {/* Hero */}
+      <section className="max-w-5xl mx-auto px-6 pt-16 pb-10 text-center">
+        <motion.h1
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-4xl sm:text-5xl font-bold tracking-tight"
+        >
+          Choose Your Trading{' '}
+          <span className="bg-gradient-to-r from-violet-500 to-fuchsia-500 bg-clip-text text-transparent">
+            Edge
+          </span>
+        </motion.h1>
+        <p className="mt-4 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
+          Everything you need to journal, analyze, replay, and improve your trading performance.
+        </p>
+
+        {/* Billing toggle */}
+        <div className="mt-8 inline-flex items-center gap-1 p-1 rounded-full bg-muted border border-border">
+          {(['monthly', 'yearly'] as Billing[]).map((b) => (
             <button
-              key={key}
-              onClick={() => setSelectedPlan(key)}
-              className={`flex-1 py-2.5 rounded-xl text-sm font-bold border transition-all ${
-                selectedPlan === key
-                  ? 'bg-violet-600 border-violet-600 text-white'
-                  : 'border-border text-muted-foreground hover:text-foreground'
+              key={b}
+              onClick={() => setBilling(b)}
+              className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
+                billing === b
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              {p.name.replace('TradeNova ', '')}
-              {p.badge && selectedPlan !== key && (
-                <span className="ml-2 text-[9px] font-bold bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full">
-                  {p.badge}
+              {b === 'monthly' ? 'Monthly' : 'Yearly'}
+              {b === 'yearly' && (
+                <span className="ml-2 text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full">
+                  Save 20%
                 </span>
               )}
             </button>
           ))}
         </div>
+      </section>
 
-        <div className="flex items-center gap-3 mb-6 p-1 bg-muted rounded-xl w-fit">
-          <button
-            onClick={() => setBilling('monthly')}
-            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-              billing === 'monthly' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground'
-            }`}
-          >
-            Monthly
-          </button>
-          <button
-            onClick={() => setBilling('annual')}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
-              billing === 'annual' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground'
-            }`}
-          >
-            Annual
-            <span className="text-[10px] font-black bg-emerald-500 text-white px-1.5 py-0.5 rounded-full">
-              -20%
-            </span>
-          </button>
-        </div>
-
-        <p className="text-sm text-muted-foreground mb-1">Subscribe to {plan.name}</p>
-
-        <div className="mb-1">
-          <div className="flex gap-1 mb-3">
-            {(['USD', 'MAD'] as const).map((c) => (
-              <button
-                key={c}
-                onClick={() => setCurrency(c)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
-                  currency === c
-                    ? 'bg-foreground text-background border-foreground'
-                    : 'border-border text-muted-foreground hover:text-foreground'
+      {/* Plan cards */}
+      <section className="max-w-6xl mx-auto px-6 pb-16">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {PLANS.map((p, i) => {
+            const Icon = p.icon;
+            const price = billing === 'yearly' ? p.yearly : p.monthly;
+            const loading = loadingPlan === p.id;
+            return (
+              <motion.div
+                key={p.id}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.07 }}
+                className={`relative rounded-2xl border bg-card p-6 flex flex-col ${
+                  p.highlight
+                    ? 'border-violet-500/60 shadow-xl shadow-violet-500/10 ring-1 ring-violet-500/30'
+                    : 'border-border shadow-sm'
                 }`}
               >
-                <span>{c === 'USD' ? '🇺🇸' : '🇲🇦'}</span> {c}
-              </button>
-            ))}
-          </div>
-          <p className="text-4xl font-black text-foreground tracking-tight">
-            {fmt(pricePerMonth)}
-            <span className="text-lg font-normal text-muted-foreground ml-1">/ mo</span>
-          </p>
-          {billing === 'annual' && (
-            <p className="text-xs text-muted-foreground mt-1">
-              Billed {fmt(pricePerMonth * 12)}/year ·{' '}
-              {currency === 'USD'
-                ? `Save $${(plan.monthlyUSD - plan.annualUSD) * 12}/year`
-                : `1 USD = ${MAD_RATE} MAD. Charges vary by exchange rate.`}
-            </p>
-          )}
+                {p.badge && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-violet-600 text-white text-[11px] font-bold shadow-md">
+                    {p.badge}
+                  </div>
+                )}
+
+                <div className="flex items-center gap-3 mb-5">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
+                    p.highlight ? 'bg-violet-500/15 text-violet-600 dark:text-violet-400'
+                                : p.id === 'elite' ? 'bg-amber-500/15 text-amber-500'
+                                : 'bg-muted text-muted-foreground'
+                  }`}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg">{p.name}</h3>
+                    <p className="text-xs text-muted-foreground">{p.tagline}</p>
+                  </div>
+                </div>
+
+                <div className="mb-6">
+                  {price === 0 ? (
+                    <p className="text-4xl font-bold">$0</p>
+                  ) : (
+                    <div className="flex items-end gap-1.5">
+                      <span className="text-4xl font-bold">${price}</span>
+                      <span className="text-sm text-muted-foreground mb-1.5">/month</span>
+                    </div>
+                  )}
+                  {billing === 'yearly' && price > 0 && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Billed ${price * 12} annually
+                    </p>
+                  )}
+                  {billing === 'monthly' && price > 0 && (
+                    <p className="text-xs text-muted-foreground mt-1">Billed monthly</p>
+                  )}
+                </div>
+
+                <button
+                  onClick={() => handleCta(p.id)}
+                  disabled={loading}
+                  className={`w-full py-3 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
+                    p.highlight
+                      ? 'bg-violet-600 hover:bg-violet-500 text-white shadow-md shadow-violet-500/25'
+                      : p.id === 'elite'
+                      ? 'bg-foreground text-background hover:opacity-90'
+                      : 'bg-muted text-foreground hover:bg-muted/70 border border-border'
+                  } disabled:opacity-60`}
+                >
+                  {loading ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" /> Opening checkout…</>
+                  ) : (
+                    p.cta
+                  )}
+                </button>
+
+                {p.id !== 'free' && (
+                  <p className="text-[11px] text-center text-muted-foreground mt-2">
+                    7-day free trial · Cancel anytime
+                  </p>
+                )}
+
+                <div className="mt-6 pt-6 border-t border-border space-y-2.5">
+                  {p.features.map((f) => (
+                    <div key={f} className="flex items-start gap-2.5 text-sm">
+                      <Check className="h-4 w-4 text-emerald-500 mt-0.5 flex-shrink-0" strokeWidth={2.5} />
+                      <span>{f}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
 
-        <div className="mt-6 mb-6 space-y-2.5">
-          {plan.features.map((f) => (
-            <div key={f} className="flex items-center gap-2.5">
-              <div className="w-4 h-4 rounded-full bg-violet-100 dark:bg-violet-500/15 flex items-center justify-center flex-shrink-0">
-                <Check className="h-2.5 w-2.5 text-violet-600 dark:text-violet-400" strokeWidth={3} />
+        <p className="text-center text-xs text-muted-foreground mt-8 flex items-center justify-center gap-2">
+          <Shield className="h-3.5 w-3.5" /> Secure checkout by Paddle · All major cards, PayPal & Apple Pay
+        </p>
+      </section>
+
+      {/* Comparison table */}
+      <section className="max-w-5xl mx-auto px-6 pb-16">
+        <h2 className="text-2xl font-bold text-center mb-2">Compare plans</h2>
+        <p className="text-center text-sm text-muted-foreground mb-8">
+          Every feature, side by side.
+        </p>
+        <div className="rounded-2xl border border-border bg-card overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-muted/30">
+                  <th className="text-left font-semibold py-4 px-5">Feature</th>
+                  <th className="font-semibold py-4 px-5 text-center">Free</th>
+                  <th className="font-semibold py-4 px-5 text-center text-violet-600 dark:text-violet-400">Pro</th>
+                  <th className="font-semibold py-4 px-5 text-center text-amber-600 dark:text-amber-500">Elite</th>
+                </tr>
+              </thead>
+              <tbody>
+                {COMPARISON.map((row, i) => (
+                  <tr key={row.label} className={i % 2 ? 'bg-muted/10' : ''}>
+                    <td className="py-3.5 px-5 font-medium">{row.label}</td>
+                    {(['free', 'pro', 'elite'] as const).map((tier) => {
+                      const v = row[tier];
+                      return (
+                        <td key={tier} className="py-3.5 px-5 text-center">
+                          {v === true ? (
+                            <Check className="h-4 w-4 text-emerald-500 mx-auto" strokeWidth={2.5} />
+                          ) : v === false ? (
+                            <X className="h-4 w-4 text-muted-foreground/40 mx-auto" />
+                          ) : (
+                            <span className="text-xs text-muted-foreground">{v}</span>
+                          )}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      {/* Trust section */}
+      <section className="max-w-6xl mx-auto px-6 pb-16">
+        <h2 className="text-2xl font-bold text-center mb-2">Trusted by serious traders</h2>
+        <p className="text-center text-sm text-muted-foreground mb-8">
+          Built for the people who treat trading like a profession.
+        </p>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          {TRUST_CARDS.map((c) => {
+            const Icon = c.icon;
+            return (
+              <div
+                key={c.title}
+                className="rounded-xl border border-border bg-card p-5 hover:border-violet-500/40 transition-colors"
+              >
+                <div className="w-9 h-9 rounded-lg bg-violet-500/10 text-violet-600 dark:text-violet-400 flex items-center justify-center mb-3">
+                  <Icon className="h-4.5 w-4.5" />
+                </div>
+                <p className="font-semibold text-sm mb-1">{c.title}</p>
+                <p className="text-xs text-muted-foreground leading-relaxed">{c.desc}</p>
               </div>
-              <span className="text-sm text-foreground">{f}</span>
-            </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="max-w-3xl mx-auto px-6 pb-20">
+        <h2 className="text-2xl font-bold text-center mb-8">Frequently asked</h2>
+        <div className="space-y-3">
+          {FAQS.map((f) => (
+            <details
+              key={f.q}
+              className="group rounded-xl border border-border bg-card p-5 [&_summary::-webkit-details-marker]:hidden"
+            >
+              <summary className="flex items-center justify-between cursor-pointer font-semibold text-sm">
+                {f.q}
+                <span className="text-muted-foreground group-open:rotate-45 transition-transform text-xl leading-none">+</span>
+              </summary>
+              <p className="text-sm text-muted-foreground mt-3 leading-relaxed">{f.a}</p>
+            </details>
           ))}
         </div>
 
-        <div className="border-t border-border pt-4 space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Subtotal</span>
-            <span className="font-medium text-foreground">
-              {fmt(totalPerYear)}
-              {billing === 'annual' && '/year'}
-            </span>
-          </div>
-          <div className="flex justify-between text-sm font-bold">
-            <span className="text-foreground">Total due today</span>
-            <span className="text-foreground">{fmt(totalPerYear)}</span>
-          </div>
-        </div>
-
-        <div className="mt-4">
-          <button
-            onClick={() => setShowPromo((p) => !p)}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            + Add promotion code
-          </button>
-          <AnimatePresence>
-            {showPromo && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="overflow-hidden mt-2"
-              >
-                <div className="flex gap-2">
-                  <input
-                    value={promoCode}
-                    onChange={(e) => setPromoCode(e.target.value)}
-                    placeholder="Enter code"
-                    className="flex-1 text-sm bg-background border border-border rounded-xl px-4 py-2.5 text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-violet-500/50"
-                  />
-                  <button className="px-4 py-2.5 rounded-xl bg-muted border border-border text-sm font-semibold text-foreground hover:bg-muted/70 transition-colors">
-                    Apply
-                  </button>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      </div>
-
-      {/* RIGHT */}
-      <div className="flex-1 flex flex-col px-8 py-10 border-t lg:border-t-0 lg:border-l border-border overflow-y-auto bg-card">
-        <button
-          onClick={handlePayoneer}
-          disabled={submitting}
-          className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-bold text-sm shadow-lg shadow-emerald-500/25 transition-all mb-4 disabled:opacity-50"
-        >
-          <span className="text-lg">🏦</span> Pay with Payoneer
-        </button>
-
-        <div className="flex items-center gap-3 mb-6">
-          <div className="flex-1 h-px bg-border" />
-          <span className="text-xs text-muted-foreground font-medium">OR</span>
-          <div className="flex-1 h-px bg-border" />
-        </div>
-
-        <div className="mb-6">
-          <p className="text-sm font-semibold text-foreground mb-3">Contact information</p>
-          <div className="rounded-xl border border-border bg-muted/20 flex items-center px-4 py-3">
-            <span className="text-xs text-muted-foreground w-12 flex-shrink-0">Email</span>
-            <span className="text-sm text-foreground ml-2">{user?.email ?? '—'}</span>
-          </div>
-        </div>
-
-        <div className="mb-6">
-          <p className="text-sm font-semibold text-foreground mb-3">Payment method</p>
-
-          <div
-            className={`rounded-xl border-2 p-4 mb-3 cursor-pointer transition-all ${
-              paymentMethod === 'payoneer'
-                ? 'border-violet-500 bg-violet-50 dark:bg-violet-500/8'
-                : 'border-border hover:border-violet-200 dark:hover:border-violet-500/30'
-            }`}
-            onClick={() => setPaymentMethod('payoneer')}
-          >
-            <div className="flex items-center gap-3">
-              <div
-                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                  paymentMethod === 'payoneer' ? 'border-violet-600' : 'border-border'
-                }`}
-              >
-                {paymentMethod === 'payoneer' && (
-                  <div className="w-2.5 h-2.5 rounded-full bg-violet-600" />
-                )}
-              </div>
-              <span className="text-lg">🏦</span>
-              <div>
-                <p className="text-sm font-semibold text-foreground">Payoneer</p>
-                <p className="text-xs text-muted-foreground">Send payment reference after checkout</p>
-              </div>
-            </div>
-          </div>
-
-          <div
-            className={`rounded-xl border-2 p-4 cursor-pointer transition-all ${
-              paymentMethod === 'bank'
-                ? 'border-violet-500 bg-violet-50 dark:bg-violet-500/8'
-                : 'border-border hover:border-violet-200 dark:hover:border-violet-500/30'
-            }`}
-            onClick={() => setPaymentMethod('bank')}
-          >
-            <div className="flex items-center gap-3">
-              <div
-                className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                  paymentMethod === 'bank' ? 'border-violet-600' : 'border-border'
-                }`}
-              >
-                {paymentMethod === 'bank' && (
-                  <div className="w-2.5 h-2.5 rounded-full bg-violet-600" />
-                )}
-              </div>
-              <Building2 className="h-4 w-4 text-muted-foreground" />
-              <div>
-                <p className="text-sm font-semibold text-foreground">Bank Transfer</p>
-                <p className="text-xs text-muted-foreground">Manual wire transfer, 1-2 days processing</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="rounded-xl border border-border bg-muted/20 p-4 mb-6">
-          <div className="flex items-start gap-3">
-            <div className="w-9 h-9 rounded-xl bg-violet-600 flex items-center justify-center flex-shrink-0">
-              <Zap className="h-4 w-4 text-white" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-bold text-foreground">{plan.name}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {plan.features.slice(0, 3).join(' · ')}
-              </p>
-              <p className="text-xs text-muted-foreground mt-0.5">Billed {billing}</p>
-            </div>
-            <p className="text-sm font-bold text-foreground flex-shrink-0">{fmt(totalPerYear)}</p>
-          </div>
-        </div>
-
-        <button
-          onClick={handleSubmit}
-          disabled={submitting}
-          className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-violet-600 hover:bg-violet-500 text-white font-bold text-sm shadow-md shadow-violet-500/20 transition-all disabled:opacity-50"
-        >
-          {submitting ? (
-            <>
-              <RefreshCw className="h-4 w-4 animate-spin" /> Processing...
-            </>
-          ) : (
-            <>
-              Subscribe to {plan.name} — {fmt(totalPerYear)}
-            </>
-          )}
-        </button>
-
-        <p className="text-center text-xs text-muted-foreground mt-4">
-          By subscribing you agree to our Terms of Service. Secure payment processing.
+        <p className="text-center text-xs text-muted-foreground mt-10">
+          By subscribing you agree to our{' '}
+          <a href="/terms" className="underline hover:text-foreground">Terms</a> and{' '}
+          <a href="/privacy" className="underline hover:text-foreground">Privacy Policy</a>.
+          7-day refund available — see our{' '}
+          <a href="/help" className="underline hover:text-foreground">refund policy</a>.
         </p>
-      </div>
+      </section>
     </div>
   );
 }
