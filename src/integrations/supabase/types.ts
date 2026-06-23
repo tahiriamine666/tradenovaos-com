@@ -1709,6 +1709,87 @@ export type Database = {
           },
         ]
       }
+      user_chart_preferences: {
+        Row: {
+          active_layout_id: string | null
+          auto_center_chart: boolean | null
+          background_color: string | null
+          bearish_color: string | null
+          border_color: string | null
+          bullish_color: string | null
+          chart_type: string | null
+          created_at: string
+          crosshair_color: string | null
+          default_speed: number | null
+          drawing_color: string | null
+          drawing_prefs: Json | null
+          favorite_symbols: Json | null
+          grid_color: string | null
+          preferred_symbol: string | null
+          preferred_theme: string | null
+          recent_symbols: Json | null
+          saved_layouts: Json | null
+          show_economic_events: boolean | null
+          show_execution_markers: boolean | null
+          show_trade_zones: boolean | null
+          updated_at: string
+          user_id: string
+          wick_color: string | null
+        }
+        Insert: {
+          active_layout_id?: string | null
+          auto_center_chart?: boolean | null
+          background_color?: string | null
+          bearish_color?: string | null
+          border_color?: string | null
+          bullish_color?: string | null
+          chart_type?: string | null
+          created_at?: string
+          crosshair_color?: string | null
+          default_speed?: number | null
+          drawing_color?: string | null
+          drawing_prefs?: Json | null
+          favorite_symbols?: Json | null
+          grid_color?: string | null
+          preferred_symbol?: string | null
+          preferred_theme?: string | null
+          recent_symbols?: Json | null
+          saved_layouts?: Json | null
+          show_economic_events?: boolean | null
+          show_execution_markers?: boolean | null
+          show_trade_zones?: boolean | null
+          updated_at?: string
+          user_id: string
+          wick_color?: string | null
+        }
+        Update: {
+          active_layout_id?: string | null
+          auto_center_chart?: boolean | null
+          background_color?: string | null
+          bearish_color?: string | null
+          border_color?: string | null
+          bullish_color?: string | null
+          chart_type?: string | null
+          created_at?: string
+          crosshair_color?: string | null
+          default_speed?: number | null
+          drawing_color?: string | null
+          drawing_prefs?: Json | null
+          favorite_symbols?: Json | null
+          grid_color?: string | null
+          preferred_symbol?: string | null
+          preferred_theme?: string | null
+          recent_symbols?: Json | null
+          saved_layouts?: Json | null
+          show_economic_events?: boolean | null
+          show_execution_markers?: boolean | null
+          show_trade_zones?: boolean | null
+          updated_at?: string
+          user_id?: string
+          wick_color?: string | null
+        }
+        Relationships: []
+      }
       workspace_layouts: {
         Row: {
           created_at: string
