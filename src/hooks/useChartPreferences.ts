@@ -101,13 +101,14 @@ export function useChartPreferences() {
         .maybeSingle();
       if (cancelled) return;
       if (data) {
+        const d = data as any;
         setPrefs({
           ...DEFAULT_PREFS,
-          ...data,
-          favorite_symbols: (data.favorite_symbols as string[]) ?? DEFAULT_PREFS.favorite_symbols,
-          recent_symbols: (data.recent_symbols as string[]) ?? [],
-          saved_layouts: (data.saved_layouts as SavedLayout[]) ?? [],
-          drawing_prefs: (data.drawing_prefs as any) ?? DEFAULT_PREFS.drawing_prefs,
+          ...d,
+          favorite_symbols: (d.favorite_symbols as string[]) ?? DEFAULT_PREFS.favorite_symbols,
+          recent_symbols: (d.recent_symbols as string[]) ?? [],
+          saved_layouts: (d.saved_layouts as unknown as SavedLayout[]) ?? [],
+          drawing_prefs: (d.drawing_prefs as any) ?? DEFAULT_PREFS.drawing_prefs,
         } as ChartPreferences);
       }
       setLoading(false);
