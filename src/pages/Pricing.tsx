@@ -124,23 +124,9 @@ export default function Pricing() {
       navigate(`/signup?redirect=/pricing`);
       return;
     }
-    const priceId =
-      plan === 'pro'
-        ? (billing === 'yearly' ? PRICE_PRO_YEARLY : PRICE_PRO_MONTHLY)
-        : (billing === 'yearly' ? PRICE_ELITE_YEARLY : PRICE_ELITE_MONTHLY);
-
-    const theme: 'light' | 'dark' =
-      document.documentElement.classList.contains('dark') ? 'dark' : 'light';
-
     try {
       setLoadingPlan(plan);
-      await openPaddleCheckout({
-        plan,
-        priceId,
-        userId: user.id,
-        email: user.email ?? '',
-        theme,
-      });
+      await startCheckout(plan);
     } catch (e: any) {
       toast({
         title: 'Could not open checkout',
