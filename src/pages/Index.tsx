@@ -11,7 +11,7 @@ import ReplayStudio from '@/pages/ReplayStudio';
 import CommunitySpace from '@/pages/CommunitySpace';
 import TradePlanWorkspace from '@/components/TradePlanWorkspace';
 import AIInsights from '@/pages/AIInsights';
-import PricingPage from '@/pages/PricingPage';
+import PricingPage from '@/pages/Pricing';
 import { TradeDialogProvider, useTradeDialog, useTradesChanged, useNavigationEvent } from '@/contexts/TradeDialogContext';
 import LearningHub from '@/pages/LearningHub';
 import TraderScore from '@/components/TraderScore';

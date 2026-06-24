@@ -1,7 +1,7 @@
 import React from 'react';
 import MarketingNav from '@/components/marketing/MarketingNav';
 import MarketingFooter from '@/components/marketing/MarketingFooter';
-import PricingPage from '@/pages/PricingPage';
+import PricingPage from '@/pages/Pricing';
 import SeoHead from '@/components/SeoHead';
 
 export default function PublicPricingPage() {
