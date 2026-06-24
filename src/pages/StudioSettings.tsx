@@ -12,7 +12,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Save, User, TrendingUp, Globe, Shield, AlertCircle, CheckCircle2, CreditCard, ExternalLink, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { openPaddlePortal } from '@/lib/paddle';
+import { openCustomerPortal } from '@/lib/lemonsqueezy';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Profile {
@@ -394,29 +394,36 @@ export default function StudioSettings() {
 // ─── Manage Billing ──────────────────────────────────────────────────────────
 function ManageBillingButton() {
   const { user } = useAuth();
-  const [paddleSubId, setPaddleSubId] = useState<string | null>(null);
+  const [hasSub, setHasSub] = useState(false);
   const [upgradedManually, setUpgradedManually] = useState(false);
   const [loading, setLoading] = useState(true);
   const [opening, setOpening] = useState(false);
 
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from('profiles')
-      .select('paddle_subscription_id, upgraded_manually')
-      .eq('id', user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        setPaddleSubId(data?.paddle_subscription_id ?? null);
-        setUpgradedManually(!!data?.upgraded_manually);
-        setLoading(false);
-      });
+    (async () => {
+      const [{ data: sub }, { data: prof }] = await Promise.all([
+        supabase
+          .from('billing_subscriptions')
+          .select('subscription_id')
+          .eq('user_id', user.id)
+          .maybeSingle(),
+        supabase
+          .from('profiles')
+          .select('upgraded_manually')
+          .eq('id', user.id)
+          .maybeSingle(),
+      ]);
+      setHasSub(!!sub?.subscription_id);
+      setUpgradedManually(!!prof?.upgraded_manually);
+      setLoading(false);
+    })();
   }, [user]);
 
   const handleOpen = async () => {
     try {
       setOpening(true);
-      await openPaddlePortal();
+      await openCustomerPortal();
     } catch (e: any) {
       toast({ title: 'Could not open billing portal', description: e?.message ?? 'Try again later', variant: 'destructive' });
     } finally {
@@ -426,7 +433,7 @@ function ManageBillingButton() {
 
   if (loading) return null;
 
-  if (paddleSubId) {
+  if (hasSub) {
     return (
       <Button onClick={handleOpen} disabled={opening} variant="outline" className="rounded-xl">
         {opening

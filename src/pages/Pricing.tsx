@@ -293,7 +293,7 @@ export default function Pricing() {
         </div>
 
         <p className="text-center text-xs text-muted-foreground mt-8 flex items-center justify-center gap-2">
-          <Shield className="h-3.5 w-3.5" /> Secure checkout by Paddle · All major cards, PayPal & Apple Pay
+          <Shield className="h-3.5 w-3.5" /> Secure checkout by Lemon Squeezy · All major cards & Apple Pay
         </p>
       </section>
 
