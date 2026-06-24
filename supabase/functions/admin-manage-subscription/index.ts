@@ -94,7 +94,7 @@ Deno.serve(async (req) => {
       return bad(400, 'user_id or email is required');
     }
 
-    // ─── Build update payload (preserve Paddle data) ─────
+    // ─── Build update payload ────────────────────────────
     const effectiveStatus =
       plan === 'free' ? 'inactive' : (trialDays > 0 ? 'trialing' : status);
 

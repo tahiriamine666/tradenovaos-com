@@ -33,8 +33,15 @@ const FEATURE_PLANS: Record<string, Plan[]> = {
   ai_insights:         ['pro', 'elite'],
   playbooks:           ['pro', 'elite'],
   trade_plan:          ['pro', 'elite'],
+  trade_vault:         ['pro', 'elite'],
+  mind_journal:        ['pro', 'elite'],
+  edge_analytics:      ['pro', 'elite'],
   analytics_advanced:  ['pro', 'elite'],
-  replay:              ['elite'],
+  replay:              ['pro', 'elite'],
+  learning_hub:        ['pro', 'elite'],
+  community:           ['pro', 'elite'],
+  ai_unlimited:        ['elite'],
+  elite_tools:         ['elite'],
   api_access:          ['elite'],
 };
 

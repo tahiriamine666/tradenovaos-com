@@ -3,18 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
-import { openPaddleCheckout } from '@/lib/paddle';
+import { startCheckout } from '@/lib/lemonsqueezy';
 import {
   Check, X, Sparkles, Zap, Crown, Shield, BookOpen, BarChart3, Users,
   Play, Brain, ChevronLeft, Loader2,
 } from 'lucide-react';
-
-// Paddle price IDs (live)
-const PRICE_PRO_MONTHLY  = 'pri_01krsn6zcwfjq19dmnerc5hzbh';
-const PRICE_ELITE_MONTHLY = 'pri_01krsn9f8ffhffprye2zktddez';
-// Yearly IDs fall back to monthly until configured
-const PRICE_PRO_YEARLY   = PRICE_PRO_MONTHLY;
-const PRICE_ELITE_YEARLY = PRICE_ELITE_MONTHLY;
 
 type PlanId = 'free' | 'pro' | 'elite';
 type Billing = 'monthly' | 'yearly';
@@ -131,23 +124,9 @@ export default function Pricing() {
       navigate(`/signup?redirect=/pricing`);
       return;
     }
-    const priceId =
-      plan === 'pro'
-        ? (billing === 'yearly' ? PRICE_PRO_YEARLY : PRICE_PRO_MONTHLY)
-        : (billing === 'yearly' ? PRICE_ELITE_YEARLY : PRICE_ELITE_MONTHLY);
-
-    const theme: 'light' | 'dark' =
-      document.documentElement.classList.contains('dark') ? 'dark' : 'light';
-
     try {
       setLoadingPlan(plan);
-      await openPaddleCheckout({
-        plan,
-        priceId,
-        userId: user.id,
-        email: user.email ?? '',
-        theme,
-      });
+      await startCheckout(plan);
     } catch (e: any) {
       toast({
         title: 'Could not open checkout',
@@ -314,7 +293,7 @@ export default function Pricing() {
         </div>
 
         <p className="text-center text-xs text-muted-foreground mt-8 flex items-center justify-center gap-2">
-          <Shield className="h-3.5 w-3.5" /> Secure checkout by Paddle · All major cards, PayPal & Apple Pay
+          <Shield className="h-3.5 w-3.5" /> Secure checkout by Lemon Squeezy · All major cards & Apple Pay
         </p>
       </section>
 

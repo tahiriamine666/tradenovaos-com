@@ -263,6 +263,54 @@ export type Database = {
         }
         Relationships: []
       }
+      billing_subscriptions: {
+        Row: {
+          created_at: string
+          customer_id: string | null
+          customer_portal_url: string | null
+          ends_at: string | null
+          plan: string
+          renews_at: string | null
+          status: string
+          subscription_id: string | null
+          trial_ends_at: string | null
+          update_payment_method_url: string | null
+          updated_at: string
+          user_id: string
+          variant_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          customer_id?: string | null
+          customer_portal_url?: string | null
+          ends_at?: string | null
+          plan?: string
+          renews_at?: string | null
+          status?: string
+          subscription_id?: string | null
+          trial_ends_at?: string | null
+          update_payment_method_url?: string | null
+          updated_at?: string
+          user_id: string
+          variant_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string | null
+          customer_portal_url?: string | null
+          ends_at?: string | null
+          plan?: string
+          renews_at?: string | null
+          status?: string
+          subscription_id?: string | null
+          trial_ends_at?: string | null
+          update_payment_method_url?: string | null
+          updated_at?: string
+          user_id?: string
+          variant_id?: string | null
+        }
+        Relationships: []
+      }
       community_bookmarks: {
         Row: {
           created_at: string
