@@ -19,15 +19,15 @@ export default function BillingSuccess() {
       attempts++;
       await refresh();
 
-      // After ~6s, if webhook hasn't landed, ask the server to query Paddle
-      // directly and sync. Safe to call multiple times; idempotent.
+      // After ~6s, if the webhook hasn't landed, ask the server to query
+      // Lemon Squeezy directly and sync. Idempotent.
       if (attempts === 3 && !syncCalled) {
         syncCalled = true;
         try {
-          await supabase.functions.invoke("paddle-sync-subscription", { method: "POST" });
+          await supabase.functions.invoke("ls-sync-subscription", { method: "POST" });
           await refresh();
         } catch (e) {
-          console.warn("paddle-sync-subscription failed", e);
+          console.warn("ls-sync-subscription failed", e);
         }
       }
     };
