@@ -1,45 +1,106 @@
-# SMC Category — Build Plan
+# Migrate from Paddle to Lemon Squeezy
 
-The Learning Hub renderer already handles every tab (Lesson, Examples, Practice, Notes, Resources, AI Assistant) plus XP, progress, completion, and Supabase persistence dynamically from `lessons.content`, `lessons.quiz_questions`, and `lessons.drill_config`. So SMC is a pure data-seeding job — identical pattern to the Fundamentals build.
+Full removal of Paddle and a clean Lemon Squeezy integration using hosted checkout, with a dedicated `billing_subscriptions` table as the source of truth, webhook-driven sync, and a real Billing page.
 
-## What gets built
+## 1. Remove Paddle
 
-### 1. Seed SMC category
-Upsert the `SMC` row in `learning_categories` (name, slug `smc`, description, icon `Activity`/`Layers`, purple accent token, sort order after Fundamentals).
+Delete:
+- `src/lib/paddle.ts`
+- `supabase/functions/paddle-config/`
+- `supabase/functions/paddle-portal/`
+- `supabase/functions/paddle-sync-subscription/`
+- `supabase/functions/paddle-webhook/`
+- Paddle function blocks in `supabase/config.toml`
 
-### 2. Seed 3 lessons in `lessons` table
-All with `category = 'SMC'`, `published = true`:
+Strip Paddle code from:
+- `src/pages/Pricing.tsx` — remove Paddle imports + price IDs, replace checkout call
+- `src/pages/PricingPage.tsx` — same (or delete this file if unused; keep `Pricing.tsx` as the live route)
+- `src/pages/BillingSuccess.tsx` — remove `paddle-sync-subscription` fallback (replaced by webhook + on-demand `ls-sync-subscription`)
+- `src/pages/StudioSettings.tsx` — replace `openPaddlePortal` with Lemon Squeezy customer portal link from the new billing row
+- `supabase/functions/admin-manage-subscription/index.ts` — drop Paddle field writes
 
-| # | Title | Difficulty | Duration | XP |
-|---|---|---|---|---|
-| 1 | Market Structure & Breaks | Beginner–Intermediate | 25 | 100 |
-| 2 | Smart Money Order Flow | Intermediate | 30 | 120 |
-| 3 | Premium & Discount Zones | Intermediate | 20 | 100 |
+Secrets to delete after migration: `PADDLE_CLIENT_TOKEN`, `PADDLE_API_KEY`, `PADDLE_WEBHOOK_SECRET`, `PADDLE_PRO_PRICE_ID`, `PADDLE_ELITE_PRICE_ID`, `PADDLE_ENVIRONMENT`.
 
-Each lesson populates:
+Paddle columns on `profiles` (`paddle_subscription_id`, `paddle_customer_id`, `paddle_price_id`) are left in place but ignored — dropping them touches unrelated admin/migration history. Call out in the response so the user can request a cleanup migration later.
 
-- **`content`** (markdown) — full Lesson tab: every topic from the brief (HH/HL/LH/LL, BOS, CHOCH, internal vs external, order flow phases, liquidity sweeps, inducement, equilibrium / 50% rule, premium vs discount entries, confluence, risk model, common mistakes, professional workflow).
-- **`key_takeaways`** + **`learning_outcomes`** — from the brief.
-- **`quiz_questions`** (jsonb) — 6–7 scenario-based MCQs per lesson with correct answer + explanation. Powers the Practice tab scoring engine and XP award.
-- **`drill_config`** (jsonb) — used by Examples / Practice / Resources / AI renderers:
-  - `examples[]` — Bullish trend, bearish trend, valid BOS, fake BOS, CHOCH, continuation (L1); liquidity grab, BSL/SSL sweeps, inducement, expansion (L2); discount entry, premium entry, equilibrium, good/bad trade location (L3). Each with setup, reaction, lesson, TradingView symbol (e.g. `OANDA:NAS100USD`, `OANDA:XAUUSD`, `OANDA:EURUSD`).
-  - `practice[]` — "Identify the right answer" scenarios: pick HH/HL/BOS/CHOCH/trend; pick liquidity / sweep / inducement / continuation / direction; pick premium / discount / equilibrium / best–worst entry zone. Each with answer + rationale.
-  - `resources[]` — downloadable metadata for SMC Cheat Sheet, Market Structure Guide, Liquidity Guide, Order Flow PDF, Premium/Discount Worksheet, TradingView Examples link, Replay Exercises, Checklists. Existing resources renderer handles dynamic generation + download tracking.
-  - `ai_prompts[]` — the 7 AI buttons (Explain Simply, Create Quiz, Test My Understanding, Show Real Market Example, Analyze Chart Concept, Generate Practice Questions, Build Study Plan) with tailored system prompts per lesson topic.
+## 2. Database
 
-### 3. No schema changes
-Notes auto-save, progress, XP, completion, resource download tracking, and AI Assistant (Pro/Elite gated) all work via existing tables, RPCs, and the `ai-learning-assistant` edge function.
+New migration creating `public.billing_subscriptions` (source of truth, written only by webhook/service role):
 
-### 4. Verify
-Open `/learn`, expand SMC, open each lesson, confirm all 5 tabs render real content and AI buttons fire.
+- `user_id uuid` (FK → `auth.users`, unique)
+- `customer_id text`
+- `subscription_id text unique`
+- `variant_id text`
+- `plan text` (`free` | `pro` | `elite`)
+- `status text` (`on_trial` | `active` | `past_due` | `paused` | `cancelled` | `expired`)
+- `trial_ends_at timestamptz`
+- `renews_at timestamptz`
+- `ends_at timestamptz`
+- `update_payment_method_url text`
+- `customer_portal_url text`
+- `created_at`, `updated_at` + trigger
+
+RLS: users can `SELECT` their own row; only `service_role` writes. GRANT `SELECT` to `authenticated`, `ALL` to `service_role`.
+
+Update `public.get_user_plan_info()` and `public.community_user_tier()` to read from `billing_subscriptions` first (fall back to existing profile fields so admin manual upgrades keep working). Plan is considered active when `status IN ('on_trial','active')` and (for trial) `trial_ends_at > now()`.
+
+## 3. Edge functions (Lemon Squeezy)
+
+- `supabase/functions/ls-checkout/index.ts` — auth required; takes `{ plan: 'pro' | 'elite' }`, calls Lemon Squeezy `POST /v1/checkouts` with the matching variant (Pro 1825642, Elite 1825635), 7-day trial, `checkout_data.email`, `custom: { user_id }`, returns `{ url }`.
+- `supabase/functions/ls-webhook/index.ts` — `verify_jwt = false`. Verifies `X-Signature` HMAC-SHA256 with `LEMON_SQUEEZY_WEBHOOK_SECRET`. Handles `order_created`, `subscription_created`, `subscription_updated`, `subscription_cancelled`, `subscription_expired`, `subscription_payment_failed`. Upserts `billing_subscriptions` keyed by `user_id` from `meta.custom_data.user_id` (fallback: email lookup on `profiles`). Mirrors `plan_type` / `subscription_status` / `trial_ends_at` / `current_period_end` back onto `profiles` so existing gates and `prevent_profile_billing_self_update` trigger continue to work (service role bypasses the trigger).
+- `supabase/functions/ls-sync-subscription/index.ts` — auth required. Reads the user's most recent subscription via Lemon Squeezy API (filter by email/customer) and upserts the row. Used by `/billing/success` as a fallback if the webhook hasn't fired yet.
+- `supabase/functions/ls-portal/index.ts` — auth required. Returns the `customer_portal_url` from `billing_subscriptions` (Lemon Squeezy provides it on the subscription object; we persist it in the webhook).
+
+Add `[functions.ls-webhook] verify_jwt = false` to `supabase/config.toml`.
+
+## 4. Frontend
+
+`src/lib/lemonsqueezy.ts` — thin client:
+- `startCheckout(plan)` → invokes `ls-checkout`, then `window.location.href = url` (hosted checkout; no JS SDK needed).
+- `openCustomerPortal()` → invokes `ls-portal`, opens returned URL in a new tab.
+
+`src/pages/Pricing.tsx`:
+- Replace `openPaddleCheckout` with `startCheckout`.
+- Keep existing TradeNova design, purple accent, light/dark, monthly/yearly toggle UI (yearly will be wired later when variants exist — for now, monthly only; hide or disable yearly toggle to avoid fake pricing).
+- Three tiers: Free / Pro $14 / Elite $28, button "Start 7-Day Free Trial".
+
+`src/pages/BillingSuccess.tsx`:
+- Poll `billing_subscriptions` for the current user; if absent after ~5s, call `ls-sync-subscription`, then re-poll.
+
+`src/pages/Billing.tsx` (new) at route `/billing`:
+- Current Plan, Status badge, Trial End, Next Billing Date
+- Buttons: Upgrade Plan (→ `/pricing`), Manage Subscription (→ `ls-portal`), Cancel Subscription (→ `ls-portal`, since Lemon Squeezy cancels via the portal)
+- All data sourced from `billing_subscriptions` + `get_user_plan_info()`; no trust in client-side flags.
+
+Wire route in `src/App.tsx` and link from `StudioSettings.tsx` (replacing the Paddle portal button).
+
+## 5. Access control
+
+`src/hooks/usePlan.tsx` already centralizes gating. Update `FEATURE_PLANS` to match the spec:
+
+```
+trade_plan, trade_vault, mind_journal, edge_analytics,
+replay, learning_hub, community         → ['pro','elite']
+ai_unlimited, elite_tools               → ['elite']
+```
+
+`isPro` / `isElite` continue to derive from `get_user_plan_info()`, which now reads from `billing_subscriptions`. No frontend-only trust.
+
+## 6. Secrets
+
+Already configured per the user: `LEMON_SQUEEZY_API_KEY`, `LEMON_SQUEEZY_WEBHOOK_SECRET`. We'll also need `LEMON_SQUEEZY_STORE_ID` (required by the checkout API) — if missing, request it via `add_secret`.
+
+After the user points their Lemon Squeezy webhook at `https://<project>.functions.supabase.co/ls-webhook`, events will flow.
 
 ## Technical details
-- 1 `supabase--insert` call: upsert category + 3 lessons (idempotent via `ON CONFLICT (slug)`).
-- 0 migrations.
-- 0 new components.
-- 0 edited components.
 
-## Out of scope
-- New lesson renderer.
-- Interactive bar-by-bar SMC charts (Practice uses MCQ + TradingView example links — same pattern as Fundamentals).
-- Admin authoring UI.
+- Lemon Squeezy webhook signature: `crypto.createHmac('sha256', secret).update(rawBody).digest('hex')` compared in constant time to `X-Signature` header.
+- Variant → plan map lives in the webhook + checkout function (`1825642 → pro`, `1825635 → elite`).
+- Hosted checkout URL is returned by `POST /v1/checkouts`; we redirect with `window.location.href`. No client SDK or script tag needed → simpler than Paddle.
+- `billing_subscriptions` is the single source of truth; `profiles` mirror columns stay for back-compat with existing RPCs and admin tools.
+- Trial: pass `trial_ends_at` via `checkout_options` / variant trial setting; Lemon Squeezy's product-level 7-day trial is the cleanest path — confirm the variants in Lemon Squeezy are configured with a 7-day trial, otherwise we add `trial_ends_at` in the checkout payload.
+
+## Out of scope (mentioned, not done)
+
+- Dropping Paddle columns from `profiles` (left for a follow-up cleanup migration).
+- Yearly pricing (no yearly variant IDs provided).
