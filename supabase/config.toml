@@ -1,7 +1,4 @@
 project_id = "jbdivofznclkfctcqfln"
 
-[functions.paddle-webhook]
-verify_jwt = false
-
-[functions.paddle-config]
+[functions.ls-webhook]
 verify_jwt = false
