@@ -48,6 +48,21 @@ export async function resolveStoreIdForVariant(apiKey: string, variantId: string
   return productJson?.data?.relationships?.store?.data?.id ?? null;
 }
 
+export async function listAccessibleStoreIds(apiKey: string): Promise<string[]> {
+  const storesRes = await fetch(`${LS_API}/stores`, {
+    headers: lsHeaders(apiKey),
+  });
+  const storesJson = await storesRes.json().catch(() => null);
+  if (!storesRes.ok) {
+    console.error("lemonsqueezy: stores lookup failed", storesRes.status, storesJson);
+    return [];
+  }
+
+  return Array.isArray(storesJson?.data)
+    ? storesJson.data.map((store: any) => String(store?.id ?? "").trim()).filter(Boolean)
+    : [];
+}
+
 export function hasStoreRelationshipError(json: unknown): boolean {
   return Array.isArray((json as any)?.errors)
     && (json as any).errors.some((err: any) => err?.source?.pointer === "/data/relationships/store");

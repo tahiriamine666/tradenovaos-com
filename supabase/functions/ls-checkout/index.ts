@@ -1,7 +1,7 @@
 // Create a Lemon Squeezy hosted checkout URL for the signed-in user.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { LS_API, hasStoreRelationshipError, lsHeaders, resolveStoreIdForVariant, variantFromPlan } from "../_shared/lemonsqueezy.ts";
+import { LS_API, hasStoreRelationshipError, listAccessibleStoreIds, lsHeaders, resolveStoreIdForVariant, variantFromPlan } from "../_shared/lemonsqueezy.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -80,6 +80,12 @@ Deno.serve(async (req) => {
     });
 
     let checkoutStoreId = String(storeId).trim();
+    const accessibleStoreIds = await listAccessibleStoreIds(apiKey);
+    if (accessibleStoreIds.length > 0 && !accessibleStoreIds.includes(checkoutStoreId)) {
+      console.error("ls-checkout: configured store is not accessible by the Lemon Squeezy API key");
+      checkoutStoreId = accessibleStoreIds[0];
+    }
+
     let res = await fetch(`${LS_API}/checkouts`, {
       method: "POST",
       headers: lsHeaders(apiKey),
@@ -91,6 +97,11 @@ Deno.serve(async (req) => {
       const resolvedStoreId = await resolveStoreIdForVariant(apiKey, variantId);
       if (resolvedStoreId && resolvedStoreId !== checkoutStoreId) {
         checkoutStoreId = resolvedStoreId;
+      } else if (accessibleStoreIds.length > 0 && accessibleStoreIds[0] !== checkoutStoreId) {
+        checkoutStoreId = accessibleStoreIds[0];
+      }
+
+      if (checkoutStoreId !== String(storeId).trim()) {
         res = await fetch(`${LS_API}/checkouts`, {
           method: "POST",
           headers: lsHeaders(apiKey),
