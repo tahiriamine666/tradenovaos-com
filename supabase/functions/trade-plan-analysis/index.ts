@@ -36,6 +36,17 @@ Deno.serve(async (req) => {
       });
     }
 
+    const { data: planInfo } = await supabase.rpc('get_user_plan_info');
+    const info = planInfo as any;
+    if (!info?.is_pro && !info?.is_elite) {
+      return new Response(JSON.stringify({ error: 'Upgrade to Pro or Elite to use Trade Plan AI Analysis.' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+
+
     const { plan } = await req.json();
     if (!plan) {
       return new Response(JSON.stringify({ error: 'Missing plan' }), {

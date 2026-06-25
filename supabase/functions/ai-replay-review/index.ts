@@ -38,6 +38,14 @@ Deno.serve(async (req) => {
       });
     }
 
+    const { data: planInfo } = await supabase.rpc('get_user_plan_info');
+    const info = planInfo as any;
+    if (!info?.is_pro && !info?.is_elite) {
+      return new Response(JSON.stringify({ error: 'Upgrade to Pro or Elite to use AI Replay Review.' }), {
+        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const body = await req.json().catch(() => ({}));
     const sessionId = body?.sessionId;
     if (!sessionId || typeof sessionId !== 'string') {
