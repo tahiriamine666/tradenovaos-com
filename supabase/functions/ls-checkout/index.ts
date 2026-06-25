@@ -1,7 +1,7 @@
 // Create a Lemon Squeezy hosted checkout URL for the signed-in user.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { LS_API, lsHeaders, variantFromPlan } from "../_shared/lemonsqueezy.ts";
+import { LS_API, hasStoreRelationshipError, listAccessibleStoreIds, lsHeaders, resolveStoreIdForVariant, variantFromPlan } from "../_shared/lemonsqueezy.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
     const origin = req.headers.get("origin") ?? "";
     const successUrl = origin ? `${origin}/billing/success` : undefined;
 
-    const payload = {
+    const buildPayload = (checkoutStoreId: string) => ({
       data: {
         type: "checkouts",
         attributes: {
@@ -73,18 +73,44 @@ Deno.serve(async (req) => {
           checkout_options: { embed: false },
         },
         relationships: {
-          store: { data: { type: "stores", id: String(storeId) } },
+          store: { data: { type: "stores", id: checkoutStoreId } },
           variant: { data: { type: "variants", id: String(variantId) } },
         },
       },
-    };
+    });
 
-    const res = await fetch(`${LS_API}/checkouts`, {
+    let checkoutStoreId = String(storeId).trim();
+    const accessibleStoreIds = await listAccessibleStoreIds(apiKey);
+    if (accessibleStoreIds.length > 0 && !accessibleStoreIds.includes(checkoutStoreId)) {
+      console.error("ls-checkout: configured store is not accessible by the Lemon Squeezy API key");
+      checkoutStoreId = accessibleStoreIds[0];
+    }
+
+    let res = await fetch(`${LS_API}/checkouts`, {
       method: "POST",
       headers: lsHeaders(apiKey),
-      body: JSON.stringify(payload),
+      body: JSON.stringify(buildPayload(checkoutStoreId)),
     });
-    const json = await res.json();
+    let json = await res.json();
+
+    if (!res.ok && res.status === 404 && hasStoreRelationshipError(json)) {
+      const resolvedStoreId = await resolveStoreIdForVariant(apiKey, variantId);
+      if (resolvedStoreId && resolvedStoreId !== checkoutStoreId) {
+        checkoutStoreId = resolvedStoreId;
+      } else if (accessibleStoreIds.length > 0 && accessibleStoreIds[0] !== checkoutStoreId) {
+        checkoutStoreId = accessibleStoreIds[0];
+      }
+
+      if (checkoutStoreId !== String(storeId).trim()) {
+        res = await fetch(`${LS_API}/checkouts`, {
+          method: "POST",
+          headers: lsHeaders(apiKey),
+          body: JSON.stringify(buildPayload(checkoutStoreId)),
+        });
+        json = await res.json();
+      }
+    }
+
     if (!res.ok) {
       console.error("ls-checkout: lemonsqueezy error", res.status, json);
       return new Response(JSON.stringify({ error: "checkout_failed", detail: json }), {
