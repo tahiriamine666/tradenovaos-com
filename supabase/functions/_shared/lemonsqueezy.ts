@@ -23,6 +23,36 @@ export function lsHeaders(apiKey: string) {
   };
 }
 
+export async function resolveStoreIdForVariant(apiKey: string, variantId: string): Promise<string | null> {
+  const variantRes = await fetch(`${LS_API}/variants/${variantId}`, {
+    headers: lsHeaders(apiKey),
+  });
+  const variantJson = await variantRes.json().catch(() => null);
+  if (!variantRes.ok) {
+    console.error("lemonsqueezy: variant lookup failed", variantRes.status, variantJson);
+    return null;
+  }
+
+  const productId = variantJson?.data?.relationships?.product?.data?.id;
+  if (!productId) return null;
+
+  const productRes = await fetch(`${LS_API}/products/${productId}`, {
+    headers: lsHeaders(apiKey),
+  });
+  const productJson = await productRes.json().catch(() => null);
+  if (!productRes.ok) {
+    console.error("lemonsqueezy: product lookup failed", productRes.status, productJson);
+    return null;
+  }
+
+  return productJson?.data?.relationships?.store?.data?.id ?? null;
+}
+
+export function hasStoreRelationshipError(json: unknown): boolean {
+  return Array.isArray((json as any)?.errors)
+    && (json as any).errors.some((err: any) => err?.source?.pointer === "/data/relationships/store");
+}
+
 // Map Lemon Squeezy status → our subscription_status mirror on profiles
 export function mirrorStatus(lsStatus: string): string {
   switch (lsStatus) {
