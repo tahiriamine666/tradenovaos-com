@@ -1,7 +1,15 @@
 // Create a Lemon Squeezy hosted checkout URL for the signed-in user.
+// Strips LS branding/extra fields and supports billing interval, coupon, and prefill.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { LS_API, hasStoreRelationshipError, listAccessibleStoreIds, lsHeaders, resolveStoreIdForVariant, variantFromPlan } from "../_shared/lemonsqueezy.ts";
+import {
+  LS_API,
+  hasStoreRelationshipError,
+  listAccessibleStoreIds,
+  lsHeaders,
+  resolveStoreIdForVariant,
+  variantFromPlan,
+} from "../_shared/lemonsqueezy.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -38,16 +46,26 @@ Deno.serve(async (req) => {
       });
     }
     const userId = claimsData.claims.sub as string;
-    const email = (claimsData.claims as any).email as string | undefined;
+    const claimEmail = (claimsData.claims as any).email as string | undefined;
 
-    let body: { plan?: "pro" | "elite" } = {};
+    let body: {
+      plan?: "pro" | "elite";
+      billing?: "monthly" | "yearly";
+      coupon?: string;
+      email?: string;
+      name?: string;
+      country?: string;
+      zip?: string;
+    } = {};
     try { body = await req.json(); } catch { /* ignore */ }
+
     const plan = body.plan;
     if (plan !== "pro" && plan !== "elite") {
       return new Response(JSON.stringify({ error: "invalid_plan" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    const billing = body.billing === "yearly" ? "yearly" : "monthly";
 
     const apiKey = Deno.env.get("LEMON_SQUEEZY_API_KEY");
     const storeId = Deno.env.get("LEMON_SQUEEZY_STORE_ID");
@@ -57,20 +75,40 @@ Deno.serve(async (req) => {
       });
     }
 
-    const variantId = variantFromPlan(plan);
+    const variantId = variantFromPlan(plan, billing);
     const origin = req.headers.get("origin") ?? "";
     const successUrl = origin ? `${origin}/billing/success` : undefined;
+    const email = (body.email && body.email.trim()) || claimEmail || undefined;
 
     const buildPayload = (checkoutStoreId: string) => ({
       data: {
         type: "checkouts",
         attributes: {
           checkout_data: {
-            email: email ?? undefined,
-            custom: { user_id: userId, plan },
+            email,
+            name: body.name?.trim() || undefined,
+            billing_address: (body.country || body.zip)
+              ? { country: body.country?.trim() || undefined, zip: body.zip?.trim() || undefined }
+              : undefined,
+            discount_code: body.coupon?.trim() || undefined,
+            custom: { user_id: userId, plan, billing },
           },
-          product_options: successUrl ? { redirect_url: successUrl } : undefined,
-          checkout_options: { embed: false },
+          product_options: {
+            enabled_variants: [Number(variantId)],
+            redirect_url: successUrl,
+            receipt_button_text: "Go to TradeNova",
+            receipt_link_url: successUrl,
+          },
+          checkout_options: {
+            embed: true,
+            media: false,
+            logo: false,
+            desc: false,
+            discount: false,
+            dark: false,
+            subscription_preview: false,
+            button_color: "#7C3AED",
+          },
         },
         relationships: {
           store: { data: { type: "stores", id: checkoutStoreId } },
@@ -82,7 +120,7 @@ Deno.serve(async (req) => {
     let checkoutStoreId = String(storeId).trim();
     const accessibleStoreIds = await listAccessibleStoreIds(apiKey);
     if (accessibleStoreIds.length > 0 && !accessibleStoreIds.includes(checkoutStoreId)) {
-      console.error("ls-checkout: configured store is not accessible by the Lemon Squeezy API key");
+      console.error("ls-checkout: configured store is not accessible by the LS API key");
       checkoutStoreId = accessibleStoreIds[0];
     }
 
@@ -101,14 +139,12 @@ Deno.serve(async (req) => {
         checkoutStoreId = accessibleStoreIds[0];
       }
 
-      if (checkoutStoreId !== String(storeId).trim()) {
-        res = await fetch(`${LS_API}/checkouts`, {
-          method: "POST",
-          headers: lsHeaders(apiKey),
-          body: JSON.stringify(buildPayload(checkoutStoreId)),
-        });
-        json = await res.json();
-      }
+      res = await fetch(`${LS_API}/checkouts`, {
+        method: "POST",
+        headers: lsHeaders(apiKey),
+        body: JSON.stringify(buildPayload(checkoutStoreId)),
+      });
+      json = await res.json();
     }
 
     if (!res.ok) {

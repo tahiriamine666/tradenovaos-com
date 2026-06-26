@@ -1,18 +1,35 @@
 // Shared Lemon Squeezy helpers used by ls-* edge functions.
-export const PRO_VARIANT_ID = "1825642";
-export const ELITE_VARIANT_ID = "1825635";
+export const PRO_MONTHLY_VARIANT_ID = "1825642";
+export const ELITE_MONTHLY_VARIANT_ID = "1825635";
+// Optional yearly variants — set these envs in LS dashboard if available.
+export const PRO_YEARLY_VARIANT_ID = Deno.env.get("LS_PRO_YEARLY_VARIANT_ID") ?? "";
+export const ELITE_YEARLY_VARIANT_ID = Deno.env.get("LS_ELITE_YEARLY_VARIANT_ID") ?? "";
+
+// Back-compat exports
+export const PRO_VARIANT_ID = PRO_MONTHLY_VARIANT_ID;
+export const ELITE_VARIANT_ID = ELITE_MONTHLY_VARIANT_ID;
 
 export const LS_API = "https://api.lemonsqueezy.com/v1";
 
-export function planFromVariant(variantId: string | number | undefined | null): "pro" | "elite" | null {
+export type Plan = "pro" | "elite";
+export type Billing = "monthly" | "yearly";
+
+export function planFromVariant(variantId: string | number | undefined | null): Plan | null {
   const v = String(variantId ?? "");
-  if (v === PRO_VARIANT_ID) return "pro";
-  if (v === ELITE_VARIANT_ID) return "elite";
+  if (v === PRO_MONTHLY_VARIANT_ID || v === PRO_YEARLY_VARIANT_ID) return "pro";
+  if (v === ELITE_MONTHLY_VARIANT_ID || v === ELITE_YEARLY_VARIANT_ID) return "elite";
   return null;
 }
 
-export function variantFromPlan(plan: "pro" | "elite"): string {
-  return plan === "pro" ? PRO_VARIANT_ID : ELITE_VARIANT_ID;
+export function variantFromPlan(plan: Plan, billing: Billing = "monthly"): string {
+  if (plan === "pro") {
+    return billing === "yearly" && PRO_YEARLY_VARIANT_ID
+      ? PRO_YEARLY_VARIANT_ID
+      : PRO_MONTHLY_VARIANT_ID;
+  }
+  return billing === "yearly" && ELITE_YEARLY_VARIANT_ID
+    ? ELITE_YEARLY_VARIANT_ID
+    : ELITE_MONTHLY_VARIANT_ID;
 }
 
 export function lsHeaders(apiKey: string) {
