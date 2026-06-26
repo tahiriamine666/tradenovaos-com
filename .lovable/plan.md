@@ -1,106 +1,119 @@
-# Migrate from Paddle to Lemon Squeezy
+## Plan: Custom TradeZella-style Checkout
 
-Full removal of Paddle and a clean Lemon Squeezy integration using hosted checkout, with a dedicated `billing_subscriptions` table as the source of truth, webhook-driven sync, and a real Billing page.
+Build a fully custom in-app checkout page. The pricing summary, plan toggle, features, coupon field, and trust badges all live in our UI. Card entry uses the Lemon.js overlay (their PCI-compliant iframe) launched on top of our page — never a redirect to LS's hosted page.
 
-## 1. Remove Paddle
+### 1. New page: `/checkout?plan=pro|elite`
 
-Delete:
-- `src/lib/paddle.ts`
-- `supabase/functions/paddle-config/`
-- `supabase/functions/paddle-portal/`
-- `supabase/functions/paddle-sync-subscription/`
-- `supabase/functions/paddle-webhook/`
-- Paddle function blocks in `supabase/config.toml`
+Two-panel layout, responsive (stacks on mobile).
 
-Strip Paddle code from:
-- `src/pages/Pricing.tsx` — remove Paddle imports + price IDs, replace checkout call
-- `src/pages/PricingPage.tsx` — same (or delete this file if unused; keep `Pricing.tsx` as the live route)
-- `src/pages/BillingSuccess.tsx` — remove `paddle-sync-subscription` fallback (replaced by webhook + on-demand `ls-sync-subscription`)
-- `src/pages/StudioSettings.tsx` — replace `openPaddlePortal` with Lemon Squeezy customer portal link from the new billing row
-- `supabase/functions/admin-manage-subscription/index.ts` — drop Paddle field writes
-
-Secrets to delete after migration: `PADDLE_CLIENT_TOKEN`, `PADDLE_API_KEY`, `PADDLE_WEBHOOK_SECRET`, `PADDLE_PRO_PRICE_ID`, `PADDLE_ELITE_PRICE_ID`, `PADDLE_ENVIRONMENT`.
-
-Paddle columns on `profiles` (`paddle_subscription_id`, `paddle_customer_id`, `paddle_price_id`) are left in place but ignored — dropping them touches unrelated admin/migration history. Call out in the response so the user can request a cleanup migration later.
-
-## 2. Database
-
-New migration creating `public.billing_subscriptions` (source of truth, written only by webhook/service role):
-
-- `user_id uuid` (FK → `auth.users`, unique)
-- `customer_id text`
-- `subscription_id text unique`
-- `variant_id text`
-- `plan text` (`free` | `pro` | `elite`)
-- `status text` (`on_trial` | `active` | `past_due` | `paused` | `cancelled` | `expired`)
-- `trial_ends_at timestamptz`
-- `renews_at timestamptz`
-- `ends_at timestamptz`
-- `update_payment_method_url text`
-- `customer_portal_url text`
-- `created_at`, `updated_at` + trigger
-
-RLS: users can `SELECT` their own row; only `service_role` writes. GRANT `SELECT` to `authenticated`, `ALL` to `service_role`.
-
-Update `public.get_user_plan_info()` and `public.community_user_tier()` to read from `billing_subscriptions` first (fall back to existing profile fields so admin manual upgrades keep working). Plan is considered active when `status IN ('on_trial','active')` and (for trial) `trial_ends_at > now()`.
-
-## 3. Edge functions (Lemon Squeezy)
-
-- `supabase/functions/ls-checkout/index.ts` — auth required; takes `{ plan: 'pro' | 'elite' }`, calls Lemon Squeezy `POST /v1/checkouts` with the matching variant (Pro 1825642, Elite 1825635), 7-day trial, `checkout_data.email`, `custom: { user_id }`, returns `{ url }`.
-- `supabase/functions/ls-webhook/index.ts` — `verify_jwt = false`. Verifies `X-Signature` HMAC-SHA256 with `LEMON_SQUEEZY_WEBHOOK_SECRET`. Handles `order_created`, `subscription_created`, `subscription_updated`, `subscription_cancelled`, `subscription_expired`, `subscription_payment_failed`. Upserts `billing_subscriptions` keyed by `user_id` from `meta.custom_data.user_id` (fallback: email lookup on `profiles`). Mirrors `plan_type` / `subscription_status` / `trial_ends_at` / `current_period_end` back onto `profiles` so existing gates and `prevent_profile_billing_self_update` trigger continue to work (service role bypasses the trigger).
-- `supabase/functions/ls-sync-subscription/index.ts` — auth required. Reads the user's most recent subscription via Lemon Squeezy API (filter by email/customer) and upserts the row. Used by `/billing/success` as a fallback if the webhook hasn't fired yet.
-- `supabase/functions/ls-portal/index.ts` — auth required. Returns the `customer_portal_url` from `billing_subscriptions` (Lemon Squeezy provides it on the subscription object; we persist it in the webhook).
-
-Add `[functions.ls-webhook] verify_jwt = false` to `supabase/config.toml`.
-
-## 4. Frontend
-
-`src/lib/lemonsqueezy.ts` — thin client:
-- `startCheckout(plan)` → invokes `ls-checkout`, then `window.location.href = url` (hosted checkout; no JS SDK needed).
-- `openCustomerPortal()` → invokes `ls-portal`, opens returned URL in a new tab.
-
-`src/pages/Pricing.tsx`:
-- Replace `openPaddleCheckout` with `startCheckout`.
-- Keep existing TradeNova design, purple accent, light/dark, monthly/yearly toggle UI (yearly will be wired later when variants exist — for now, monthly only; hide or disable yearly toggle to avoid fake pricing).
-- Three tiers: Free / Pro $14 / Elite $28, button "Start 7-Day Free Trial".
-
-`src/pages/BillingSuccess.tsx`:
-- Poll `billing_subscriptions` for the current user; if absent after ~5s, call `ls-sync-subscription`, then re-poll.
-
-`src/pages/Billing.tsx` (new) at route `/billing`:
-- Current Plan, Status badge, Trial End, Next Billing Date
-- Buttons: Upgrade Plan (→ `/pricing`), Manage Subscription (→ `ls-portal`), Cancel Subscription (→ `ls-portal`, since Lemon Squeezy cancels via the portal)
-- All data sourced from `billing_subscriptions` + `get_user_plan_info()`; no trust in client-side flags.
-
-Wire route in `src/App.tsx` and link from `StudioSettings.tsx` (replacing the Paddle portal button).
-
-## 5. Access control
-
-`src/hooks/usePlan.tsx` already centralizes gating. Update `FEATURE_PLANS` to match the spec:
-
-```
-trade_plan, trade_vault, mind_journal, edge_analytics,
-replay, learning_hub, community         → ['pro','elite']
-ai_unlimited, elite_tools               → ['elite']
+```text
++-------------------------------+----------------------------------+
+|  LEFT 40% (#F7F7FA)           |  RIGHT 60% (white)               |
+|                               |                                  |
+|  [TradeNova logo]             |  Complete your purchase          |
+|                               |                                  |
+|  [Pro ⇄ Elite] toggle         |  Email      [______________]     |
+|  [Monthly | Yearly] toggle    |                                  |
+|                               |  Billing name   [___________]    |
+|  $14 / month                  |  Country        [▼ select  ]     |
+|  Billed monthly · 7-day free  |  ZIP / Postal   [___________]    |
+|                               |                                  |
+|  ✓ Unlimited trades           |  ─────────────────────────────   |
+|  ✓ AI Analytics               |                                  |
+|  ✓ Trade Journal              |  [  Start 7-day free trial  ]    |
+|  ✓ Risk Management            |   (opens Lemon.js overlay for    |
+|  ✓ Replay Studio              |    card details)                 |
+|                               |                                  |
+|  Total due today    $0.00     |  🔒 Secure checkout · 256-bit    |
+|  Then $14/mo after trial      |     SSL · Cancel anytime         |
+|                               |                                  |
+|  [Have a coupon? ____] Apply  |                                  |
+|                               |                                  |
+|  [Visa] [MC] [Amex] [Apple]   |                                  |
++-------------------------------+----------------------------------+
 ```
 
-`isPro` / `isElite` continue to derive from `get_user_plan_info()`, which now reads from `billing_subscriptions`. No frontend-only trust.
+### 2. Lemon.js overlay integration
 
-## 6. Secrets
+- Add Lemon.js script loader (`https://app.lemonsqueezy.com/js/lemon.js`) in the checkout page only.
+- Edge function `ls-checkout` already creates a checkout. Modify it to:
+  - Accept `{ plan, billing: "monthly"|"yearly", coupon?, email?, name?, country?, zip? }`.
+  - Pre-fill `checkout_data` (email, name, billing_address).
+  - Pass `discount_code` when a validated coupon is provided.
+  - Set `product_options.enabled_variants` to the chosen variant, and `checkout_options`:
+    - `embed: true`
+    - `media: false`
+    - `logo: false`
+    - `desc: false`
+    - `discount: false` (we collect it ourselves)
+    - `dark: false`
+    - `subscription_preview: false`
+    - `button_color: "#7C3AED"`
+  - Returns the checkout `url`.
+- Frontend calls the function, then `window.LemonSqueezy.Url.Open(url)` to launch the overlay. On `Checkout.Success` event, redirect to `/billing/success` which polls `ls-sync-subscription`.
 
-Already configured per the user: `LEMON_SQUEEZY_API_KEY`, `LEMON_SQUEEZY_WEBHOOK_SECRET`. We'll also need `LEMON_SQUEEZY_STORE_ID` (required by the checkout API) — if missing, request it via `add_secret`.
+### 3. New edge function: `ls-validate-coupon`
 
-After the user points their Lemon Squeezy webhook at `https://<project>.functions.supabase.co/ls-webhook`, events will flow.
+- Input: `{ code, plan, billing }`.
+- Calls LS `GET /v1/discounts?filter[code]=...`, verifies status=published, applies to the correct store/variant, returns `{ valid, amount, type, label }`.
+- Frontend shows discounted total ("Total due today $0.00, then $X.XX/mo") and passes the code into `ls-checkout`.
 
-## Technical details
+### 4. Pricing page rewrite of CTA
 
-- Lemon Squeezy webhook signature: `crypto.createHmac('sha256', secret).update(rawBody).digest('hex')` compared in constant time to `X-Signature` header.
-- Variant → plan map lives in the webhook + checkout function (`1825642 → pro`, `1825635 → elite`).
-- Hosted checkout URL is returned by `POST /v1/checkouts`; we redirect with `window.location.href`. No client SDK or script tag needed → simpler than Paddle.
-- `billing_subscriptions` is the single source of truth; `profiles` mirror columns stay for back-compat with existing RPCs and admin tools.
-- Trial: pass `trial_ends_at` via `checkout_options` / variant trial setting; Lemon Squeezy's product-level 7-day trial is the cleanest path — confirm the variants in Lemon Squeezy are configured with a 7-day trial, otherwise we add `trial_ends_at` in the checkout payload.
+`src/pages/Pricing.tsx` "Start 7-day free trial" buttons navigate to `/checkout?plan=pro` or `/checkout?plan=elite` instead of calling `startCheckout` directly. Plan cards/comparison/FAQ stay as-is.
 
-## Out of scope (mentioned, not done)
+### 5. Yearly pricing
 
-- Dropping Paddle columns from `profiles` (left for a follow-up cleanup migration).
-- Yearly pricing (no yearly variant IDs provided).
+Add yearly variant IDs to `supabase/functions/_shared/lemonsqueezy.ts` (`variantFromPlan(plan, billing)`). Requires the user to provide yearly variant IDs in LS (or we use monthly only and hide the yearly toggle on checkout if not configured — confirm post-plan).
+
+### 6. Subscription sync (already exists — verify)
+
+- `ls-webhook` writes to `billing_subscriptions` (customer_id, subscription_id, plan, status, renews_at, trial_ends_at) — already wired.
+- `ls-sync-subscription` re-fetches from LS on demand — already wired.
+- `get_user_plan_info()` already reads `billing_subscriptions` first, then falls back to `profiles`. No DB changes needed.
+
+### 7. Files
+
+**New**
+- `src/pages/Checkout.tsx` — the two-panel page.
+- `src/components/checkout/PlanSummary.tsx` — left panel.
+- `src/components/checkout/CheckoutForm.tsx` — right panel.
+- `src/components/checkout/CouponField.tsx`.
+- `src/lib/lemonjs.ts` — loads Lemon.js once, exposes `openOverlay(url, { onSuccess })`.
+- `supabase/functions/ls-validate-coupon/index.ts`.
+
+**Modified**
+- `src/App.tsx` — add `/checkout` route.
+- `src/pages/Pricing.tsx` — CTA navigates to `/checkout?plan=...`.
+- `src/lib/lemonsqueezy.ts` — `startCheckout` accepts billing + coupon + prefill, returns `{ url }` instead of redirecting; redirect logic moves into the checkout page.
+- `supabase/functions/_shared/lemonsqueezy.ts` — `variantFromPlan(plan, billing)`.
+- `supabase/functions/ls-checkout/index.ts` — accept new fields, set `checkout_options` to strip LS branding (logo/desc/media off, custom button color), forward `discount_code` and prefill.
+
+### 8. Design tokens (no hardcoded colors in components)
+
+Add to `src/index.css`:
+- `--checkout-surface: 240 20% 97%;` (#F7F7FA)
+- `--brand-purple: 262 83% 58%;` (#7C3AED)
+- `--brand-purple-foreground: 0 0% 100%;`
+- `--checkout-radius: 1rem;` (16px)
+- `--shadow-checkout: 0 20px 60px -20px hsl(262 83% 58% / 0.25);`
+
+Extend `tailwind.config.ts` with `checkout-surface`, `brand-purple`, `rounded-checkout`, `shadow-checkout`.
+
+### 9. Typography
+
+Install via `bun add @fontsource/plus-jakarta-sans @fontsource/inter`, import in `main.tsx`. Use Plus Jakarta Sans for display (prices, headings), Inter for body/form fields. Wire into `tailwind.config.ts` `fontFamily.display` and `fontFamily.sans`.
+
+### 10. Branding hidden in overlay
+
+LS Lemon.js overlay still shows their chrome by default. We minimize it via `checkout_options` (`logo: false, media: false, desc: false, discount: false`). The "Powered by Lemon Squeezy" footer and Test Mode banner inside the iframe cannot be fully removed via API — they're enforced by LS. Plan: suppress everything that the API allows; the residual badge inside the card iframe is a platform constraint. I'll flag this at implementation time if you want me to fall back to the hosted page styled the same way.
+
+### 11. Post-implementation
+
+- Confirm with `supabase--curl_edge_functions` that `ls-checkout` returns a URL when called with the new payload.
+- Manual click-through verification of the overlay and `/billing/success` redirect.
+
+### Open items to confirm after approval
+
+1. **Yearly variant IDs** — do you have separate yearly variants in Lemon Squeezy? If not, I'll keep the yearly toggle but disable it until you add them.
+2. **Apple Pay / Cash App / PayPal** — LS enables these per-store in their dashboard, not per-checkout. I can't toggle them off via API. The visual trust badges on our page will only show Visa/MC/Amex; the overlay itself will still show whatever your LS store has enabled.
