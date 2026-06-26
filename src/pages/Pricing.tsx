@@ -121,21 +121,11 @@ export default function Pricing() {
       return;
     }
     if (!user) {
-      navigate(`/signup?redirect=/pricing`);
+      navigate(`/signup?redirect=/checkout?plan=${plan}`);
       return;
     }
-    try {
-      setLoadingPlan(plan);
-      await startCheckout(plan);
-    } catch (e: any) {
-      toast({
-        title: 'Could not open checkout',
-        description: e?.message ?? 'Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoadingPlan(null);
-    }
+    setLoadingPlan(plan);
+    navigate(`/checkout?plan=${plan}`);
   };
 
   return (

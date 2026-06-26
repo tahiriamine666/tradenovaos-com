@@ -23,6 +23,7 @@ import FairValueGapsGuide from "./pages/blog/FairValueGapsGuide.tsx";
 import BillingSuccess from "./pages/BillingSuccess.tsx";
 import BillingCancel from "./pages/BillingCancel.tsx";
 import Billing from "./pages/Billing.tsx";
+import Checkout from "./pages/Checkout.tsx";
 
 const queryClient = new QueryClient();
 
@@ -81,6 +82,7 @@ const App = () => (
                   <Route path="/billing" element={<ProtectedApp><Billing /></ProtectedApp>} />
                   <Route path="/billing/success" element={<ProtectedApp><BillingSuccess /></ProtectedApp>} />
                   <Route path="/billing/cancel" element={<ProtectedApp><BillingCancel /></ProtectedApp>} />
+                  <Route path="/checkout" element={<ProtectedApp><Checkout /></ProtectedApp>} />
 
 
                   {/* Public marketing routes */}
