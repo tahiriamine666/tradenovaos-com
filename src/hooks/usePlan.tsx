@@ -66,6 +66,7 @@ export function PlanProvider({ children }: { children: ReactNode }) {
 
       if (error || !raw) throw error;
       const data = raw as any;
+      console.log('[usePlan] loaded subscription:', { userId: user.id, plan: data.plan, status: data.status, admin_override: data.admin_override, is_pro: data.is_pro, is_elite: data.is_elite });
 
       const plan     = (data.plan ?? 'free') as Plan;
       const status   = (data.status ?? 'inactive') as Status;

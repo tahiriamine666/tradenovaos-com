@@ -123,6 +123,10 @@ Deno.serve(async (req) => {
       return bad(500, 'Failed to update subscription. Please try again.');
     }
 
+    console.log('[admin-manage-subscription] updated subscription:', {
+      userId: targetUserId, email: targetEmail, plan, status: effectiveStatus, trialDays,
+    });
+
     // ─── Audit log ───────────────────────────────────────
     const { error: logErr } = await admin.from('subscription_overrides').insert({
       user_id: targetUserId,
