@@ -68,7 +68,7 @@ const PLANS: Array<{
     tagline: 'For funded & professional traders',
     monthly: 28,
     yearly: 22,
-    cta: 'Start 7-Day Free Trial',
+    cta: 'Upgrade to Elite',
     features: [
       'Everything in Pro',
       'Unlimited AI Usage',
@@ -80,6 +80,7 @@ const PLANS: Array<{
     ],
   },
 ];
+
 
 const COMPARISON: Array<{ label: string; free: boolean | string; pro: boolean | string; elite: boolean | string }> = [
   { label: 'Unlimited Trades',     free: '50 / mo', pro: true, elite: true },
