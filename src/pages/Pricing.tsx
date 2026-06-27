@@ -105,7 +105,7 @@ const TRUST_CARDS = [
 
 const FAQS = [
   { q: 'Can I cancel anytime?',     a: 'Yes — cancel in one click from your billing settings. No questions asked.' },
-  { q: 'Do I get a free trial?',     a: 'Yes. Pro and Elite both start with a 7-day free trial. You won\'t be charged until it ends.' },
+  { q: 'Do I get a free trial?',     a: 'Yes — every new account gets a 7-day free Pro trial. Elite plans are billed immediately. You can cancel anytime.' },
   { q: 'Can I upgrade later?',       a: 'Of course — upgrade from Pro to Elite anytime. Your billing prorates automatically.' },
   { q: 'Will I lose my data if I downgrade?', a: 'Never. All your trades, journals, and playbooks stay safe in your account.' },
 ];
