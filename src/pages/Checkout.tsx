@@ -421,8 +421,10 @@ export default function Checkout() {
               >
                 {submitting ? (
                   <><Loader2 className="h-5 w-5 animate-spin" /> Opening secure checkout…</>
-                ) : (
+                ) : isTrialPlan ? (
                   <>Start 7-day free trial</>
+                ) : (
+                  <>Upgrade to Elite — ${recurringMonthly.toFixed(2)}/mo</>
                 )}
               </button>
 
@@ -432,10 +434,11 @@ export default function Checkout() {
               </div>
 
               <p className="text-center text-[11px] text-slate-400 leading-relaxed">
-                By starting your trial you agree to our{" "}
+                By {isTrialPlan ? "starting your trial" : "completing your purchase"} you agree to our{" "}
                 <a href="/terms" className="underline hover:text-slate-700">Terms</a> and{" "}
                 <a href="/privacy" className="underline hover:text-slate-700">Privacy Policy</a>.
               </p>
+
             </div>
           </div>
         </section>
