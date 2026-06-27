@@ -323,9 +323,10 @@ export default function Checkout() {
                   </div>
                 )}
                 <div className="flex justify-between text-slate-600 pt-2 border-t border-slate-200">
-                  <span>After trial</span>
+                  <span>{isTrialPlan ? "After trial" : "Recurring"}</span>
                   <span className="font-semibold text-slate-900">${recurringMonthly.toFixed(2)}/mo</span>
                 </div>
+
                 <div className="flex justify-between text-base pt-2 border-t border-slate-200">
                   <span className="font-bold text-slate-900">Due today</span>
                   <span className="font-bold text-[#7C3AED]">${dueToday.toFixed(2)}</span>
