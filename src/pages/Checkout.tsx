@@ -258,7 +258,7 @@ export default function Checkout() {
                   <span className="text-5xl font-bold tracking-tight font-heading">${price}</span>
                   <span className="text-sm text-slate-500 mb-2">{period}</span>
                 </div>
-                <p className="text-xs text-slate-500 mt-1">7-day free trial · Cancel anytime</p>
+                <p className="text-xs text-slate-500 mt-1">{isTrialPlan ? "7-day free trial · Cancel anytime" : "Billed immediately · Cancel anytime"}</p>
               </div>
 
               {/* Features */}
