@@ -107,7 +107,9 @@ export default function Checkout() {
     return Math.max(0, +(price - coupon.amount / 100).toFixed(2));
   }, [price, coupon]);
 
-  const dueToday = 0; // 7-day free trial
+  const isTrialPlan = planId === "pro";
+  const dueToday = isTrialPlan ? 0 : recurringMonthly;
+
 
   const handleApplyCoupon = async () => {
     const code = couponInput.trim();
@@ -256,7 +258,7 @@ export default function Checkout() {
                   <span className="text-5xl font-bold tracking-tight font-heading">${price}</span>
                   <span className="text-sm text-slate-500 mb-2">{period}</span>
                 </div>
-                <p className="text-xs text-slate-500 mt-1">7-day free trial · Cancel anytime</p>
+                <p className="text-xs text-slate-500 mt-1">{isTrialPlan ? "7-day free trial · Cancel anytime" : "Billed immediately · Cancel anytime"}</p>
               </div>
 
               {/* Features */}
@@ -321,9 +323,10 @@ export default function Checkout() {
                   </div>
                 )}
                 <div className="flex justify-between text-slate-600 pt-2 border-t border-slate-200">
-                  <span>After trial</span>
+                  <span>{isTrialPlan ? "After trial" : "Recurring"}</span>
                   <span className="font-semibold text-slate-900">${recurringMonthly.toFixed(2)}/mo</span>
                 </div>
+
                 <div className="flex justify-between text-base pt-2 border-t border-slate-200">
                   <span className="font-bold text-slate-900">Due today</span>
                   <span className="font-bold text-[#7C3AED]">${dueToday.toFixed(2)}</span>
@@ -352,8 +355,11 @@ export default function Checkout() {
                 Complete your purchase
               </h1>
               <p className="text-sm text-slate-500 mt-2">
-                Start your 7-day free trial. We'll only charge you after the trial ends.
+                {isTrialPlan
+                  ? "Start your 7-day free trial. We'll only charge you after the trial ends."
+                  : "You'll be charged immediately. Cancel anytime from billing settings."}
               </p>
+
             </motion.div>
 
             <div className="mt-10 space-y-6">
@@ -415,8 +421,10 @@ export default function Checkout() {
               >
                 {submitting ? (
                   <><Loader2 className="h-5 w-5 animate-spin" /> Opening secure checkout…</>
-                ) : (
+                ) : isTrialPlan ? (
                   <>Start 7-day free trial</>
+                ) : (
+                  <>Upgrade to Elite — ${recurringMonthly.toFixed(2)}/mo</>
                 )}
               </button>
 
@@ -426,10 +434,11 @@ export default function Checkout() {
               </div>
 
               <p className="text-center text-[11px] text-slate-400 leading-relaxed">
-                By starting your trial you agree to our{" "}
+                By {isTrialPlan ? "starting your trial" : "completing your purchase"} you agree to our{" "}
                 <a href="/terms" className="underline hover:text-slate-700">Terms</a> and{" "}
                 <a href="/privacy" className="underline hover:text-slate-700">Privacy Policy</a>.
               </p>
+
             </div>
           </div>
         </section>

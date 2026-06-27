@@ -68,7 +68,7 @@ const PLANS: Array<{
     tagline: 'For funded & professional traders',
     monthly: 28,
     yearly: 22,
-    cta: 'Start 7-Day Free Trial',
+    cta: 'Upgrade to Elite',
     features: [
       'Everything in Pro',
       'Unlimited AI Usage',
@@ -80,6 +80,7 @@ const PLANS: Array<{
     ],
   },
 ];
+
 
 const COMPARISON: Array<{ label: string; free: boolean | string; pro: boolean | string; elite: boolean | string }> = [
   { label: 'Unlimited Trades',     free: '50 / mo', pro: true, elite: true },
@@ -104,7 +105,7 @@ const TRUST_CARDS = [
 
 const FAQS = [
   { q: 'Can I cancel anytime?',     a: 'Yes — cancel in one click from your billing settings. No questions asked.' },
-  { q: 'Do I get a free trial?',     a: 'Yes. Pro and Elite both start with a 7-day free trial. You won\'t be charged until it ends.' },
+  { q: 'Do I get a free trial?',     a: 'Yes — every new account gets a 7-day free Pro trial. Elite plans are billed immediately. You can cancel anytime.' },
   { q: 'Can I upgrade later?',       a: 'Of course — upgrade from Pro to Elite anytime. Your billing prorates automatically.' },
   { q: 'Will I lose my data if I downgrade?', a: 'Never. All your trades, journals, and playbooks stay safe in your account.' },
 ];
@@ -263,11 +264,17 @@ export default function Pricing() {
                   )}
                 </button>
 
-                {p.id !== 'free' && (
+                {p.id === 'pro' && (
                   <p className="text-[11px] text-center text-muted-foreground mt-2">
                     7-day free trial · Cancel anytime
                   </p>
                 )}
+                {p.id === 'elite' && (
+                  <p className="text-[11px] text-center text-muted-foreground mt-2">
+                    Billed immediately · Cancel anytime
+                  </p>
+                )}
+
 
                 <div className="mt-6 pt-6 border-t border-border space-y-2.5">
                   {p.features.map((f) => (
