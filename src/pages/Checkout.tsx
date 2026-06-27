@@ -107,7 +107,9 @@ export default function Checkout() {
     return Math.max(0, +(price - coupon.amount / 100).toFixed(2));
   }, [price, coupon]);
 
-  const dueToday = 0; // 7-day free trial
+  const isTrialPlan = planId === "pro";
+  const dueToday = isTrialPlan ? 0 : recurringMonthly;
+
 
   const handleApplyCoupon = async () => {
     const code = couponInput.trim();
