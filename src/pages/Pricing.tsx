@@ -264,11 +264,17 @@ export default function Pricing() {
                   )}
                 </button>
 
-                {p.id !== 'free' && (
+                {p.id === 'pro' && (
                   <p className="text-[11px] text-center text-muted-foreground mt-2">
                     7-day free trial · Cancel anytime
                   </p>
                 )}
+                {p.id === 'elite' && (
+                  <p className="text-[11px] text-center text-muted-foreground mt-2">
+                    Billed immediately · Cancel anytime
+                  </p>
+                )}
+
 
                 <div className="mt-6 pt-6 border-t border-border space-y-2.5">
                   {p.features.map((f) => (
