@@ -355,8 +355,11 @@ export default function Checkout() {
                 Complete your purchase
               </h1>
               <p className="text-sm text-slate-500 mt-2">
-                Start your 7-day free trial. We'll only charge you after the trial ends.
+                {isTrialPlan
+                  ? "Start your 7-day free trial. We'll only charge you after the trial ends."
+                  : "You'll be charged immediately. Cancel anytime from billing settings."}
               </p>
+
             </motion.div>
 
             <div className="mt-10 space-y-6">
