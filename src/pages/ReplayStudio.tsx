@@ -14,6 +14,10 @@ import {
   AlertCircle,
   Activity,
   ListVideo,
+  PanelRightOpen,
+  PanelRightClose,
+  ArrowLeft,
+
 } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
