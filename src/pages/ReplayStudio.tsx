@@ -98,6 +98,8 @@ export default function ReplayStudio() {
   const [playing, setPlaying] = React.useState(false);
   const [speed, setSpeed] = React.useState(1);
   const [scoresVersion, setScoresVersion] = React.useState(0);
+  const [panelOpen, setPanelOpen] = React.useState(false);
+  const [addExecOpen, setAddExecOpen] = React.useState(false);
 
   // Aggregated KPIs (from sessions list)
   const allScoresRef = React.useRef<Record<string, number>>({});
