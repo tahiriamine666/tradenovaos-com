@@ -420,105 +420,108 @@ export default function ReplayStudio() {
         }
       />
 
-      {/* KPI strip */}
-      <div className="mb-4 grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-6">
-        <KpiCard icon={ListVideo} label="Sessions" value={kpis.totalSessions} />
-        <KpiCard icon={Activity} label="Replayed Trades" value={kpis.totalExecs} />
-        <KpiCard
-          icon={Trophy}
-          label="Avg Replay Score"
-          value={kpis.avgScore ?? "—"}
-          accent={
-            kpis.avgScore != null ? tierColor(tierFor(kpis.avgScore)) : undefined
-          }
-        />
-        <KpiCard
-          icon={Target}
-          label="Win Rate"
-          value={kpis.winRate != null ? `${kpis.winRate}%` : "—"}
-          accent={
-            kpis.winRate != null
-              ? kpis.winRate >= 50
-                ? "text-emerald-500"
-                : "text-red-500"
-              : undefined
-          }
-        />
-        <KpiCard
-          icon={TrendingUp}
-          label="Avg RR"
-          value={kpis.avgRr != null ? kpis.avgRr.toFixed(2) : "—"}
-          accent={
-            kpis.avgRr != null
-              ? kpis.avgRr >= 1
-                ? "text-emerald-500"
-                : "text-red-500"
-              : undefined
-          }
-        />
-        <KpiCard
-          icon={AlertCircle}
-          label="Top Mistake"
-          value={kpis.topMistake ?? "—"}
-          small
-        />
-      </div>
+      {/* KPI strip + filters — hidden when a session is active so chart fills viewport */}
+      {!active && (
+        <>
+          <div className="mb-4 grid grid-cols-2 gap-2 md:grid-cols-3 lg:grid-cols-6">
+            <KpiCard icon={ListVideo} label="Sessions" value={kpis.totalSessions} />
+            <KpiCard icon={Activity} label="Replayed Trades" value={kpis.totalExecs} />
+            <KpiCard
+              icon={Trophy}
+              label="Avg Replay Score"
+              value={kpis.avgScore ?? "—"}
+              accent={
+                kpis.avgScore != null ? tierColor(tierFor(kpis.avgScore)) : undefined
+              }
+            />
+            <KpiCard
+              icon={Target}
+              label="Win Rate"
+              value={kpis.winRate != null ? `${kpis.winRate}%` : "—"}
+              accent={
+                kpis.winRate != null
+                  ? kpis.winRate >= 50
+                    ? "text-emerald-500"
+                    : "text-red-500"
+                  : undefined
+              }
+            />
+            <KpiCard
+              icon={TrendingUp}
+              label="Avg RR"
+              value={kpis.avgRr != null ? kpis.avgRr.toFixed(2) : "—"}
+              accent={
+                kpis.avgRr != null
+                  ? kpis.avgRr >= 1
+                    ? "text-emerald-500"
+                    : "text-red-500"
+                  : undefined
+              }
+            />
+            <KpiCard
+              icon={AlertCircle}
+              label="Top Mistake"
+              value={kpis.topMistake ?? "—"}
+              small
+            />
+          </div>
 
-      {/* Filters */}
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search sessions…"
-            className="pl-8"
-          />
-        </div>
-        <div className="flex items-center gap-1.5">
-          <Calendar className="h-4 w-4 text-muted-foreground" />
-          <Input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-            className="w-[140px]"
-          />
-          <span className="text-xs text-muted-foreground">to</span>
-          <Input
-            type="date"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-            className="w-[140px]"
-          />
-        </div>
-        <Select value={symbolFilter} onValueChange={setSymbolFilter}>
-          <SelectTrigger className="w-[130px]">
-            <Filter className="h-3.5 w-3.5" />
-            <SelectValue placeholder="Symbol" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All symbols</SelectItem>
-            {uniqueSymbols.map((s) => (
-              <SelectItem key={s} value={s}>
-                {s}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={setupFilter} onValueChange={setSetupFilter}>
-          <SelectTrigger className="w-[140px]">
-            <SelectValue placeholder="Setup" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All setups</SelectItem>
-            {uniqueSetups.map((s) => (
-              <SelectItem key={s} value={s}>
-                {s}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search sessions…"
+                className="pl-8"
+              />
+            </div>
+            <div className="flex items-center gap-1.5">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <Input
+                type="date"
+                value={dateFrom}
+                onChange={(e) => setDateFrom(e.target.value)}
+                className="w-[140px]"
+              />
+              <span className="text-xs text-muted-foreground">to</span>
+              <Input
+                type="date"
+                value={dateTo}
+                onChange={(e) => setDateTo(e.target.value)}
+                className="w-[140px]"
+              />
+            </div>
+            <Select value={symbolFilter} onValueChange={setSymbolFilter}>
+              <SelectTrigger className="w-[130px]">
+                <Filter className="h-3.5 w-3.5" />
+                <SelectValue placeholder="Symbol" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All symbols</SelectItem>
+                {uniqueSymbols.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={setupFilter} onValueChange={setSetupFilter}>
+              <SelectTrigger className="w-[140px]">
+                <SelectValue placeholder="Setup" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All setups</SelectItem>
+                {uniqueSetups.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </>
+      )}
 
       {/* Body */}
       {sessions.length === 0 && !loading ? (
