@@ -114,7 +114,10 @@ export function ExecutionsTable({ rows, currentId, addOpen, onAddOpenChange, onJ
                 <tr
                   key={r.id}
                   onClick={() => onJump(r)}
-                  className="cursor-pointer border-t border-border/60 transition hover:bg-accent/40"
+                  className={cn(
+                    "cursor-pointer border-t border-border/60 transition hover:bg-accent/40",
+                    currentId === r.id && "bg-primary/10 ring-1 ring-inset ring-primary/40",
+                  )}
                 >
                   <td className="px-3 py-1.5 font-mono text-muted-foreground">
                     {new Date(r.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
