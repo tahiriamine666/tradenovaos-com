@@ -205,20 +205,32 @@ export default function ReplayStudio() {
     })();
   }, [user, sessions.length]);
 
-  // Replay player tick
+  // Execution playback tick (walks through logged executions — not chart candles).
   React.useEffect(() => {
-    if (!playing || executions.length < 2) return;
-    const intervalMs = 1500 / speed;
+    if (!playing) return;
+    if (executions.length < 2) {
+      console.log("[replay] playback halted: need ≥2 executions, have", executions.length);
+      setPlaying(false);
+      return;
+    }
+    const intervalMs = Math.max(80, Math.round(1500 / speed));
+    console.log("[replay] tick start", { speed, intervalMs, total: executions.length });
     const t = window.setInterval(() => {
       setStepIndex((i) => {
         if (i >= executions.length - 1) {
+          console.log("[replay] playback complete");
           setPlaying(false);
           return i;
         }
-        return i + 1;
+        const next = i + 1;
+        console.log("[replay] advance step", { from: i, to: next });
+        return next;
       });
     }, intervalMs);
-    return () => window.clearInterval(t);
+    return () => {
+      console.log("[replay] tick cleanup");
+      window.clearInterval(t);
+    };
   }, [playing, speed, executions.length]);
 
   // Persist a new execution
