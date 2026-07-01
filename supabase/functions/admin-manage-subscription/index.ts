@@ -64,7 +64,9 @@ Deno.serve(async (req) => {
 
     const plan = String(body.plan ?? '').toLowerCase();
     const status = String(body.status ?? (plan === 'free' ? 'inactive' : 'active')).toLowerCase();
-    const trialDays = Math.max(0, Math.min(365, Number(body.trial_days ?? 0) | 0));
+    // Elite has no free trial — force trial_days = 0 regardless of caller input.
+    const rawTrialDays = Math.max(0, Math.min(365, Number(body.trial_days ?? 0) | 0));
+    const trialDays = plan === 'elite' ? 0 : rawTrialDays;
     const notes = body.notes?.toString().slice(0, 2000) ?? null;
 
     if (!VALID_PLANS.includes(plan as any)) return bad(400, 'Invalid plan');

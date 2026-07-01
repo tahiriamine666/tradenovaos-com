@@ -35,9 +35,8 @@ const PLANS: Array<{
     features: [
       'Dashboard',
       'Trade Journal',
-      'Limited Learning Hub',
-      '50 Trades',
       'Basic Analytics',
+      'Up to 50 trades / month',
     ],
   },
   {
@@ -54,11 +53,11 @@ const PLANS: Array<{
       'Unlimited Trades',
       'Trade Vault',
       'Replay Studio',
-      'Learning Hub',
       'Trade Plan',
-      'AI Reviews',
       'Community Access',
       'Advanced Analytics',
+      '1 connected trading account',
+      '500 AI Credits / month',
     ],
   },
   {
@@ -71,28 +70,40 @@ const PLANS: Array<{
     cta: 'Upgrade to Elite',
     features: [
       'Everything in Pro',
-      'Unlimited AI Usage',
-      'Elite Community',
-      'Advanced Replay Analytics',
+      'Unlimited connected trading accounts',
+      '1000 AI Credits / month',
+      'Learning Hub',
+      'Mind Journal',
+      'Edge Analytics',
       'Premium Playbooks',
+      'Elite Community',
       'Priority Support',
-      'Future Elite Features',
+      'Advanced Replay Analytics',
+      'Command Center, Trade Plan & Mind Journal customization',
     ],
   },
 ];
 
 
 const COMPARISON: Array<{ label: string; free: boolean | string; pro: boolean | string; elite: boolean | string }> = [
-  { label: 'Unlimited Trades',     free: '50 / mo', pro: true, elite: true },
-  { label: 'Replay Studio',         free: false, pro: true, elite: true },
-  { label: 'Trade Plan',            free: false, pro: true, elite: true },
-  { label: 'Trade Vault',           free: false, pro: true, elite: true },
-  { label: 'Learning Hub',          free: 'Limited', pro: true, elite: true },
-  { label: 'AI Reviews',            free: false, pro: 'Standard', elite: 'Unlimited' },
-  { label: 'Community',             free: 'Read-only', pro: true, elite: 'Elite tier' },
-  { label: 'Advanced Analytics',    free: false, pro: true, elite: true },
-  { label: 'Priority Support',      free: false, pro: false, elite: true },
-  { label: 'Unlimited AI',          free: false, pro: false, elite: true },
+  { label: 'Trades per month',           free: '50', pro: 'Unlimited', elite: 'Unlimited' },
+  { label: 'Connected trading accounts', free: '—', pro: '1', elite: 'Unlimited' },
+  { label: 'Trade Journal',              free: true, pro: true, elite: true },
+  { label: 'Basic Analytics',            free: true, pro: true, elite: true },
+  { label: 'Advanced Analytics',         free: false, pro: true, elite: true },
+  { label: 'Trade Vault',                free: false, pro: true, elite: true },
+  { label: 'Replay Studio',              free: false, pro: true, elite: true },
+  { label: 'Trade Plan',                 free: false, pro: true, elite: true },
+  { label: 'Community Access',           free: false, pro: true, elite: true },
+  { label: 'AI Credits / month',         free: '—', pro: '500', elite: '1,000' },
+  { label: 'Learning Hub',               free: false, pro: false, elite: true },
+  { label: 'Mind Journal',               free: false, pro: false, elite: true },
+  { label: 'Edge Analytics',             free: false, pro: false, elite: true },
+  { label: 'Premium Playbooks',          free: false, pro: false, elite: true },
+  { label: 'Elite Community',            free: false, pro: false, elite: true },
+  { label: 'Priority Support',           free: false, pro: false, elite: true },
+  { label: 'Advanced Replay Analytics',  free: false, pro: false, elite: true },
+  { label: 'Layout customization',       free: false, pro: false, elite: true },
 ];
 
 const TRUST_CARDS = [
@@ -105,8 +116,9 @@ const TRUST_CARDS = [
 
 const FAQS = [
   { q: 'Can I cancel anytime?',     a: 'Yes — cancel in one click from your billing settings. No questions asked.' },
-  { q: 'Do I get a free trial?',     a: 'Yes — every new account gets a 7-day free Pro trial. Elite plans are billed immediately. You can cancel anytime.' },
-  { q: 'Can I upgrade later?',       a: 'Of course — upgrade from Pro to Elite anytime. Your billing prorates automatically.' },
+  { q: 'Do I get a free trial?',     a: 'Every new account gets a 7-day free Pro trial — no card required to keep exploring afterwards. Elite plans are billed immediately and do not include a free trial.' },
+  { q: 'What happens when my Pro trial ends?', a: 'Your account stays active on the Free plan. You keep all your data — only Pro-only features become locked until you upgrade.' },
+  { q: 'Can I upgrade later?',       a: 'Of course — upgrade from Free or Pro to Elite anytime. Your billing prorates automatically.' },
   { q: 'Will I lose my data if I downgrade?', a: 'Never. All your trades, journals, and playbooks stay safe in your account.' },
 ];
 

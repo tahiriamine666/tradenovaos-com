@@ -128,7 +128,8 @@ export default function AdminPanel() {
   const approveReq = async (req) => {
     setUpgrading(req.id);
     try {
-      await callManageSubscription({ user_id: req.user_id, plan: req.requested_plan, status: 'trialing', trial_days: 14, notes: `Payoneer ref: ${req.payoneer_ref ?? 'N/A'}` });
+      const isElite = req.requested_plan === 'elite';
+      await callManageSubscription({ user_id: req.user_id, plan: req.requested_plan, status: isElite ? 'active' : 'trialing', trial_days: isElite ? 0 : 14, notes: `Payoneer ref: ${req.payoneer_ref ?? 'N/A'}` });
       await supabase.from('upgrade_requests').update({ status: 'approved', reviewed_by: user?.id, reviewed_at: new Date().toISOString() }).eq('id', req.id);
       toast({ title: `Approved → ${req.requested_plan}` }); load();
     } catch (e: any) { toast({ title: 'Error', description: e.message, variant: 'destructive' }); }
