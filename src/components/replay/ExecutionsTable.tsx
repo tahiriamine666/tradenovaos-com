@@ -56,8 +56,10 @@ function actionColor(a: string) {
   }
 }
 
-export function ExecutionsTable({ rows, onJump, onAdd, onDelete }: Props) {
-  const [open, setOpen] = React.useState(false);
+export function ExecutionsTable({ rows, currentId, addOpen, onAddOpenChange, onJump, onAdd, onDelete }: Props) {
+  const [internalOpen, setInternalOpen] = React.useState(false);
+  const open = addOpen ?? internalOpen;
+  const setOpen = onAddOpenChange ?? setInternalOpen;
   const [action, setAction] = React.useState<string>("entry");
   const [price, setPrice] = React.useState("");
   const [size, setSize] = React.useState("");
