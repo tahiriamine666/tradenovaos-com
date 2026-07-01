@@ -1,119 +1,60 @@
-## Plan: Custom TradeZella-style Checkout
+# Replay Studio — Fullscreen Chart + Honest Replay UX
 
-Build a fully custom in-app checkout page. The pricing summary, plan toggle, features, coupon field, and trust badges all live in our UI. Card entry uses the Lemon.js overlay (their PCI-compliant iframe) launched on top of our page — never a redirect to LS's hosted page.
+Scope: layout/fullscreen fix and UX cleanup only. We keep the current TradingView public widget (per your choice) and stop pretending the external controls step candles on the chart — because the widget is an iframe with no JS API for that. TradingView's own built-in **Bar Replay** button (already inside its toolbar) remains the way to replay candles.
 
-### 1. New page: `/checkout?plan=pro|elite`
+## What changes
 
-Two-panel layout, responsive (stacks on mobile).
+### 1. Fullscreen chart layout
+- Replay Studio's active-session view switches to a true fullscreen workspace: the chart fills the viewport (minus the top bar), the right-hand tabs panel becomes a collapsible drawer instead of stealing 380px of chart width.
+- Remove the hardcoded `h-[520px]` wrapper around `<TradingViewChart>` (ReplayStudio.tsx line 525).
+- Chart container becomes `w-full h-full` inside a flex column that fills `100vh - header`. No fixed heights, no `max-h`, no `overflow` traps.
+- `TradingViewChart` inner container already sets `height:100%;width:100%` and the widget uses `autosize: true`, so it will reflow. We add a `ResizeObserver` on the wrapper to re-init on drawer open/close.
+- The custom Fullscreen button (Maximize2) already calls `requestFullscreen()`; we keep it and ensure the parent it targets is the full workspace, not just the chart card.
+
+### 2. Reframe the replay controls (no false promises)
+The Play/Pause/Step/Speed buttons already work as React state — they step through your logged executions (entries, partials, exits). They cannot advance chart candles because the widget is a black-box iframe. We make the UI match reality:
+- Rename the control bar's context from "replay" to **"Execution playback"** so users understand it walks their trade log, not the chart.
+- Add a small helper line: *"Use TradingView's Bar Replay button in the chart toolbar to rewind candles."*
+- Progress bar and step counter now update whenever there are ≥1 executions (currently the tick requires ≥2 — fine, but we show `0 / 0` clearly instead of a dead 0%).
+- Keep 1x / 2x / 5x / 10x / 20x — they already work; verify the tick interval math (`1500 / speed` ms) and clean up the `setInterval` on unmount / dep change.
+- Add debug `console.log` for: playback start, pause, speed change, step advance, playback complete (removable behind a flag).
+- Highlight the current execution row in the executions table and pulse the matching marker chip in the strip when the tick advances.
+
+### 3. Execution markers empty state
+The message *"No execution markers yet…"* is not a bug — it renders only when the session has 0 rows in `replay_executions`. We make it more useful:
+- Show a small illustrated empty state with an "Add first execution" button that opens the add-row form directly (currently that form sits below and is easy to miss).
+- When ≥1 execution exists, the strip renders normally (entry / SL / TP / partial / exit chips, already color-coded). No on-chart overlay — impossible with the iframe.
+
+### 4. Right panel becomes a slide-over
+- Details / Notes / AI Review / Playbook tabs move into a right-side drawer that opens over the chart instead of splitting the grid. Chart reclaims that 380px.
+- A persistent "Session panel" button (top-right of chart) toggles it. Closed by default when the viewport is narrower than `lg`.
+
+### 5. Cleanup
+- Remove the dead `ReplayControls.tsx` (superseded by `ReplayControlBar.tsx`) if unused.
+- Fix the `React.useEffect` dep list on the playback tick to include the setter references it uses, silencing the eslint-disable already implied.
+
+## What we deliberately do NOT do
+- No swap to `lightweight-charts`. That was the only path to real programmatic bar replay and on-chart markers, and you chose to keep the widget.
+- No new data source, no Binance/Yahoo adapter (that was tied to the rewrite path).
+- No changes to session data model, RLS, or edge functions.
+
+## Files touched
 
 ```text
-+-------------------------------+----------------------------------+
-|  LEFT 40% (#F7F7FA)           |  RIGHT 60% (white)               |
-|                               |                                  |
-|  [TradeNova logo]             |  Complete your purchase          |
-|                               |                                  |
-|  [Pro ⇄ Elite] toggle         |  Email      [______________]     |
-|  [Monthly | Yearly] toggle    |                                  |
-|                               |  Billing name   [___________]    |
-|  $14 / month                  |  Country        [▼ select  ]     |
-|  Billed monthly · 7-day free  |  ZIP / Postal   [___________]    |
-|                               |                                  |
-|  ✓ Unlimited trades           |  ─────────────────────────────   |
-|  ✓ AI Analytics               |                                  |
-|  ✓ Trade Journal              |  [  Start 7-day free trial  ]    |
-|  ✓ Risk Management            |   (opens Lemon.js overlay for    |
-|  ✓ Replay Studio              |    card details)                 |
-|                               |                                  |
-|  Total due today    $0.00     |  🔒 Secure checkout · 256-bit    |
-|  Then $14/mo after trial      |     SSL · Cancel anytime         |
-|                               |                                  |
-|  [Have a coupon? ____] Apply  |                                  |
-|                               |                                  |
-|  [Visa] [MC] [Amex] [Apple]   |                                  |
-+-------------------------------+----------------------------------+
+src/pages/ReplayStudio.tsx              layout: fullscreen workspace, drawer for tabs, remove h-[520px]
+src/components/replay/TradingViewChart.tsx  h-full sizing, ResizeObserver, fullscreen target
+src/components/replay/ReplayControlBar.tsx  rename, helper text, debug logs, cleanup deps
+src/components/replay/MarkerStrip.tsx        richer empty state with CTA
+src/components/replay/ExecutionsTable.tsx    highlight current row on tick
+src/components/replay/ReplayControls.tsx     delete if unused
 ```
 
-### 2. Lemon.js overlay integration
+## Verification
+- Chart fills viewport on 1280×800, 1440×900, 1920×1080 — no gray band below.
+- Fullscreen button enters browser fullscreen filling the screen.
+- With a session that has ≥2 executions: Play advances step, Pause halts, Step ±1 moves one row, speed pills change tick rate, progress % updates, current row highlights.
+- With a session that has 0 executions: empty state shows CTA, no dead 0% bar.
+- Right-panel drawer opens/closes without resizing the chart iframe (it stays full width).
 
-- Add Lemon.js script loader (`https://app.lemonsqueezy.com/js/lemon.js`) in the checkout page only.
-- Edge function `ls-checkout` already creates a checkout. Modify it to:
-  - Accept `{ plan, billing: "monthly"|"yearly", coupon?, email?, name?, country?, zip? }`.
-  - Pre-fill `checkout_data` (email, name, billing_address).
-  - Pass `discount_code` when a validated coupon is provided.
-  - Set `product_options.enabled_variants` to the chosen variant, and `checkout_options`:
-    - `embed: true`
-    - `media: false`
-    - `logo: false`
-    - `desc: false`
-    - `discount: false` (we collect it ourselves)
-    - `dark: false`
-    - `subscription_preview: false`
-    - `button_color: "#7C3AED"`
-  - Returns the checkout `url`.
-- Frontend calls the function, then `window.LemonSqueezy.Url.Open(url)` to launch the overlay. On `Checkout.Success` event, redirect to `/billing/success` which polls `ls-sync-subscription`.
-
-### 3. New edge function: `ls-validate-coupon`
-
-- Input: `{ code, plan, billing }`.
-- Calls LS `GET /v1/discounts?filter[code]=...`, verifies status=published, applies to the correct store/variant, returns `{ valid, amount, type, label }`.
-- Frontend shows discounted total ("Total due today $0.00, then $X.XX/mo") and passes the code into `ls-checkout`.
-
-### 4. Pricing page rewrite of CTA
-
-`src/pages/Pricing.tsx` "Start 7-day free trial" buttons navigate to `/checkout?plan=pro` or `/checkout?plan=elite` instead of calling `startCheckout` directly. Plan cards/comparison/FAQ stay as-is.
-
-### 5. Yearly pricing
-
-Add yearly variant IDs to `supabase/functions/_shared/lemonsqueezy.ts` (`variantFromPlan(plan, billing)`). Requires the user to provide yearly variant IDs in LS (or we use monthly only and hide the yearly toggle on checkout if not configured — confirm post-plan).
-
-### 6. Subscription sync (already exists — verify)
-
-- `ls-webhook` writes to `billing_subscriptions` (customer_id, subscription_id, plan, status, renews_at, trial_ends_at) — already wired.
-- `ls-sync-subscription` re-fetches from LS on demand — already wired.
-- `get_user_plan_info()` already reads `billing_subscriptions` first, then falls back to `profiles`. No DB changes needed.
-
-### 7. Files
-
-**New**
-- `src/pages/Checkout.tsx` — the two-panel page.
-- `src/components/checkout/PlanSummary.tsx` — left panel.
-- `src/components/checkout/CheckoutForm.tsx` — right panel.
-- `src/components/checkout/CouponField.tsx`.
-- `src/lib/lemonjs.ts` — loads Lemon.js once, exposes `openOverlay(url, { onSuccess })`.
-- `supabase/functions/ls-validate-coupon/index.ts`.
-
-**Modified**
-- `src/App.tsx` — add `/checkout` route.
-- `src/pages/Pricing.tsx` — CTA navigates to `/checkout?plan=...`.
-- `src/lib/lemonsqueezy.ts` — `startCheckout` accepts billing + coupon + prefill, returns `{ url }` instead of redirecting; redirect logic moves into the checkout page.
-- `supabase/functions/_shared/lemonsqueezy.ts` — `variantFromPlan(plan, billing)`.
-- `supabase/functions/ls-checkout/index.ts` — accept new fields, set `checkout_options` to strip LS branding (logo/desc/media off, custom button color), forward `discount_code` and prefill.
-
-### 8. Design tokens (no hardcoded colors in components)
-
-Add to `src/index.css`:
-- `--checkout-surface: 240 20% 97%;` (#F7F7FA)
-- `--brand-purple: 262 83% 58%;` (#7C3AED)
-- `--brand-purple-foreground: 0 0% 100%;`
-- `--checkout-radius: 1rem;` (16px)
-- `--shadow-checkout: 0 20px 60px -20px hsl(262 83% 58% / 0.25);`
-
-Extend `tailwind.config.ts` with `checkout-surface`, `brand-purple`, `rounded-checkout`, `shadow-checkout`.
-
-### 9. Typography
-
-Install via `bun add @fontsource/plus-jakarta-sans @fontsource/inter`, import in `main.tsx`. Use Plus Jakarta Sans for display (prices, headings), Inter for body/form fields. Wire into `tailwind.config.ts` `fontFamily.display` and `fontFamily.sans`.
-
-### 10. Branding hidden in overlay
-
-LS Lemon.js overlay still shows their chrome by default. We minimize it via `checkout_options` (`logo: false, media: false, desc: false, discount: false`). The "Powered by Lemon Squeezy" footer and Test Mode banner inside the iframe cannot be fully removed via API — they're enforced by LS. Plan: suppress everything that the API allows; the residual badge inside the card iframe is a platform constraint. I'll flag this at implementation time if you want me to fall back to the hosted page styled the same way.
-
-### 11. Post-implementation
-
-- Confirm with `supabase--curl_edge_functions` that `ls-checkout` returns a URL when called with the new payload.
-- Manual click-through verification of the overlay and `/billing/success` redirect.
-
-### Open items to confirm after approval
-
-1. **Yearly variant IDs** — do you have separate yearly variants in Lemon Squeezy? If not, I'll keep the yearly toggle but disable it until you add them.
-2. **Apple Pay / Cash App / PayPal** — LS enables these per-store in their dashboard, not per-checkout. I can't toggle them off via API. The visual trust badges on our page will only show Visa/MC/Amex; the overlay itself will still show whatever your LS store has enabled.
+## Note on expectations
+"Candles advance in replay" and "trade markers display on the chart" from your spec require the lightweight-charts rewrite. With the widget kept, candle stepping stays inside TradingView's own Bar Replay UI, and our markers stay as chips below the chart. If you want on-chart markers and programmatic candle stepping later, that's the follow-up rewrite.

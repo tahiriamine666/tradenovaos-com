@@ -31,6 +31,9 @@ export interface ExecutionRow {
 
 interface Props {
   rows: ExecutionRow[];
+  currentId?: string | null;
+  addOpen?: boolean;
+  onAddOpenChange?: (v: boolean) => void;
   onJump: (row: ExecutionRow) => void;
   onAdd: (row: Omit<ExecutionRow, "id">) => Promise<void> | void;
   onDelete: (id: string) => Promise<void> | void;
@@ -53,8 +56,10 @@ function actionColor(a: string) {
   }
 }
 
-export function ExecutionsTable({ rows, onJump, onAdd, onDelete }: Props) {
-  const [open, setOpen] = React.useState(false);
+export function ExecutionsTable({ rows, currentId, addOpen, onAddOpenChange, onJump, onAdd, onDelete }: Props) {
+  const [internalOpen, setInternalOpen] = React.useState(false);
+  const open = addOpen ?? internalOpen;
+  const setOpen = onAddOpenChange ?? setInternalOpen;
   const [action, setAction] = React.useState<string>("entry");
   const [price, setPrice] = React.useState("");
   const [size, setSize] = React.useState("");
@@ -109,7 +114,10 @@ export function ExecutionsTable({ rows, onJump, onAdd, onDelete }: Props) {
                 <tr
                   key={r.id}
                   onClick={() => onJump(r)}
-                  className="cursor-pointer border-t border-border/60 transition hover:bg-accent/40"
+                  className={cn(
+                    "cursor-pointer border-t border-border/60 transition hover:bg-accent/40",
+                    currentId === r.id && "bg-primary/10 ring-1 ring-inset ring-primary/40",
+                  )}
                 >
                   <td className="px-3 py-1.5 font-mono text-muted-foreground">
                     {new Date(r.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}

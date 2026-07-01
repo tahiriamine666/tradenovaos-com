@@ -57,7 +57,14 @@ export function ReplayControlBar({
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border border-border bg-card/80 p-3 backdrop-blur">
+      <div className="flex items-center justify-between gap-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+        <span className="font-semibold">Execution playback</span>
+        <span className="hidden normal-case tracking-normal md:inline">
+          Steps through your logged executions. Use TradingView's Bar Replay button in the chart toolbar to rewind candles.
+        </span>
+      </div>
       <div className="flex items-center gap-2">
+
         <Button size="icon" variant="ghost" onClick={onRestart} title="Restart">
           <RotateCcw className="h-4 w-4" />
         </Button>
