@@ -540,96 +540,145 @@ export default function ReplayStudio() {
       ) : !active ? (
         <SessionGrid sessions={filtered} onSelect={setActiveId} scores={allScoresRef.current} />
       ) : (
-        <div className="grid flex-1 gap-3 lg:grid-cols-[minmax(0,1fr)_380px]">
-          <main className="min-w-0 space-y-3">
-            <NewsBadges date={active.replay_date} />
-            <div className="h-[520px]">
+        <div className="relative -mx-4 -mb-4 flex flex-1 md:-mx-6 md:-mb-6">
+          {/* Chart workspace fills the viewport */}
+          <main className="flex min-w-0 flex-1 flex-col gap-2 p-3 md:p-4">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex min-w-0 items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setActiveId(null)}
+                  className="h-8 px-2 text-muted-foreground"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Sessions
+                </Button>
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-semibold">
+                    {active.title ?? active.pair ?? "Untitled"}
+                  </div>
+                  <div className="truncate text-[10px] uppercase tracking-wider text-muted-foreground">
+                    {active.pair ?? "—"} · {active.timeframe ?? ""}m · {new Date(active.replay_date).toLocaleDateString()}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                <NewsBadges date={active.replay_date} />
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setPanelOpen((v) => !v)}
+                  className="h-8"
+                  title={panelOpen ? "Hide session panel" : "Show session panel"}
+                >
+                  {panelOpen ? <PanelRightClose className="h-4 w-4" /> : <PanelRightOpen className="h-4 w-4" />}
+                  <span className="hidden md:inline">{panelOpen ? "Hide panel" : "Session panel"}</span>
+                </Button>
+              </div>
+            </div>
+
+            {/* Fullscreen chart — fills remaining viewport height */}
+            <div className="min-h-[520px] flex-1 [height:calc(100vh-260px)]">
               <TradingViewChart symbol={active.pair ?? "NAS100"} interval={active.timeframe ?? "60"} />
             </div>
-            <MarkerStrip markers={markers} />
+
+            <MarkerStrip
+              markers={markers}
+              onAddExecution={() => setAddExecOpen(true)}
+            />
             <ReplayControlBar
               total={executions.length}
               index={Math.min(stepIndex, Math.max(executions.length - 1, 0))}
               playing={playing}
               speed={speed}
               currentTime={currentExec?.time}
-              onPlay={() => setPlaying(true)}
-              onPause={() => setPlaying(false)}
+              onPlay={() => {
+                console.log("[replay] play pressed", { total: executions.length, speed });
+                setPlaying(true);
+              }}
+              onPause={() => {
+                console.log("[replay] pause pressed");
+                setPlaying(false);
+              }}
               onRestart={() => {
+                console.log("[replay] restart pressed");
                 setPlaying(false);
                 setStepIndex(0);
               }}
-              onStep={(d) =>
-                setStepIndex((i) => Math.max(0, Math.min(executions.length - 1, i + d)))
-              }
+              onStep={(d) => {
+                console.log("[replay] step", d);
+                setStepIndex((i) => Math.max(0, Math.min(executions.length - 1, i + d)));
+              }}
               onSeek={(i) => setStepIndex(i)}
-              onSpeed={setSpeed}
+              onSpeed={(s) => {
+                console.log("[replay] speed change", s);
+                setSpeed(s);
+              }}
             />
             <ExecutionsTable
               rows={executions}
+              currentId={currentExec?.id}
+              addOpen={addExecOpen}
+              onAddOpenChange={setAddExecOpen}
               onAdd={addExecution}
               onDelete={deleteExecution}
               onJump={(r) => setStepIndex(executions.findIndex((e) => e.id === r.id))}
             />
           </main>
 
-          <aside className="min-w-0">
-            <div className="sticky top-2 space-y-2 rounded-xl border border-border bg-card/60 p-3 backdrop-blur">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-xs uppercase tracking-wider text-muted-foreground">
-                    Active session
-                  </div>
-                  <div className="font-semibold">
-                    {active.title ?? active.pair ?? "Untitled"}
-                  </div>
+          {/* Slide-over session panel */}
+          <aside
+            className={cn(
+              "flex flex-col border-l border-border bg-card/60 backdrop-blur transition-[width] duration-200 ease-out",
+              panelOpen ? "w-full max-w-[380px]" : "w-0 overflow-hidden border-l-0",
+            )}
+          >
+            <div className="flex items-center justify-between border-b border-border p-3">
+              <div className="min-w-0">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  Active session
                 </div>
-                <Button
-                  size="icon"
-                  variant="ghost"
-                  onClick={deleteSession}
-                  className="text-muted-foreground hover:text-red-500"
-                  title="Delete session"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                <div className="truncate text-sm font-semibold">
+                  {active.title ?? active.pair ?? "Untitled"}
+                </div>
               </div>
-
-              <Tabs defaultValue="details">
-                <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="details" className="text-xs">
-                    Details
-                  </TabsTrigger>
-                  <TabsTrigger value="notes" className="text-xs">
-                    Notes
-                  </TabsTrigger>
-                  <TabsTrigger value="ai" className="text-xs">
-                    AI Review
-                  </TabsTrigger>
-                  <TabsTrigger value="playbook" className="text-xs">
-                    Playbook
-                  </TabsTrigger>
-                </TabsList>
-                <div className="mt-3 max-h-[70vh] overflow-auto pr-1">
-                  <TabsContent value="details" className="mt-0">
-                    <TradeDetailsTab session={active} imageUrl={imageUrl} />
-                  </TabsContent>
-                  <TabsContent value="notes" className="mt-0">
-                    <ReplayNotesTab sessionId={active.id} />
-                  </TabsContent>
-                  <TabsContent value="ai" className="mt-0">
-                    <AiReviewTab
-                      sessionId={active.id}
-                      clientScores={clientScores}
-                      canRun={executions.length > 0}
-                    />
-                  </TabsContent>
-                  <TabsContent value="playbook" className="mt-0">
-                    <PlaybookMatchTab session={active} />
-                  </TabsContent>
-                </div>
-              </Tabs>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={deleteSession}
+                className="text-muted-foreground hover:text-red-500"
+                title="Delete session"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
             </div>
+            <Tabs defaultValue="details" className="flex min-h-0 flex-1 flex-col">
+              <TabsList className="mx-3 mt-3 grid grid-cols-4">
+                <TabsTrigger value="details" className="text-xs">Details</TabsTrigger>
+                <TabsTrigger value="notes" className="text-xs">Notes</TabsTrigger>
+                <TabsTrigger value="ai" className="text-xs">AI Review</TabsTrigger>
+                <TabsTrigger value="playbook" className="text-xs">Playbook</TabsTrigger>
+              </TabsList>
+              <div className="min-h-0 flex-1 overflow-auto p-3">
+                <TabsContent value="details" className="mt-0">
+                  <TradeDetailsTab session={active} imageUrl={imageUrl} />
+                </TabsContent>
+                <TabsContent value="notes" className="mt-0">
+                  <ReplayNotesTab sessionId={active.id} />
+                </TabsContent>
+                <TabsContent value="ai" className="mt-0">
+                  <AiReviewTab
+                    sessionId={active.id}
+                    clientScores={clientScores}
+                    canRun={executions.length > 0}
+                  />
+                </TabsContent>
+                <TabsContent value="playbook" className="mt-0">
+                  <PlaybookMatchTab session={active} />
+                </TabsContent>
+              </div>
+            </Tabs>
           </aside>
         </div>
       )}
