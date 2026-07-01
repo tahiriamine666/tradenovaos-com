@@ -31,6 +31,9 @@ export interface ExecutionRow {
 
 interface Props {
   rows: ExecutionRow[];
+  currentId?: string | null;
+  addOpen?: boolean;
+  onAddOpenChange?: (v: boolean) => void;
   onJump: (row: ExecutionRow) => void;
   onAdd: (row: Omit<ExecutionRow, "id">) => Promise<void> | void;
   onDelete: (id: string) => Promise<void> | void;
