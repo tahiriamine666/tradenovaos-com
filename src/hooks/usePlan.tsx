@@ -29,20 +29,33 @@ interface PlanContextValue extends PlanState {
 }
 
 const FEATURE_PLANS: Record<string, Plan[]> = {
-  csv_import:          ['pro', 'elite'],
-  ai_insights:         ['pro', 'elite'],
-  playbooks:           ['pro', 'elite'],
-  trade_plan:          ['pro', 'elite'],
-  trade_vault:         ['pro', 'elite'],
-  mind_journal:        ['pro', 'elite'],
-  edge_analytics:      ['pro', 'elite'],
-  analytics_advanced:  ['pro', 'elite'],
-  replay:              ['pro', 'elite'],
-  learning_hub:        ['pro', 'elite'],
-  community:           ['pro', 'elite'],
-  ai_unlimited:        ['elite'],
-  elite_tools:         ['elite'],
-  api_access:          ['elite'],
+  // Pro + Elite
+  csv_import:              ['pro', 'elite'],
+  ai_insights:             ['pro', 'elite'],
+  ai_reviews:              ['pro', 'elite'],
+  playbooks:               ['pro', 'elite'],
+  trade_plan:              ['pro', 'elite'],
+  trade_vault:             ['pro', 'elite'],
+  replay:                  ['pro', 'elite'],
+  community:               ['pro', 'elite'],
+  analytics_advanced:      ['pro', 'elite'],
+
+  // Elite only
+  learning_hub:            ['elite'],
+  mind_journal:            ['elite'],
+  edge_analytics:          ['elite'],
+  premium_playbooks:       ['elite'],
+  elite_community:         ['elite'],
+  priority_support:        ['elite'],
+  advanced_replay:         ['elite'],
+  ai_unlimited:            ['elite'],
+  elite_tools:             ['elite'],
+  api_access:              ['elite'],
+
+  // Elite-only customization
+  command_center_customize:['elite'],
+  trade_plan_customize:    ['elite'],
+  mind_journal_customize:  ['elite'],
 };
 
 const FREE: PlanState = {
