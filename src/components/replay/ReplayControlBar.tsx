@@ -63,7 +63,7 @@ export function ReplayControlBar({
           Steps through your logged executions. Use TradingView's Bar Replay button in the chart toolbar to rewind candles.
         </span>
       </div>
-      <div className="flex items-center gap-2"></div>
+      <div className="flex items-center gap-2">
 
         <Button size="icon" variant="ghost" onClick={onRestart} title="Restart">
           <RotateCcw className="h-4 w-4" />
