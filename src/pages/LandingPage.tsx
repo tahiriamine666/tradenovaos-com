@@ -891,9 +891,9 @@ function Testimonials() {
 function Pricing({ onSignup }: { onSignup: () => void }) {
   const { ref, inView } = useReveal();
   const plans = [
-    {name:'Free',  price:'$0',  desc:'Start tracking',          features:['50 trades/month','Basic analytics','Trade journal','Calendar','Dark/light mode'],cta:'Start Free',hi:false},
-    {name:'Pro',   price:'$14', per:'/mo',desc:'Serious traders',badge:'Most Popular',features:['Unlimited trades','Full analytics','CSV import','AI insights','Playbook lab','Trade plan'],cta:'Start 7-day Free Trial',hi:true},
-    {name:'Elite', price:'$28', per:'/mo',desc:'Funded traders', features:['Everything in Pro','Replay studio','API access','Unlimited AI','Priority support'],cta:'Start 7-day Free Trial',hi:false},
+    {name:'Free',  price:'$0',  desc:'Start tracking',          features:['50 trades/month','Trade journal','Basic analytics','Dark/light mode'],cta:'Start Free',hi:false},
+    {name:'Pro',   price:'$14', per:'/mo',desc:'Serious traders',badge:'Most Popular',features:['Unlimited trades','Trade Vault','Replay Studio','Trade Plan','Community access','Advanced analytics','1 trading account','500 AI credits/mo'],cta:'Start 7-day Free Trial',hi:true},
+    {name:'Elite', price:'$28', per:'/mo',desc:'Funded traders', features:['Everything in Pro','Unlimited trading accounts','1,000 AI credits/mo','Learning Hub','Mind Journal','Edge Analytics','Elite Community','Priority Support','Layout customization'],cta:'Upgrade to Elite',hi:false},
   ];
   return (
     <section id="pricing" className="py-24 sm:py-32 relative" ref={ref}>
