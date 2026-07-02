@@ -5,7 +5,7 @@ import { CreditCard, ExternalLink, Loader2, Crown, Sparkles, Zap, ChevronLeft, S
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePlan } from '@/hooks/usePlan';
-import { openCustomerPortal } from '@/lib/lemonsqueezy';
+import { openCustomerPortal } from '@/lib/dodo';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
