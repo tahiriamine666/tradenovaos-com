@@ -1,4 +1,4 @@
 project_id = "jbdivofznclkfctcqfln"
 
-[functions.ls-webhook]
+[functions.dodo-webhook]
 verify_jwt = false
