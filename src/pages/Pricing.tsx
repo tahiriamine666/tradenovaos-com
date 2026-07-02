@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
-import { startCheckout } from '@/lib/lemonsqueezy';
+import { startCheckout } from '@/lib/dodo';
 import {
   Check, X, Sparkles, Zap, Crown, Shield, BookOpen, BarChart3, Users,
   Play, Brain, ChevronLeft, Loader2,
@@ -302,7 +302,7 @@ export default function Pricing() {
         </div>
 
         <p className="text-center text-xs text-muted-foreground mt-8 flex items-center justify-center gap-2">
-          <Shield className="h-3.5 w-3.5" /> Secure checkout by Lemon Squeezy · All major cards & Apple Pay
+          <Shield className="h-3.5 w-3.5" /> Secure checkout by Dodo Payments · All major cards & Apple Pay
         </p>
       </section>
 

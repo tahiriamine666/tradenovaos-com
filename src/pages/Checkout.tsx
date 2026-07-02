@@ -1,14 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  Check, ChevronLeft, Loader2, Lock, ShieldCheck, Sparkles, Crown, Tag, Zap,
+  Check, ChevronLeft, Loader2, Lock, ShieldCheck, Sparkles, Crown, Zap,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
-import { createCheckoutUrl, validateCoupon, syncSubscription, type LsPlan, type LsBilling, type CouponResult } from "@/lib/lemonsqueezy";
-import { openLemonOverlay, loadLemonJs } from "@/lib/lemonjs";
+import { createCheckoutUrl, type DodoPlan, type DodoBilling } from "@/lib/dodo";
+
+type LsPlan = DodoPlan;
+type LsBilling = DodoBilling;
 
 type PlanDef = {
   id: LsPlan;
@@ -77,17 +79,10 @@ export default function Checkout() {
   const [country, setCountry] = useState("US");
   const [zip, setZip] = useState("");
 
-  const [couponInput, setCouponInput] = useState("");
-  const [coupon, setCoupon] = useState<CouponResult | null>(null);
-  const [couponLoading, setCouponLoading] = useState(false);
-
   const [submitting, setSubmitting] = useState(false);
 
   const plan = PLANS[planId];
   const Icon = plan.icon;
-
-  useEffect(() => { loadLemonJs().catch(() => {}); }, []);
-  useEffect(() => { setCoupon(null); setCouponInput(""); }, [planId, billing]);
 
   useEffect(() => {
     if (!user) {
@@ -98,38 +93,9 @@ export default function Checkout() {
   const price = billing === "yearly" ? plan.yearly : plan.monthly;
   const period = billing === "yearly" ? "/mo, billed yearly" : "/month";
 
-  const recurringMonthly = useMemo(() => {
-    if (!coupon?.valid || !coupon.amount) return price;
-    if (coupon.amount_type === "percent") {
-      return Math.max(0, +(price * (1 - coupon.amount / 100)).toFixed(2));
-    }
-    // fixed = cents off the recurring charge
-    return Math.max(0, +(price - coupon.amount / 100).toFixed(2));
-  }, [price, coupon]);
-
+  const recurringMonthly = price;
   const isTrialPlan = planId === "pro";
   const dueToday = isTrialPlan ? 0 : recurringMonthly;
-
-
-  const handleApplyCoupon = async () => {
-    const code = couponInput.trim();
-    if (!code) return;
-    setCouponLoading(true);
-    try {
-      const result = await validateCoupon({ code, plan: planId, billing });
-      if (!result.valid) {
-        setCoupon(null);
-        toast({ title: "Coupon not valid", description: result.error ?? "Try a different code.", variant: "destructive" });
-      } else {
-        setCoupon(result);
-        toast({ title: "Coupon applied", description: result.label ?? "Discount added." });
-      }
-    } catch (e: any) {
-      toast({ title: "Could not check coupon", description: e?.message ?? "Try again.", variant: "destructive" });
-    } finally {
-      setCouponLoading(false);
-    }
-  };
 
   const handleSubmit = async () => {
     if (!email.trim()) {
@@ -141,28 +107,24 @@ export default function Checkout() {
       const url = await createCheckoutUrl({
         plan: planId,
         billing,
-        coupon: coupon?.valid ? coupon.code : undefined,
         email: email.trim(),
         name: name.trim() || undefined,
         country: country || undefined,
         zip: zip.trim() || undefined,
       });
-      await openLemonOverlay(url, {
-        onSuccess: async () => {
-          try { await syncSubscription(); } catch { /* noop */ }
-          navigate("/billing/success");
-        },
-      });
+      // Redirect to Dodo hosted checkout. Dodo returns the user to
+      // /billing/success after payment (return_url set server-side).
+      window.location.href = url;
     } catch (e: any) {
       toast({
         title: "Could not start checkout",
         description: e?.message ?? "Please try again.",
         variant: "destructive",
       });
-    } finally {
       setSubmitting(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-white text-slate-900 font-body">
@@ -273,55 +235,13 @@ export default function Checkout() {
                 ))}
               </ul>
 
-              {/* Coupon */}
-              <div className="mb-6">
-                <label className="text-xs font-semibold text-slate-500 mb-2 flex items-center gap-1.5">
-                  <Tag className="h-3.5 w-3.5" /> Coupon code
-                </label>
-                <div className="flex gap-2">
-                  <Input
-                    value={couponInput}
-                    onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                    placeholder="ENTER CODE"
-                    className="h-10 rounded-xl bg-white border-slate-200 text-sm uppercase tracking-wider"
-                    disabled={!!coupon?.valid}
-                  />
-                  {coupon?.valid ? (
-                    <button
-                      onClick={() => { setCoupon(null); setCouponInput(""); }}
-                      className="px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-sm font-semibold text-slate-700 transition-colors"
-                    >
-                      Remove
-                    </button>
-                  ) : (
-                    <button
-                      onClick={handleApplyCoupon}
-                      disabled={couponLoading || !couponInput.trim()}
-                      className="px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold disabled:opacity-50 transition-colors flex items-center gap-1.5"
-                    >
-                      {couponLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Apply"}
-                    </button>
-                  )}
-                </div>
-                {coupon?.valid && (
-                  <p className="mt-2 text-xs text-emerald-600 font-semibold">
-                    ✓ {coupon.label} applied
-                  </p>
-                )}
-              </div>
-
               {/* Totals */}
               <div className="rounded-xl bg-slate-50 p-4 space-y-2 text-sm">
                 <div className="flex justify-between text-slate-600">
                   <span>{plan.name} · {billing}</span>
                   <span>${price.toFixed(2)}/mo</span>
                 </div>
-                {coupon?.valid && (
-                  <div className="flex justify-between text-emerald-600 font-medium">
-                    <span>Discount ({coupon.label})</span>
-                    <span>−${(price - recurringMonthly).toFixed(2)}/mo</span>
-                  </div>
-                )}
+
                 <div className="flex justify-between text-slate-600 pt-2 border-t border-slate-200">
                   <span>{isTrialPlan ? "After trial" : "Recurring"}</span>
                   <span className="font-semibold text-slate-900">${recurringMonthly.toFixed(2)}/mo</span>

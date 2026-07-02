@@ -270,6 +270,7 @@ export type Database = {
           customer_portal_url: string | null
           ends_at: string | null
           plan: string
+          provider: string
           renews_at: string | null
           status: string
           subscription_id: string | null
@@ -285,6 +286,7 @@ export type Database = {
           customer_portal_url?: string | null
           ends_at?: string | null
           plan?: string
+          provider?: string
           renews_at?: string | null
           status?: string
           subscription_id?: string | null
@@ -300,6 +302,7 @@ export type Database = {
           customer_portal_url?: string | null
           ends_at?: string | null
           plan?: string
+          provider?: string
           renews_at?: string | null
           status?: string
           subscription_id?: string | null

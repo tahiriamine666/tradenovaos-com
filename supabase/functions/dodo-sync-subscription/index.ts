@@ -1,9 +1,9 @@
-// On-demand sync: query Lemon Squeezy for the user's most recent subscription
-// and upsert billing_subscriptions. Used by /billing/success as a fallback
+// On-demand sync: query Dodo for the user's most recent subscription and
+// upsert billing_subscriptions. Used by /billing/success as a fallback
 // in case the webhook hasn't landed yet.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
-import { LS_API, lsHeaders, mirrorStatus, planFromVariant } from "../_shared/lemonsqueezy.ts";
+import { dodoApiBase, dodoAuthHeaders, mirrorStatus, planFromProductId } from "../_shared/dodo.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -31,19 +31,18 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_ANON_KEY")!,
       { global: { headers: { Authorization: authHeader } } },
     );
-    const { data: userData, error: userErr } = await userClient.auth.getUser();
-    if (userErr || !userData?.user?.id) {
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claims, error: cErr } = await userClient.auth.getClaims(token);
+    if (cErr || !claims?.claims?.sub) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const userId = userData.user.id;
-    const email = userData.user.email ?? "";
+    const userId = claims.claims.sub as string;
+    const email = (claims.claims as any).email as string | undefined;
 
-    const apiKey = Deno.env.get("LEMON_SQUEEZY_API_KEY");
-    const storeId = Deno.env.get("LEMON_SQUEEZY_STORE_ID");
-    if (!apiKey || !storeId) {
-      return new Response(JSON.stringify({ ok: false, reason: "lemonsqueezy_not_configured" }), {
+    if (!Deno.env.get("DODO_API_KEY")) {
+      return new Response(JSON.stringify({ ok: false, reason: "dodo_not_configured" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -54,39 +53,52 @@ Deno.serve(async (req) => {
       { auth: { persistSession: false } },
     );
 
-    // Find most recent subscription by user_email.
-    const url = `${LS_API}/subscriptions?filter[store_id]=${encodeURIComponent(storeId)}&filter[user_email]=${encodeURIComponent(email)}&sort=-created_at&page[size]=5`;
-    const res = await fetch(url, { headers: lsHeaders(apiKey) });
-    const json = await res.json();
-    if (!res.ok) {
-      console.error("ls-sync error", res.status, json);
-      return new Response(JSON.stringify({ ok: false, reason: "ls_api_error" }), {
+    // Try to find recent subscriptions for this email.
+    if (!email) {
+      return new Response(JSON.stringify({ ok: false, reason: "no_email" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const sub = (json?.data ?? [])[0];
+
+    const url = `${dodoApiBase()}/subscriptions?email=${encodeURIComponent(email)}&page_size=5`;
+    const res = await fetch(url, { headers: dodoAuthHeaders() });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      console.error("dodo-sync error", res.status, json);
+      return new Response(JSON.stringify({ ok: false, reason: "dodo_api_error" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const items = (json?.items ?? json?.data ?? []) as any[];
+    // Newest first.
+    items.sort((a, b) => {
+      const ta = new Date(a.created_at ?? 0).getTime();
+      const tb = new Date(b.created_at ?? 0).getTime();
+      return tb - ta;
+    });
+    const sub = items[0];
     if (!sub) {
       return new Response(JSON.stringify({ ok: false, reason: "no_subscription" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const attr = sub.attributes ?? {};
-    const variantId = String(attr.variant_id ?? "");
-    const plan = planFromVariant(variantId);
-    const status = attr.status ?? "";
+
+    const productId = String(sub.product_id ?? "");
+    const planInfo = planFromProductId(productId);
+    const plan = planInfo?.plan ?? null;
+    const status = String(sub.status ?? "");
 
     const row = {
       user_id: userId,
-      customer_id: String(attr.customer_id ?? ""),
-      subscription_id: String(sub.id),
-      variant_id: variantId,
+      provider: "dodo",
+      customer_id: String(sub.customer?.customer_id ?? sub.customer_id ?? ""),
+      subscription_id: String(sub.subscription_id ?? sub.id ?? ""),
+      variant_id: productId || null,
       plan: plan ?? "free",
       status,
-      trial_ends_at: attr.trial_ends_at ?? null,
-      renews_at: attr.renews_at ?? null,
-      ends_at: attr.ends_at ?? null,
-      update_payment_method_url: attr.urls?.update_payment_method ?? null,
-      customer_portal_url: attr.urls?.customer_portal ?? null,
+      trial_ends_at: sub.trial_end ?? sub.trial_ends_at ?? null,
+      renews_at: sub.next_billing_date ?? sub.renews_at ?? null,
+      ends_at: sub.cancelled_at ?? sub.ends_at ?? null,
       updated_at: new Date().toISOString(),
     };
 
@@ -94,7 +106,7 @@ Deno.serve(async (req) => {
       .from("billing_subscriptions")
       .upsert(row, { onConflict: "user_id" });
     if (upErr) {
-      console.error("ls-sync upsert error", upErr);
+      console.error("dodo-sync upsert error", upErr);
       return new Response(JSON.stringify({ ok: false, reason: "upsert_failed" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -118,7 +130,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
-    console.error("ls-sync error", e);
+    console.error("dodo-sync error", e);
     return new Response(JSON.stringify({ ok: false, error: String(e) }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
