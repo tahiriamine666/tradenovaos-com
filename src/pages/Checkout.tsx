@@ -242,19 +242,6 @@ export default function Checkout() {
                   <span>${price.toFixed(2)}/mo</span>
                 </div>
 
-
-              {/* Totals */}
-              <div className="rounded-xl bg-slate-50 p-4 space-y-2 text-sm">
-                <div className="flex justify-between text-slate-600">
-                  <span>{plan.name} · {billing}</span>
-                  <span>${price.toFixed(2)}/mo</span>
-                </div>
-                {coupon?.valid && (
-                  <div className="flex justify-between text-emerald-600 font-medium">
-                    <span>Discount ({coupon.label})</span>
-                    <span>−${(price - recurringMonthly).toFixed(2)}/mo</span>
-                  </div>
-                )}
                 <div className="flex justify-between text-slate-600 pt-2 border-t border-slate-200">
                   <span>{isTrialPlan ? "After trial" : "Recurring"}</span>
                   <span className="font-semibold text-slate-900">${recurringMonthly.toFixed(2)}/mo</span>
