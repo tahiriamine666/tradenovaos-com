@@ -1,14 +1,16 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  Check, ChevronLeft, Loader2, Lock, ShieldCheck, Sparkles, Crown, Tag, Zap,
+  Check, ChevronLeft, Loader2, Lock, ShieldCheck, Sparkles, Crown, Zap,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
-import { createCheckoutUrl, validateCoupon, syncSubscription, type LsPlan, type LsBilling, type CouponResult } from "@/lib/lemonsqueezy";
-import { openLemonOverlay, loadLemonJs } from "@/lib/lemonjs";
+import { createCheckoutUrl, type DodoPlan, type DodoBilling } from "@/lib/dodo";
+
+type LsPlan = DodoPlan;
+type LsBilling = DodoBilling;
 
 type PlanDef = {
   id: LsPlan;
