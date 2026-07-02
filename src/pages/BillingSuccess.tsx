@@ -24,10 +24,10 @@ export default function BillingSuccess() {
       if (attempts === 3 && !syncCalled) {
         syncCalled = true;
         try {
-          await supabase.functions.invoke("ls-sync-subscription", { method: "POST" });
+          await supabase.functions.invoke("dodo-sync-subscription", { method: "POST" });
           await refresh();
         } catch (e) {
-          console.warn("ls-sync-subscription failed", e);
+          console.warn("dodo-sync-subscription failed", e);
         }
       }
     };
