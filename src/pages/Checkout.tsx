@@ -79,17 +79,10 @@ export default function Checkout() {
   const [country, setCountry] = useState("US");
   const [zip, setZip] = useState("");
 
-  const [couponInput, setCouponInput] = useState("");
-  const [coupon, setCoupon] = useState<CouponResult | null>(null);
-  const [couponLoading, setCouponLoading] = useState(false);
-
   const [submitting, setSubmitting] = useState(false);
 
   const plan = PLANS[planId];
   const Icon = plan.icon;
-
-  useEffect(() => { loadLemonJs().catch(() => {}); }, []);
-  useEffect(() => { setCoupon(null); setCouponInput(""); }, [planId, billing]);
 
   useEffect(() => {
     if (!user) {
@@ -100,38 +93,9 @@ export default function Checkout() {
   const price = billing === "yearly" ? plan.yearly : plan.monthly;
   const period = billing === "yearly" ? "/mo, billed yearly" : "/month";
 
-  const recurringMonthly = useMemo(() => {
-    if (!coupon?.valid || !coupon.amount) return price;
-    if (coupon.amount_type === "percent") {
-      return Math.max(0, +(price * (1 - coupon.amount / 100)).toFixed(2));
-    }
-    // fixed = cents off the recurring charge
-    return Math.max(0, +(price - coupon.amount / 100).toFixed(2));
-  }, [price, coupon]);
-
+  const recurringMonthly = price;
   const isTrialPlan = planId === "pro";
   const dueToday = isTrialPlan ? 0 : recurringMonthly;
-
-
-  const handleApplyCoupon = async () => {
-    const code = couponInput.trim();
-    if (!code) return;
-    setCouponLoading(true);
-    try {
-      const result = await validateCoupon({ code, plan: planId, billing });
-      if (!result.valid) {
-        setCoupon(null);
-        toast({ title: "Coupon not valid", description: result.error ?? "Try a different code.", variant: "destructive" });
-      } else {
-        setCoupon(result);
-        toast({ title: "Coupon applied", description: result.label ?? "Discount added." });
-      }
-    } catch (e: any) {
-      toast({ title: "Could not check coupon", description: e?.message ?? "Try again.", variant: "destructive" });
-    } finally {
-      setCouponLoading(false);
-    }
-  };
 
   const handleSubmit = async () => {
     if (!email.trim()) {
@@ -143,28 +107,24 @@ export default function Checkout() {
       const url = await createCheckoutUrl({
         plan: planId,
         billing,
-        coupon: coupon?.valid ? coupon.code : undefined,
         email: email.trim(),
         name: name.trim() || undefined,
         country: country || undefined,
         zip: zip.trim() || undefined,
       });
-      await openLemonOverlay(url, {
-        onSuccess: async () => {
-          try { await syncSubscription(); } catch { /* noop */ }
-          navigate("/billing/success");
-        },
-      });
+      // Redirect to Dodo hosted checkout. Dodo returns the user to
+      // /billing/success after payment (return_url set server-side).
+      window.location.href = url;
     } catch (e: any) {
       toast({
         title: "Could not start checkout",
         description: e?.message ?? "Please try again.",
         variant: "destructive",
       });
-    } finally {
       setSubmitting(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-white text-slate-900 font-body">
