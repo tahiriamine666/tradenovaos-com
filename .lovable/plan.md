@@ -1,60 +1,57 @@
-# Replay Studio — Fullscreen Chart + Honest Replay UX
 
-Scope: layout/fullscreen fix and UX cleanup only. We keep the current TradingView public widget (per your choice) and stop pretending the external controls step candles on the chart — because the widget is an iframe with no JS API for that. TradingView's own built-in **Bar Replay** button (already inside its toolbar) remains the way to replay candles.
+## Goal
+Fully replace the existing Lemon Squeezy integration with Dodo Payments as the sole subscription provider. Keep plan structure and prices:
+- Pro Monthly $14 / Pro Yearly $132
+- Elite Monthly $28 / Elite Yearly $264
 
-## What changes
+## Secrets to add
+- `DODO_API_KEY` — server-side Dodo API key
+- `DODO_WEBHOOK_SECRET` — signing secret for webhook verification
+- `DODO_ENV` — `test` or `live` (defaults to `live`)
+- 4 product IDs stored as env config (in code constants, populated from your answer): `DODO_PRODUCT_PRO_MONTHLY`, `DODO_PRODUCT_PRO_YEARLY`, `DODO_PRODUCT_ELITE_MONTHLY`, `DODO_PRODUCT_ELITE_YEARLY`
 
-### 1. Fullscreen chart layout
-- Replay Studio's active-session view switches to a true fullscreen workspace: the chart fills the viewport (minus the top bar), the right-hand tabs panel becomes a collapsible drawer instead of stealing 380px of chart width.
-- Remove the hardcoded `h-[520px]` wrapper around `<TradingViewChart>` (ReplayStudio.tsx line 525).
-- Chart container becomes `w-full h-full` inside a flex column that fills `100vh - header`. No fixed heights, no `max-h`, no `overflow` traps.
-- `TradingViewChart` inner container already sets `height:100%;width:100%` and the widget uses `autosize: true`, so it will reflow. We add a `ResizeObserver` on the wrapper to re-init on drawer open/close.
-- The custom Fullscreen button (Maximize2) already calls `requestFullscreen()`; we keep it and ensure the parent it targets is the full workspace, not just the chart card.
+Requested via `add_secret` after plan approval. You'll paste the 4 product IDs in chat and I'll set them via `set_secret`.
 
-### 2. Reframe the replay controls (no false promises)
-The Play/Pause/Step/Speed buttons already work as React state — they step through your logged executions (entries, partials, exits). They cannot advance chart candles because the widget is a black-box iframe. We make the UI match reality:
-- Rename the control bar's context from "replay" to **"Execution playback"** so users understand it walks their trade log, not the chart.
-- Add a small helper line: *"Use TradingView's Bar Replay button in the chart toolbar to rewind candles."*
-- Progress bar and step counter now update whenever there are ≥1 executions (currently the tick requires ≥2 — fine, but we show `0 / 0` clearly instead of a dead 0%).
-- Keep 1x / 2x / 5x / 10x / 20x — they already work; verify the tick interval math (`1500 / speed` ms) and clean up the `setInterval` on unmount / dep change.
-- Add debug `console.log` for: playback start, pause, speed change, step advance, playback complete (removable behind a flag).
-- Highlight the current execution row in the executions table and pulse the matching marker chip in the strip when the tick advances.
+## Database
+Reuse the existing `billing_subscriptions` table (already has `customer_id`, `subscription_id`, `plan`, `status`, `trial_ends_at`, `renews_at`). Add a `provider text default 'dodo'` column via migration and backfill existing rows to `'lemonsqueezy'` for historical clarity. No breaking schema change.
 
-### 3. Execution markers empty state
-The message *"No execution markers yet…"* is not a bug — it renders only when the session has 0 rows in `replay_executions`. We make it more useful:
-- Show a small illustrated empty state with an "Add first execution" button that opens the add-row form directly (currently that form sits below and is easy to miss).
-- When ≥1 execution exists, the strip renders normally (entry / SL / TP / partial / exit chips, already color-coded). No on-chart overlay — impossible with the iframe.
+`get_user_plan_info()` RPC already reads `billing_subscriptions` — no change needed.
 
-### 4. Right panel becomes a slide-over
-- Details / Notes / AI Review / Playbook tabs move into a right-side drawer that opens over the chart instead of splitting the grid. Chart reclaims that 380px.
-- A persistent "Session panel" button (top-right of chart) toggles it. Closed by default when the viewport is narrower than `lg`.
+## Edge functions (new)
+1. **`dodo-checkout`** (JWT-verified) — accepts `{ plan, billing }`, resolves the Dodo product ID, calls Dodo `POST /checkouts` (or subscription equivalent) with `metadata: { user_id, plan, billing }` and `return_url = <origin>/billing/success`, returns `{ url }`.
+2. **`dodo-webhook`** (`verify_jwt = false`) — verifies Dodo signature header with `DODO_WEBHOOK_SECRET`, handles:
+   - `subscription.created` / `subscription.active` / `subscription.renewed` → upsert `billing_subscriptions` row (user_id from metadata, plan, status=`active`, customer_id, subscription_id, renews_at) and mirror `plan_type`/`subscription_status` on `profiles`.
+   - `subscription.cancelled` → set status=`canceled`, downgrade profile to free at period end.
+   - `payment.succeeded` → refresh renews_at.
+   - `payment.failed` → status=`past_due`.
+3. **`dodo-portal`** (JWT-verified) — returns Dodo customer portal URL for the current user's `customer_id`.
+4. **`dodo-sync-subscription`** (JWT-verified) — fallback used by `/billing/success` polling: fetches subscription by customer/subscription id from Dodo and upserts locally, in case the webhook is delayed.
 
-### 5. Cleanup
-- Remove the dead `ReplayControls.tsx` (superseded by `ReplayControlBar.tsx`) if unused.
-- Fix the `React.useEffect` dep list on the playback tick to include the setter references it uses, silencing the eslint-disable already implied.
+## Frontend
+- `src/lib/dodo.ts` — replaces `src/lib/lemonsqueezy.ts` with the same shape: `createCheckoutUrl`, `openCustomerPortal`, `syncSubscription`. Coupon validation removed (Dodo handles discounts inside its hosted checkout unless you want a custom endpoint later).
+- Update `Pricing.tsx`, `Checkout.tsx`, `Billing.tsx`, `BillingSuccess.tsx`, `PayoneerUpgradeModal.tsx`, and any component importing `@/lib/lemonsqueezy` to import from `@/lib/dodo` and drop LS-specific fields (coupon UI stays only if we add coupon endpoint later — removed for v1 per your scope).
+- Pricing page upgrade buttons: call `createCheckoutUrl({ plan, billing })` → `window.location.href = url`.
 
-## What we deliberately do NOT do
-- No swap to `lightweight-charts`. That was the only path to real programmatic bar replay and on-chart markers, and you chose to keep the widget.
-- No new data source, no Binance/Yahoo adapter (that was tied to the rewrite path).
-- No changes to session data model, RLS, or edge functions.
+## Cleanup (delete)
+- `supabase/functions/ls-checkout/`
+- `supabase/functions/ls-webhook/`
+- `supabase/functions/ls-portal/`
+- `supabase/functions/ls-sync-subscription/`
+- `supabase/functions/ls-validate-coupon/`
+- `supabase/functions/_shared/lemonsqueezy.ts`
+- `src/lib/lemonsqueezy.ts`, `src/lib/lemonjs.ts`
+- LS block from `supabase/config.toml`; add `[functions.dodo-webhook] verify_jwt = false`
+- Delete LS secrets after Dodo is verified working: `LEMON_SQUEEZY_API_KEY`, `LEMON_SQUEEZY_STORE_ID`, `LEMON_SQUEEZY_WEBHOOK_SECRET`
 
-## Files touched
-
-```text
-src/pages/ReplayStudio.tsx              layout: fullscreen workspace, drawer for tabs, remove h-[520px]
-src/components/replay/TradingViewChart.tsx  h-full sizing, ResizeObserver, fullscreen target
-src/components/replay/ReplayControlBar.tsx  rename, helper text, debug logs, cleanup deps
-src/components/replay/MarkerStrip.tsx        richer empty state with CTA
-src/components/replay/ExecutionsTable.tsx    highlight current row on tick
-src/components/replay/ReplayControls.tsx     delete if unused
-```
+## Webhook URL to register in Dodo dashboard
+`https://jbdivofznclkfctcqfln.supabase.co/functions/v1/dodo-webhook`
 
 ## Verification
-- Chart fills viewport on 1280×800, 1440×900, 1920×1080 — no gray band below.
-- Fullscreen button enters browser fullscreen filling the screen.
-- With a session that has ≥2 executions: Play advances step, Pause halts, Step ±1 moves one row, speed pills change tick rate, progress % updates, current row highlights.
-- With a session that has 0 executions: empty state shows CTA, no dead 0% bar.
-- Right-panel drawer opens/closes without resizing the chart iframe (it stays full width).
+1. Deploy functions, register webhook, add product IDs.
+2. Test checkout for each of the 4 plans in Dodo test mode.
+3. Verify `billing_subscriptions` row created, `profiles.plan_type` mirrored, `usePlan` returns `isPro`/`isElite` = true.
+4. Simulate `subscription.cancelled` and `payment.failed` webhooks via Dodo dashboard.
+5. Confirm `/billing/success` polling + `dodo-sync-subscription` fallback resolves within 10s.
 
-## Note on expectations
-"Candles advance in replay" and "trade markers display on the chart" from your spec require the lightweight-charts rewrite. With the widget kept, candle stepping stays inside TradingView's own Bar Replay UI, and our markers stay as chips below the chart. If you want on-chart markers and programmatic candle stepping later, that's the follow-up rewrite.
+## Open item
+After you approve, please paste the 4 Dodo product IDs (Pro Monthly, Pro Yearly, Elite Monthly, Elite Yearly) so I can wire them in.
