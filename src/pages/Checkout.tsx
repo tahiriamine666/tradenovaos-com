@@ -235,42 +235,13 @@ export default function Checkout() {
                 ))}
               </ul>
 
-              {/* Coupon */}
-              <div className="mb-6">
-                <label className="text-xs font-semibold text-slate-500 mb-2 flex items-center gap-1.5">
-                  <Tag className="h-3.5 w-3.5" /> Coupon code
-                </label>
-                <div className="flex gap-2">
-                  <Input
-                    value={couponInput}
-                    onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
-                    placeholder="ENTER CODE"
-                    className="h-10 rounded-xl bg-white border-slate-200 text-sm uppercase tracking-wider"
-                    disabled={!!coupon?.valid}
-                  />
-                  {coupon?.valid ? (
-                    <button
-                      onClick={() => { setCoupon(null); setCouponInput(""); }}
-                      className="px-4 rounded-xl bg-slate-100 hover:bg-slate-200 text-sm font-semibold text-slate-700 transition-colors"
-                    >
-                      Remove
-                    </button>
-                  ) : (
-                    <button
-                      onClick={handleApplyCoupon}
-                      disabled={couponLoading || !couponInput.trim()}
-                      className="px-4 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold disabled:opacity-50 transition-colors flex items-center gap-1.5"
-                    >
-                      {couponLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Apply"}
-                    </button>
-                  )}
+              {/* Totals */}
+              <div className="rounded-xl bg-slate-50 p-4 space-y-2 text-sm">
+                <div className="flex justify-between text-slate-600">
+                  <span>{plan.name} · {billing}</span>
+                  <span>${price.toFixed(2)}/mo</span>
                 </div>
-                {coupon?.valid && (
-                  <p className="mt-2 text-xs text-emerald-600 font-semibold">
-                    ✓ {coupon.label} applied
-                  </p>
-                )}
-              </div>
+
 
               {/* Totals */}
               <div className="rounded-xl bg-slate-50 p-4 space-y-2 text-sm">
