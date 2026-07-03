@@ -1713,42 +1713,51 @@ export type Database = {
       trading_accounts: {
         Row: {
           account_name: string
+          account_number: string | null
+          broker: string | null
           created_at: string
+          credentials: Json
           id: string
           is_default: boolean
           last_connected_at: string | null
-          login: string
-          password: string
+          login: string | null
+          password: string | null
           platform: string
-          server: string
+          server: string | null
           status: string
           updated_at: string
           user_id: string
         }
         Insert: {
           account_name: string
+          account_number?: string | null
+          broker?: string | null
           created_at?: string
+          credentials?: Json
           id?: string
           is_default?: boolean
           last_connected_at?: string | null
-          login: string
-          password: string
+          login?: string | null
+          password?: string | null
           platform?: string
-          server: string
+          server?: string | null
           status?: string
           updated_at?: string
           user_id: string
         }
         Update: {
           account_name?: string
+          account_number?: string | null
+          broker?: string | null
           created_at?: string
+          credentials?: Json
           id?: string
           is_default?: boolean
           last_connected_at?: string | null
-          login?: string
-          password?: string
+          login?: string | null
+          password?: string | null
           platform?: string
-          server?: string
+          server?: string | null
           status?: string
           updated_at?: string
           user_id?: string
