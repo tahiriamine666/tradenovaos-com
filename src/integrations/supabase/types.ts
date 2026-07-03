@@ -1710,6 +1710,51 @@ export type Database = {
           },
         ]
       }
+      trading_accounts: {
+        Row: {
+          account_name: string
+          created_at: string
+          id: string
+          is_default: boolean
+          last_connected_at: string | null
+          login: string
+          password: string
+          platform: string
+          server: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_name: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          last_connected_at?: string | null
+          login: string
+          password: string
+          platform?: string
+          server: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_name?: string
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          last_connected_at?: string | null
+          login?: string
+          password?: string
+          platform?: string
+          server?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       upgrade_requests: {
         Row: {
           created_at: string
