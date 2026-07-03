@@ -19,13 +19,13 @@ import {
   SideFilter, OutcomeFilter, AccountFilter, DateRange,
 } from '@/contexts/GlobalFiltersContext';
 
-const ACCOUNT_OPTIONS: { value: AccountFilter; label: string; icon: string }[] = [
-  { value: 'all',       label: 'All Accounts',    icon: '🌐' },
-  { value: 'main',      label: 'Main Account',    icon: '💼' },
-  { value: 'funded',    label: 'Funded Challenge', icon: '🏆' },
-  { value: 'prop_firm', label: 'Prop Firm',        icon: '🏦' },
-  { value: 'demo',      label: 'Demo Account',     icon: '🧪' },
-  { value: 'live',      label: 'Live Account',     icon: '🔴' },
+import { useActiveAccount, type PlatformFilter } from '@/contexts/ActiveAccountContext';
+import { PLATFORMS, getPlatform } from '@/lib/platforms';
+import type { PlatformId } from '@/lib/platforms/types';
+
+const PLATFORM_TABS: { value: PlatformFilter; label: string; icon: string }[] = [
+  { value: 'all', label: 'All Accounts', icon: '🌐' },
+  ...PLATFORMS.map(p => ({ value: p.id as PlatformFilter, label: `${p.label} Accounts`, icon: p.icon })),
 ];
 
 function Dropdown({ trigger, children, align = 'left', width = 'w-56' }: {
