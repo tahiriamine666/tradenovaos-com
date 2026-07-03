@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { PlanProvider } from "@/hooks/usePlan";
 import { ProfileProvider } from "@/hooks/useProfile";
 import { LearningNavProvider } from "@/contexts/LearningNavContext";
+import { ActiveAccountProvider } from "@/contexts/ActiveAccountContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
 import Index from "./pages/Index.tsx";
@@ -62,6 +63,7 @@ const App = () => (
         <AuthProvider>
           <ProfileProvider>
             <PlanProvider>
+              <ActiveAccountProvider>
               <LearningNavProvider>
                 <Routes>
                   <Route path="/" element={<PublicOnly><LandingPage /></PublicOnly>} />
@@ -106,6 +108,7 @@ const App = () => (
                 </Routes>
                 <AIChatWidget />
               </LearningNavProvider>
+              </ActiveAccountProvider>
             </PlanProvider>
           </ProfileProvider>
         </AuthProvider>
