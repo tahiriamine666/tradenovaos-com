@@ -1,57 +1,102 @@
+# Multi-Platform Trading Accounts
 
-## Goal
-Fully replace the existing Lemon Squeezy integration with Dodo Payments as the sole subscription provider. Keep plan structure and prices:
-- Pro Monthly $14 / Pro Yearly $132
-- Elite Monthly $28 / Elite Yearly $264
+Turn the current MT5-only Trading Accounts feature into a pluggable multi-platform system (MT5, cTrader, DXtrade, TradeLocker, Alpha Trader) with a global active-account switcher wired into the Command Center and all data views.
 
-## Secrets to add
-- `DODO_API_KEY` — server-side Dodo API key
-- `DODO_WEBHOOK_SECRET` — signing secret for webhook verification
-- `DODO_ENV` — `test` or `live` (defaults to `live`)
-- 4 product IDs stored as env config (in code constants, populated from your answer): `DODO_PRODUCT_PRO_MONTHLY`, `DODO_PRODUCT_PRO_YEARLY`, `DODO_PRODUCT_ELITE_MONTHLY`, `DODO_PRODUCT_ELITE_YEARLY`
+## 1. Database migration
 
-Requested via `add_secret` after plan approval. You'll paste the 4 product IDs in chat and I'll set them via `set_secret`.
+Extend `trading_accounts` to match the required schema without breaking existing rows.
 
-## Database
-Reuse the existing `billing_subscriptions` table (already has `customer_id`, `subscription_id`, `plan`, `status`, `trial_ends_at`, `renews_at`). Add a `provider text default 'dodo'` column via migration and backfill existing rows to `'lemonsqueezy'` for historical clarity. No breaking schema change.
+New / changed columns:
+- `platform` — already exists as text, will be constrained to `mt5 | ctrader | dxtrade | tradelocker | alpha_trader`. Backfill existing 'MT5' rows to 'mt5'.
+- `account_number` (text) — canonical login/account ID across platforms.
+- `broker` (text, nullable) — required for cTrader / DXtrade / Alpha Trader.
+- `credentials` (jsonb) — platform-specific secrets (password, access_token, etc.).
+- `status` — already exists. Values normalized to `connected | syncing | disconnected | error`.
+- Keep existing `login`, `password`, `server`, `account_name`, `is_default`, timestamps.
+- Backfill: copy `login → account_number`, `{password} → credentials` for existing rows.
 
-`get_user_plan_info()` RPC already reads `billing_subscriptions` — no change needed.
+RLS + GRANTs stay as-is (already scoped to `auth.uid()`). Trigger `enforce_trading_account_limit` remains (Free 1 / Pro 3 / Elite unlimited).
 
-## Edge functions (new)
-1. **`dodo-checkout`** (JWT-verified) — accepts `{ plan, billing }`, resolves the Dodo product ID, calls Dodo `POST /checkouts` (or subscription equivalent) with `metadata: { user_id, plan, billing }` and `return_url = <origin>/billing/success`, returns `{ url }`.
-2. **`dodo-webhook`** (`verify_jwt = false`) — verifies Dodo signature header with `DODO_WEBHOOK_SECRET`, handles:
-   - `subscription.created` / `subscription.active` / `subscription.renewed` → upsert `billing_subscriptions` row (user_id from metadata, plan, status=`active`, customer_id, subscription_id, renews_at) and mirror `plan_type`/`subscription_status` on `profiles`.
-   - `subscription.cancelled` → set status=`canceled`, downgrade profile to free at period end.
-   - `payment.succeeded` → refresh renews_at.
-   - `payment.failed` → status=`past_due`.
-3. **`dodo-portal`** (JWT-verified) — returns Dodo customer portal URL for the current user's `customer_id`.
-4. **`dodo-sync-subscription`** (JWT-verified) — fallback used by `/billing/success` polling: fetches subscription by customer/subscription id from Dodo and upserts locally, in case the webhook is delayed.
+## 2. Platform adapter architecture
 
-## Frontend
-- `src/lib/dodo.ts` — replaces `src/lib/lemonsqueezy.ts` with the same shape: `createCheckoutUrl`, `openCustomerPortal`, `syncSubscription`. Coupon validation removed (Dodo handles discounts inside its hosted checkout unless you want a custom endpoint later).
-- Update `Pricing.tsx`, `Checkout.tsx`, `Billing.tsx`, `BillingSuccess.tsx`, `PayoneerUpgradeModal.tsx`, and any component importing `@/lib/lemonsqueezy` to import from `@/lib/dodo` and drop LS-specific fields (coupon UI stays only if we add coupon endpoint later — removed for v1 per your scope).
-- Pricing page upgrade buttons: call `createCheckoutUrl({ plan, billing })` → `window.location.href = url`.
+New folder `src/lib/platforms/`:
 
-## Cleanup (delete)
-- `supabase/functions/ls-checkout/`
-- `supabase/functions/ls-webhook/`
-- `supabase/functions/ls-portal/`
-- `supabase/functions/ls-sync-subscription/`
-- `supabase/functions/ls-validate-coupon/`
-- `supabase/functions/_shared/lemonsqueezy.ts`
-- `src/lib/lemonsqueezy.ts`, `src/lib/lemonjs.ts`
-- LS block from `supabase/config.toml`; add `[functions.dodo-webhook] verify_jwt = false`
-- Delete LS secrets after Dodo is verified working: `LEMON_SQUEEZY_API_KEY`, `LEMON_SQUEEZY_STORE_ID`, `LEMON_SQUEEZY_WEBHOOK_SECRET`
+- `types.ts` — `PlatformId`, `PlatformField` (`{ key, label, type: 'text'|'password', placeholder, required }`), `PlatformAdapter` (`{ id, label, icon, credentialFields, accountNumberField, serverField, brokerField, buildRecord(form), summarize(account) }`).
+- `mt5.ts`, `ctrader.ts`, `dxtrade.ts`, `tradelocker.ts`, `alpha.ts` — one adapter each, declaring which fields go into `credentials` vs top-level columns.
+- `index.ts` — `PLATFORMS: PlatformAdapter[]` registry + `getPlatform(id)` helper.
 
-## Webhook URL to register in Dodo dashboard
-`https://jbdivofznclkfctcqfln.supabase.co/functions/v1/dodo-webhook`
+Adding a new platform later = one new file + one registry entry. No UI code touched.
 
-## Verification
-1. Deploy functions, register webhook, add product IDs.
-2. Test checkout for each of the 4 plans in Dodo test mode.
-3. Verify `billing_subscriptions` row created, `profiles.plan_type` mirrored, `usePlan` returns `isPro`/`isElite` = true.
-4. Simulate `subscription.cancelled` and `payment.failed` webhooks via Dodo dashboard.
-5. Confirm `/billing/success` polling + `dodo-sync-subscription` fallback resolves within 10s.
+Field mapping per spec:
 
-## Open item
-After you approve, please paste the 4 Dodo product IDs (Pro Monthly, Pro Yearly, Elite Monthly, Elite Yearly) so I can wire them in.
+| Platform     | account_number | server / broker  | credentials keys |
+|--------------|----------------|------------------|------------------|
+| MT5          | Login          | server           | password         |
+| cTrader      | Account ID     | broker           | access_token     |
+| DXtrade      | Username       | broker           | password         |
+| TradeLocker  | Account ID     | server           | access_token     |
+| Alpha Trader | Username       | broker           | password         |
+
+## 3. Add-Account flow (Settings)
+
+Rewrite `src/components/settings/TradingAccountsSection.tsx`:
+
+1. Click **Add Account** → step 1 shows a grid of platform cards (icon + name).
+2. Select platform → step 2 renders a dynamic form driven by the adapter's field list, plus universal fields (Account Name, Set as default).
+3. Save writes to `trading_accounts` using the adapter's `buildRecord`.
+4. Cards list all platforms with correct field summaries, status pill, default toggle, edit, delete.
+
+## 4. Active-account context
+
+New `src/contexts/ActiveAccountContext.tsx`:
+
+- Loads all `trading_accounts` for the user.
+- Tracks `activeAccountId` (persisted to `localStorage`, defaults to the row where `is_default = true`, else the first).
+- Exposes `{ accounts, activeAccount, setActiveAccountId, platformFilter, setPlatformFilter, refresh }`.
+- Bumps a `version` counter on switch so consumers can re-fetch.
+
+Provider mounted in `src/App.tsx` inside the authenticated `/app` shell.
+
+## 5. Global account switcher (TopBar)
+
+In `src/components/TopBar.tsx`, replace the current `AccountDropdown` (which filters by account *type*) with a two-level switcher:
+
+- **Platform group:** All Accounts · MT5 · cTrader · DXtrade · TradeLocker · Alpha Trader (sets `platformFilter`).
+- **Accounts list** for the selected group, each row = account name + platform badge + status dot. Selecting one sets `activeAccountId`.
+
+Old `AccountFilter` type in `GlobalFiltersContext` becomes a no-op alias (kept for existing consumers) — real filtering moves to `ActiveAccountContext`.
+
+## 6. Command Center + data views integration
+
+All data-loading hooks/pages read `activeAccount` and include `.eq('trading_account_id', activeAccount.id)` when set (or ignore filter when `activeAccountId === 'all'`). Files touched (query filter + `useEffect` dep on `activeAccount?.id`):
+
+- `src/pages/Index.tsx` (Command Center dashboard, stats)
+- `src/pages/TradeVault.tsx` (trade history / open positions)
+- `src/pages/MindJournal.tsx` (journal)
+- `src/pages/AIInsights.tsx` (analytics)
+- `src/components/AnalyticsMetrics.tsx` (performance metrics)
+- `src/contexts/GlobalFiltersContext.tsx` (setups/pairs option lists)
+
+Switching accounts instantly re-runs these queries via the `version` bump.
+
+Note: `trades.trading_account_id` column already exists (used by `enforce_trading_account_limit` context). We'll ensure `AddTradeModal` stamps the current active account on insert.
+
+## 7. Status handling
+
+Status is stored on each row (`connected | syncing | disconnected | error`). No live broker connection is implemented in this pass — status defaults to `disconnected` on create and is settable manually via an adapter-level "Test connection" placeholder that flips to `syncing` then `disconnected` (real integrations come later, one per adapter).
+
+## 8. Plan limits
+
+Unchanged: Free 1, Pro 3, Elite unlimited, enforced by existing DB trigger + client-side guard in the Add flow.
+
+## Technical notes
+
+- Migration is additive; no data loss. Existing single MT5 row for a user becomes their default `mt5` account automatically.
+- `credentials` jsonb is only ever selected by the owner (RLS). Never rendered in list view — only shown masked in the edit dialog.
+- Adapters are pure config; no runtime imports of platform SDKs yet, so bundle size is unaffected.
+- Types regen after migration; then `TradingAccount` interface is re-derived from `Database['public']['Tables']['trading_accounts']['Row']`.
+
+## Out of scope (call out explicitly)
+
+- Real broker API sync / live P&L pull (needs per-broker credentials + edge functions).
+- Encryption-at-rest beyond Postgres defaults (credentials stored as jsonb; can be upgraded to Vault later).
