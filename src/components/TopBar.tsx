@@ -19,13 +19,13 @@ import {
   SideFilter, OutcomeFilter, AccountFilter, DateRange,
 } from '@/contexts/GlobalFiltersContext';
 
-const ACCOUNT_OPTIONS: { value: AccountFilter; label: string; icon: string }[] = [
-  { value: 'all',       label: 'All Accounts',    icon: '🌐' },
-  { value: 'main',      label: 'Main Account',    icon: '💼' },
-  { value: 'funded',    label: 'Funded Challenge', icon: '🏆' },
-  { value: 'prop_firm', label: 'Prop Firm',        icon: '🏦' },
-  { value: 'demo',      label: 'Demo Account',     icon: '🧪' },
-  { value: 'live',      label: 'Live Account',     icon: '🔴' },
+import { useActiveAccount, type PlatformFilter } from '@/contexts/ActiveAccountContext';
+import { PLATFORMS, getPlatform } from '@/lib/platforms';
+import type { PlatformId } from '@/lib/platforms/types';
+
+const PLATFORM_TABS: { value: PlatformFilter; label: string; icon: string }[] = [
+  { value: 'all', label: 'All Accounts', icon: '🌐' },
+  ...PLATFORMS.map(p => ({ value: p.id as PlatformFilter, label: `${p.label} Accounts`, icon: p.icon })),
 ];
 
 function Dropdown({ trigger, children, align = 'left', width = 'w-56' }: {
@@ -199,19 +199,78 @@ function FiltersDropdown() {
 }
 
 function AccountDropdown() {
-  const { filters, setAccountType } = useGlobalFilters();
-  const cur = ACCOUNT_OPTIONS.find(a => a.value === filters.accountType) ?? ACCOUNT_OPTIONS[0];
+  const { accounts, activeAccount, activeAccountId, setActiveAccountId, platformFilter, setPlatformFilter } = useActiveAccount();
+
+  const filtered = platformFilter === 'all' ? accounts : accounts.filter(a => a.platform === platformFilter);
+  const label = activeAccountId === null || activeAccountId === 'all'
+    ? 'All Accounts'
+    : activeAccount?.account_name ?? 'Select account';
+  const icon = activeAccount ? getPlatform(activeAccount.platform)?.icon ?? '🌐' : '🌐';
+  const isActive = activeAccountId !== null || platformFilter !== 'all';
+
+  const statusDot: Record<string, string> = {
+    connected: 'bg-emerald-500', syncing: 'bg-primary', error: 'bg-red-500', disconnected: 'bg-muted-foreground/40',
+  };
+
   return (
-    <Dropdown width="w-52" align="right" trigger={
+    <Dropdown width="w-72" align="right" trigger={
       <button className={`flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-medium transition-all whitespace-nowrap select-none
-        ${filters.accountType !== 'all' ? 'border-primary/60 bg-primary/10 text-primary' : 'border-border bg-card/50 text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}>
-        <span className="text-sm leading-none">{cur.icon}</span>
-        <span className="hidden md:inline">{cur.label}</span>
+        ${isActive ? 'border-primary/60 bg-primary/10 text-primary' : 'border-border bg-card/50 text-muted-foreground hover:text-foreground hover:bg-muted/50'}`}>
+        <span className="text-sm leading-none">{icon}</span>
+        <span className="hidden md:inline max-w-[140px] truncate">{label}</span>
         <ChevronDown className="h-3 w-3 opacity-60" />
       </button>
     }>
-      <div className="py-1.5"><Sec label="Account Type" />
-        {ACCOUNT_OPTIONS.map(a => <Opt key={a.value} label={a.label} icon={a.icon} selected={filters.accountType===a.value} onClick={() => setAccountType(a.value)} />)}
+      <div className="py-1.5">
+        <Sec label="Platform" />
+        <div className="px-2 pb-2 flex flex-wrap gap-1">
+          {PLATFORM_TABS.map(t => (
+            <button
+              key={t.value}
+              onClick={() => setPlatformFilter(t.value)}
+              className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium transition-all
+                ${platformFilter === t.value ? 'bg-primary/15 text-primary ring-1 ring-primary/30' : 'bg-muted/50 text-muted-foreground hover:text-foreground'}`}
+            >
+              <span>{t.icon}</span>
+              <span>{t.value === 'all' ? 'All' : getPlatform(t.value as PlatformId)?.label}</span>
+            </button>
+          ))}
+        </div>
+        <div className="border-t border-border pt-1">
+          <Sec label="Accounts" />
+          <button
+            onClick={() => setActiveAccountId(null)}
+            className={`flex items-center justify-between w-full px-3 py-2 mx-1 rounded-lg text-sm text-left transition-colors ${activeAccountId === null || activeAccountId === 'all' ? 'text-primary bg-primary/10' : 'text-foreground hover:bg-muted'}`}
+            style={{ width: 'calc(100% - 8px)' }}>
+            <span className="flex items-center gap-2"><span>🌐</span> All Accounts</span>
+            {(activeAccountId === null || activeAccountId === 'all') && <Check className="h-4 w-4 text-primary" />}
+          </button>
+          <div className="max-h-64 overflow-y-auto">
+            {filtered.length === 0 ? (
+              <p className="text-xs text-muted-foreground px-3 py-3 text-center">No accounts on this platform yet.</p>
+            ) : filtered.map(a => {
+              const adapter = getPlatform(a.platform);
+              const selected = a.id === activeAccountId;
+              return (
+                <button
+                  key={a.id}
+                  onClick={() => setActiveAccountId(a.id)}
+                  className={`flex items-center justify-between w-full px-3 py-2 mx-1 rounded-lg text-sm text-left transition-colors ${selected ? 'text-primary bg-primary/10' : 'text-foreground hover:bg-muted'}`}
+                  style={{ width: 'calc(100% - 8px)' }}
+                >
+                  <span className="flex items-center gap-2 min-w-0">
+                    <span className="text-base leading-none flex-shrink-0">{adapter?.icon ?? '📊'}</span>
+                    <span className="min-w-0">
+                      <span className="block truncate">{a.account_name}{a.is_default && <span className="ml-1 text-[10px] text-primary">★</span>}</span>
+                      <span className="block text-[10px] text-muted-foreground truncate">{adapter?.label ?? a.platform}</span>
+                    </span>
+                  </span>
+                  <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ml-2 ${statusDot[a.status] ?? statusDot.disconnected}`} />
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
     </Dropdown>
   );
@@ -275,7 +334,7 @@ export function ActiveFilterPills() {
     filters.outcome !== 'all' && { label: `Outcome: ${filters.outcome}`, onRemove: () => setOutcome('all') },
     filters.setup !== 'all' && { label: `Setup: ${filters.setup}`, onRemove: () => setSetup('all') },
     filters.pair !== 'all' && { label: `Pair: ${filters.pair}`, onRemove: () => setPair('all') },
-    filters.accountType !== 'all' && { label: `${ACCOUNT_OPTIONS.find(a => a.value === filters.accountType)?.icon} ${ACCOUNT_OPTIONS.find(a => a.value === filters.accountType)?.label}`, onRemove: () => setAccountType('all') },
+    filters.accountType !== 'all' && { label: `Account: ${filters.accountType}`, onRemove: () => setAccountType('all') },
   ].filter(Boolean) as { label: string; onRemove: () => void }[];
   return (
     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
