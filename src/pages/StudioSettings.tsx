@@ -305,6 +305,9 @@ export default function StudioSettings() {
         </Field>
       </Section>
 
+      {/* Trading Accounts */}
+      <TradingAccountsSection />
+
       {/* Trading preferences */}
       <Section icon={TrendingUp} title="Trading Preferences" description="Setup your default trading parameters">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
