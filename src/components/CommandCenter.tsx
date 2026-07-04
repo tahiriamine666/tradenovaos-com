@@ -6,7 +6,6 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useActiveAccount } from "@/contexts/ActiveAccountContext";
-import { PLATFORMS } from "@/lib/platforms";
 import { ChevronLeft, ChevronRight, Plus, Upload, AlertCircle, Wallet } from "lucide-react";
 import {
   AreaChart, Area, CartesianGrid, ResponsiveContainer,
