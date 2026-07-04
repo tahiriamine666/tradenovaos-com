@@ -5,7 +5,9 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { ChevronLeft, ChevronRight, Plus, Upload, AlertCircle } from "lucide-react";
+import { useActiveAccount } from "@/contexts/ActiveAccountContext";
+import { PLATFORMS } from "@/lib/platforms";
+import { ChevronLeft, ChevronRight, Plus, Upload, AlertCircle, Wallet } from "lucide-react";
 import {
   AreaChart, Area, CartesianGrid, ResponsiveContainer,
   XAxis, YAxis, Tooltip,
@@ -14,6 +16,7 @@ import {
 import { PageHeader } from "@/components/ui/page-header";
 import { MetricCard } from "@/components/ui/metric-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
