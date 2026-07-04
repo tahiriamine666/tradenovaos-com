@@ -193,6 +193,7 @@ export default function TradingAccountsSection() {
     } else {
       await load();
       await refreshActive();
+      setActiveAccountId(a.id);
     }
   };
 
