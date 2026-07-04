@@ -569,7 +569,7 @@ export default function CommandCenter({ onNavigate, onAddTrade }: Props) {
   const isEmpty = !loading && trades.length === 0;
 
   const platformLabel = activeAccount
-    ? PLATFORMS.find(p => p.id === activeAccount.platform)?.label ?? activeAccount.platform.toUpperCase()
+    ? activeAccount.platform.toUpperCase().replace('_', ' ')
     : null;
   const badgeParts = activeAccount
     ? [
