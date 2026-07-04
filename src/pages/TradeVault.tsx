@@ -379,8 +379,9 @@ function AddTradeModal({ open, onClose, onSaved, editTrade, playbooks }: {
         screenshot_url: form.screenshot_url || null,
         account_type: form.account_type, emotion: form.emotion,
         discipline_score: form.discipline_score, execution_score: form.execution_score,
+        trading_account_id: activeAccountId || null,
         updated_at: new Date().toISOString(),
-      };
+      } as any;
       if (editTrade) {
         const { error } = await supabase.from('trades').update(payload).eq('id', editTrade.id);
         if (error) throw error;
