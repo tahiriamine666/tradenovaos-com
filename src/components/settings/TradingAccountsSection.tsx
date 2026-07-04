@@ -155,9 +155,9 @@ export default function TradingAccountsSection() {
       ...rec,
     };
 
-    const { error } = editing
-      ? await supabase.from('trading_accounts').update(payload).eq('id', editing.id)
-      : await supabase.from('trading_accounts').insert(payload);
+    const { data: saved, error } = editing
+      ? await supabase.from('trading_accounts').update(payload).eq('id', editing.id).select().single()
+      : await supabase.from('trading_accounts').insert(payload).select().single();
 
     if (error) {
       toast({ title: 'Could not save', description: error.message, variant: 'destructive' });
@@ -167,6 +167,7 @@ export default function TradingAccountsSection() {
       resetDialog();
       await load();
       await refreshActive();
+      if (saved?.id) setActiveAccountId(saved.id);
     }
     setSaving(false);
   };
