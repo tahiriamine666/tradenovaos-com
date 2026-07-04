@@ -6,6 +6,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useActiveAccount } from '@/contexts/ActiveAccountContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -66,6 +67,7 @@ function MetricCard({
 
 export default function AnalyticsMetrics() {
   const { user } = useAuth();
+  const { activeAccountId, version } = useActiveAccount();
   const [data, setData] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -75,10 +77,12 @@ export default function AnalyticsMetrics() {
     const load = async () => {
       setLoading(true);
       {
-        const { data: trades } = await supabase
+        let q: any = supabase
           .from('trades')
-          .select('result, rr')
+          .select('result, rr, trading_account_id')
           .eq('user_id', user.id);
+        if (activeAccountId) q = q.eq('trading_account_id', activeAccountId);
+        const { data: trades } = await q;
 
         if (trades && trades.length > 0) {
           const wins = trades.filter(t => t.result > 0);
@@ -116,7 +120,7 @@ export default function AnalyticsMetrics() {
       setLoading(false);
     };
     load();
-  }, [user]);
+  }, [user, activeAccountId, version]);
 
   if (loading) {
     return (

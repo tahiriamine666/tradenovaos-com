@@ -5,7 +5,8 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { ChevronLeft, ChevronRight, Plus, Upload, AlertCircle } from "lucide-react";
+import { useActiveAccount } from "@/contexts/ActiveAccountContext";
+import { ChevronLeft, ChevronRight, Plus, Upload, AlertCircle, Wallet } from "lucide-react";
 import {
   AreaChart, Area, CartesianGrid, ResponsiveContainer,
   XAxis, YAxis, Tooltip,
@@ -14,6 +15,7 @@ import {
 import { PageHeader } from "@/components/ui/page-header";
 import { MetricCard } from "@/components/ui/metric-card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -485,6 +487,7 @@ interface Props { onNavigate: (id: string) => void; onAddTrade?: () => void; }
 
 export default function CommandCenter({ onNavigate, onAddTrade }: Props) {
   const { user } = useAuth();
+  const { activeAccount, activeAccountId, version } = useActiveAccount();
   const [trades, setTrades] = useState<Trade[]>([]);
   const [plan, setPlan] = useState<TradePlan | null>(null);
   const [loading, setLoading] = useState(true);
@@ -494,11 +497,15 @@ export default function CommandCenter({ onNavigate, onAddTrade }: Props) {
     if (!user) return;
     setLoading(true);
     setError(null);
+    let tradesQuery: any = supabase.from("trades")
+      .select("id,pair,side,result,outcome,trade_date,setup,rr,trading_account_id")
+      .eq("user_id", user.id)
+      .order("trade_date", { ascending: false });
+    if (activeAccountId) {
+      tradesQuery = tradesQuery.eq("trading_account_id", activeAccountId);
+    }
     const [tR, pR] = await Promise.all([
-      supabase.from("trades")
-        .select("id,pair,side,result,outcome,trade_date,setup,rr")
-        .eq("user_id", user.id)
-        .order("trade_date", { ascending: false }),
+      tradesQuery,
       supabase.from("trade_plans")
         .select("plan_date,market_bias,session,setups_to_trade,max_risk_per_trade,max_daily_loss")
         .eq("user_id", user.id)
@@ -510,9 +517,9 @@ export default function CommandCenter({ onNavigate, onAddTrade }: Props) {
     else setTrades((tR.data as Trade[]) ?? []);
     setPlan((pR.data as TradePlan | null) ?? null);
     setLoading(false);
-  }, [user]);
+  }, [user, activeAccountId]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { load(); }, [load, version]);
 
   // ── Metrics + period comparison ──────────────────────────────────────
   const m = useMemo(() => {
@@ -560,6 +567,17 @@ export default function CommandCenter({ onNavigate, onAddTrade }: Props) {
 
   const isEmpty = !loading && trades.length === 0;
 
+  const platformLabel = activeAccount
+    ? activeAccount.platform.toUpperCase().replace('_', ' ')
+    : null;
+  const badgeParts = activeAccount
+    ? [
+        platformLabel,
+        activeAccount.account_number || activeAccount.login,
+        activeAccount.broker || activeAccount.server,
+      ].filter(Boolean)
+    : null;
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -573,6 +591,19 @@ export default function CommandCenter({ onNavigate, onAddTrade }: Props) {
           )
         }
       />
+
+      <div className="flex items-center gap-2 -mt-2">
+        <Badge variant="outline" className="gap-1.5 py-1 px-2.5 text-xs font-medium">
+          <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+          {badgeParts ? badgeParts.join(" • ") : "All Accounts"}
+        </Badge>
+        {activeAccount && (
+          <span className="text-[11px] text-muted-foreground">
+            Showing data for {activeAccount.account_name}
+          </span>
+        )}
+      </div>
+
 
       {error && (
         <div className="flex items-center gap-2 rounded-lg border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">

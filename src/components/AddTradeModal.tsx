@@ -9,6 +9,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useActiveAccount } from '@/contexts/ActiveAccountContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -205,6 +206,7 @@ export default function AddTradeModal({
   open, onClose, onSaved, onGoToPlaybooks, editTrade,
 }: AddTradeModalProps) {
   const { user } = useAuth();
+  const { activeAccountId } = useActiveAccount();
   const [form, setForm] = useState<TradeForm>(EMPTY_FORM);
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [saving, setSaving] = useState(false);
@@ -286,7 +288,7 @@ export default function AddTradeModal({
     if (!validate() || !user) return;
     setSaving(true);
 
-    const payload = {
+    const payload: any = {
       user_id: user.id,
       pair: form.pair.trim().toUpperCase(),
       side: form.side || null,
@@ -298,6 +300,7 @@ export default function AddTradeModal({
       notes: form.notes.trim() || null,
       rr: form.rr ? Number(form.rr) : null,
       session: form.session || null,
+      trading_account_id: activeAccountId || null,
     };
 
     let error;
