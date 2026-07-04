@@ -318,6 +318,7 @@ function AddTradeModal({ open, onClose, onSaved, editTrade, playbooks }: {
   playbooks: { id: string; title: string }[];
 }) {
   const { user } = useAuth();
+  const { activeAccountId } = useActiveAccount();
   const [step, setStep] = useState(1);
   const [form, setForm] = useState<FormData>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
