@@ -206,6 +206,7 @@ export default function AddTradeModal({
   open, onClose, onSaved, onGoToPlaybooks, editTrade,
 }: AddTradeModalProps) {
   const { user } = useAuth();
+  const { activeAccountId } = useActiveAccount();
   const [form, setForm] = useState<TradeForm>(EMPTY_FORM);
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [saving, setSaving] = useState(false);
