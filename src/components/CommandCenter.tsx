@@ -488,6 +488,7 @@ interface Props { onNavigate: (id: string) => void; onAddTrade?: () => void; }
 
 export default function CommandCenter({ onNavigate, onAddTrade }: Props) {
   const { user } = useAuth();
+  const { activeAccount, activeAccountId, version } = useActiveAccount();
   const [trades, setTrades] = useState<Trade[]>([]);
   const [plan, setPlan] = useState<TradePlan | null>(null);
   const [loading, setLoading] = useState(true);
@@ -497,11 +498,15 @@ export default function CommandCenter({ onNavigate, onAddTrade }: Props) {
     if (!user) return;
     setLoading(true);
     setError(null);
+    let tradesQuery: any = supabase.from("trades")
+      .select("id,pair,side,result,outcome,trade_date,setup,rr,trading_account_id")
+      .eq("user_id", user.id)
+      .order("trade_date", { ascending: false });
+    if (activeAccountId) {
+      tradesQuery = tradesQuery.eq("trading_account_id", activeAccountId);
+    }
     const [tR, pR] = await Promise.all([
-      supabase.from("trades")
-        .select("id,pair,side,result,outcome,trade_date,setup,rr")
-        .eq("user_id", user.id)
-        .order("trade_date", { ascending: false }),
+      tradesQuery,
       supabase.from("trade_plans")
         .select("plan_date,market_bias,session,setups_to_trade,max_risk_per_trade,max_daily_loss")
         .eq("user_id", user.id)
@@ -513,9 +518,9 @@ export default function CommandCenter({ onNavigate, onAddTrade }: Props) {
     else setTrades((tR.data as Trade[]) ?? []);
     setPlan((pR.data as TradePlan | null) ?? null);
     setLoading(false);
-  }, [user]);
+  }, [user, activeAccountId]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { load(); }, [load, version]);
 
   // ── Metrics + period comparison ──────────────────────────────────────
   const m = useMemo(() => {
