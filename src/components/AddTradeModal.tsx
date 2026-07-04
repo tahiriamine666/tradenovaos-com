@@ -288,7 +288,7 @@ export default function AddTradeModal({
     if (!validate() || !user) return;
     setSaving(true);
 
-    const payload = {
+    const payload: any = {
       user_id: user.id,
       pair: form.pair.trim().toUpperCase(),
       side: form.side || null,
@@ -300,6 +300,7 @@ export default function AddTradeModal({
       notes: form.notes.trim() || null,
       rr: form.rr ? Number(form.rr) : null,
       session: form.session || null,
+      trading_account_id: activeAccountId || null,
     };
 
     let error;
