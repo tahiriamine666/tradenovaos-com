@@ -57,7 +57,7 @@ function StatusPill({ status }: { status: Status }) {
 export default function TradingAccountsSection() {
   const { user } = useAuth();
   const { isPro, isElite, plan } = usePlan();
-  const { refresh: refreshActive } = useActiveAccount();
+  const { refresh: refreshActive, setActiveAccountId } = useActiveAccount();
   const limit = planLimit(isElite, isPro);
 
   const [accounts, setAccounts] = useState<TradingAccountRecord[]>([]);
