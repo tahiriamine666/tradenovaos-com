@@ -568,6 +568,17 @@ export default function CommandCenter({ onNavigate, onAddTrade }: Props) {
 
   const isEmpty = !loading && trades.length === 0;
 
+  const platformLabel = activeAccount
+    ? PLATFORMS.find(p => p.id === activeAccount.platform)?.label ?? activeAccount.platform.toUpperCase()
+    : null;
+  const badgeParts = activeAccount
+    ? [
+        platformLabel,
+        activeAccount.account_number || activeAccount.login,
+        activeAccount.broker || activeAccount.server,
+      ].filter(Boolean)
+    : null;
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -581,6 +592,19 @@ export default function CommandCenter({ onNavigate, onAddTrade }: Props) {
           )
         }
       />
+
+      <div className="flex items-center gap-2 -mt-2">
+        <Badge variant="outline" className="gap-1.5 py-1 px-2.5 text-xs font-medium">
+          <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
+          {badgeParts ? badgeParts.join(" • ") : "All Accounts"}
+        </Badge>
+        {activeAccount && (
+          <span className="text-[11px] text-muted-foreground">
+            Showing data for {activeAccount.account_name}
+          </span>
+        )}
+      </div>
+
 
       {error && (
         <div className="flex items-center gap-2 rounded-lg border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">
