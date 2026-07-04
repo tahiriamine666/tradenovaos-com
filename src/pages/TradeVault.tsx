@@ -940,6 +940,7 @@ function TradeDetails({ trade, onClose, onEdit, onDuplicate, onDelete, onAIRevie
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function TradeVault() {
   const { user } = useAuth();
+  const { activeAccountId, version } = useActiveAccount();
   const [trades, setTrades] = useState<Trade[]>([]);
   const [playbooks, setPlaybooks] = useState<{ id: string; title: string; entry_rules?: string }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -954,17 +955,19 @@ export default function TradeVault() {
   const load = useCallback(async () => {
     if (!user) return;
     setLoading(true);
+    let tq: any = supabase.from('trades').select('*').eq('user_id', user.id)
+      .order('trade_date', { ascending: false }).order('created_at', { ascending: false });
+    if (activeAccountId) tq = tq.eq('trading_account_id', activeAccountId);
     const [tr, pb] = await Promise.all([
-      supabase.from('trades').select('*').eq('user_id', user.id)
-        .order('trade_date', { ascending: false }).order('created_at', { ascending: false }),
+      tq,
       supabase.from('playbooks').select('id,title,entry_rules').eq('user_id', user.id),
     ]);
     setTrades((tr.data as Trade[]) ?? []);
     setPlaybooks(pb.data ?? []);
     setLoading(false);
-  }, [user]);
+  }, [user, activeAccountId]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => { load(); }, [load, version]);
 
   const handleDelete = async (t: Trade) => {
     if (!confirm(`Delete this ${t.pair} trade?`)) return;
