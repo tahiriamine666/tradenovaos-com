@@ -1637,6 +1637,7 @@ export type Database = {
           tags: string[]
           take_profit: number | null
           trade_date: string
+          trading_account_id: string | null
           updated_at: string
           user_id: string
         }
@@ -1667,6 +1668,7 @@ export type Database = {
           tags?: string[]
           take_profit?: number | null
           trade_date?: string
+          trading_account_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -1697,6 +1699,7 @@ export type Database = {
           tags?: string[]
           take_profit?: number | null
           trade_date?: string
+          trading_account_id?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -1706,6 +1709,13 @@ export type Database = {
             columns: ["playbook_id"]
             isOneToOne: false
             referencedRelation: "playbooks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trades_trading_account_id_fkey"
+            columns: ["trading_account_id"]
+            isOneToOne: false
+            referencedRelation: "trading_accounts"
             referencedColumns: ["id"]
           },
         ]
