@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useActiveAccount } from '@/contexts/ActiveAccountContext';
 import {
   Plus, Search, TrendingUp, TrendingDown, Minus, Check, X, Edit, Trash2, Copy, Upload,
   ChevronLeft, ChevronRight, BarChart3, CalendarDays, AlertCircle, Sparkles, RefreshCw,
