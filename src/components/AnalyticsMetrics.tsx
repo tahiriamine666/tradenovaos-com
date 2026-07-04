@@ -120,7 +120,7 @@ export default function AnalyticsMetrics() {
       setLoading(false);
     };
     load();
-  }, [user]);
+  }, [user, activeAccountId, version]);
 
   if (loading) {
     return (
