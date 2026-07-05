@@ -22,9 +22,9 @@ export function EventsTimelineView({ events, day, onSelect, selectedId }: Props)
       </div>
 
       <div className="relative">
-        <div className="grid grid-cols-24 gap-0 border-b border-border pb-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+        <div className="flex border-b border-border pb-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
           {Array.from({ length: 24 }).map((_, h) => (
-            <div key={h} className="col-span-1 border-l border-border/40 pl-1">{h.toString().padStart(2, "0")}</div>
+            <div key={h} className="flex-1 border-l border-border/40 pl-1">{h.toString().padStart(2, "0")}</div>
           ))}
         </div>
         <div className="relative mt-2 h-40">
