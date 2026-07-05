@@ -14,6 +14,7 @@ import AIInsights from '@/pages/AIInsights';
 import PricingPage from '@/pages/Pricing';
 import { TradeDialogProvider, useTradeDialog, useTradesChanged, useNavigationEvent } from '@/contexts/TradeDialogContext';
 import LearningHub from '@/pages/LearningHub';
+import EconomicCalendar from '@/pages/EconomicCalendar';
 import TraderScore from '@/components/TraderScore';
 
 import AppLayout, { BASE_ITEMS, ADMIN_ITEM } from '@/components/AppLayout';
@@ -481,6 +482,8 @@ function TradingDashboardInner() {
           {active === 'community' && <CommunitySpace />}
 
           {active === 'resources' && <LearningHub />}
+
+          {active === 'economic' && <EconomicCalendar />}
 
           {active === 'settings' && <StudioSettings />}
 
