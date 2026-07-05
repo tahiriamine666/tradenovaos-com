@@ -1,102 +1,138 @@
-# Multi-Platform Trading Accounts
+# Economic Calendar
 
-Turn the current MT5-only Trading Accounts feature into a pluggable multi-platform system (MT5, cTrader, DXtrade, TradeLocker, Alpha Trader) with a global active-account switcher wired into the Command Center and all data views.
+A new full page under `/app` with sidebar entry "Economic Calendar" (below Learning Hub). Matches TradeNova's purple/glass dashboard styling using existing tokens (`bg-card`, `border-border`, `text-primary`, `MetricCard`, `PageHeader`, `EmptyState`).
 
-## 1. Database migration
+## 1. Data model (Supabase migration)
 
-Extend `trading_accounts` to match the required schema without breaking existing rows.
+Three new public tables + GRANTs + RLS.
 
-New / changed columns:
-- `platform` — already exists as text, will be constrained to `mt5 | ctrader | dxtrade | tradelocker | alpha_trader`. Backfill existing 'MT5' rows to 'mt5'.
-- `account_number` (text) — canonical login/account ID across platforms.
-- `broker` (text, nullable) — required for cTrader / DXtrade / Alpha Trader.
-- `credentials` (jsonb) — platform-specific secrets (password, access_token, etc.).
-- `status` — already exists. Values normalized to `connected | syncing | disconnected | error`.
-- Keep existing `login`, `password`, `server`, `account_name`, `is_default`, timestamps.
-- Backfill: copy `login → account_number`, `{password} → credentials` for existing rows.
+**`economic_events`** — shared reference data, readable by all authenticated users, writable only by service role (populated later by API sync jobs).
+- `event_time` (timestamptz), `country` (text, ISO-2), `currency` (text), `title`, `category`, `impact` (`low|medium|high`), `forecast`, `previous`, `actual`, `unit`, `source`, `description`, `volatility_score` (numeric), `affected_symbols` (text[]), `external_id` (text, unique per source), `source_provider` (text).
 
-RLS + GRANTs stay as-is (already scoped to `auth.uid()`). Trigger `enforce_trading_account_limit` remains (Free 1 / Pro 3 / Elite unlimited).
+**`event_bookmarks`** — per-user star.
+- `user_id`, `event_id` (fk economic_events), unique(user_id, event_id).
 
-## 2. Platform adapter architecture
+**`event_alerts`** — per-user reminder.
+- `user_id`, `event_id`, `remind_minutes_before` (int: 15/30/60), `notified_at` (nullable), `channel` (`inapp`).
 
-New folder `src/lib/platforms/`:
+RLS: events readable by `authenticated`; bookmarks/alerts scoped to `auth.uid()`. GRANTs per project rules (no anon).
 
-- `types.ts` — `PlatformId`, `PlatformField` (`{ key, label, type: 'text'|'password', placeholder, required }`), `PlatformAdapter` (`{ id, label, icon, credentialFields, accountNumberField, serverField, brokerField, buildRecord(form), summarize(account) }`).
-- `mt5.ts`, `ctrader.ts`, `dxtrade.ts`, `tradelocker.ts`, `alpha.ts` — one adapter each, declaring which fields go into `credentials` vs top-level columns.
-- `index.ts` — `PLATFORMS: PlatformAdapter[]` registry + `getPlatform(id)` helper.
+## 2. Platform architecture (future API-ready)
 
-Adding a new platform later = one new file + one registry entry. No UI code touched.
+`src/lib/economic-calendar/` with a provider adapter interface so ForexFactory / TradingEconomics / FMP / Marketaux can be plugged in later without UI changes.
 
-Field mapping per spec:
+```text
+src/lib/economic-calendar/
+  types.ts              # EconomicEvent, ImpactLevel, Category, Provider
+  providers/
+    index.ts            # registry
+    forexfactory.ts     # stub
+    tradingeconomics.ts # stub
+    fmp.ts              # stub
+    marketaux.ts        # stub
+  useEvents.ts          # reads from economic_events table, filters
+```
 
-| Platform     | account_number | server / broker  | credentials keys |
-|--------------|----------------|------------------|------------------|
-| MT5          | Login          | server           | password         |
-| cTrader      | Account ID     | broker           | access_token     |
-| DXtrade      | Username       | broker           | password         |
-| TradeLocker  | Account ID     | server           | access_token     |
-| Alpha Trader | Username       | broker           | password         |
+Each provider exports `{ id, label, fetchEvents(range) }`. For now data comes from the DB; a future edge function will sync providers into `economic_events`.
 
-## 3. Add-Account flow (Settings)
+## 3. Routing & navigation
 
-Rewrite `src/components/settings/TradingAccountsSection.tsx`:
+- Add route `path="economic-calendar"` inside the existing `/app` shell in `src/pages/Index.tsx` (same pattern as Learning Hub / Replay Studio).
+- Add sidebar item in `src/components/AppLayout.tsx` under Learning Hub with a `CalendarClock` lucide icon.
 
-1. Click **Add Account** → step 1 shows a grid of platform cards (icon + name).
-2. Select platform → step 2 renders a dynamic form driven by the adapter's field list, plus universal fields (Account Name, Set as default).
-3. Save writes to `trading_accounts` using the adapter's `buildRecord`.
-4. Cards list all platforms with correct field summaries, status pill, default toggle, edit, delete.
+## 4. Page structure — `src/pages/EconomicCalendar.tsx`
 
-## 4. Active-account context
+```text
+PageHeader
+  title: Economic Calendar
+  description: Track high-impact economic events and market-moving news.
 
-New `src/contexts/ActiveAccountContext.tsx`:
+StatsRow (4x MetricCard)
+  High Impact Today · Total Events Today · Next 24h · Most Volatile Currency
 
-- Loads all `trading_accounts` for the user.
-- Tracks `activeAccountId` (persisted to `localStorage`, defaults to the row where `is_default = true`, else the first).
-- Exposes `{ accounts, activeAccount, setActiveAccountId, platformFilter, setPlatformFilter, refresh }`.
-- Bumps a `version` counter on switch so consumers can re-fetch.
+FiltersBar (sticky)
+  DateRange · Country · Currency · Impact · Category · Search
 
-Provider mounted in `src/App.tsx` inside the authenticated `/app` shell.
+ViewSwitch: List | Calendar | Timeline
 
-## 5. Global account switcher (TopBar)
+Main body (grid, right drawer overlays on mobile)
+  ├── EventsView (List/Calendar/Timeline) — takes full width when no selection
+  └── EventDetailsDrawer (right side, ~420px)
+        Header: flag · currency · title · impact badge · bookmark + alert buttons
+        Metrics: Actual · Forecast · Previous · Volatility score
+        Description
+        Affected pairs (chips)
+        Trading implications (bulleted, from row)
+        History mini-bar chart (recharts) using previous vs forecast series
+        AIEconomicInsight card (see §6)
+        TradingViewChart (see §7)
+```
 
-In `src/components/TopBar.tsx`, replace the current `AccountDropdown` (which filters by account *type*) with a two-level switcher:
+### View modes
+- **List**: grouped-by-day table with sticky day headers, columns per spec (Time, Flag, Currency, Event, Impact dots, Forecast, Previous, Actual, Volatility).
+- **Calendar**: month grid with impact dots per day; click day = filter list to that day.
+- **Timeline**: horizontal 24h ribbon for the selected day; events plotted on hour axis with impact color.
 
-- **Platform group:** All Accounts · MT5 · cTrader · DXtrade · TradeLocker · Alpha Trader (sets `platformFilter`).
-- **Accounts list** for the selected group, each row = account name + platform badge + status dot. Selecting one sets `activeAccountId`.
+### Impact badge colors (tokens only)
+- high → `bg-danger/10 text-danger border-danger/30`
+- medium → `bg-warning/10 text-warning border-warning/30`
+- low → `bg-success/10 text-success border-success/30` (existing yellow variant via warning-muted; will introduce a `--warning-muted` if needed, otherwise use success)
 
-Old `AccountFilter` type in `GlobalFiltersContext` becomes a no-op alias (kept for existing consumers) — real filtering moves to `ActiveAccountContext`.
+## 5. Filters & search
 
-## 6. Command Center + data views integration
+Local `useState` filter object → memoized query against `economic_events` via Supabase. Debounced search (`title ilike`). Country/Currency/Category options derived from distinct values.
 
-All data-loading hooks/pages read `activeAccount` and include `.eq('trading_account_id', activeAccount.id)` when set (or ignore filter when `activeAccountId === 'all'`). Files touched (query filter + `useEffect` dep on `activeAccount?.id`):
+## 6. AI Economic Analysis card
 
-- `src/pages/Index.tsx` (Command Center dashboard, stats)
-- `src/pages/TradeVault.tsx` (trade history / open positions)
-- `src/pages/MindJournal.tsx` (journal)
-- `src/pages/AIInsights.tsx` (analytics)
-- `src/components/AnalyticsMetrics.tsx` (performance metrics)
-- `src/contexts/GlobalFiltersContext.tsx` (setups/pairs option lists)
+Reuse existing `ai-chat` edge function (or new `economic-insight` function later). For plan scope: client-side deterministic insight generator that reads the selected event and outputs 2-3 concise bullets ("NFP expected to increase USD volatility", etc.), keyed by category + impact + currency. Ships without new edge function; interface is `generateInsight(event) → string[]` so we can swap to LLM later.
 
-Switching accounts instantly re-runs these queries via the `version` bump.
+## 7. TradingView chart
 
-Note: `trades.trading_account_id` column already exists (used by `enforce_trading_account_limit` context). We'll ensure `AddTradeModal` stamps the current active account on insert.
+`TradingViewChart` component already exists (`src/components/replay/TradingViewChart.tsx`). Wrap with a symbol switcher (EURUSD, GBPUSD, USDJPY, XAUUSD, NAS100) that defaults to a symbol mapped from the selected event's currency:
+- USD → EURUSD, EUR → EURUSD, GBP → GBPUSD, JPY → USDJPY, XAU → XAUUSD, indices → NAS100.
 
-## 7. Status handling
+## 8. Bookmarks & alerts
 
-Status is stored on each row (`connected | syncing | disconnected | error`). No live broker connection is implemented in this pass — status defaults to `disconnected` on create and is settable manually via an adapter-level "Test connection" placeholder that flips to `syncing` then `disconnected` (real integrations come later, one per adapter).
+- Star icon in row + drawer toggles `event_bookmarks`.
+- Bell icon opens a small popover with 15/30/60 min presets; writes `event_alerts`.
+- Client-side scheduler (`useEventAlertScheduler`) polls due alerts every 60s and fires `sonner` toast + optional `Notification` API. No push infra in this pass.
 
-## 8. Plan limits
+## 9. Empty & loading states
 
-Unchanged: Free 1, Pro 3, Elite unlimited, enforced by existing DB trigger + client-side guard in the Add flow.
+- No events after filter → `EmptyState` with `CalendarClock` icon, copy: *"Markets are quiet today. No major economic releases scheduled."*
+- Loading → skeleton rows.
 
-## Technical notes
+## 10. Files to create
 
-- Migration is additive; no data loss. Existing single MT5 row for a user becomes their default `mt5` account automatically.
-- `credentials` jsonb is only ever selected by the owner (RLS). Never rendered in list view — only shown masked in the edit dialog.
-- Adapters are pure config; no runtime imports of platform SDKs yet, so bundle size is unaffected.
-- Types regen after migration; then `TradingAccount` interface is re-derived from `Database['public']['Tables']['trading_accounts']['Row']`.
+```text
+src/pages/EconomicCalendar.tsx
+src/components/economic/StatsRow.tsx
+src/components/economic/FiltersBar.tsx
+src/components/economic/EventsListView.tsx
+src/components/economic/EventsCalendarView.tsx
+src/components/economic/EventsTimelineView.tsx
+src/components/economic/EventDetailsDrawer.tsx
+src/components/economic/ImpactBadge.tsx
+src/components/economic/CountryFlag.tsx
+src/components/economic/AiInsightCard.tsx
+src/components/economic/SymbolChart.tsx
+src/lib/economic-calendar/types.ts
+src/lib/economic-calendar/useEvents.ts
+src/lib/economic-calendar/useBookmarks.ts
+src/lib/economic-calendar/useAlerts.ts
+src/lib/economic-calendar/insight.ts
+src/lib/economic-calendar/providers/{index,forexfactory,tradingeconomics,fmp,marketaux}.ts
+supabase/migrations/<ts>_economic_calendar.sql
+```
 
-## Out of scope (call out explicitly)
+## 11. Files to edit
 
-- Real broker API sync / live P&L pull (needs per-broker credentials + edge functions).
-- Encryption-at-rest beyond Postgres defaults (credentials stored as jsonb; can be upgraded to Vault later).
+- `src/components/AppLayout.tsx` — add sidebar link.
+- `src/pages/Index.tsx` — add nested route.
+- `src/integrations/supabase/types.ts` — regenerated after migration approval.
+
+## 12. Out of scope (this pass)
+
+- Live provider syncing (edge function stubs only; `economic_events` starts empty → empty state).
+- Server-side push notifications; only in-app + Web Notification toast.
+- Localization / timezone picker beyond user's browser locale.

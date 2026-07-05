@@ -544,6 +544,142 @@ export type Database = {
         }
         Relationships: []
       }
+      economic_events: {
+        Row: {
+          actual: string | null
+          affected_symbols: string[] | null
+          category: string | null
+          country: string
+          created_at: string
+          currency: string
+          description: string | null
+          event_time: string
+          external_id: string | null
+          forecast: string | null
+          id: string
+          impact: string
+          previous: string | null
+          source: string | null
+          source_provider: string | null
+          title: string
+          unit: string | null
+          updated_at: string
+          volatility_score: number | null
+        }
+        Insert: {
+          actual?: string | null
+          affected_symbols?: string[] | null
+          category?: string | null
+          country: string
+          created_at?: string
+          currency: string
+          description?: string | null
+          event_time: string
+          external_id?: string | null
+          forecast?: string | null
+          id?: string
+          impact: string
+          previous?: string | null
+          source?: string | null
+          source_provider?: string | null
+          title: string
+          unit?: string | null
+          updated_at?: string
+          volatility_score?: number | null
+        }
+        Update: {
+          actual?: string | null
+          affected_symbols?: string[] | null
+          category?: string | null
+          country?: string
+          created_at?: string
+          currency?: string
+          description?: string | null
+          event_time?: string
+          external_id?: string | null
+          forecast?: string | null
+          id?: string
+          impact?: string
+          previous?: string | null
+          source?: string | null
+          source_provider?: string | null
+          title?: string
+          unit?: string | null
+          updated_at?: string
+          volatility_score?: number | null
+        }
+        Relationships: []
+      }
+      event_alerts: {
+        Row: {
+          channel: string
+          created_at: string
+          event_id: string
+          id: string
+          notified_at: string | null
+          remind_minutes_before: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          channel?: string
+          created_at?: string
+          event_id: string
+          id?: string
+          notified_at?: string | null
+          remind_minutes_before?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          event_id?: string
+          id?: string
+          notified_at?: string | null
+          remind_minutes_before?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_alerts_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "economic_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_bookmarks: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_bookmarks_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "economic_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       import_batches: {
         Row: {
           created_at: string
