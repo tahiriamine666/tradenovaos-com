@@ -1,5 +1,5 @@
 import { useState } from "react";
-import TradingViewChart from "@/components/replay/TradingViewChart";
+import { TradingViewChart } from "@/components/replay/TradingViewChart";
 import { cn } from "@/lib/utils";
 
 const SYMBOLS = ["EURUSD", "GBPUSD", "USDJPY", "XAUUSD", "NAS100"];
