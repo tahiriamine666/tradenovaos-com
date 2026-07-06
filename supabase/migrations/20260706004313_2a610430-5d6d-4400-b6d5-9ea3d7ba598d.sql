@@ -1,0 +1,2 @@
+CREATE UNIQUE INDEX IF NOT EXISTS economic_events_ext_provider_uidx ON public.economic_events (external_id, source_provider) WHERE external_id IS NOT NULL AND source_provider IS NOT NULL;
+GRANT SELECT ON public.economic_events TO authenticated;
