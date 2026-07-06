@@ -20,6 +20,26 @@ function fmtDay(iso: string) {
   return new Date(iso).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
 }
 
+function parseNum(v: string | null): number | null {
+  if (v == null) return null;
+  const cleaned = v.replace(/[%,]/g, "").trim();
+  const n = parseFloat(cleaned);
+  return Number.isFinite(n) ? n : null;
+}
+
+function deviation(actual: string | null, forecast: string | null): { text: string; tone: "up" | "down" | "neutral" } {
+  const a = parseNum(actual);
+  const f = parseNum(forecast);
+  if (a == null || f == null) return { text: "—", tone: "neutral" };
+  if (f === 0) {
+    const diff = a - f;
+    return { text: diff > 0 ? `+${diff.toFixed(2)}` : diff.toFixed(2), tone: diff > 0 ? "up" : diff < 0 ? "down" : "neutral" };
+  }
+  const pct = ((a - f) / Math.abs(f)) * 100;
+  const sign = pct > 0 ? "+" : "";
+  return { text: `${sign}${pct.toFixed(1)}%`, tone: pct > 0 ? "up" : pct < 0 ? "down" : "neutral" };
+}
+
 export function EventsListView({ events, selectedId, onSelect, bookmarkIds, onBookmark }: Props) {
   const grouped = useMemo(() => {
     const map = new Map<string, EconomicEvent[]>();
@@ -34,10 +54,11 @@ export function EventsListView({ events, selectedId, onSelect, bookmarkIds, onBo
 
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-card">
-      <div className="grid grid-cols-[80px_28px_60px_1fr_60px_80px_80px_80px_60px_32px] items-center gap-3 border-b border-border bg-muted/30 px-4 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <div className="grid grid-cols-[80px_28px_60px_1fr_60px_80px_80px_80px_70px_60px_32px] items-center gap-3 border-b border-border bg-muted/30 px-4 py-2.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
         <span>Time</span><span /><span>Ccy</span><span>Event</span>
         <span>Impact</span><span className="text-right">Forecast</span>
         <span className="text-right">Previous</span><span className="text-right">Actual</span>
+        <span className="text-right">Deviation</span>
         <span className="text-right">Vol</span><span />
       </div>
 
@@ -49,12 +70,13 @@ export function EventsListView({ events, selectedId, onSelect, bookmarkIds, onBo
           {rows.map((e) => {
             const isSel = e.id === selectedId;
             const isMarked = bookmarkIds.has(e.id);
+            const dev = deviation(e.actual, e.forecast);
             return (
               <button
                 key={e.id}
                 onClick={() => onSelect(e)}
                 className={cn(
-                  "grid w-full grid-cols-[80px_28px_60px_1fr_60px_80px_80px_80px_60px_32px] items-center gap-3 border-b border-border px-4 py-3 text-left text-sm transition-colors hover:bg-muted/40",
+                  "grid w-full grid-cols-[80px_28px_60px_1fr_60px_80px_80px_80px_70px_60px_32px] items-center gap-3 border-b border-border px-4 py-3 text-left text-sm transition-colors hover:bg-muted/40",
                   isSel && "bg-primary/10",
                 )}
               >
@@ -66,6 +88,12 @@ export function EventsListView({ events, selectedId, onSelect, bookmarkIds, onBo
                 <span className="text-right tabular-nums text-muted-foreground">{e.forecast ?? "—"}</span>
                 <span className="text-right tabular-nums text-muted-foreground">{e.previous ?? "—"}</span>
                 <span className={cn("text-right tabular-nums", e.actual ? "font-semibold text-foreground" : "text-muted-foreground")}>{e.actual ?? "—"}</span>
+                <span className={cn(
+                  "text-right tabular-nums font-medium",
+                  dev.tone === "up" && "text-success",
+                  dev.tone === "down" && "text-danger",
+                  dev.tone === "neutral" && "text-muted-foreground",
+                )}>{dev.text}</span>
                 <span className="text-right tabular-nums text-muted-foreground">{e.volatility_score?.toFixed(1) ?? "—"}</span>
                 <span onClick={(ev) => { ev.stopPropagation(); onBookmark(e.id); }} className="justify-self-end">
                   {isMarked
