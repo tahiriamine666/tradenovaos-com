@@ -39,7 +39,7 @@ export default function EconomicCalendar() {
   const [selected, setSelected] = useState<EconomicEvent | null>(null);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
-  const { events, allEvents, loading } = useEvents(filters);
+  const { events, allEvents, loading, syncing, refetch } = useEvents(filters);
   const { ids: bookmarkIds, toggle: toggleBookmark } = useBookmarks();
   const { setAlert } = useAlerts(events);
 
