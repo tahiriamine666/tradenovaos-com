@@ -56,10 +56,24 @@ export default function EconomicCalendar() {
 
   return (
     <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6">
-      <PageHeader
-        title="Economic Calendar"
-        description="Track high-impact economic events and market-moving news."
-      />
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <PageHeader
+          title="Economic Calendar"
+          description="Track high-impact economic events and market-moving news."
+        />
+        <div className="flex items-center gap-2">
+          {syncing && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary">
+              <Loader2 className="h-3 w-3 animate-spin" /> Syncing…
+            </span>
+          )}
+          <Button size="sm" variant="outline" onClick={() => refetch()} disabled={syncing || loading}>
+            <RefreshCw className={cn("mr-1.5 h-3.5 w-3.5", (syncing || loading) && "animate-spin")} />
+            Refresh
+          </Button>
+        </div>
+      </div>
+
 
       <div className="space-y-5">
         <StatsRow events={events} />
