@@ -107,15 +107,17 @@ export default function EconomicCalendar() {
           })}
         </div>
 
-        {loading ? (
+        {loading && allEvents.length === 0 ? (
           <div className="space-y-2">
             {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-xl" />)}
           </div>
         ) : events.length === 0 ? (
           <EmptyState
             icon={CalendarClock}
-            title="Markets are quiet today"
-            description="No major economic releases scheduled for the selected range. Try widening filters or picking another week."
+            title={allEvents.length === 0 ? "No events found for this range" : "No events match your filters"}
+            description={allEvents.length === 0
+              ? "We couldn't load economic events for the selected dates. Try refreshing or picking another week."
+              : "Try clearing filters or widening the date range to see more events."}
           />
         ) : view === "list" ? (
           <EventsListView
