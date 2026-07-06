@@ -2,3 +2,6 @@ project_id = "jbdivofznclkfctcqfln"
 
 [functions.dodo-webhook]
 verify_jwt = false
+
+[functions.sync-economic-events]
+verify_jwt = false

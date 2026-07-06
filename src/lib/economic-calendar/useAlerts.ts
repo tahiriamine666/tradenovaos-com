@@ -25,7 +25,7 @@ export function useAlerts(events: EconomicEvent[]) {
 
   useEffect(() => { refresh(); }, [refresh]);
 
-  const setAlert = useCallback(async (eventId: string, minutes: 15 | 30 | 60) => {
+  const setAlert = useCallback(async (eventId: string, minutes: 5 | 15 | 30 | 60) => {
     if (!user) return;
     await supabase.from("event_alerts" as never).upsert({
       user_id: user.id, event_id: eventId, remind_minutes_before: minutes,

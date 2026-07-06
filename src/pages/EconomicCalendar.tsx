@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
-import { CalendarClock, LayoutGrid, List, ActivitySquare } from "lucide-react";
+import { CalendarClock, LayoutGrid, List, ActivitySquare, RefreshCw, Loader2 } from "lucide-react";
 import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 import { FiltersBar } from "@/components/economic/FiltersBar";
@@ -38,7 +39,7 @@ export default function EconomicCalendar() {
   const [selected, setSelected] = useState<EconomicEvent | null>(null);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
-  const { events, allEvents, loading } = useEvents(filters);
+  const { events, allEvents, loading, syncing, refetch } = useEvents(filters);
   const { ids: bookmarkIds, toggle: toggleBookmark } = useBookmarks();
   const { setAlert } = useAlerts(events);
 
@@ -55,10 +56,24 @@ export default function EconomicCalendar() {
 
   return (
     <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6">
-      <PageHeader
-        title="Economic Calendar"
-        description="Track high-impact economic events and market-moving news."
-      />
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <PageHeader
+          title="Economic Calendar"
+          description="Track high-impact economic events and market-moving news."
+        />
+        <div className="flex items-center gap-2">
+          {syncing && (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary">
+              <Loader2 className="h-3 w-3 animate-spin" /> Syncing…
+            </span>
+          )}
+          <Button size="sm" variant="outline" onClick={() => refetch()} disabled={syncing || loading}>
+            <RefreshCw className={cn("mr-1.5 h-3.5 w-3.5", (syncing || loading) && "animate-spin")} />
+            Refresh
+          </Button>
+        </div>
+      </div>
+
 
       <div className="space-y-5">
         <StatsRow events={events} />
@@ -92,15 +107,17 @@ export default function EconomicCalendar() {
           })}
         </div>
 
-        {loading ? (
+        {loading && allEvents.length === 0 ? (
           <div className="space-y-2">
             {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-xl" />)}
           </div>
         ) : events.length === 0 ? (
           <EmptyState
             icon={CalendarClock}
-            title="Markets are quiet today"
-            description="No major economic releases scheduled for the selected range. Try widening filters or picking another week."
+            title={allEvents.length === 0 ? "No events found for this range" : "No events match your filters"}
+            description={allEvents.length === 0
+              ? "We couldn't load economic events for the selected dates. Try refreshing or picking another week."
+              : "Try clearing filters or widening the date range to see more events."}
           />
         ) : view === "list" ? (
           <EventsListView
