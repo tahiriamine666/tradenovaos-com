@@ -1,138 +1,86 @@
-# Economic Calendar
+## Phase 1: Live Economic Calendar (FMP-powered)
 
-A new full page under `/app` with sidebar entry "Economic Calendar" (below Learning Hub). Matches TradeNova's purple/glass dashboard styling using existing tokens (`bg-card`, `border-border`, `text-primary`, `MetricCard`, `PageHeader`, `EmptyState`).
+Wire the existing Economic Calendar page to real data from Financial Modeling Prep, make every filter and view work against live events, and surface AI-generated impact for high-impact releases. Defer News Center, Heatmap, Sessions, Weekly Outlook, email/push alerts, and watchlist alerts to a future phase.
 
-## 1. Data model (Supabase migration)
+### 1. Secret & data source
 
-Three new public tables + GRANTs + RLS.
+- Request `FMP_API_KEY` via `add_secret` (user pastes their key from financialmodelingprep.com).
+- No new Supabase tables — the existing `economic_events`, `event_bookmarks`, `event_alerts` schema is reused. `event_alerts.remind_minutes_before` already supports arbitrary integers, so we extend the UI to include 5 min alongside 15/30/60.
 
-**`economic_events`** — shared reference data, readable by all authenticated users, writable only by service role (populated later by API sync jobs).
-- `event_time` (timestamptz), `country` (text, ISO-2), `currency` (text), `title`, `category`, `impact` (`low|medium|high`), `forecast`, `previous`, `actual`, `unit`, `source`, `description`, `volatility_score` (numeric), `affected_symbols` (text[]), `external_id` (text, unique per source), `source_provider` (text).
+### 2. Edge function: `sync-economic-events`
 
-**`event_bookmarks`** — per-user star.
-- `user_id`, `event_id` (fk economic_events), unique(user_id, event_id).
+New Deno function under `supabase/functions/sync-economic-events/`.
 
-**`event_alerts`** — per-user reminder.
-- `user_id`, `event_id`, `remind_minutes_before` (int: 15/30/60), `notified_at` (nullable), `channel` (`inapp`).
+- Accepts `{ from, to }` (defaults: today → +7 days).
+- Calls `https://financialmodelingprep.com/api/v3/economic_calendar?from=…&to=…&apikey=$FMP_API_KEY`.
+- Normalizes each row into our `economic_events` shape:
+  - `external_id` = stable hash of `date|country|event`
+  - `impact` mapped from FMP `impact` (`Low`/`Medium`/`High`) → `low|medium|high`
+  - `currency` from FMP `currency`, `country` from FMP `country` (ISO-2 fallback via a small map)
+  - `category` inferred by keyword matching on `event` (CPI/PPI → Inflation, NFP/Unemployment → Employment, GDP → GDP, Rate/FOMC/ECB/BOE/BOJ → Central Bank, PMI/ISM → Manufacturing, Retail → Retail, Confidence → Consumer Confidence, Housing → Housing, Trade → Trade)
+  - `volatility_score` = 3/6/9 base by impact, +1 if event name matches a known market-mover list (NFP, CPI, FOMC, ECB, GDP, PPI, Retail Sales)
+  - `affected_symbols` derived from currency (USD → `[EURUSD, XAUUSD, NAS100, US30]`, EUR → `[EURUSD, DAX]`, GBP → `[GBPUSD]`, JPY → `[USDJPY]`, XAU → `[XAUUSD]`, AUD → `[AUDUSD]`, etc.)
+  - `source_provider = 'fmp'`
+- Upserts on `external_id` (add unique index in migration below).
+- Response: `{ inserted, updated, total }`.
+- Uses `SUPABASE_SERVICE_ROLE_KEY` for insert; no JWT required (`verify_jwt = false` in `supabase/config.toml`).
 
-RLS: events readable by `authenticated`; bookmarks/alerts scoped to `auth.uid()`. GRANTs per project rules (no anon).
+### 3. Small migration
 
-## 2. Platform architecture (future API-ready)
+- Add `UNIQUE (external_id, source_provider)` to `economic_events` so the sync upsert is idempotent.
+- Ensure `authenticated` has `SELECT` on `economic_events` (verify existing grants; add if missing).
 
-`src/lib/economic-calendar/` with a provider adapter interface so ForexFactory / TradingEconomics / FMP / Marketaux can be plugged in later without UI changes.
+### 4. FMP provider adapter
 
-```text
-src/lib/economic-calendar/
-  types.ts              # EconomicEvent, ImpactLevel, Category, Provider
-  providers/
-    index.ts            # registry
-    forexfactory.ts     # stub
-    tradingeconomics.ts # stub
-    fmp.ts              # stub
-    marketaux.ts        # stub
-  useEvents.ts          # reads from economic_events table, filters
-```
+Replace the stub in `src/lib/economic-calendar/providers/fmp.ts` with a client that invokes the edge function via `supabase.functions.invoke('sync-economic-events', { body: { from, to } })` and returns `{ synced: number }`. The other provider stubs stay as placeholders.
 
-Each provider exports `{ id, label, fetchEvents(range) }`. For now data comes from the DB; a future edge function will sync providers into `economic_events`.
+### 5. `useEvents` upgrades
 
-## 3. Routing & navigation
+- On mount and whenever `filters.from`/`filters.to` change, trigger the FMP sync **before** reading from the DB; then re-fetch rows.
+- Add a `setInterval` of 60s that re-syncs and re-queries while the tab is visible (pause on `document.hidden`).
+- Expose `refetch()` and a `syncing` boolean.
+- Keep client-side filtering for country/currency/impact/category/search (already implemented).
 
-- Add route `path="economic-calendar"` inside the existing `/app` shell in `src/pages/Index.tsx` (same pattern as Learning Hub / Replay Studio).
-- Add sidebar item in `src/components/AppLayout.tsx` under Learning Hub with a `CalendarClock` lucide icon.
+### 6. UI wiring
 
-## 4. Page structure — `src/pages/EconomicCalendar.tsx`
+- **`EconomicCalendar.tsx`**: show a subtle "Syncing…" pill in the header while `syncing`. Show a "Refresh" button that calls `refetch()`. Never render the "Markets are quiet" empty state while `loading || syncing` OR if `allEvents.length > 0` but current filters narrow it to zero — in the latter case show a filter-specific empty state ("No events match your filters").
+- **`FiltersBar.tsx`**: already functional; verify `country`, `currency`, `impact`, `category`, `search`, and date range all filter correctly against real FMP data (they will, since options are derived from `allEvents`).
+- **`EventsListView.tsx`**: add a **Deviation** column = `((actual − forecast) / |forecast|) * 100` when both numeric; color green if positive, red if negative, muted "—" otherwise. Adjust the grid template accordingly.
+- **`StatsRow.tsx`**: already dynamic — verify against live data. "Most Volatile Currency" continues to weight by impact.
+- **`EventDetailsDrawer.tsx`**: for `impact === 'high'`, ensure `AiInsightCard` renders (already wired via `generateInsight`). Extend `src/lib/economic-calendar/insight.ts` with richer per-category templates ("Likely USD volatility", "May affect NASDAQ and S&P500", "High probability of XAUUSD movement", etc.).
+- **Alerts popover**: add a 5-minute preset alongside 15/30/60 in `useAlerts` / drawer UI.
 
-```text
-PageHeader
-  title: Economic Calendar
-  description: Track high-impact economic events and market-moving news.
+### 7. Views
 
-StatsRow (4x MetricCard)
-  High Impact Today · Total Events Today · Next 24h · Most Volatile Currency
+List, Calendar, and Timeline already exist and are data-driven — no structural changes, they'll light up once real events land.
 
-FiltersBar (sticky)
-  DateRange · Country · Currency · Impact · Category · Search
+### Out of scope (future phases, not built now)
 
-ViewSwitch: List | Calendar | Timeline
+- AI Market News Center + news sources
+- Economic Heatmap (8 currencies)
+- Trading Session Tracker (Sydney/Tokyo/London/NY)
+- AI Weekly Outlook
+- AI Volatility Scanner widget
+- Watchlist-based alerts and symbol subscriptions
+- Browser push + email alert delivery
+- Smart Alert subscriptions per event type (NFP/CPI/FOMC/…)
 
-Main body (grid, right drawer overlays on mobile)
-  ├── EventsView (List/Calendar/Timeline) — takes full width when no selection
-  └── EventDetailsDrawer (right side, ~420px)
-        Header: flag · currency · title · impact badge · bookmark + alert buttons
-        Metrics: Actual · Forecast · Previous · Volatility score
-        Description
-        Affected pairs (chips)
-        Trading implications (bulleted, from row)
-        History mini-bar chart (recharts) using previous vs forecast series
-        AIEconomicInsight card (see §6)
-        TradingViewChart (see §7)
-```
+### Files
 
-### View modes
-- **List**: grouped-by-day table with sticky day headers, columns per spec (Time, Flag, Currency, Event, Impact dots, Forecast, Previous, Actual, Volatility).
-- **Calendar**: month grid with impact dots per day; click day = filter list to that day.
-- **Timeline**: horizontal 24h ribbon for the selected day; events plotted on hour axis with impact color.
+**Create**
+- `supabase/functions/sync-economic-events/index.ts`
+- `supabase/migrations/<ts>_economic_events_unique.sql`
 
-### Impact badge colors (tokens only)
-- high → `bg-danger/10 text-danger border-danger/30`
-- medium → `bg-warning/10 text-warning border-warning/30`
-- low → `bg-success/10 text-success border-success/30` (existing yellow variant via warning-muted; will introduce a `--warning-muted` if needed, otherwise use success)
+**Edit**
+- `src/lib/economic-calendar/providers/fmp.ts`
+- `src/lib/economic-calendar/useEvents.ts`
+- `src/lib/economic-calendar/useAlerts.ts` (add 5-min preset)
+- `src/lib/economic-calendar/insight.ts` (richer templates)
+- `src/pages/EconomicCalendar.tsx` (refresh button, syncing state, smarter empty state)
+- `src/components/economic/EventsListView.tsx` (Deviation column)
+- `src/components/economic/EventDetailsDrawer.tsx` (5-min alert option)
+- `supabase/config.toml` (add `[functions.sync-economic-events] verify_jwt = false`)
 
-## 5. Filters & search
+### Verification
 
-Local `useState` filter object → memoized query against `economic_events` via Supabase. Debounced search (`title ilike`). Country/Currency/Category options derived from distinct values.
-
-## 6. AI Economic Analysis card
-
-Reuse existing `ai-chat` edge function (or new `economic-insight` function later). For plan scope: client-side deterministic insight generator that reads the selected event and outputs 2-3 concise bullets ("NFP expected to increase USD volatility", etc.), keyed by category + impact + currency. Ships without new edge function; interface is `generateInsight(event) → string[]` so we can swap to LLM later.
-
-## 7. TradingView chart
-
-`TradingViewChart` component already exists (`src/components/replay/TradingViewChart.tsx`). Wrap with a symbol switcher (EURUSD, GBPUSD, USDJPY, XAUUSD, NAS100) that defaults to a symbol mapped from the selected event's currency:
-- USD → EURUSD, EUR → EURUSD, GBP → GBPUSD, JPY → USDJPY, XAU → XAUUSD, indices → NAS100.
-
-## 8. Bookmarks & alerts
-
-- Star icon in row + drawer toggles `event_bookmarks`.
-- Bell icon opens a small popover with 15/30/60 min presets; writes `event_alerts`.
-- Client-side scheduler (`useEventAlertScheduler`) polls due alerts every 60s and fires `sonner` toast + optional `Notification` API. No push infra in this pass.
-
-## 9. Empty & loading states
-
-- No events after filter → `EmptyState` with `CalendarClock` icon, copy: *"Markets are quiet today. No major economic releases scheduled."*
-- Loading → skeleton rows.
-
-## 10. Files to create
-
-```text
-src/pages/EconomicCalendar.tsx
-src/components/economic/StatsRow.tsx
-src/components/economic/FiltersBar.tsx
-src/components/economic/EventsListView.tsx
-src/components/economic/EventsCalendarView.tsx
-src/components/economic/EventsTimelineView.tsx
-src/components/economic/EventDetailsDrawer.tsx
-src/components/economic/ImpactBadge.tsx
-src/components/economic/CountryFlag.tsx
-src/components/economic/AiInsightCard.tsx
-src/components/economic/SymbolChart.tsx
-src/lib/economic-calendar/types.ts
-src/lib/economic-calendar/useEvents.ts
-src/lib/economic-calendar/useBookmarks.ts
-src/lib/economic-calendar/useAlerts.ts
-src/lib/economic-calendar/insight.ts
-src/lib/economic-calendar/providers/{index,forexfactory,tradingeconomics,fmp,marketaux}.ts
-supabase/migrations/<ts>_economic_calendar.sql
-```
-
-## 11. Files to edit
-
-- `src/components/AppLayout.tsx` — add sidebar link.
-- `src/pages/Index.tsx` — add nested route.
-- `src/integrations/supabase/types.ts` — regenerated after migration approval.
-
-## 12. Out of scope (this pass)
-
-- Live provider syncing (edge function stubs only; `economic_events` starts empty → empty state).
-- Server-side push notifications; only in-app + Web Notification toast.
-- Localization / timezone picker beyond user's browser locale.
+- After building: open Economic Calendar, confirm events populate for the current week, filters narrow results, list shows Deviation, high-impact rows render AI Impact in the drawer, and the syncing pill appears every 60s.
