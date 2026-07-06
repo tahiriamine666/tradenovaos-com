@@ -63,15 +63,15 @@ export function EventDetailsDrawer({ event, onClose, bookmarked, onBookmark, onS
                   </PopoverTrigger>
                   <PopoverContent className="w-48 p-2" align="end">
                     <p className="px-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Remind me before</p>
-                    {[15, 30, 60].map((m) => (
+                    {[5, 15, 30, 60].map((m) => (
                       <button
                         key={m}
                         onClick={() => {
                           if (typeof Notification !== "undefined" && Notification.permission === "default") Notification.requestPermission();
-                          onSetAlert(event.id, m as 15 | 30 | 60);
+                          onSetAlert(event.id, m as 5 | 15 | 30 | 60);
                         }}
                         className="flex w-full items-center rounded-md px-2 py-1.5 text-sm hover:bg-muted"
-                      >{m} minutes</button>
+                      >{m} minutes before</button>
                     ))}
                   </PopoverContent>
                 </Popover>
