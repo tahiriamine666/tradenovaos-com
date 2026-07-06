@@ -13,7 +13,7 @@ interface Props {
   onClose: () => void;
   bookmarked: boolean;
   onBookmark: (id: string) => void;
-  onSetAlert: (id: string, minutes: 15 | 30 | 60) => void;
+  onSetAlert: (id: string, minutes: 5 | 15 | 30 | 60) => void;
 }
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
