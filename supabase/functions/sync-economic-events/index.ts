@@ -1,7 +1,7 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 
-const FMP_URL = 'https://financialmodelingprep.com/api/v3/economic_calendar';
+const FMP_URL = 'https://financialmodelingprep.com/stable/economic-calendar';
 
 const COUNTRY_TO_ISO2: Record<string, string> = {
   'United States': 'US', 'US': 'US', 'USA': 'US',
