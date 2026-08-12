@@ -360,7 +360,10 @@ export default function TradePlanWorkspace() {
   );
 
   return (
-    <div className="max-w-3xl mx-auto space-y-0">
+    <div className="max-w-[1400px] mx-auto grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-6 items-start">
+      <div className="min-w-0 space-y-0">
+
+
 
       {/* ── TOP HEADER ── */}
       <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
