@@ -200,7 +200,10 @@ export default function TradePlanWorkspace() {
   const [addingTask,setAddingTask]= useState(false);
   const [dragItem,  setDragItem]  = useState<string|null>(null);
   const [newsFilter,setNewsFilter]= useState<'high'|'medium'|'low'|'all'>('all');
+  const [lastSaved, setLastSaved] = useState<Date|null>(null);
+  const [saveError, setSaveError] = useState<string|null>(null);
   const autoSaveTimer = useRef<any>(null);
+
 
   // ── Session info ──────────────────────────────────────────────────────────
   const sessionInfo = (() => {
