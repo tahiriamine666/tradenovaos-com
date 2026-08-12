@@ -10,6 +10,8 @@ import {
   Moon, Sun, Coffee, Battery, Activity, X,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import AiTradePlanAssistant from '@/components/tradeplan/AiTradePlanAssistant';
+
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface ChecklistItem {
@@ -200,7 +202,10 @@ export default function TradePlanWorkspace() {
   const [addingTask,setAddingTask]= useState(false);
   const [dragItem,  setDragItem]  = useState<string|null>(null);
   const [newsFilter,setNewsFilter]= useState<'high'|'medium'|'low'|'all'>('all');
+  const [lastSaved, setLastSaved] = useState<Date|null>(null);
+  const [saveError, setSaveError] = useState<string|null>(null);
   const autoSaveTimer = useRef<any>(null);
+
 
   // ── Session info ──────────────────────────────────────────────────────────
   const sessionInfo = (() => {
@@ -217,15 +222,22 @@ export default function TradePlanWorkspace() {
   // ── Load ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (!user) return;
+    let cancelled = false;
     const load = async () => {
       setLoading(true);
-      const { data } = await supabase.from('trade_plans').select('*').eq('user_id',user.id).eq('plan_date',today).maybeSingle();
+      const { data, error } = await supabase
+        .from('trade_plans').select('*')
+        .eq('user_id', user.id).eq('plan_date', today).maybeSingle();
+      if (cancelled) return;
+      if (error) toast({ title: 'Could not load your plan', description: error.message, variant: 'destructive' });
       if (data) {
         setPlanId(data.id);
-        const cl = (data as any).checklist as ChecklistItem[] | null;
-        const setups = (data as any).setups_to_trade as string[] | null;
+        const row: any = { ...data };
+        delete row.id; delete row.user_id; delete row.plan_date; delete row.created_at;
+        const cl = row.checklist as ChecklistItem[] | null;
+        const setups = row.setups_to_trade as string[] | null;
         setPlan({
-          ...EMPTY_PLAN, ...(data as any),
+          ...EMPTY_PLAN, ...row,
           checklist: cl && cl.length ? cl : DEFAULT_CHECKLIST,
           setups_to_trade: setups && setups.length >= 2 ? setups : [setups?.[0] ?? '', setups?.[1] ?? ''],
         });
@@ -233,6 +245,7 @@ export default function TradePlanWorkspace() {
       setLoading(false);
     };
     load();
+    return () => { cancelled = true; };
   }, [user, today]);
 
   // ── Auto-save ─────────────────────────────────────────────────────────────
@@ -245,29 +258,59 @@ export default function TradePlanWorkspace() {
     setSaving(true);
     try {
       const payload: any = {
-        ...planData, user_id:user.id, plan_date:today,
+        ...planData, user_id: user.id, plan_date: today,
         name: planData.market_bias,
         updated_at: new Date().toISOString(),
       };
-      delete payload.id;
-      if (planId) {
-        await supabase.from('trade_plans').update(payload).eq('id', planId);
-      } else {
-        const { data } = await supabase.from('trade_plans').insert(payload).select('id').single();
-        if (data?.id) setPlanId(data.id);
+      // Strip server-managed / non-column fields
+      delete payload.id; delete payload.created_at;
+
+      const { data, error } = await supabase
+        .from('trade_plans')
+        .upsert(payload, { onConflict: 'user_id,plan_date' })
+        .select('id')
+        .single();
+
+      if (error) {
+        setSaveError(error.message);
+        toast({ title: 'Plan not saved', description: error.message, variant: 'destructive' });
+        return;
       }
+      setSaveError(null);
+      if (data?.id) setPlanId(data.id);
+      setLastSaved(new Date());
     } finally {
       setSaving(false);
     }
-  }, [user, today, planId, plan]);
+  }, [user, today, plan]);
+
+  // Keep a ref of the latest plan so we can flush on unmount / tab close
+  const planRef = useRef(plan);
+  useEffect(() => { planRef.current = plan; }, [plan]);
+  const dirtyRef = useRef(false);
 
   useEffect(() => {
     if (loading) return;
+    dirtyRef.current = true;
     clearTimeout(autoSaveTimer.current);
-    autoSaveTimer.current = setTimeout(() => save(plan), 2000);
+    autoSaveTimer.current = setTimeout(() => { dirtyRef.current = false; save(plan); }, 1200);
     return () => clearTimeout(autoSaveTimer.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [plan, loading]);
+
+  // Flush pending edits when leaving the page or hiding the tab
+  useEffect(() => {
+    const flush = () => { if (dirtyRef.current) { dirtyRef.current = false; save(planRef.current); } };
+    const onHide = () => { if (document.visibilityState === 'hidden') flush(); };
+    window.addEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', onHide);
+    return () => {
+      window.removeEventListener('pagehide', flush);
+      document.removeEventListener('visibilitychange', onHide);
+      flush();
+    };
+  }, [save]);
+
 
   // ── Checklist ─────────────────────────────────────────────────────────────
   const toggleTask = (id: string) => {
@@ -319,7 +362,10 @@ export default function TradePlanWorkspace() {
   );
 
   return (
-    <div className="max-w-3xl mx-auto space-y-0">
+    <div className="max-w-[1400px] mx-auto grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-6 items-start">
+      <div className="min-w-0 space-y-0">
+
+
 
       {/* ── TOP HEADER ── */}
       <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
@@ -725,9 +771,21 @@ export default function TradePlanWorkspace() {
       </div>
 
       <div className="flex items-center justify-center gap-2 pt-2 pb-4">
-        <div className={`w-1.5 h-1.5 rounded-full ${saving?'bg-violet-500 animate-pulse':'bg-white/10'}`}/>
-        <span className="text-[10px] text-white/15">{saving ? 'Auto-saving...' : 'All changes saved automatically'}</span>
+        <div className={`w-1.5 h-1.5 rounded-full ${saveError ? 'bg-red-500' : saving?'bg-violet-500 animate-pulse':'bg-emerald-500/50'}`}/>
+        <span className={`text-[10px] ${saveError ? 'text-red-400/70' : 'text-white/25'}`}>
+          {saveError
+            ? `Not saved — ${saveError}`
+            : saving
+              ? 'Saving to your account...'
+              : lastSaved
+                ? `Saved ${lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                : 'All changes save automatically'}
+        </span>
       </div>
+      </div>
+
+      <AiTradePlanAssistant plan={plan as any} analyzing={analyzing} onAnalyze={runAI} />
+
     </div>
   );
 }
