@@ -769,9 +769,21 @@ export default function TradePlanWorkspace() {
       </div>
 
       <div className="flex items-center justify-center gap-2 pt-2 pb-4">
-        <div className={`w-1.5 h-1.5 rounded-full ${saving?'bg-violet-500 animate-pulse':'bg-white/10'}`}/>
-        <span className="text-[10px] text-white/15">{saving ? 'Auto-saving...' : 'All changes saved automatically'}</span>
+        <div className={`w-1.5 h-1.5 rounded-full ${saveError ? 'bg-red-500' : saving?'bg-violet-500 animate-pulse':'bg-emerald-500/50'}`}/>
+        <span className={`text-[10px] ${saveError ? 'text-red-400/70' : 'text-white/25'}`}>
+          {saveError
+            ? `Not saved — ${saveError}`
+            : saving
+              ? 'Saving to your account...'
+              : lastSaved
+                ? `Saved ${lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                : 'All changes save automatically'}
+        </span>
       </div>
+      </div>
+
+      <AiTradePlanAssistant plan={plan as any} analyzing={analyzing} onAnalyze={runAI} />
+
     </div>
   );
 }
