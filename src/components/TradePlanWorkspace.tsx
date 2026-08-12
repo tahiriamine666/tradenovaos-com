@@ -10,6 +10,8 @@ import {
   Moon, Sun, Coffee, Battery, Activity, X,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import AiTradePlanAssistant from '@/components/tradeplan/AiTradePlanAssistant';
+
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 interface ChecklistItem {
