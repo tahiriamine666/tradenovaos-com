@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import TrialPaywall from "./TrialPaywall";
 
-const ADMIN_EMAILS = ["tahiria740@gmail.com"];
+
 
 /**
  * Blocks app access when the user's 7-day trial has expired and they have
