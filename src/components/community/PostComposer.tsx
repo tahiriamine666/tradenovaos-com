@@ -40,20 +40,34 @@ export default function PostComposer({ onCreated, defaultCategory }: {
     setExpanded(false);
   };
 
+  const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'] as const;
+  const EXT_BY_TYPE: Record<string, string> = {
+    'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif',
+  };
+  const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
+
   const uploadImages = async (): Promise<string[]> => {
     if (!user || files.length === 0) return [];
     const paths: string[] = [];
     for (const f of files) {
-      const ext = f.name.split('.').pop() || 'jpg';
+      const type = (f.type || '').toLowerCase();
+      if (!(ALLOWED_IMAGE_TYPES as readonly string[]).includes(type)) {
+        throw new Error('Only JPEG, PNG, WebP or GIF images are allowed.');
+      }
+      if (f.size > MAX_IMAGE_BYTES) {
+        throw new Error('Images must be 10MB or smaller.');
+      }
+      const ext = EXT_BY_TYPE[type];
       const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
       const { error } = await supabase.storage.from('community-uploads').upload(path, f, {
-        cacheControl: '3600', upsert: false,
+        cacheControl: '3600', upsert: false, contentType: type,
       });
       if (error) throw error;
       paths.push(path);
     }
     return paths;
   };
+
 
   const submit = async () => {
     if (!user) return;
