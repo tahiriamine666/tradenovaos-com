@@ -22,14 +22,8 @@ export default function TrialGate({ children }: { children: React.ReactNode }) {
       setIsAdmin(false);
       return;
     }
-    // Fast-path email allowlist while DB check resolves.
-    if (
-      user?.email &&
-      ADMIN_EMAILS.includes(String(user.email).toLowerCase())
-    ) {
-      setIsAdmin(true);
-      return;
-    }
+    // Admin status is resolved server-side via the admin_users table only.
+
     (async () => {
       const { data } = await supabase
         .from("admin_users")
