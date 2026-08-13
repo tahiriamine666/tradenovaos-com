@@ -75,8 +75,12 @@ Deno.serve(async (req) => {
   "risk_score": <0-100 integer>,
   "warnings": ["warning1", "warning2"],
   "suggestions": ["suggestion1", "suggestion2"],
+  "recommended_models": ["e.g. ICT Judas Swing", "AMD", "Wyckoff Accumulation", "Liquidity Sweep Reversal"],
   "verdict": "Ready to trade" | "Proceed with caution" | "Do not trade today"
 }
+
+Pick 2-4 recommended trading models that best fit the trader's bias, session and volatility.
+
 
 Trader's Plan:
 - Bias: ${plan.market_bias}
