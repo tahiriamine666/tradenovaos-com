@@ -38,14 +38,24 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { data: planInfo } = await supabase.rpc('get_user_plan_info');
+    const { data: planInfo, error: planErr } = await supabase.rpc('get_user_plan_info');
     const info = planInfo as any;
+    console.log('[trade-plan-analysis] entitlement', JSON.stringify({
+      user: (claimsData.claims as any)?.sub,
+      err: planErr?.message ?? null,
+      plan: info?.plan, status: info?.status, source: info?.source,
+      is_pro: info?.is_pro, is_elite: info?.is_elite,
+    }));
     if (!info?.is_pro && !info?.is_elite) {
-      return new Response(JSON.stringify({ error: 'Upgrade to Pro or Elite to use Trade Plan AI Analysis.' }), {
+      return new Response(JSON.stringify({
+        error: 'Upgrade to Pro or Elite to use Trade Plan AI Analysis.',
+        debug: { plan: info?.plan ?? null, status: info?.status ?? null, source: info?.source ?? null },
+      }), {
         status: 403,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
 
 
 

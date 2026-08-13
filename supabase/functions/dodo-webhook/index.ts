@@ -124,18 +124,27 @@ Deno.serve(async (req) => {
 
       // Mirror onto profiles for gates / admin tools.
       const mirror = mirrorStatus(status);
-      const profUpdate: Record<string, unknown> = {
-        subscription_status: mirror,
-        trial_ends_at: trialEndsAt,
-        current_period_end: renewsAt,
-        upgraded_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      if (plan && mirror !== "canceled" && mirror !== "inactive") {
-        profUpdate.plan_type = plan;
-        profUpdate.subscription_plan = plan;
+      const { data: prof } = await admin
+        .from("profiles").select("upgraded_manually").eq("id", userId).maybeSingle();
+      const manuallyUpgraded = Boolean(prof?.upgraded_manually);
+
+      if (manuallyUpgraded && (mirror === "inactive" || mirror === "canceled")) {
+        console.log("dodo-webhook: skipping downgrade for manually upgraded user", userId);
+      } else {
+        const profUpdate: Record<string, unknown> = {
+          subscription_status: mirror,
+          trial_ends_at: trialEndsAt,
+          current_period_end: renewsAt,
+          upgraded_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+        if (plan && mirror !== "canceled" && mirror !== "inactive") {
+          profUpdate.plan_type = plan;
+          profUpdate.subscription_plan = plan;
+        }
+        await admin.from("profiles").update(profUpdate).eq("id", userId);
       }
-      await admin.from("profiles").update(profUpdate).eq("id", userId);
+
     } else if (type === "payment.succeeded" || type === "payment.failed") {
       // For payments tied to a subscription, refresh the row's status if we can.
       const subscriptionId: string = String(data.subscription_id ?? "");
