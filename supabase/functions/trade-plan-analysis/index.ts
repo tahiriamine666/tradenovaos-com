@@ -7,8 +7,10 @@ const FALLBACK = {
   risk_score: 60,
   warnings: ['Could not generate AI analysis'],
   suggestions: ['Ensure risk management is set', 'Complete the checklist before trading'],
+  recommended_models: [] as string[],
   verdict: 'Proceed with caution',
 };
+
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
