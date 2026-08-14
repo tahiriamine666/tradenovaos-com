@@ -204,6 +204,8 @@ export default function TradePlanWorkspace() {
   const [newsFilter,setNewsFilter]= useState<'high'|'medium'|'low'|'all'>('all');
   const [lastSaved, setLastSaved] = useState<Date|null>(null);
   const [saveError, setSaveError] = useState<string|null>(null);
+  const [mode,      setMode]      = useState<'manual'|'ai'>('ai');
+  const [generating,setGenerating]= useState(false);
   const autoSaveTimer = useRef<any>(null);
 
 
@@ -241,6 +243,8 @@ export default function TradePlanWorkspace() {
           checklist: cl && cl.length ? cl : DEFAULT_CHECKLIST,
           setups_to_trade: setups && setups.length >= 2 ? setups : [setups?.[0] ?? '', setups?.[1] ?? ''],
         });
+        const savedMode = (row.ai_analysis as any)?.plan_mode;
+        if (savedMode === 'manual' || savedMode === 'ai') setMode(savedMode);
       }
       setLoading(false);
     };
@@ -333,11 +337,135 @@ export default function TradePlanWorkspace() {
   // ── AI analysis ───────────────────────────────────────────────────────────
   const runAI = async () => {
     setAnalyzing(true);
-    const result = await generateAIAnalysis(plan);
+    const result = { ...(await generateAIAnalysis(plan)), plan_mode: mode };
     set('ai_analysis', result);
     await save({ ...plan, ai_analysis: result });
     setAnalyzing(false);
     toast({ title:'✅ AI analysis complete' });
+  };
+
+  // ── Mode switch (persisted inside ai_analysis) ────────────────────────────
+  const changeMode = (m: 'manual'|'ai') => {
+    setMode(m);
+    set('ai_analysis', { ...(plan.ai_analysis ?? {}), plan_mode: m });
+  };
+
+  // ── AI: generate a full trade plan from user context ──────────────────────
+  const generatePlan = async () => {
+    if (!user) return;
+    setGenerating(true);
+    try {
+      // 1. Recent performance
+      const { data: trades } = await supabase
+        .from('trades')
+        .select('result, session, setup, pair, trade_date')
+        .eq('user_id', user.id)
+        .order('trade_date', { ascending: false })
+        .limit(60);
+
+      const rows = trades ?? [];
+      const wins = rows.filter(t => Number(t.result ?? 0) > 0).length;
+      const winRate = rows.length ? Math.round((wins / rows.length) * 100) : 0;
+
+      const bestOf = (key: 'session' | 'setup') => {
+        const agg: Record<string, { n: number; pnl: number }> = {};
+        rows.forEach(t => {
+          const k = (t as any)[key];
+          if (!k) return;
+          agg[k] = agg[k] || { n: 0, pnl: 0 };
+          agg[k].n++; agg[k].pnl += Number(t.result ?? 0);
+        });
+        return Object.entries(agg).sort((a, b) => b[1].pnl - a[1].pnl).map(([k]) => k);
+      };
+      const bestSessions = bestOf('session');
+      const bestSetups   = bestOf('setup');
+
+      // 2. Today's economic events
+      const dayStart = new Date(); dayStart.setHours(0, 0, 0, 0);
+      const dayEnd   = new Date(); dayEnd.setHours(23, 59, 59, 999);
+      const { data: events } = await supabase
+        .from('economic_events')
+        .select('title, impact, currency, event_time')
+        .gte('event_time', dayStart.toISOString())
+        .lte('event_time', dayEnd.toISOString())
+        .order('event_time', { ascending: true })
+        .limit(40);
+
+      const highImpact = (events ?? []).filter(e => (e.impact ?? '').toLowerCase() === 'high');
+
+      // 3. Derive plan values
+      const recentPnl = rows.slice(0, 10).reduce((s, t) => s + Number(t.result ?? 0), 0);
+      const derivedBias =
+        recentPnl > 0 ? (plan.market_bias !== 'neutral' ? plan.market_bias : 'bullish')
+        : highImpact.length > 1 ? 'ranging'
+        : plan.market_bias;
+
+      const session = bestSessions[0] || sessionInfo.label.replace(' Open', '').replace(' Session', '').replace(' Close', '') || 'London';
+      const normalizedSession = SESSIONS.find(s => s.toLowerCase().includes(session.toLowerCase())) ?? SESSIONS[0];
+
+      const volatility = highImpact.length >= 2 ? 'high' : highImpact.length === 1 ? 'normal' : 'low';
+      const confidence = Math.max(25, Math.min(90, Math.round((winRate || 50) * 0.8 + (highImpact.length ? -5 : 5) + 20)));
+
+      const mainSetup      = bestSetups[0] || (derivedBias === 'ranging' ? 'Liquidity Sweep Reversal' : 'Order Block + FVG Continuation');
+      const secondarySetup = bestSetups[1] || (derivedBias === 'ranging' ? 'Mean Reversion to VWAP' : 'Break of Structure Retest');
+
+      const aiChecklist: ChecklistItem[] = [
+        { id: crypto.randomUUID(), text: `Mark HTF levels and confirm ${derivedBias} bias`, done: false, category: 'prep' },
+        { id: crypto.randomUUID(), text: `Trade only the ${normalizedSession} session window`, done: false, category: 'execution' },
+        { id: crypto.randomUUID(), text: `Wait for confirmation on "${mainSetup}" before entry`, done: false, category: 'execution' },
+        ...(highImpact.length
+          ? [{ id: crypto.randomUUID(), text: `Avoid entries 15 min around: ${highImpact.slice(0, 2).map(e => e.title).join(', ')}`, done: false, category: 'news' as const }]
+          : []),
+        { id: crypto.randomUUID(), text: 'Stop trading after max daily loss or max trades hit', done: false, category: 'risk' },
+        { id: crypto.randomUUID(), text: winRate < 45 ? 'Half size today — win rate is below baseline' : 'Review last session notes before first entry', done: false, category: 'psychology' },
+      ];
+
+      const riskPerTrade = winRate >= 55 ? 1 : winRate >= 45 ? 0.75 : 0.5;
+      const nextPlan: TradePlan = {
+        ...plan,
+        market_bias: derivedBias,
+        setups_to_trade: [mainSetup, secondarySetup],
+        session: normalizedSession,
+        confidence,
+        volatility,
+        news_impact: highImpact.length ? 'high' : 'none',
+        avoid_before_news: highImpact.length > 0,
+        checklist: aiChecklist,
+        news_events: highImpact.slice(0, 4).map(e => ({
+          id: crypto.randomUUID(),
+          name: e.title,
+          time: new Date(e.event_time).toISOString().slice(11, 16),
+          impact: 'high' as const,
+          currency: e.currency ?? '',
+        })),
+        max_risk_per_trade: plan.max_risk_per_trade ?? riskPerTrade,
+        max_trades: plan.max_trades ?? (winRate < 45 ? 2 : 4),
+        max_consec_losses: winRate < 45 ? 2 : 3,
+      };
+
+      setPlan(nextPlan);
+
+      // 4. Deep AI review of the generated plan
+      const result = {
+        ...(await generateAIAnalysis(nextPlan)),
+        plan_mode: 'ai',
+        generated_context: {
+          trades_analyzed: rows.length,
+          win_rate: winRate,
+          best_session: bestSessions[0] ?? null,
+          best_setup: bestSetups[0] ?? null,
+          high_impact_events: highImpact.length,
+        },
+      };
+      const finalPlan = { ...nextPlan, ai_analysis: result };
+      setPlan(finalPlan);
+      await save(finalPlan);
+      toast({ title: '✨ Trade plan generated', description: `Based on ${rows.length} trades · ${winRate}% win rate · ${highImpact.length} high-impact events.` });
+    } catch (e: any) {
+      toast({ title: 'Could not generate plan', description: e?.message ?? 'Please try again.', variant: 'destructive' });
+    } finally {
+      setGenerating(false);
+    }
   };
 
   // ── Drag reorder ──────────────────────────────────────────────────────────
@@ -362,7 +490,7 @@ export default function TradePlanWorkspace() {
   );
 
   return (
-    <div className="max-w-[1400px] mx-auto grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-6 items-start">
+    <div className={`max-w-[1400px] mx-auto grid grid-cols-1 gap-6 items-start ${mode === 'ai' ? 'xl:grid-cols-[minmax(0,1fr)_360px]' : ''}`}>
       <div className="min-w-0 space-y-0">
 
 
@@ -396,11 +524,13 @@ export default function TradePlanWorkspace() {
             {bias.label}
           </div>
 
-          <button onClick={runAI} disabled={analyzing}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-violet-500/25 bg-violet-500/10 text-violet-400 text-xs font-bold hover:bg-violet-500/15 transition-all disabled:opacity-50">
-            <Sparkles className={`h-3.5 w-3.5 ${analyzing?'animate-spin':''}`}/>
-            {analyzing ? 'Analyzing...' : 'AI Analysis'}
-          </button>
+          {mode === 'ai' && (
+            <button onClick={runAI} disabled={analyzing}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-violet-500/25 bg-violet-500/10 text-violet-400 text-xs font-bold hover:bg-violet-500/15 transition-all disabled:opacity-50">
+              <Sparkles className={`h-3.5 w-3.5 ${analyzing?'animate-spin':''}`}/>
+              {analyzing ? 'Analyzing...' : 'AI Analysis'}
+            </button>
+          )}
 
           <button onClick={() => save(plan)} disabled={saving}
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-black transition-all shadow-lg shadow-violet-500/20 disabled:opacity-50">
@@ -410,12 +540,53 @@ export default function TradePlanWorkspace() {
         </div>
       </div>
 
+      {/* ── MODE SELECTOR ── */}
+      <div className="mb-5 rounded-2xl border border-white/[0.08] bg-white/[0.02] px-5 py-4">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-2.5">Trade Plan Mode</p>
+            <div className="flex gap-2">
+              {([
+                { v:'manual' as const, label:'Manual Plan',      icon: Edit3,    desc:'You fill everything' },
+                { v:'ai' as const,     label:'AI Assisted Plan', icon: Sparkles, desc:'AI drafts your plan' },
+              ]).map(m => {
+                const Icon = m.icon;
+                const active = mode === m.v;
+                return (
+                  <button key={m.v} onClick={() => changeMode(m.v)}
+                    className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl border text-left transition-all ${
+                      active ? 'bg-violet-500/12 border-violet-500/30 text-violet-300 shadow-md' : 'border-white/[0.07] text-white/35 hover:border-white/[0.15] hover:text-white/60'
+                    }`}>
+                    <span className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${active ? 'border-violet-400' : 'border-white/20'}`}>
+                      {active && <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />}
+                    </span>
+                    <Icon className="h-3.5 w-3.5" />
+                    <span>
+                      <span className="block text-xs font-black">{m.label}</span>
+                      <span className="block text-[10px] opacity-60">{m.desc}</span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {mode === 'ai' && (
+            <button onClick={generatePlan} disabled={generating}
+              className="flex items-center gap-2 px-5 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-black transition-all shadow-lg shadow-violet-500/25 disabled:opacity-50">
+              <Sparkles className={`h-4 w-4 ${generating ? 'animate-spin' : ''}`} />
+              {generating ? 'Generating plan...' : 'Generate Trade Plan'}
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* ── MAIN CARD ── */}
       <div className="rounded-3xl border border-white/[0.08] bg-white/[0.02] overflow-hidden shadow-2xl shadow-black/30">
 
         {/* AI PANEL */}
         <AnimatePresence>
-          {ai?.verdict && (
+          {mode === 'ai' && ai?.verdict && (
             <motion.div initial={{height:0,opacity:0}} animate={{height:'auto',opacity:1}} exit={{height:0,opacity:0}}
               className="overflow-hidden border-b border-violet-500/20 bg-gradient-to-r from-violet-600/8 via-violet-500/4 to-transparent">
               <div className="px-6 py-4">
@@ -478,13 +649,6 @@ export default function TradePlanWorkspace() {
             </div>
           </div>
 
-          <div className="mb-4">
-            <p className="text-[10px] font-bold text-white/25 uppercase tracking-wider mb-2">Session Focus</p>
-            <textarea value={plan.focus} onChange={e => set('focus', e.target.value)}
-              placeholder="e.g. Bullish continuation on NAS100, watching key 20,000 level for pullback entry..."
-              rows={2}
-              className="w-full text-sm text-white/80 placeholder:text-white/20 bg-white/[0.03] border border-white/[0.07] rounded-xl px-4 py-3 focus:outline-none focus:border-violet-500/40 resize-none transition-colors" />
-          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
             <div>
@@ -784,7 +948,9 @@ export default function TradePlanWorkspace() {
       </div>
       </div>
 
-      <AiTradePlanAssistant plan={plan as any} analyzing={analyzing} onAnalyze={runAI} />
+      {mode === 'ai' && (
+        <AiTradePlanAssistant plan={plan as any} analyzing={analyzing} onAnalyze={runAI} />
+      )}
 
     </div>
   );

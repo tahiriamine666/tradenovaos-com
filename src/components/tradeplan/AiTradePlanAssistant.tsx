@@ -90,7 +90,7 @@ function localReadiness(p: AssistantPlan) {
   if ((p.max_risk_per_trade ?? 0) > 2) warnings.push(`Risk/trade of ${p.max_risk_per_trade}% is above the 2% guardrail.`);
   if (p.setups_to_trade?.[0]) score += 8; else tips.push('Define a main setup so you only take A+ entries.');
   if (p.session) score += 6; else tips.push('Pick a session to avoid trading all day.');
-  if (p.focus?.trim()) score += 6; else tips.push('Write your session focus — a plan you cannot state is not a plan.');
+  if (p.setups_to_trade?.[1]) score += 6; else tips.push('Add a secondary setup so you are not forcing the primary one.');
 
   const done = p.checklist?.filter(i => i.done).length ?? 0;
   const total = p.checklist?.length ?? 0;
