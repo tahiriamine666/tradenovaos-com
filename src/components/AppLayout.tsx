@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowLeft, BookOpen, Brain, CalendarClock, CalendarDays, CheckCircle2, ChevronRight,
+  ArrowLeft, Brain, CalendarClock, CalendarDays, CheckCircle2, ChevronRight,
   Circle, CircleDollarSign, LayoutDashboard, Lock, Menu, Search,
-  Settings, Shield, Target, Users, X,
+  Settings, Shield, Users, X,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,11 +23,9 @@ export const BASE_ITEMS = [
   { id: 'dashboard', label: 'Command Center',    icon: LayoutDashboard },
   { id: 'plan',      label: 'Trade Plan',        icon: CalendarDays },
   { id: 'trades',    label: 'Trade Vault',       icon: CircleDollarSign },
-  { id: 'journal',   label: 'Mind Journal',      icon: BookOpen },
   { id: 'community', label: 'Community',         icon: Users },
   { id: 'resources', label: 'Learning Hub',      icon: Brain },
   { id: 'economic',  label: 'Economic Calendar', icon: CalendarClock },
-  { id: 'goals',     label: 'Goals',             icon: Target },
   { id: 'settings',  label: 'Studio Settings',   icon: Settings },
 ];
 
@@ -35,7 +33,7 @@ const BOTTOM_NAV = [
   { id: 'dashboard', icon: LayoutDashboard, label: 'Home' },
   { id: 'plan',    icon: CalendarDays,    label: 'Plan' },
   { id: 'trades',  icon: CircleDollarSign, label: 'Trades' },
-  { id: 'journal', icon: BookOpen,         label: 'Journal' },
+  { id: 'community', icon: Users,          label: 'Community' },
   { id: 'settings', icon: Settings,         label: 'Settings' },
 ];
 
