@@ -23,11 +23,9 @@ export const BASE_ITEMS = [
   { id: 'dashboard', label: 'Command Center',    icon: LayoutDashboard },
   { id: 'plan',      label: 'Trade Plan',        icon: CalendarDays },
   { id: 'trades',    label: 'Trade Vault',       icon: CircleDollarSign },
-  { id: 'journal',   label: 'Mind Journal',      icon: BookOpen },
   { id: 'community', label: 'Community',         icon: Users },
   { id: 'resources', label: 'Learning Hub',      icon: Brain },
   { id: 'economic',  label: 'Economic Calendar', icon: CalendarClock },
-  { id: 'goals',     label: 'Goals',             icon: Target },
   { id: 'settings',  label: 'Studio Settings',   icon: Settings },
 ];
 
@@ -35,7 +33,7 @@ const BOTTOM_NAV = [
   { id: 'dashboard', icon: LayoutDashboard, label: 'Home' },
   { id: 'plan',    icon: CalendarDays,    label: 'Plan' },
   { id: 'trades',  icon: CircleDollarSign, label: 'Trades' },
-  { id: 'journal', icon: BookOpen,         label: 'Journal' },
+  { id: 'community', icon: Users,          label: 'Community' },
   { id: 'settings', icon: Settings,         label: 'Settings' },
 ];
 
