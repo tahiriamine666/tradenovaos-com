@@ -393,11 +393,10 @@ function Hero({ onSignup }: { onSignup: () => void }) {
                     {l:'Trade Plan'},
                     {l:'Trade Vault'},
                     {l:'Mind Journal'},
-                    {l:'Edge Analytics'},
-                    {l:'Playbook Lab'},
-                    {l:'Import CSV'},
-                    {l:'Replay Studio'},
+                    {l:'Community'},
                     {l:'Learning Hub'},
+                    {l:'Economic Calendar'},
+                    {l:'Goals'},
                     {l:'Studio Settings'},
                   ].map(item => (
                     <div key={item.l} className={`text-[11px] px-3 py-1.5 rounded-lg font-medium flex items-center gap-2 ${item.a ? 'bg-violet-600 text-white shadow-sm shadow-violet-500/30' : 'text-slate-500'}`}>
