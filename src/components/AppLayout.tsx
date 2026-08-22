@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowLeft, BookOpen, Brain, CalendarClock, CalendarDays, CheckCircle2, ChevronRight,
+  ArrowLeft, Brain, CalendarClock, CalendarDays, CheckCircle2, ChevronRight,
   Circle, CircleDollarSign, LayoutDashboard, Lock, Menu, Search,
-  Settings, Shield, Target, Users, X,
+  Settings, Shield, Users, X,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
