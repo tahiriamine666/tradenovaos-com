@@ -8,8 +8,8 @@ import { useNavigate } from 'react-router-dom';
 import {
   BarChart3, BookOpen, Brain, Target, PlayCircle, Sparkles,
   ArrowRight, Check, TrendingUp, Shield, Zap,
-  Star, Menu, X, Activity, Calendar, Upload,
-  Award, LineChart,
+  Star, Menu, X, Activity, Calendar, CalendarDays, Upload,
+  Award, LineChart, Trophy,
 } from 'lucide-react';
 import {
   AreaChart, Area, ResponsiveContainer, XAxis, YAxis,
