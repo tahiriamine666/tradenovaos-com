@@ -643,14 +643,16 @@ function StatsBar() {
 }
 
 const FEATURES = [
-  {icon:BookOpen,  title:'Trade Journal',    desc:'Log every trade with emotion, execution score, and outcome. Build habits that compound.',tag:'Core',    c:'violet'},
-  {icon:BarChart3, title:'Edge Analytics',   desc:'Win rate, profit factor, expectancy — know exactly where your edge lives and breaks.',  tag:'Analytics',c:'blue'},
-  {icon:Brain,     title:'Mind Journal',     desc:'Track emotions and biases. Identify revenge trading, over-trading, and patterns.',        tag:'Psychology',c:'pink'},
-  {icon:Target,    title:'Playbook Lab',     desc:'Define setups, entry rules, and checklists. Operate with a system, not a feeling.',      tag:'Planning',c:'emerald'},
-  {icon:PlayCircle,title:'Replay Studio',   desc:'Replay sessions bar by bar. Practice without risk. Score your simulated executions.',    tag:'Practice', c:'amber'},
-  {icon:Sparkles,  title:'AI Insights',      desc:'Claude analyzes your trades and surfaces patterns you\'d never catch manually.',         tag:'AI',       c:'purple'},
-  {icon:Calendar,  title:'Trading Calendar', desc:'See P&L heatmap across the month. Identify your best and worst trading days.',           tag:'Visual',   c:'cyan'},
-  {icon:Upload,    title:'CSV Import',       desc:'Import from any broker — MT4, MT5, cTrader, IBKR. Smart column mapping.',               tag:'Import',   c:'green'},
+  {icon:BookOpen,  title:'Trade Journal',          desc:'Log every trade with emotion, execution score, and outcome. Build habits that compound.',tag:'Core',       c:'violet'},
+  {icon:Brain,     title:'Mind Journal',           desc:'Track emotions and biases. Identify revenge trading, over-trading, and patterns.',        tag:'Psychology', c:'pink'},
+  {icon:Target,    title:'Playbook Lab',           desc:'Define setups, entry rules, and checklists. Operate with a system, not a feeling.',      tag:'Planning',   c:'emerald'},
+  {icon:Sparkles,  title:'AI Insights',            desc:'Claude analyzes your trades and surfaces patterns you\'d never catch manually.',         tag:'AI',         c:'purple'},
+  {icon:Calendar,  title:'Trading Calendar',       desc:'See P&L heatmap across the month. Identify your best and worst trading days.',           tag:'Visual',     c:'cyan'},
+  {icon:Upload,    title:'CSV Import',             desc:'Import from any broker — MT4, MT5, cTrader, IBKR. Smart column mapping.',               tag:'Import',     c:'green'},
+  {icon:Trophy,    title:'Trading Goals',          desc:'Set monthly profit, risk, and consistency targets. Track progress toward funded-ready performance.', tag:'Goals', c:'amber'},
+  {icon:CalendarDays,title:'Economic Calendar',   desc:'High-impact news alerts, volatility scanner, and session tracker for every trading day.', tag:'News',       c:'blue'},
+  {icon:Sparkles,  title:'AI Trading Assistant',   desc:'Get daily bias, model recommendations, and risk warnings built from your data.',         tag:'AI Coach',   c:'violet'},
+  {icon:Award,     title:'Funded Certificates',    desc:'Build a portfolio of prop-firm certificates. Track rules, payouts, and milestones.',  tag:'Funding',    c:'emerald'},
 ];
 
 const CM: Record<string,any> = {
@@ -891,8 +893,8 @@ function Pricing({ onSignup }: { onSignup: () => void }) {
   const { ref, inView } = useReveal();
   const plans = [
     {name:'Free',  price:'$0',  desc:'Start tracking',          features:['50 trades/month','Trade journal','Basic analytics','Dark/light mode'],cta:'Start Free',hi:false},
-    {name:'Pro',   price:'$14', per:'/mo',desc:'Serious traders',badge:'Most Popular',features:['Unlimited trades','Trade Vault','Replay Studio','Trade Plan','Community access','Advanced analytics','1 trading account','500 AI credits/mo'],cta:'Start 7-day Free Trial',hi:true},
-    {name:'Elite', price:'$28', per:'/mo',desc:'Funded traders', features:['Everything in Pro','Unlimited trading accounts','1,000 AI credits/mo','Learning Hub','Mind Journal','Edge Analytics','Elite Community','Priority Support','Layout customization'],cta:'Upgrade to Elite',hi:false},
+    {name:'Pro',   price:'$14', per:'/mo',desc:'Serious traders',badge:'Most Popular',features:['Unlimited trades','Trade Vault','Trade Plan','Community access','Advanced analytics','1 trading account','500 AI credits/mo'],cta:'Start 7-day Free Trial',hi:true},
+    {name:'Elite', price:'$28', per:'/mo',desc:'Funded traders', features:['Everything in Pro','Unlimited trading accounts','1,000 AI credits/mo','Learning Hub','Mind Journal','Economic Calendar','AI Trading Assistant','Elite Community','Priority Support','Layout customization'],cta:'Upgrade to Elite',hi:false},
   ];
   return (
     <section id="pricing" className="py-24 sm:py-32 relative" ref={ref}>
