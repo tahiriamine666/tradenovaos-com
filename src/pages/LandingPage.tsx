@@ -677,7 +677,7 @@ function Features() {
             <span className="text-xs font-semibold text-violet-700">Complete trading stack</span>
           </div>
           <h2 className="text-4xl sm:text-5xl font-black text-slate-900 mb-4 tracking-tight">Everything you need to improve</h2>
-          <p className="text-slate-600 text-lg max-w-xl mx-auto">Eight tools that work together to turn trading data into consistent edge.</p>
+          <p className="text-slate-600 text-lg max-w-xl mx-auto">Tools that work together to turn trading data into consistent edge.</p>
         </motion.div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {FEATURES.map((f,i) => {
