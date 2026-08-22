@@ -1755,6 +1755,7 @@ export type Database = {
           entry_price: number | null
           execution_score: number | null
           exit_price: number | null
+          external_id: string | null
           id: string
           is_starred: boolean
           mistakes: string[]
@@ -1786,6 +1787,7 @@ export type Database = {
           entry_price?: number | null
           execution_score?: number | null
           exit_price?: number | null
+          external_id?: string | null
           id?: string
           is_starred?: boolean
           mistakes?: string[]
@@ -1817,6 +1819,7 @@ export type Database = {
           entry_price?: number | null
           execution_score?: number | null
           exit_price?: number | null
+          external_id?: string | null
           id?: string
           is_starred?: boolean
           mistakes?: string[]
@@ -1860,51 +1863,90 @@ export type Database = {
         Row: {
           account_name: string
           account_number: string | null
+          account_type: string
+          balance: number | null
           broker: string | null
+          challenge: Json
           created_at: string
           credentials: Json
+          currency: string | null
+          equity: number | null
+          firm: string | null
+          free_margin: number | null
           id: string
+          initial_balance: number | null
           is_default: boolean
           last_connected_at: string | null
+          last_synced_at: string | null
           login: string | null
+          margin: number | null
+          metaapi_account_id: string | null
+          metrics: Json
           password: string | null
           platform: string
           server: string | null
           status: string
+          sync_error: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           account_name: string
           account_number?: string | null
+          account_type?: string
+          balance?: number | null
           broker?: string | null
+          challenge?: Json
           created_at?: string
           credentials?: Json
+          currency?: string | null
+          equity?: number | null
+          firm?: string | null
+          free_margin?: number | null
           id?: string
+          initial_balance?: number | null
           is_default?: boolean
           last_connected_at?: string | null
+          last_synced_at?: string | null
           login?: string | null
+          margin?: number | null
+          metaapi_account_id?: string | null
+          metrics?: Json
           password?: string | null
           platform?: string
           server?: string | null
           status?: string
+          sync_error?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           account_name?: string
           account_number?: string | null
+          account_type?: string
+          balance?: number | null
           broker?: string | null
+          challenge?: Json
           created_at?: string
           credentials?: Json
+          currency?: string | null
+          equity?: number | null
+          firm?: string | null
+          free_margin?: number | null
           id?: string
+          initial_balance?: number | null
           is_default?: boolean
           last_connected_at?: string | null
+          last_synced_at?: string | null
           login?: string | null
+          margin?: number | null
+          metaapi_account_id?: string | null
+          metrics?: Json
           password?: string | null
           platform?: string
           server?: string | null
           status?: string
+          sync_error?: string | null
           updated_at?: string
           user_id?: string
         }
