@@ -1,7 +1,7 @@
 // Platform adapter architecture for trading account integrations.
 // Add a new platform = add one file in this folder + register it in ./index.ts.
 
-export type PlatformId = 'mt5' | 'ctrader' | 'dxtrade' | 'tradelocker' | 'alpha_trader';
+export type PlatformId = 'mt5' | 'mt4' | 'ctrader' | 'dxtrade' | 'tradelocker' | 'alpha_trader';
 
 export interface PlatformField {
   key: string;                       // stored in credentials, unless mappedTo is set
@@ -38,4 +38,17 @@ export interface TradingAccountRecord {
   last_connected_at: string | null;
   created_at: string;
   updated_at: string;
+  account_type?: 'broker' | 'prop_firm';
+  firm?: string | null;
+  metaapi_account_id?: string | null;
+  currency?: string | null;
+  balance?: number | null;
+  equity?: number | null;
+  margin?: number | null;
+  free_margin?: number | null;
+  initial_balance?: number | null;
+  metrics?: Record<string, unknown> | null;
+  challenge?: Record<string, unknown> | null;
+  sync_error?: string | null;
+  last_synced_at?: string | null;
 }

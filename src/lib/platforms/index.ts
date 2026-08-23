@@ -50,7 +50,17 @@ const ALPHA: PlatformAdapter = {
   ],
 };
 
-export const PLATFORMS: PlatformAdapter[] = [MT5, CTRADER, DXTRADE, TRADELOCKER, ALPHA];
+const MT4: PlatformAdapter = {
+  id: 'mt4', label: 'MetaTrader 4', icon: '📊',
+  description: 'Connect any MT4 broker or prop-firm account.',
+  fields: [
+    { key: 'login',    label: 'Login',    mappedTo: 'account_number', required: true, placeholder: '12345678' },
+    { key: 'password', label: 'Password', type: 'password',           required: true, placeholder: 'Investor password' },
+    { key: 'server',   label: 'Server',   mappedTo: 'server',         required: true, placeholder: 'FTMO-Server' },
+  ],
+};
+
+export const PLATFORMS: PlatformAdapter[] = [MT5, MT4, CTRADER, DXTRADE, TRADELOCKER, ALPHA];
 
 export function getPlatform(id: string | null | undefined): PlatformAdapter | undefined {
   return PLATFORMS.find(p => p.id === id);
