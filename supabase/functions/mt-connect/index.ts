@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
     if (error || !row) return json({ error: 'Account not found' }, 404);
 
     await db.from('trading_accounts')
-      .update({ status: 'syncing', sync_error: null }).eq('id', row.id);
+      .update({ status: 'connecting', sync_error: null }).eq('id', row.id);
 
     let metaId: string | null = row.metaapi_account_id;
     if (!metaId) {

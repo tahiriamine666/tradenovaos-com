@@ -44,14 +44,15 @@ const money = (v: number | null | undefined, currency?: string | null) =>
 function StatusPill({ status }: { status: Status }) {
   const map: Record<Status, { label: string; icon: React.ElementType; cls: string }> = {
     connected:    { label: 'Connected',    icon: CheckCircle2, cls: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
-    syncing:      { label: 'Syncing',      icon: RefreshCw,    cls: 'bg-primary/10 text-primary border-primary/20' },
+    pending:      { label: 'Pending',      icon: CircleDashed, cls: 'bg-muted text-muted-foreground border-border' },
+    connecting:   { label: 'Connecting',   icon: RefreshCw,    cls: 'bg-primary/10 text-primary border-primary/20' },
     disconnected: { label: 'Disconnected', icon: CircleDashed, cls: 'bg-muted text-muted-foreground border-border' },
     error:        { label: 'Error',        icon: XCircle,      cls: 'bg-red-500/10 text-red-500 border-red-500/20' },
   };
   const { label, icon: Icon, cls } = map[status] ?? map.disconnected;
   return (
     <Badge variant="outline" className={`gap-1 border ${cls}`}>
-      <Icon className={`h-3 w-3 ${status === 'syncing' ? 'animate-spin' : ''}`} />
+      <Icon className={`h-3 w-3 ${status === 'connecting' ? 'animate-spin' : ''}`} />
       {label}
     </Badge>
   );
@@ -109,7 +110,7 @@ export default function TradingAccountsSection() {
   // Poll while any account is syncing (MetaApi deployment takes ~1 min).
   const pollRef = useRef<number | null>(null);
   useEffect(() => {
-    const anySyncing = accounts.some(a => a.status === 'syncing');
+    const anySyncing = accounts.some(a => (a.status === 'connecting' || a.status === 'pending'));
     if (!anySyncing) { if (pollRef.current) window.clearInterval(pollRef.current); return; }
     pollRef.current = window.setInterval(() => { void load(); }, 15000);
     return () => { if (pollRef.current) window.clearInterval(pollRef.current); };
@@ -181,7 +182,7 @@ export default function TradingAccountsSection() {
       account_number: login.trim(),
       login: login.trim(),
       is_default: isDefault,
-      status: 'syncing' as Status,
+      status: 'pending' as Status,
     };
     if (password.trim()) {
       payload.password = password.trim();
@@ -189,12 +190,16 @@ export default function TradingAccountsSection() {
       payload.metaapi_account_id = null; // re-provision when credentials change
     }
 
+    console.log('Creating account:', { ...payload, password: payload.password ? '***' : undefined, credentials: undefined });
+    console.log('Status being inserted:', payload.status);
+
     const { data: saved, error } = editing
       ? await supabase.from('trading_accounts').update(payload as never).eq('id', editing.id).select().single()
       : await supabase.from('trading_accounts').insert(payload as never).select().single();
 
     if (error || !saved) {
-      toast({ title: 'Could not save account', description: error?.message, variant: 'destructive' });
+      console.error('trading_accounts save failed:', error);
+      toast({ title: 'Could not save account', description: error?.message ?? 'Unknown database error', variant: 'destructive' });
       setSaving(false);
       return;
     }
@@ -221,7 +226,7 @@ export default function TradingAccountsSection() {
         description: (res as { error?: string })?.error ?? fnErr?.message ?? 'Check your login, server and investor password.',
         variant: 'destructive',
       });
-    } else if ((res as { status?: string })?.status === 'syncing') {
+    } else if ((res as { status?: string })?.status === 'connecting') {
       toast({ title: 'Account deploying', description: 'This takes about a minute — data will appear automatically.' });
     } else {
       toast({ title: 'Account connected', description: 'Live balance and trade history imported.' });

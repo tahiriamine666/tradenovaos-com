@@ -33,7 +33,7 @@ export interface TradingAccountRecord {
   login: string | null;
   password: string | null;
   credentials: Record<string, unknown>;
-  status: 'connected' | 'syncing' | 'disconnected' | 'error';
+  status: 'pending' | 'connecting' | 'connected' | 'disconnected' | 'error';
   is_default: boolean;
   last_connected_at: string | null;
   created_at: string;
