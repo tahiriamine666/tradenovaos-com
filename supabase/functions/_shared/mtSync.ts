@@ -81,9 +81,9 @@ export async function syncAccount(row: AccountRow) {
   }
   if (meta.connectionStatus !== 'CONNECTED' && meta.state !== 'DEPLOYED') {
     await db.from('trading_accounts').update({
-      status: 'syncing', sync_error: null,
+      status: 'connecting', sync_error: null,
     }).eq('id', row.id);
-    return { status: 'syncing' as const, message: 'Account is deploying, this can take a minute.' };
+    return { status: 'connecting' as const, message: 'Account is deploying, this can take a minute.' };
   }
 
   const info = await accountInformation(metaId, region);

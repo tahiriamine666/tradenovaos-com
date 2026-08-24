@@ -607,7 +607,7 @@ export default function CommandCenter({ onNavigate, onAddTrade }: Props) {
                 : 'text-muted-foreground'
               }`}
             >
-              {activeAccount.status === 'syncing' ? 'Syncing…' : activeAccount.status}
+              {activeAccount.status === 'connecting' ? 'Syncing…' : activeAccount.status}
             </Badge>
             <span className="text-[11px] text-muted-foreground">
               {activeAccount.last_synced_at
@@ -651,7 +651,7 @@ export default function CommandCenter({ onNavigate, onAddTrade }: Props) {
             description={
               activeAccount.sync_error
                 ? activeAccount.sync_error
-                : activeAccount.status === 'syncing'
+                : activeAccount.status === 'connecting'
                   ? 'We are pulling closed trades from your account — this usually takes about a minute.'
                   : 'No closed trades found on this account yet. Trades will appear here automatically after each sync.'
             }
