@@ -169,7 +169,7 @@ export default function TradingAccountsSection() {
       return;
     }
     setSaving(true);
-    const firmName = provider?.name ?? providerQuery.trim() || null;
+    const firmName = provider?.name ?? (providerQuery.trim() || null);
     const payload: Record<string, unknown> = {
       user_id: user.id,
       account_name: accountName.trim(),
