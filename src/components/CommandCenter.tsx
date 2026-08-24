@@ -592,18 +592,49 @@ export default function CommandCenter({ onNavigate, onAddTrade }: Props) {
         }
       />
 
-      <div className="flex items-center gap-2 -mt-2">
+      <div className="flex items-center gap-2 -mt-2 flex-wrap">
         <Badge variant="outline" className="gap-1.5 py-1 px-2.5 text-xs font-medium">
           <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
           {badgeParts ? badgeParts.join(" • ") : "All Accounts"}
         </Badge>
         {activeAccount && (
-          <span className="text-[11px] text-muted-foreground">
-            Showing data for {activeAccount.account_name}
-          </span>
+          <>
+            <Badge
+              variant="outline"
+              className={`py-1 px-2 text-[11px] ${
+                activeAccount.status === 'connected' ? 'text-emerald-600 border-emerald-500/30 bg-emerald-500/10'
+                : activeAccount.status === 'error' ? 'text-danger border-danger/30 bg-danger/10'
+                : 'text-muted-foreground'
+              }`}
+            >
+              {activeAccount.status === 'syncing' ? 'Syncing…' : activeAccount.status}
+            </Badge>
+            <span className="text-[11px] text-muted-foreground">
+              {activeAccount.last_synced_at
+                ? `Last sync ${new Date(activeAccount.last_synced_at).toLocaleTimeString()}`
+                : `Showing data for ${activeAccount.account_name}`}
+            </span>
+          </>
         )}
       </div>
 
+      {activeAccount && (activeAccount.balance != null || activeAccount.equity != null) && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {([
+            ['Balance', activeAccount.balance],
+            ['Equity', activeAccount.equity],
+            ['Free Margin', activeAccount.free_margin],
+            ['Margin Used', activeAccount.margin],
+          ] as [string, number | null | undefined][]).map(([label, val]) => (
+            <div key={label} className="rounded-xl border border-border bg-card px-4 py-3">
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</p>
+              <p className="text-base font-semibold text-foreground">
+                {val == null ? '—' : `$${Number(val).toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
 
       {error && (
         <div className="flex items-center gap-2 rounded-lg border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">
@@ -614,28 +645,54 @@ export default function CommandCenter({ onNavigate, onAddTrade }: Props) {
       )}
 
       {isEmpty && !error ? (
-        <EmptyState
-          title="Your dashboard is ready"
-          description="Log your first trade or import from a CSV to unlock P&L, equity curve, calendar, and edge analytics."
-          checklist={[
-            { label: "First trade logged", done: false },
-            { label: "10 trades → setup analytics" },
-            { label: "30 trades → AI insights" },
-            { label: "50+ trades → pattern detection" },
-          ]}
-          actions={
-            <>
-              {onAddTrade && (
-                <Button onClick={onAddTrade} size="sm">
-                  <Plus className="mr-1.5 h-4 w-4" /> Log your first trade
+        activeAccount ? (
+          <EmptyState
+            title={activeAccount.status === 'error' ? 'Account connection issue' : 'Importing your trade history'}
+            description={
+              activeAccount.sync_error
+                ? activeAccount.sync_error
+                : activeAccount.status === 'syncing'
+                  ? 'We are pulling closed trades from your account — this usually takes about a minute.'
+                  : 'No closed trades found on this account yet. Trades will appear here automatically after each sync.'
+            }
+            actions={
+              <>
+                {onAddTrade && (
+                  <Button onClick={onAddTrade} size="sm">
+                    <Plus className="mr-1.5 h-4 w-4" /> Log a trade manually
+                  </Button>
+                )}
+                <Button variant="outline" size="sm" onClick={() => onNavigate("settings")}>
+                  <Wallet className="mr-1.5 h-4 w-4" /> Manage accounts
                 </Button>
-              )}
-              <Button variant="outline" size="sm" onClick={() => onNavigate("trades")}>
-                <Upload className="mr-1.5 h-4 w-4" /> Import trades
-              </Button>
-            </>
-          }
-        />
+              </>
+            }
+          />
+        ) : (
+          <EmptyState
+            title="Your dashboard is ready"
+            description="Connect a broker or prop-firm account, log a trade, or import a CSV to unlock P&L, equity curve, calendar, and edge analytics."
+            checklist={[
+              { label: "First trade logged", done: false },
+              { label: "10 trades → setup analytics" },
+              { label: "30 trades → AI insights" },
+              { label: "50+ trades → pattern detection" },
+            ]}
+            actions={
+              <>
+                {onAddTrade && (
+                  <Button onClick={onAddTrade} size="sm">
+                    <Plus className="mr-1.5 h-4 w-4" /> Log your first trade
+                  </Button>
+                )}
+                <Button variant="outline" size="sm" onClick={() => onNavigate("trades")}>
+                  <Upload className="mr-1.5 h-4 w-4" /> Import trades
+                </Button>
+              </>
+            }
+          />
+        )
+
       ) : (
         <>
           {/* Metric cards */}
