@@ -209,7 +209,7 @@ function AccountDropdown() {
   const isActive = activeAccountId !== null || platformFilter !== 'all';
 
   const statusDot: Record<string, string> = {
-    connected: 'bg-emerald-500', syncing: 'bg-primary', error: 'bg-red-500', disconnected: 'bg-muted-foreground/40',
+    connected: 'bg-emerald-500', pending: 'bg-muted-foreground/40', connecting: 'bg-primary', error: 'bg-red-500', disconnected: 'bg-muted-foreground/40',
   };
 
   return (
