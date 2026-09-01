@@ -220,23 +220,35 @@ export default function TradingAccountsSection() {
     await refreshActive();
     setActiveAccountId(saved.id);
     setSaving(false);
-    toast({ title: 'Connecting…', description: 'Verifying credentials and pulling live account data.' });
+
+    // Live diagnostics
+    setDiagTitle(`Connecting · ${saved.account_name}`);
+    setDiagError(null);
+    setDiagSteps(mergeSteps(
+      [{ id: 'db_saved', label: 'Account saved to database', status: 'ok', detail: saved.account_name }],
+      false,
+    ));
+    setDiagRunning(true);
+    setDiagOpen(true);
 
     setSyncingId(saved.id);
     const { data: res, error: fnErr } = await supabase.functions.invoke('mt-connect', {
       body: { account_id: saved.id },
     });
     setSyncingId(null);
+
+    const payload = (res ?? {}) as { steps?: DiagStep[]; error?: string; status?: string };
+    const failure = payload.error ?? fnErr?.message ?? null;
+    setDiagSteps(mergeSteps(payload.steps, true, failure ?? undefined));
+    setDiagError(failure);
+    setDiagRunning(false);
+
     await load();
     await refreshActive();
 
-    if (fnErr || (res as { error?: string })?.error) {
-      toast({
-        title: 'Connection failed',
-        description: (res as { error?: string })?.error ?? fnErr?.message ?? 'Check your login, server and investor password.',
-        variant: 'destructive',
-      });
-    } else if ((res as { status?: string })?.status === 'connecting') {
+    if (failure) {
+      toast({ title: 'Connection failed', description: failure, variant: 'destructive' });
+    } else if (payload.status === 'connecting') {
       toast({ title: 'Account deploying', description: 'This takes about a minute — data will appear automatically.' });
     } else {
       toast({ title: 'Account connected', description: 'Live balance and trade history imported.' });
@@ -245,23 +257,38 @@ export default function TradingAccountsSection() {
 
   const syncNow = async (a: TradingAccountRecord) => {
     setSyncingId(a.id);
+    setDiagTitle(`Syncing · ${a.account_name}`);
+    setDiagError(null);
+    setDiagSteps(mergeSteps(
+      [{ id: 'db_saved', label: 'Account saved to database', status: 'ok', detail: a.account_name }],
+      false,
+    ));
+    setDiagRunning(true);
+    setDiagOpen(true);
+
     const { data: res, error } = await supabase.functions.invoke(
       a.metaapi_account_id ? 'mt-sync' : 'mt-connect',
       { body: { account_id: a.id } },
     );
     setSyncingId(null);
+
+    const payload = (res ?? {}) as {
+      steps?: DiagStep[]; error?: string;
+      results?: { account_id: string; steps?: DiagStep[]; error?: string }[];
+    };
+    const result = payload.results?.find(r => r.account_id === a.id);
+    const failure = result?.error ?? payload.error ?? error?.message ?? null;
+    setDiagSteps(mergeSteps(result?.steps ?? payload.steps, true, failure ?? undefined));
+    setDiagError(failure);
+    setDiagRunning(false);
+
     await load();
     await refreshActive();
-    if (error || (res as { error?: string })?.error) {
-      toast({
-        title: 'Sync failed',
-        description: (res as { error?: string })?.error ?? error?.message,
-        variant: 'destructive',
-      });
-    } else {
-      toast({ title: 'Account synced' });
-    }
+    if (failure) toast({ title: 'Sync failed', description: failure, variant: 'destructive' });
+    else toast({ title: 'Account synced' });
   };
+
+
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
