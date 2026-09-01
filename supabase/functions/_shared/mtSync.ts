@@ -69,32 +69,76 @@ interface AccountRow {
   credentials: Record<string, unknown> | null;
 }
 
-export async function syncAccount(row: AccountRow) {
+export type StepStatus = 'ok' | 'error' | 'pending' | 'skipped';
+export interface DiagStep {
+  id: string;
+  label: string;
+  status: StepStatus;
+  detail?: string;
+  error?: string;
+}
+
+export function createStepLog(accountId: string) {
+  const steps: DiagStep[] = [];
+  const push = (id: string, label: string, status: StepStatus, extra?: { detail?: string; error?: string }) => {
+    const step: DiagStep = { id, label, status, ...extra };
+    steps.push(step);
+    const line = `[mt-sync][${accountId}] ${status.toUpperCase()} ${label}${extra?.detail ? ` — ${extra.detail}` : ''}${extra?.error ? ` — ${extra.error}` : ''}`;
+    if (status === 'error') console.error(line); else console.log(line);
+    return step;
+  };
+  return { steps, push };
+}
+
+export async function syncAccount(row: AccountRow, log = createStepLog(row.id)) {
   const db = admin();
   const metaId = row.metaapi_account_id;
-  if (!metaId) throw new Error('Account is not linked to MetaApi yet');
+  if (!metaId) {
+    log.push('metaapi_account', 'MetaApi account created', 'error', { error: 'Account is not linked to MetaApi yet' });
+    throw new Error('Account is not linked to MetaApi yet');
+  }
+  log.push('metaapi_account', 'MetaApi account created', 'ok', { detail: metaId });
 
   const meta = await getAccount(metaId);
   const region: string = meta.region ?? 'new-york';
   if (meta.state !== 'DEPLOYED') {
     await deployAccount(metaId).catch(() => {});
+    log.push('deployed', 'Account deployed', 'pending', { detail: `state=${meta.state ?? 'UNKNOWN'} — deploying` });
+  } else {
+    log.push('deployed', 'Account deployed', 'ok', { detail: `region ${region}` });
   }
   if (meta.connectionStatus !== 'CONNECTED' && meta.state !== 'DEPLOYED') {
+    log.push('connected', 'Connected to broker', 'pending', { detail: 'Waiting for broker connection' });
     await db.from('trading_accounts').update({
       status: 'connecting', sync_error: null,
     }).eq('id', row.id);
-    return { status: 'connecting' as const, message: 'Account is deploying, this can take a minute.' };
+    return {
+      status: 'connecting' as const,
+      message: 'Account is deploying, this can take a minute.',
+      steps: log.steps,
+    };
   }
+  log.push('connected', 'Connected to broker', 'ok', { detail: meta.connectionStatus ?? 'DEPLOYED' });
 
   const info = await accountInformation(metaId, region);
+  log.push('balance', 'Balance loaded', 'ok', { detail: `${info.balance ?? 0} ${info.currency ?? ''}`.trim() });
+  log.push('equity', 'Equity loaded', 'ok', { detail: `${info.equity ?? info.balance ?? 0} ${info.currency ?? ''}`.trim() });
+
   const open = await positions(metaId, region).catch(() => []);
 
   const to = new Date();
   const from = new Date(to.getTime() - 365 * 24 * 3600 * 1000);
-  const deals: any[] = await historyDeals(metaId, region, from.toISOString(), to.toISOString()).catch(() => []);
+  const deals: any[] = await historyDeals(metaId, region, from.toISOString(), to.toISOString()).catch((e) => {
+    log.push('history', 'Trade history loaded', 'error', { error: e instanceof Error ? e.message : 'History request failed' });
+    return [];
+  });
 
   const closing = (deals ?? []).filter(d =>
     (d.entryType === 'DEAL_ENTRY_OUT' || d.entryType === 'DEAL_ENTRY_OUT_BY') && d.symbol);
+  log.push('history', 'Trade history loaded', 'ok', {
+    detail: `${closing.length} closed trades · ${Array.isArray(open) ? open.length : 0} open positions`,
+  });
+
 
   const tradeRows = closing.map(d => {
     const net = Number(d.profit ?? 0) + Number(d.swap ?? 0) + Number(d.commission ?? 0);
