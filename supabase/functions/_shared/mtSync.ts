@@ -201,7 +201,7 @@ export async function syncAccount(row: AccountRow, log = createStepLog(row.id)) 
 
   const firm = row.account_type === 'prop_firm' ? (row.firm ?? row.broker) : null;
 
-  await db.from('trading_accounts').update({
+  const { error: updErr } = await db.from('trading_accounts').update({
     status: 'connected',
     sync_error: null,
     balance,
@@ -217,5 +217,12 @@ export async function syncAccount(row: AccountRow, log = createStepLog(row.id)) 
     last_synced_at: new Date().toISOString(),
   }).eq('id', row.id);
 
-  return { status: 'connected' as const, imported, metrics, balance, equity };
+  if (updErr) {
+    log.push('dashboard', 'Dashboard synchronized', 'error', { error: updErr.message });
+    throw new Error(updErr.message);
+  }
+  log.push('dashboard', 'Dashboard synchronized', 'ok', { detail: `${imported} trades stored` });
+
+  return { status: 'connected' as const, imported, metrics, balance, equity, steps: log.steps };
+
 }
