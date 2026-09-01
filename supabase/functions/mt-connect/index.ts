@@ -1,7 +1,7 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { createAccount } from '../_shared/metaapi.ts';
-import { admin, syncAccount } from '../_shared/mtSync.ts';
+import { admin, syncAccount, createStepLog } from '../_shared/mtSync.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -10,6 +10,8 @@ Deno.serve(async (req) => {
     new Response(JSON.stringify(body), {
       status, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
+
+  let log = createStepLog('unknown');
 
   try {
     const authHeader = req.headers.get('Authorization') ?? '';
@@ -28,6 +30,8 @@ Deno.serve(async (req) => {
     const accountId = typeof body?.account_id === 'string' ? body.account_id : '';
     if (!accountId) return json({ error: 'account_id is required' }, 400);
 
+    log = createStepLog(accountId);
+
     const db = admin();
     const { data: row, error } = await db
       .from('trading_accounts')
@@ -35,7 +39,11 @@ Deno.serve(async (req) => {
       .eq('id', accountId)
       .eq('user_id', user.id)
       .maybeSingle();
-    if (error || !row) return json({ error: 'Account not found' }, 404);
+    if (error || !row) {
+      log.push('db_saved', 'Account saved to database', 'error', { error: error?.message ?? 'Account not found' });
+      return json({ error: 'Account not found', steps: log.steps }, 404);
+    }
+    log.push('db_saved', 'Account saved to database', 'ok', { detail: row.account_name });
 
     await db.from('trading_accounts')
       .update({ status: 'connecting', sync_error: null }).eq('id', row.id);
@@ -46,7 +54,8 @@ Deno.serve(async (req) => {
       const password = String((row.credentials as Record<string, string> | null)?.password ?? row.password ?? '');
       const server = String(row.server ?? '');
       if (!login || !password || !server) {
-        return json({ error: 'Login, investor password and server are required' }, 400);
+        log.push('metaapi_account', 'MetaApi account created', 'error', { error: 'Login, investor password and server are required' });
+        return json({ error: 'Login, investor password and server are required', steps: log.steps }, 400);
       }
       const created = await createAccount({
         name: `${row.account_name} (${user.id.slice(0, 8)})`,
@@ -54,12 +63,13 @@ Deno.serve(async (req) => {
         platform: row.platform === 'mt4' ? 'mt4' : 'mt5',
       });
       metaId = created.id;
+      console.log(`[mt-connect][${row.id}] provisioned MetaApi account ${metaId}`);
       await db.from('trading_accounts')
         .update({ metaapi_account_id: metaId }).eq('id', row.id);
     }
 
-    const result = await syncAccount({ ...row, metaapi_account_id: metaId });
-    return json({ ok: true, ...result });
+    const result = await syncAccount({ ...row, metaapi_account_id: metaId }, log);
+    return json({ ok: true, ...result, steps: log.steps });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Connection failed';
     console.error('mt-connect error', message);
@@ -71,6 +81,7 @@ Deno.serve(async (req) => {
           .eq('id', body.account_id);
       }
     } catch { /* ignore */ }
-    return json({ error: message }, 502);
+    return json({ error: message, steps: log.steps }, 502);
   }
 });
+
