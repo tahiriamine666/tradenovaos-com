@@ -659,6 +659,16 @@ export default function TradingAccountsSection() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ConnectionDiagnostics
+        open={diagOpen}
+        onOpenChange={setDiagOpen}
+        title={diagTitle}
+        steps={diagSteps}
+        running={diagRunning}
+        error={diagError}
+      />
+
     </>
   );
 }
