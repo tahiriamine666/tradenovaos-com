@@ -25,10 +25,12 @@ import {
   CheckCircle2, XCircle, CircleDashed, ArrowLeft, RefreshCw, Search, ShieldCheck,
 } from 'lucide-react';
 import type { TradingAccountRecord } from '@/lib/platforms/types';
+import ConnectionDiagnostics, { initialSteps, mergeSteps, type DiagStep } from './ConnectionDiagnostics';
 import {
   providersFor, suggestServers, findProvider, formatAccountSize,
   type AccountType, type MtPlatform, type ProviderDef,
 } from '@/lib/platforms/providers';
+
 
 type Status = TradingAccountRecord['status'];
 
@@ -72,6 +74,14 @@ export default function TradingAccountsSection() {
   const [accounts, setAccounts] = useState<TradingAccountRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncingId, setSyncingId] = useState<string | null>(null);
+
+  // Connection diagnostics
+  const [diagOpen, setDiagOpen] = useState(false);
+  const [diagTitle, setDiagTitle] = useState('');
+  const [diagSteps, setDiagSteps] = useState<DiagStep[]>(initialSteps());
+  const [diagRunning, setDiagRunning] = useState(false);
+  const [diagError, setDiagError] = useState<string | null>(null);
+
 
   // Wizard state
   const [dialogOpen, setDialogOpen] = useState(false);
