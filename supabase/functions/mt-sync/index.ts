@@ -1,6 +1,6 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { admin, syncAccount } from '../_shared/mtSync.ts';
+import { admin, syncAccount, createStepLog } from '../_shared/mtSync.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -36,16 +36,20 @@ Deno.serve(async (req) => {
 
     const results: Record<string, unknown>[] = [];
     for (const row of rows) {
+      const log = createStepLog(row.id);
+      log.push('db_saved', 'Account saved to database', 'ok', { detail: row.account_name });
       try {
-        const r = await syncAccount(row as never);
+        const r = await syncAccount(row as never, log);
         results.push({ account_id: row.id, ...r });
       } catch (e) {
         const message = e instanceof Error ? e.message : 'Sync failed';
+        console.error(`[mt-sync][${row.id}] failed:`, message);
         await db.from('trading_accounts')
           .update({ status: 'error', sync_error: message }).eq('id', row.id);
-        results.push({ account_id: row.id, status: 'error', error: message });
+        results.push({ account_id: row.id, status: 'error', error: message, steps: log.steps });
       }
     }
+
     return json({ ok: true, synced: results.length, results });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Sync failed';

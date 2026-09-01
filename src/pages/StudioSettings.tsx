@@ -14,6 +14,8 @@ import { Save, User, TrendingUp, Globe, Shield, AlertCircle, CheckCircle2, Credi
 import { toast } from '@/hooks/use-toast';
 import { openCustomerPortal } from '@/lib/dodo';
 import TradingAccountsSection from '@/components/settings/TradingAccountsSection';
+import ConnectionStatusSection from '@/components/settings/ConnectionStatusSection';
+
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Profile {
@@ -307,6 +309,10 @@ export default function StudioSettings() {
 
       {/* Trading Accounts */}
       <TradingAccountsSection />
+
+      {/* Connection status */}
+      <ConnectionStatusSection />
+
 
       {/* Trading preferences */}
       <Section icon={TrendingUp} title="Trading Preferences" description="Setup your default trading parameters">
