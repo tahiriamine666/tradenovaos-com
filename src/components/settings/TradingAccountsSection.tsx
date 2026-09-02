@@ -249,7 +249,7 @@ export default function TradingAccountsSection() {
 
     if (failure) {
       toast({ title: 'Connection failed', description: failure, variant: 'destructive' });
-    } else if (payload.status === 'connecting') {
+    } else if (diagRes.status === 'connecting') {
       toast({ title: 'Account deploying', description: 'This takes about a minute — data will appear automatically.' });
     } else {
       toast({ title: 'Account connected', description: 'Live balance and trade history imported.' });
