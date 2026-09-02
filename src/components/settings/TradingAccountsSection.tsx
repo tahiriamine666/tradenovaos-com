@@ -237,9 +237,10 @@ export default function TradingAccountsSection() {
     });
     setSyncingId(null);
 
-    const payload = (res ?? {}) as { steps?: DiagStep[]; error?: string; status?: string };
-    const failure = payload.error ?? fnErr?.message ?? null;
-    setDiagSteps(mergeSteps(payload.steps, true, failure ?? undefined));
+    const diagRes = (res ?? {}) as { steps?: DiagStep[]; error?: string; status?: string };
+    const failure = diagRes.error ?? fnErr?.message ?? null;
+    setDiagSteps(mergeSteps(diagRes.steps, true, failure ?? undefined));
+
     setDiagError(failure);
     setDiagRunning(false);
 
@@ -248,7 +249,7 @@ export default function TradingAccountsSection() {
 
     if (failure) {
       toast({ title: 'Connection failed', description: failure, variant: 'destructive' });
-    } else if (payload.status === 'connecting') {
+    } else if (diagRes.status === 'connecting') {
       toast({ title: 'Account deploying', description: 'This takes about a minute — data will appear automatically.' });
     } else {
       toast({ title: 'Account connected', description: 'Live balance and trade history imported.' });
