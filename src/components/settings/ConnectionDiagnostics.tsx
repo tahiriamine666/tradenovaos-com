@@ -22,6 +22,8 @@ export const DIAG_STEPS: { id: string; label: string }[] = [
   { id: 'balance', label: 'Balance loaded' },
   { id: 'equity', label: 'Equity loaded' },
   { id: 'history', label: 'Trade history loaded' },
+  { id: 'history_store', label: 'Trades stored' },
+
   { id: 'dashboard', label: 'Dashboard synchronized' },
 ];
 
