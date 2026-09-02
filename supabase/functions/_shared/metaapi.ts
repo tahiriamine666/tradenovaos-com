@@ -2,7 +2,7 @@
 
 export const PROVISIONING = 'https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade.ai';
 export const clientApi = (region: string) =>
-  `https://mt-client-api-v1.${region}.agiliumtrade.agiliumtrade.ai`;
+  `https://mt-client-api-v1.${region}.agiliumtrade.ai`;
 
 export function token(): string {
   const t = Deno.env.get('METAAPI_TOKEN');
