@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1788310516189,
+      "tag": "0000_trades_external_id_unique_index",
+      "breakpoints": true
+    }
+  ]
+}
