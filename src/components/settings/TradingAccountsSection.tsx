@@ -237,9 +237,10 @@ export default function TradingAccountsSection() {
     });
     setSyncingId(null);
 
-    const payload = (res ?? {}) as { steps?: DiagStep[]; error?: string; status?: string };
-    const failure = payload.error ?? fnErr?.message ?? null;
-    setDiagSteps(mergeSteps(payload.steps, true, failure ?? undefined));
+    const diagRes = (res ?? {}) as { steps?: DiagStep[]; error?: string; status?: string };
+    const failure = diagRes.error ?? fnErr?.message ?? null;
+    setDiagSteps(mergeSteps(diagRes.steps, true, failure ?? undefined));
+
     setDiagError(failure);
     setDiagRunning(false);
 
