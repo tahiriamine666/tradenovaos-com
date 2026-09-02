@@ -158,12 +158,26 @@ export async function syncAccount(row: AccountRow, log = createStepLog(row.id)) 
   });
 
   let imported = 0;
+  let storeError: string | null = null;
   for (let i = 0; i < tradeRows.length; i += 200) {
     const chunk = tradeRows.slice(i, i + 200);
     const { error } = await db.from('trades')
-      .upsert(chunk, { onConflict: 'trading_account_id,external_id', ignoreDuplicates: true });
-    if (!error) imported += chunk.length;
+      .upsert(chunk, { onConflict: 'trading_account_id,external_id' });
+    if (error) {
+      storeError = error.message;
+      console.error(`[mt-sync][${row.id}] trade upsert failed: ${error.message}`);
+    } else {
+      imported += chunk.length;
+    }
   }
+  const lastTradeAt = tradeRows.length
+    ? tradeRows.map(t => t.trade_date).sort().at(-1)
+    : null;
+  log.push('history_store', 'Trades stored', storeError ? 'error' : 'ok', {
+    detail: `${tradeRows.length} received · ${imported} stored · last ${lastTradeAt ?? 'n/a'}`,
+    ...(storeError ? { error: storeError } : {}),
+  });
+
 
   // Metrics
   const wins = tradeRows.filter(t => (t.result ?? 0) > 0);
