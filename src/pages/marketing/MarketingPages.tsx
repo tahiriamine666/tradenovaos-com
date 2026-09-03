@@ -276,7 +276,7 @@ export function BlogPage() {
           "@context": "https://schema.org",
           "@type": "Blog",
           "name": "TradeNova Blog",
-          "url": "https://tradenovaos-com.lovable.app/resources/blog",
+          "url": "https://tradenovaos.com/resources/blog",
           "blogPost": posts.map(p => ({
             "@type": "BlogPosting",
             "headline": p.title,
