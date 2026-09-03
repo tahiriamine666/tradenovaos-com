@@ -6,7 +6,7 @@ import MarketingNavbar from '@/components/MarketingNavbar';
 import SeoHead from '@/components/SeoHead';
 
 const PUBLISHED = '2026-06-20';
-const URL = 'https://tradenovaos-com.lovable.app/blog/fair-value-gaps-guide';
+const URL = 'https://tradenovaos.com/blog/fair-value-gaps-guide';
 
 export default function FairValueGapsGuide() {
   const navigate = useNavigate();
@@ -32,7 +32,7 @@ export default function FairValueGapsGuide() {
             name: 'TradeNova OS',
             logo: {
               '@type': 'ImageObject',
-              url: 'https://tradenovaos-com.lovable.app/tradenova-icon.png',
+              url: 'https://tradenovaos.com/tradenova-icon.png',
             },
           },
           mainEntityOfPage: URL,
