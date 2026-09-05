@@ -251,9 +251,7 @@ function Hero({ onSignup }: { onSignup: () => void }) {
           <button onClick={onSignup} className="group flex items-center gap-2.5 bg-violet-600 hover:bg-violet-500 text-white px-8 py-4 rounded-2xl font-black text-sm transition-all hover:shadow-2xl hover:shadow-violet-500/30 hover:-translate-y-0.5 w-full sm:w-auto justify-center">
             Start Free — No credit card <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </button>
-          <button className="flex items-center gap-2.5 text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 hover:bg-slate-50 px-7 py-4 rounded-2xl font-semibold text-sm transition-all w-full sm:w-auto justify-center">
-            <PlayCircle className="h-4 w-4" /> Watch Demo
-          </button>
+          
         </motion.div>
 
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }}
@@ -392,11 +390,9 @@ function Hero({ onSignup }: { onSignup: () => void }) {
                     {l:'Command Center', a:true},
                     {l:'Trade Plan'},
                     {l:'Trade Vault'},
-                    {l:'Mind Journal'},
                     {l:'Community'},
                     {l:'Learning Hub'},
                     {l:'Economic Calendar'},
-                    {l:'Goals'},
                     {l:'Studio Settings'},
                   ].map(item => (
                     <div key={item.l} className={`text-[11px] px-3 py-1.5 rounded-lg font-medium flex items-center gap-2 ${item.a ? 'bg-violet-600 text-white shadow-sm shadow-violet-500/30' : 'text-slate-500'}`}>
@@ -644,15 +640,11 @@ function StatsBar() {
 
 const FEATURES = [
   {icon:BookOpen,  title:'Trade Journal',          desc:'Log every trade with emotion, execution score, and outcome. Build habits that compound.',tag:'Core',       c:'violet'},
-  {icon:Brain,     title:'Mind Journal',           desc:'Track emotions and biases. Identify revenge trading, over-trading, and patterns.',        tag:'Psychology', c:'pink'},
-  {icon:Target,    title:'Playbook Lab',           desc:'Define setups, entry rules, and checklists. Operate with a system, not a feeling.',      tag:'Planning',   c:'emerald'},
   {icon:Sparkles,  title:'AI Insights',            desc:'Claude analyzes your trades and surfaces patterns you\'d never catch manually.',         tag:'AI',         c:'purple'},
   {icon:Calendar,  title:'Trading Calendar',       desc:'See P&L heatmap across the month. Identify your best and worst trading days.',           tag:'Visual',     c:'cyan'},
   {icon:Upload,    title:'CSV Import',             desc:'Import from any broker — MT4, MT5, cTrader, IBKR. Smart column mapping.',               tag:'Import',     c:'green'},
-  {icon:Trophy,    title:'Trading Goals',          desc:'Set monthly profit, risk, and consistency targets. Track progress toward funded-ready performance.', tag:'Goals', c:'amber'},
   {icon:CalendarDays,title:'Economic Calendar',   desc:'High-impact news alerts, volatility scanner, and session tracker for every trading day.', tag:'News',       c:'blue'},
   {icon:Sparkles,  title:'AI Trading Assistant',   desc:'Get daily bias, model recommendations, and risk warnings built from your data.',         tag:'AI Coach',   c:'violet'},
-  {icon:Award,     title:'Funded Certificates',    desc:'Build a portfolio of prop-firm certificates. Track rules, payouts, and milestones.',  tag:'Funding',    c:'emerald'},
 ];
 
 const CM: Record<string,any> = {
@@ -894,16 +886,13 @@ function Pricing({ onSignup }: { onSignup: () => void }) {
   const plans = [
     {name:'Free',  price:'$0',  desc:'Start tracking',          features:['50 trades/month','Trade journal','Basic analytics','Dark/light mode'],cta:'Start Free',hi:false},
     {name:'Pro',   price:'$14', per:'/mo',desc:'Serious traders',badge:'Most Popular',features:['Unlimited trades','Trade Vault','Trade Plan','Community access','Advanced analytics','1 trading account','500 AI credits/mo'],cta:'Start 7-day Free Trial',hi:true},
-    {name:'Elite', price:'$28', per:'/mo',desc:'Funded traders', features:['Everything in Pro','Unlimited trading accounts','1,000 AI credits/mo','Learning Hub','Mind Journal','Economic Calendar','AI Trading Assistant','Elite Community','Priority Support','Layout customization'],cta:'Upgrade to Elite',hi:false},
+    {name:'Elite', price:'$28', per:'/mo',desc:'Funded traders', features:['Everything in Pro','Unlimited trading accounts','1,000 AI credits/mo','Learning Hub','Economic Calendar','AI Trading Assistant','Elite Community','Priority Support','Layout customization'],cta:'Upgrade to Elite',hi:false},
   ];
   return (
     <section id="pricing" className="py-24 sm:py-32 relative" ref={ref}>
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-violet-950/6 to-transparent pointer-events-none"/>
       <div className="max-w-5xl mx-auto px-5 sm:px-8">
         <motion.div initial={{opacity:0,y:24}} animate={inView?{opacity:1,y:0}:{}} transition={{duration:0.5}} className="text-center mb-14">
-          <div className="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 rounded-full px-4 py-1.5 mb-5">
-            <span className="text-xs font-semibold text-amber-700">🔄 Stripe coming soon · Manual activation via Payoneer</span>
-          </div>
           <h2 className="text-4xl sm:text-5xl font-black text-slate-900 mb-4 tracking-tight">Simple, honest pricing</h2>
           <p className="text-slate-500">Start free. Upgrade when you're ready.</p>
         </motion.div>

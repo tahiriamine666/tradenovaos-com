@@ -719,6 +719,21 @@ export type Database = {
         }
         Relationships: []
       }
+      internal_config: {
+        Row: {
+          key: string
+          value: string
+        }
+        Insert: {
+          key: string
+          value: string
+        }
+        Update: {
+          key?: string
+          value?: string
+        }
+        Relationships: []
+      }
       journal_entries: {
         Row: {
           ai_review: Json
