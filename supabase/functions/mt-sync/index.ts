@@ -13,12 +13,17 @@ Deno.serve(async (req) => {
   try {
     const authHeader = req.headers.get('Authorization') ?? '';
     const cronSecret = req.headers.get('x-sync-secret') ?? '';
-    const expectedSecret = Deno.env.get('SYNC_CRON_SECRET') ?? '';
-    const isCron = expectedSecret.length > 0 && cronSecret === expectedSecret;
-    if (!authHeader.startsWith('Bearer ') && !isCron) return json({ error: 'Unauthorized' }, 401);
-
     const body = await req.json().catch(() => ({}));
     const db = admin();
+
+    // Cron path: the scheduler sends the rotating token stored in internal_config.
+    let isCron = false;
+    if (cronSecret) {
+      const { data: cfg } = await db.from('internal_config')
+        .select('value').eq('key', 'sync_cron_token').maybeSingle();
+      isCron = !!cfg?.value && cfg.value === cronSecret;
+    }
+    if (!authHeader.startsWith('Bearer ') && !isCron) return json({ error: 'Unauthorized' }, 401);
 
     let userId: string | null = null;
     if (!isCron) {
