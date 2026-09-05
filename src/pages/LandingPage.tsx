@@ -886,16 +886,13 @@ function Pricing({ onSignup }: { onSignup: () => void }) {
   const plans = [
     {name:'Free',  price:'$0',  desc:'Start tracking',          features:['50 trades/month','Trade journal','Basic analytics','Dark/light mode'],cta:'Start Free',hi:false},
     {name:'Pro',   price:'$14', per:'/mo',desc:'Serious traders',badge:'Most Popular',features:['Unlimited trades','Trade Vault','Trade Plan','Community access','Advanced analytics','1 trading account','500 AI credits/mo'],cta:'Start 7-day Free Trial',hi:true},
-    {name:'Elite', price:'$28', per:'/mo',desc:'Funded traders', features:['Everything in Pro','Unlimited trading accounts','1,000 AI credits/mo','Learning Hub','Mind Journal','Economic Calendar','AI Trading Assistant','Elite Community','Priority Support','Layout customization'],cta:'Upgrade to Elite',hi:false},
+    {name:'Elite', price:'$28', per:'/mo',desc:'Funded traders', features:['Everything in Pro','Unlimited trading accounts','1,000 AI credits/mo','Learning Hub','Economic Calendar','AI Trading Assistant','Elite Community','Priority Support','Layout customization'],cta:'Upgrade to Elite',hi:false},
   ];
   return (
     <section id="pricing" className="py-24 sm:py-32 relative" ref={ref}>
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-violet-950/6 to-transparent pointer-events-none"/>
       <div className="max-w-5xl mx-auto px-5 sm:px-8">
         <motion.div initial={{opacity:0,y:24}} animate={inView?{opacity:1,y:0}:{}} transition={{duration:0.5}} className="text-center mb-14">
-          <div className="inline-flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 rounded-full px-4 py-1.5 mb-5">
-            <span className="text-xs font-semibold text-amber-700">🔄 Stripe coming soon · Manual activation via Payoneer</span>
-          </div>
           <h2 className="text-4xl sm:text-5xl font-black text-slate-900 mb-4 tracking-tight">Simple, honest pricing</h2>
           <p className="text-slate-500">Start free. Upgrade when you're ready.</p>
         </motion.div>
