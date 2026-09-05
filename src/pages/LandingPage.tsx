@@ -251,9 +251,7 @@ function Hero({ onSignup }: { onSignup: () => void }) {
           <button onClick={onSignup} className="group flex items-center gap-2.5 bg-violet-600 hover:bg-violet-500 text-white px-8 py-4 rounded-2xl font-black text-sm transition-all hover:shadow-2xl hover:shadow-violet-500/30 hover:-translate-y-0.5 w-full sm:w-auto justify-center">
             Start Free — No credit card <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </button>
-          <button className="flex items-center gap-2.5 text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 hover:bg-slate-50 px-7 py-4 rounded-2xl font-semibold text-sm transition-all w-full sm:w-auto justify-center">
-            <PlayCircle className="h-4 w-4" /> Watch Demo
-          </button>
+          
         </motion.div>
 
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }}
@@ -392,7 +390,7 @@ function Hero({ onSignup }: { onSignup: () => void }) {
                     {l:'Command Center', a:true},
                     {l:'Trade Plan'},
                     {l:'Trade Vault'},
-                    {l:'Mind Journal'},
+                    {l:'Community'},
                     {l:'Community'},
                     {l:'Learning Hub'},
                     {l:'Economic Calendar'},
@@ -644,15 +642,11 @@ function StatsBar() {
 
 const FEATURES = [
   {icon:BookOpen,  title:'Trade Journal',          desc:'Log every trade with emotion, execution score, and outcome. Build habits that compound.',tag:'Core',       c:'violet'},
-  {icon:Brain,     title:'Mind Journal',           desc:'Track emotions and biases. Identify revenge trading, over-trading, and patterns.',        tag:'Psychology', c:'pink'},
-  {icon:Target,    title:'Playbook Lab',           desc:'Define setups, entry rules, and checklists. Operate with a system, not a feeling.',      tag:'Planning',   c:'emerald'},
   {icon:Sparkles,  title:'AI Insights',            desc:'Claude analyzes your trades and surfaces patterns you\'d never catch manually.',         tag:'AI',         c:'purple'},
   {icon:Calendar,  title:'Trading Calendar',       desc:'See P&L heatmap across the month. Identify your best and worst trading days.',           tag:'Visual',     c:'cyan'},
   {icon:Upload,    title:'CSV Import',             desc:'Import from any broker — MT4, MT5, cTrader, IBKR. Smart column mapping.',               tag:'Import',     c:'green'},
-  {icon:Trophy,    title:'Trading Goals',          desc:'Set monthly profit, risk, and consistency targets. Track progress toward funded-ready performance.', tag:'Goals', c:'amber'},
   {icon:CalendarDays,title:'Economic Calendar',   desc:'High-impact news alerts, volatility scanner, and session tracker for every trading day.', tag:'News',       c:'blue'},
   {icon:Sparkles,  title:'AI Trading Assistant',   desc:'Get daily bias, model recommendations, and risk warnings built from your data.',         tag:'AI Coach',   c:'violet'},
-  {icon:Award,     title:'Funded Certificates',    desc:'Build a portfolio of prop-firm certificates. Track rules, payouts, and milestones.',  tag:'Funding',    c:'emerald'},
 ];
 
 const CM: Record<string,any> = {
