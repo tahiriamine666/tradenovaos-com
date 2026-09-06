@@ -374,9 +374,7 @@ function Hero({ onSignup }: { onSignup: () => void }) {
               {/* Sidebar */}
               <div className="hidden sm:flex w-44 lg:w-[210px] flex-col border-r border-slate-200 bg-white p-3 flex-shrink-0">
                 <div className="flex items-center gap-2 mb-4 px-1">
-                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-violet-700 flex items-center justify-center shadow-sm shadow-violet-500/30">
-                    <BarChart3 className="h-[18px] w-[18px] text-white" />
-                  </div>
+                  <img src="/tradenova-icon.png" alt="TradeNova" className="w-9 h-9 rounded-xl object-contain shadow-sm shadow-violet-500/30" />
                   <div className="leading-tight">
                     <p className="text-[12px] font-black text-slate-900 tracking-tight">TradeNova</p>
                     <p className="text-[8px] font-semibold text-slate-400 tracking-[0.12em]">TRADING OS</p>
