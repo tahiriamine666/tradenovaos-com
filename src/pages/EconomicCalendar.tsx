@@ -17,6 +17,9 @@ import { useBookmarks } from "@/lib/economic-calendar/useBookmarks";
 import { useAlerts } from "@/lib/economic-calendar/useAlerts";
 import type { CalendarViewMode, EconomicEvent, EventFilters } from "@/lib/economic-calendar/types";
 
+const FILTERS_KEY = "econ-calendar-filters";
+const VIEW_KEY = "econ-calendar-view";
+
 function defaultFilters(): EventFilters {
   const now = new Date();
   const from = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -25,6 +28,32 @@ function defaultFilters(): EventFilters {
     from, to,
     country: "all", currency: "all", impact: "all", category: "all", search: "",
   };
+}
+
+function loadSavedFilters(): EventFilters {
+  try {
+    const raw = localStorage.getItem(FILTERS_KEY);
+    if (!raw) return defaultFilters();
+    const saved = JSON.parse(raw);
+    const from = saved.from ? new Date(saved.from) : null;
+    const to = saved.to ? new Date(saved.to) : null;
+    if (!from || !to || isNaN(from.getTime()) || isNaN(to.getTime())) return defaultFilters();
+    return {
+      from, to,
+      country: saved.country ?? "all",
+      currency: saved.currency ?? "all",
+      impact: saved.impact ?? "all",
+      category: saved.category ?? "all",
+      search: saved.search ?? "",
+    };
+  } catch {
+    return defaultFilters();
+  }
+}
+
+function loadSavedView(): CalendarViewMode {
+  const v = localStorage.getItem(VIEW_KEY);
+  return v === "calendar" || v === "timeline" ? v : "list";
 }
 
 const VIEW_TABS: { id: CalendarViewMode; label: string; icon: typeof List }[] = [
