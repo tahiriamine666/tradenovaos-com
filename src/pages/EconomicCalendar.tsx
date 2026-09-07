@@ -63,8 +63,8 @@ const VIEW_TABS: { id: CalendarViewMode; label: string; icon: typeof List }[] = 
 ];
 
 export default function EconomicCalendar() {
-  const [filters, setFilters] = useState<EventFilters>(defaultFilters);
-  const [view, setView] = useState<CalendarViewMode>("list");
+  const [filters, setFilters] = useState<EventFilters>(loadSavedFilters);
+  const [view, setViewState] = useState<CalendarViewMode>(loadSavedView);
   const [selected, setSelected] = useState<EconomicEvent | null>(null);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
