@@ -17,6 +17,9 @@ import { useBookmarks } from "@/lib/economic-calendar/useBookmarks";
 import { useAlerts } from "@/lib/economic-calendar/useAlerts";
 import type { CalendarViewMode, EconomicEvent, EventFilters } from "@/lib/economic-calendar/types";
 
+const FILTERS_KEY = "econ-calendar-filters";
+const VIEW_KEY = "econ-calendar-view";
+
 function defaultFilters(): EventFilters {
   const now = new Date();
   const from = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -27,6 +30,32 @@ function defaultFilters(): EventFilters {
   };
 }
 
+function loadSavedFilters(): EventFilters {
+  try {
+    const raw = localStorage.getItem(FILTERS_KEY);
+    if (!raw) return defaultFilters();
+    const saved = JSON.parse(raw);
+    const from = saved.from ? new Date(saved.from) : null;
+    const to = saved.to ? new Date(saved.to) : null;
+    if (!from || !to || isNaN(from.getTime()) || isNaN(to.getTime())) return defaultFilters();
+    return {
+      from, to,
+      country: saved.country ?? "all",
+      currency: saved.currency ?? "all",
+      impact: saved.impact ?? "all",
+      category: saved.category ?? "all",
+      search: saved.search ?? "",
+    };
+  } catch {
+    return defaultFilters();
+  }
+}
+
+function loadSavedView(): CalendarViewMode {
+  const v = localStorage.getItem(VIEW_KEY);
+  return v === "calendar" || v === "timeline" ? v : "list";
+}
+
 const VIEW_TABS: { id: CalendarViewMode; label: string; icon: typeof List }[] = [
   { id: "list", label: "List", icon: List },
   { id: "calendar", label: "Calendar", icon: LayoutGrid },
@@ -34,8 +63,8 @@ const VIEW_TABS: { id: CalendarViewMode; label: string; icon: typeof List }[] = 
 ];
 
 export default function EconomicCalendar() {
-  const [filters, setFilters] = useState<EventFilters>(defaultFilters);
-  const [view, setView] = useState<CalendarViewMode>("list");
+  const [filters, setFilters] = useState<EventFilters>(loadSavedFilters);
+  const [view, setViewState] = useState<CalendarViewMode>(loadSavedView);
   const [selected, setSelected] = useState<EconomicEvent | null>(null);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
 
@@ -52,7 +81,22 @@ export default function EconomicCalendar() {
     [allEvents],
   );
 
-  const patch = (p: Partial<EventFilters>) => setFilters((f) => ({ ...f, ...p }));
+  const patch = (p: Partial<EventFilters>) => {
+    setFilters((f) => {
+      const next = { ...f, ...p };
+      try {
+        localStorage.setItem(FILTERS_KEY, JSON.stringify(next));
+      } catch { /* storage unavailable */ }
+      return next;
+    });
+  };
+
+  const setView = (v: CalendarViewMode) => {
+    setViewState(v);
+    try {
+      localStorage.setItem(VIEW_KEY, v);
+    } catch { /* storage unavailable */ }
+  };
 
   return (
     <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6">
