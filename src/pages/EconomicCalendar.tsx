@@ -81,7 +81,22 @@ export default function EconomicCalendar() {
     [allEvents],
   );
 
-  const patch = (p: Partial<EventFilters>) => setFilters((f) => ({ ...f, ...p }));
+  const patch = (p: Partial<EventFilters>) => {
+    setFilters((f) => {
+      const next = { ...f, ...p };
+      try {
+        localStorage.setItem(FILTERS_KEY, JSON.stringify(next));
+      } catch { /* storage unavailable */ }
+      return next;
+    });
+  };
+
+  const setView = (v: CalendarViewMode) => {
+    setViewState(v);
+    try {
+      localStorage.setItem(VIEW_KEY, v);
+    } catch { /* storage unavailable */ }
+  };
 
   return (
     <div className="mx-auto w-full max-w-[1400px] px-4 py-6 sm:px-6">
