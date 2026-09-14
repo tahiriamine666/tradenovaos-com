@@ -169,11 +169,12 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
   try {
-    // --- Authentication: only signed-in users (or internal service-role callers) may trigger a sync.
+    // Only authenticated users (or internal service-role callers) may trigger a sync.
     const authHeader = req.headers.get('Authorization') ?? '';
     const token = authHeader.replace(/^Bearer\s+/i, '').trim();
     const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const isInternal = token.length > 0 && token === serviceKey;
+    let requesterId: string | null = null;
 
     if (!isInternal) {
       if (!token) {
@@ -192,17 +193,60 @@ Deno.serve(async (req) => {
           status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         });
       }
+      requesterId = userData.user.id;
     }
 
     let body: { from?: string; to?: string } = {};
     try { body = await req.json(); } catch { /* empty */ }
 
-
-
     const today = new Date();
-    const inWeek = new Date(today.getTime() + 7 * 24 * 3600 * 1000);
-    const from = body.from ?? today.toISOString().slice(0, 10);
-    const to = body.to ?? inWeek.toISOString().slice(0, 10);
+    const defaultFrom = today.toISOString().slice(0, 10);
+    const defaultTo = new Date(today.getTime() + 7 * 24 * 3600 * 1000).toISOString().slice(0, 10);
+    const from = body.from ?? defaultFrom;
+    const to = body.to ?? defaultTo;
+    const parseDateOnly = (value: string): Date | null => {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
+      const parsed = new Date(`${value}T00:00:00.000Z`);
+      return Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== value ? null : parsed;
+    };
+    const fromDate = parseDateOnly(from);
+    const toDate = parseDateOnly(to);
+    const maxRangeMs = 31 * 24 * 60 * 60 * 1000;
+    if (!fromDate || !toDate || toDate < fromDate || toDate.getTime() - fromDate.getTime() > maxRangeMs) {
+      return new Response(JSON.stringify({ error: 'Date range must use valid YYYY-MM-DD dates within 31 days' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    );
+
+    // A user can refresh at most once per 15 minutes. Scheduled internal syncs
+    // are exempt so they can keep the cached calendar current.
+    if (requesterId) {
+      const { data: previous } = await supabase
+        .from('economic_sync_requests')
+        .select('last_requested_at')
+        .eq('user_id', requesterId)
+        .maybeSingle();
+      const previousAt = previous?.last_requested_at ? new Date(previous.last_requested_at).getTime() : 0;
+      if (previousAt && Date.now() - previousAt < 15 * 60 * 1000) {
+        return new Response(JSON.stringify({ error: 'Please wait before refreshing the economic calendar again.' }), {
+          status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Retry-After': '900' },
+        });
+      }
+      const { error: throttleError } = await supabase
+        .from('economic_sync_requests')
+        .upsert({ user_id: requesterId, last_requested_at: new Date().toISOString() }, { onConflict: 'user_id' });
+      if (throttleError) {
+        console.error('economic sync throttle error', throttleError);
+        return new Response(JSON.stringify({ error: 'Unable to start sync' }), {
+          status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
 
     // 1) Try FMP if key is present.
     const apiKey = Deno.env.get('FMP_API_KEY');
@@ -236,11 +280,6 @@ Deno.serve(async (req) => {
         status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
-    );
 
     let upserted = 0;
     const CHUNK = 500;
