@@ -20,7 +20,7 @@ export default function BillingSuccess() {
       await refresh();
 
       // After ~6s, if the webhook hasn't landed, ask the server to query
-      // Lemon Squeezy directly and sync. Idempotent.
+      // Dodo Payments directly and sync. Idempotent.
       if (attempts === 3 && !syncCalled) {
         syncCalled = true;
         try {
