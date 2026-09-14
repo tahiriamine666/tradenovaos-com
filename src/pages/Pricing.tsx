@@ -138,7 +138,7 @@ export default function Pricing() {
       return;
     }
     setLoadingPlan(plan);
-    navigate(`/checkout?plan=${plan}`);
+    navigate(`/checkout?plan=${plan}&billing=${billing}`);
   };
 
   return (
