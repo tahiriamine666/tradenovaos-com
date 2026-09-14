@@ -7,13 +7,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import ForgotPassword from '@/components/ForgotPassword';
-import { lovable } from '@/integrations/lovable/index';
+import { supabase } from '@/integrations/supabase/client';
 
 async function handleGoogle() {
-  const result = await lovable.auth.signInWithOAuth('google', {
-    redirect_uri: window.location.origin + '/app',
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: `${window.location.origin}/app` },
   });
-  if (result.error) toast.error(result.error.message ?? 'Google sign-in failed');
+  if (error) toast.error(error.message ?? 'Google sign-in failed');
 }
 
 function GoogleButton({ label }: { label: string }) {
