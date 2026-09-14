@@ -66,9 +66,17 @@ Deno.serve(async (req) => {
       });
     }
 
-    const origin = req.headers.get("origin") ?? "";
-    const returnUrl = origin ? `${origin}/billing/success` : undefined;
-    const email = (body.email && body.email.trim()) || claimEmail || undefined;
+    // Never trust a caller-controlled Origin for payment redirects. APP_URL must be
+    // the canonical, HTTPS production URL (for example https://tradenovaos.com).
+    const appUrl = Deno.env.get("APP_URL");
+    if (!appUrl) throw new Error("APP_URL is not configured");
+    const appOrigin = new URL(appUrl).origin;
+    if (!appOrigin.startsWith("https://")) throw new Error("APP_URL must use HTTPS");
+    const returnUrl = `${appOrigin}/billing/success`;
+
+    // Bind checkout customer identity to the authenticated Supabase account.
+    // The client may display an email field but cannot select another account email.
+    const email = claimEmail || undefined;
 
     const payload: Record<string, unknown> = {
       product_cart: [{ product_id: productId, quantity: 1 }],
