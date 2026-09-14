@@ -72,7 +72,8 @@ export default function Checkout() {
 
   const initialPlan: LsPlan = params.get("plan") === "elite" ? "elite" : "pro";
   const [planId, setPlanId] = useState<LsPlan>(initialPlan);
-  const [billing, setBilling] = useState<LsBilling>("monthly");
+  const initialBilling: LsBilling = params.get("billing") === "yearly" ? "yearly" : "monthly";
+  const [billing, setBilling] = useState<LsBilling>(initialBilling);
 
   const [email, setEmail] = useState(user?.email ?? "");
   const [name, setName] = useState((user?.user_metadata as any)?.full_name ?? "");
