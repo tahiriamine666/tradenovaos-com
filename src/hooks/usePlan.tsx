@@ -173,7 +173,7 @@ export function PlanGate({ feature, children, fallback, onUpgrade }: {
         className="px-6 py-2.5 bg-primary text-primary-foreground rounded-xl font-medium text-sm hover:opacity-90 transition-opacity">
         Upgrade to {req.charAt(0).toUpperCase() + req.slice(1)}
       </button>
-      <p className="text-xs text-muted-foreground">Activation via Payoneer · 24h or less</p>
+      <p className="text-xs text-muted-foreground">Secure checkout via Dodo Payments</p>
     </div>
   );
 }

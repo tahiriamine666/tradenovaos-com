@@ -68,6 +68,31 @@ Deno.serve(async (req) => {
 
   const type: string = event?.type ?? "";
   const data = event?.data ?? {};
+  const webhookId = req.headers.get("webhook-id")!;
+  const eventTimeCandidate = event?.created_at ?? data?.updated_at ?? data?.modified_at ?? null;
+  const providerEventAt = eventTimeCandidate && !Number.isNaN(new Date(eventTimeCandidate).getTime())
+    ? new Date(eventTimeCandidate).toISOString()
+    : null;
+
+  // The provider may retry a signed delivery. Persisting the delivery ID makes
+  // processing idempotent before any subscription or profile mutation happens.
+  const { error: deliveryErr } = await admin.from("billing_webhook_events").insert({
+    provider: "dodo",
+    event_id: webhookId,
+    event_type: type,
+    provider_event_at: providerEventAt,
+    payload: event,
+  });
+  if (deliveryErr) {
+    if (deliveryErr.code === "23505") {
+      return new Response(JSON.stringify({ ok: true, duplicate: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    console.error("dodo-webhook: could not record delivery", deliveryErr);
+    return new Response("event_record_failed", { status: 500, headers: corsHeaders });
+  }
+
   console.log("dodo-webhook:", type, "id=", data?.subscription_id ?? data?.payment_id ?? data?.id);
 
   try {
@@ -98,6 +123,21 @@ Deno.serve(async (req) => {
         });
       }
 
+      // Ignore an out-of-order provider event rather than reverting a newer state.
+      if (providerEventAt) {
+        const { data: current } = await admin
+          .from("billing_subscriptions")
+          .select("provider_event_at")
+          .eq("user_id", userId)
+          .maybeSingle();
+        if (current?.provider_event_at && new Date(current.provider_event_at) > new Date(providerEventAt)) {
+          console.warn("dodo-webhook: stale event ignored", { webhookId, userId });
+          return new Response(JSON.stringify({ ok: true, stale: true }), {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+
       const row = {
         user_id: userId,
         provider: "dodo",
@@ -111,6 +151,7 @@ Deno.serve(async (req) => {
         ends_at: endsAt,
         customer_portal_url: null,
         update_payment_method_url: null,
+        provider_event_at: providerEventAt,
         updated_at: new Date().toISOString(),
       };
 
