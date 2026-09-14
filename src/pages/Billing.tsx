@@ -172,7 +172,7 @@ export default function Billing() {
 
             <p className="text-xs text-muted-foreground flex items-center gap-2">
               <Shield className="h-3.5 w-3.5" />
-              Cancel or update payment in the secure Lemon Squeezy portal. Your access continues until the end of the paid period.
+              Cancel or update payment in the secure Dodo Payments portal. Your access continues until the end of the paid period.
             </p>
           </>
         )}
