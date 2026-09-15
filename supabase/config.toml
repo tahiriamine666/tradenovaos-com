@@ -5,3 +5,20 @@ verify_jwt = false
 
 [functions.sync-economic-events]
 verify_jwt = false
+
+
+# Local Auth configuration. Run `npx supabase config push` to apply non-secret
+# settings to the linked hosted project. The Google client secret is supplied
+# only from an ignored .env file when running Supabase locally.
+[auth]
+site_url = "https://www.tradenovaos.com"
+additional_redirect_urls = [
+  "https://www.tradenovaos.com/app",
+  "http://localhost:8080/app",
+]
+
+[auth.external.google]
+enabled = true
+client_id = "487964386891-tt5arcs8a6qm2tsfoh0238p26c1vrud6.apps.googleusercontent.com"
+secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET)"
+skip_nonce_check = false
