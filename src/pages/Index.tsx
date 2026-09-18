@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import TradeVault from '@/pages/TradeVault';
 import PlaybookLab from '@/pages/PlaybookLab';
-import MindJournal from '@/pages/MindJournal';
+import TradeJournal from '@/pages/TradeJournal';
 import StudioSettings from '@/pages/StudioSettings';
 import ReplayStudio from '@/pages/ReplayStudio';
 import CommunitySpace from '@/pages/CommunitySpace';
@@ -465,7 +465,7 @@ function TradingDashboardInner() {
 
           {active === 'trades' && <TradeVault />}
 
-          {active === 'journal' && <MindJournal />}
+          {active === 'journal' && <TradeJournal />}
 
           {active === 'analytics' && <EdgeAnalytics dark={dark} user={user} />}
 

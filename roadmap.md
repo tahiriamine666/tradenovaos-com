@@ -4,3 +4,10 @@
 - [x] Restyle the public homepage, navigation, broker strip, and footer
 - [x] Restyle the signed-in shell and shared controls
 - [x] Verify desktop/mobile visuals and preview diagnostics
+
+# Trading workspace views
+- [x] Rebuild Journal as a dense trade table
+- [ ] Rebuild Trade Logs as a screenshot gallery
+- [ ] Rebuild Analytics with KPI and trend charts
+- [ ] Rebuild Calendar with monthly summary
+- [ ] Verify all four views
