@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BarChart3, ChevronDown, Menu, X } from 'lucide-react';
-import logoAsset from '@/assets/tradenova-n-logo.png.asset.json';
 
 type Item = { label: string; to: string; desc?: string };
 
@@ -79,7 +78,7 @@ export default function MarketingNav() {
     <header className={`sticky top-0 inset-x-0 z-50 bg-background/95 backdrop-blur-xl transition-shadow ${scrolled ? 'shadow-[0_1px_0_0_rgba(15,23,42,0.06),0_8px_24px_-12px_rgba(15,23,42,0.12)]' : 'border-b border-border'}`}>
       <div className="max-w-7xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5">
-          <img src={logoAsset.url} alt="TradeNova" className="w-8 h-8 rounded-md object-contain" />
+          <img src="/tradenova-logo.png" alt="TradeNova" className="w-8 h-8 rounded-md object-contain" />
           <span className="font-black text-foreground text-lg tracking-tight">TradeNova</span>
         </Link>
 

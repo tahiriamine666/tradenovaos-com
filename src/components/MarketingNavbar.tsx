@@ -10,7 +10,6 @@ import {
   TrendingUp, Users, Building2, Globe, HelpCircle, FileText,
   ChevronDown, Menu, X, Zap, ArrowRight, Upload, Calendar,
 } from 'lucide-react';
-import logoAsset from '@/assets/tradenova-n-logo.png.asset.json';
 
 // ─── Nav config ────────────────────────────────────────────────────────────────
 const NAV_ITEMS = [
@@ -159,7 +158,7 @@ export default function MarketingNavbar({ onLogin, onSignup }: MarketingNavbarPr
 
           {/* Logo */}
           <button onClick={() => handleNavigate('/')} className="flex items-center gap-2.5 flex-shrink-0">
-            <img src={logoAsset.url} alt="TradeNova" className="w-8 h-8 rounded-md object-contain" />
+            <img src="/tradenova-logo.png" alt="TradeNova" className="w-8 h-8 rounded-md object-contain" />
             <span className="font-black text-foreground text-lg tracking-tight">TradeNova</span>
           </button>
 

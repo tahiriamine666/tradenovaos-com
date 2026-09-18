@@ -3,4 +3,4 @@
 - [x] Apply the black and ice-blue global design system and typography
 - [x] Restyle the public homepage, navigation, broker strip, and footer
 - [x] Restyle the signed-in shell and shared controls
-- [ ] Verify desktop/mobile visuals and preview diagnostics
+- [x] Verify desktop/mobile visuals and preview diagnostics
