@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowLeft, Brain, CalendarClock, CalendarDays, CheckCircle2, ChevronRight,
-  Circle, CircleDollarSign, LayoutDashboard, Lock, Menu, Search,
-  Settings, Shield, Users, X,
+  ArrowLeft, BarChart3, BookOpen, Brain, CalendarClock, CalendarDays,
+  CheckCircle2, ChevronRight, Circle, CircleDollarSign, ClipboardCheck,
+  LayoutDashboard, List, Lock, Menu, Search, Settings, Shield, Users, X,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,13 +20,15 @@ import SupportChat from '@/components/SupportChat';
 
 
 export const BASE_ITEMS = [
-  { id: 'dashboard', label: 'Command Center',    icon: LayoutDashboard },
-  { id: 'plan',      label: 'Trade Plan',        icon: CalendarDays },
-  { id: 'trades',    label: 'Trade Vault',       icon: CircleDollarSign },
-  { id: 'community', label: 'Community',         icon: Users },
-  { id: 'resources', label: 'Learning Hub',      icon: Brain },
-  { id: 'economic',  label: 'Economic Calendar', icon: CalendarClock },
-  { id: 'settings',  label: 'Studio Settings',   icon: Settings },
+  { id: 'dashboard', label: 'Dashboard',  icon: LayoutDashboard },
+  { id: 'journal',   label: 'Journal',    icon: BookOpen },
+  { id: 'trades',    label: 'Trade Logs', icon: List },
+  { id: 'analytics', label: 'Analytics',  icon: BarChart3 },
+  { id: 'calendar',  label: 'Calendar',   icon: CalendarDays },
+  { id: 'ai',        label: 'Nova AI',    icon: Brain },
+  { id: 'plan',      label: 'Checklist',  icon: ClipboardCheck },
+  { id: 'economic',  label: 'Economic',   icon: CalendarClock },
+  { id: 'settings',  label: 'Settings',   icon: Settings },
 ];
 
 const BOTTOM_NAV = [
