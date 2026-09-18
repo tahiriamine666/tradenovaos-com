@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import UserAvatar from '@/components/UserAvatar';
 import { useProfile } from '@/hooks/useProfile';
 import SupportChat from '@/components/SupportChat';
+import logoAsset from '@/assets/tradenova-n-logo.png.asset.json';
 
 
 export const BASE_ITEMS = [
@@ -43,13 +44,13 @@ function Logo() {
   return (
     <div className="flex items-center gap-3">
       <img
-        src="/tradenova-icon.png"
+        src={logoAsset.url}
         alt="TradeNova"
-        className="w-11 h-11 rounded-xl flex-shrink-0 object-contain shadow-lg shadow-primary/25 ring-1 ring-primary/15"
+        className="w-11 h-11 rounded-md flex-shrink-0 object-cover shadow-[0_0_24px_hsl(var(--primary)/0.28)] ring-1 ring-primary/25"
       />
       <div className="leading-tight">
         <p className="font-heading font-bold text-foreground tracking-tight text-[15px]">TradeNova</p>
-        <p className="text-[10px] text-muted-foreground tracking-wide uppercase">Trading OS</p>
+        <p className="text-[10px] text-primary/70 uppercase">Trading OS</p>
       </div>
     </div>
   );
@@ -351,10 +352,10 @@ function SidebarContent({ active, onNavigate }: {
               return (
                 <button key={item.id} onClick={() => onNavigate(item.id)}
                   className={cx(
-                    'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all',
+                    'flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-sm font-medium transition-all',
                     sel
-                      ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                      ? 'bg-primary/15 text-primary border border-primary/25 shadow-[inset_3px_0_0_hsl(var(--primary)),0_0_24px_hsl(var(--primary)/0.10)]'
+                      : 'border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground hover:border-border',
                   )}>
                   <Icon className="h-4 w-4 flex-shrink-0" />
                   <span className="flex-1">{item.label}</span>
@@ -399,7 +400,7 @@ export default function AppLayout({ active, onNavigate, dark, children, topBar }
     <div className={cx('app-shell flex h-screen overflow-hidden font-body bg-background text-foreground', dark ? 'dark' : '')}>
 
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex w-72 flex-shrink-0 flex-col border-r overflow-hidden bg-sidebar border-border">
+      <aside className="hidden lg:flex w-64 flex-shrink-0 flex-col border-r overflow-hidden bg-sidebar border-border shadow-[18px_0_60px_hsl(var(--background)/0.65)]">
         <SidebarContent active={active} onNavigate={onNavigate} />
       </aside>
 

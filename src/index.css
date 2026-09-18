@@ -1,296 +1,123 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --primary: 263 70% 58%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 263 70% 95%;
-    --accent-foreground: 263 70% 30%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 263 70% 58%;
-    --radius: 1rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5% 26%;
-    --sidebar-primary: 263 70% 58%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 263 70% 95%;
-    --sidebar-accent-foreground: 263 70% 30%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 263 70% 58%;
-
-    --surface: 240 5% 96%;
-    --surface-foreground: 222 47% 11%;
-    --surface-1: 0 0% 100%;
-    --surface-2: 220 14% 98%;
-    --surface-3: 220 13% 95%;
-    --success: 142 71% 45%;
-    --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-    --danger: 0 84% 60%;
-    --danger-foreground: 0 0% 100%;
-
-    font-family: 'DM Sans', system-ui, sans-serif;
-  }
-
+  :root,
   .dark {
-    --background: 240 15% 6%;
-    --foreground: 210 40% 98%;
-    --card: 240 12% 10%;
-    --card-foreground: 210 40% 98%;
-    --popover: 240 12% 10%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 263 70% 58%;
+    --background: 220 33% 2%;
+    --foreground: 213 100% 96%;
+    --card: 218 31% 5%;
+    --card-foreground: 213 100% 96%;
+    --popover: 218 31% 6%;
+    --popover-foreground: 213 100% 96%;
+    --primary: 217 100% 59%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 240 10% 16%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 240 10% 16%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 263 50% 20%;
-    --accent-foreground: 263 70% 80%;
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 240 10% 18%;
-    --input: 240 10% 18%;
-    --ring: 263 70% 58%;
-    --sidebar-background: 240 15% 8%;
-    --sidebar-foreground: 240 5% 96%;
-    --sidebar-primary: 263 70% 58%;
+    --secondary: 216 31% 10%;
+    --secondary-foreground: 213 80% 91%;
+    --muted: 216 27% 9%;
+    --muted-foreground: 215 21% 58%;
+    --accent: 216 80% 13%;
+    --accent-foreground: 211 100% 89%;
+    --destructive: 0 72% 54%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 215 52% 15%;
+    --input: 215 45% 17%;
+    --ring: 199 100% 57%;
+    --radius: 0.5rem;
+
+    --sidebar-background: 220 38% 3%;
+    --sidebar-foreground: 213 60% 91%;
+    --sidebar-primary: 217 100% 59%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 263 50% 18%;
-    --sidebar-accent-foreground: 263 70% 80%;
-    --sidebar-border: 240 10% 16%;
-    --sidebar-ring: 263 70% 58%;
+    --sidebar-accent: 216 68% 12%;
+    --sidebar-accent-foreground: 211 100% 89%;
+    --sidebar-border: 215 48% 13%;
+    --sidebar-ring: 199 100% 57%;
 
-    --surface: 240 12% 12%;
-    --surface-foreground: 210 40% 98%;
-    --surface-1: 240 12% 10%;
-    --surface-2: 240 12% 13%;
-    --surface-3: 240 11% 16%;
-    --success: 142 71% 45%;
-    --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-    --danger: 0 72% 51%;
+    --surface: 218 29% 7%;
+    --surface-foreground: 213 100% 96%;
+    --surface-1: 218 31% 5%;
+    --surface-2: 217 29% 7%;
+    --surface-3: 216 27% 10%;
+    --success: 155 73% 46%;
+    --success-foreground: 220 33% 2%;
+    --warning: 39 96% 57%;
+    --warning-foreground: 220 33% 2%;
+    --danger: 0 84% 62%;
     --danger-foreground: 0 0% 100%;
-  }
-}
 
-@layer base {
+    --blue-glow: 199 100% 57%;
+    --electric-blue: 217 100% 59%;
+    --ice-blue: 211 100% 92%;
+    --terminal-grid: 214 76% 18%;
+    font-family: 'Manrope', system-ui, sans-serif;
+  }
+
   * {
     @apply border-border;
   }
+
+  html {
+    background: hsl(var(--background));
+    color-scheme: dark;
+  }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    min-width: 320px;
+    min-height: 100vh;
   }
+
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-family: 'Sora', system-ui, sans-serif;
+    letter-spacing: 0;
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.35);
+    color: hsl(var(--foreground));
   }
 }
 
-/* ─────────────────────────────────────────────────────────────
-   Light Mode polish for in-app dashboard (.app-shell)
-   The dashboard was originally designed dark-first using
-   white-opacity glass utilities and a few literal hex backgrounds.
-   These rules remap those patterns so light mode looks premium
-   without rewriting every component. Marketing pages live outside
-   .app-shell and stay intentionally dark.
-   ───────────────────────────────────────────────────────────── */
-html:not(.dark) :is(.app-shell, .app-chrome) {
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
-}
-.app-chrome { background-color: transparent; }
+@layer components {
+  .app-shell {
+    background-image:
+      linear-gradient(hsl(var(--terminal-grid) / 0.08) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--terminal-grid) / 0.08) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
 
-/* White-opacity surfaces → soft slate-tinted surfaces */
-html:not(.dark) :is(.app-shell, .app-chrome) [class*="bg-white/"] {
-  background-color: hsl(222 47% 11% / 0.04) !important;
-}
-html:not(.dark) :is(.app-shell, .app-chrome) [class*="hover\:bg-white/"]:hover {
-  background-color: hsl(222 47% 11% / 0.07) !important;
-}
-html:not(.dark) :is(.app-shell, .app-chrome) [class*="border-white/"] {
-  border-color: hsl(214 32% 91%) !important;
-}
-html:not(.dark) :is(.app-shell, .app-chrome) [class*="hover\:border-white/"]:hover {
-  border-color: hsl(214 32% 80%) !important;
-}
+  .app-shell main {
+    background: hsl(var(--background) / 0.97);
+  }
 
-/* White-opacity text → muted slate; pure text-white → foreground */
-html:not(.dark) :is(.app-shell, .app-chrome) [class*="text-white/"] {
-  color: hsl(215 16% 47%) !important;
-}
-html:not(.dark) :is(.app-shell, .app-chrome) .text-white {
-  color: hsl(var(--foreground));
-}
-html:not(.dark) :is(.app-shell, .app-chrome) [class~="hover:text-white"]:hover {
-  color: hsl(var(--foreground)) !important;
-}
-html:not(.dark) :is(.app-shell, .app-chrome) [class*="placeholder\:text-white/"]::placeholder {
-  color: hsl(215 16% 60%) !important;
+  .app-shell :is(.bg-card, [class*="bg-card"]) {
+    box-shadow: inset 0 1px 0 hsl(var(--ice-blue) / 0.025);
+  }
+
+  .app-shell :is(button, a, input, select, textarea):focus-visible {
+    outline: 1px solid hsl(var(--blue-glow) / 0.75);
+    outline-offset: 2px;
+  }
+
+  .blue-panel-glow {
+    box-shadow:
+      inset 0 1px 0 hsl(var(--ice-blue) / 0.05),
+      0 0 0 1px hsl(var(--primary) / 0.04),
+      0 18px 70px hsl(var(--primary) / 0.09);
+  }
+
+  .blue-text-glow {
+    text-shadow: 0 0 24px hsl(var(--blue-glow) / 0.45);
+  }
 }
 
-/* Keep text-white legible on solid colored buttons/badges */
-html:not(.dark) :is(.app-shell, .app-chrome)
-  :is(
-    [class*="bg-violet-"], [class*="bg-purple-"], [class*="bg-indigo-"],
-    [class*="bg-fuchsia-"], [class*="bg-pink-"], [class*="bg-rose-"],
-    [class*="bg-red-"],     [class*="bg-orange-"], [class*="bg-amber-"],
-    [class*="bg-yellow-"],  [class*="bg-lime-"],   [class*="bg-green-"],
-    [class*="bg-emerald-"], [class*="bg-teal-"],   [class*="bg-cyan-"],
-    [class*="bg-sky-"],     [class*="bg-blue-"],   [class*="bg-primary"],
-    [class*="bg-destructive"], [class*="bg-gradient"]
-  ) .text-white,
-html:not(.dark) :is(.app-shell, .app-chrome)
-  :is(
-    [class*="bg-violet-"], [class*="bg-purple-"], [class*="bg-indigo-"],
-    [class*="bg-fuchsia-"], [class*="bg-pink-"], [class*="bg-rose-"],
-    [class*="bg-red-"],     [class*="bg-orange-"], [class*="bg-amber-"],
-    [class*="bg-yellow-"],  [class*="bg-lime-"],   [class*="bg-green-"],
-    [class*="bg-emerald-"], [class*="bg-teal-"],   [class*="bg-cyan-"],
-    [class*="bg-sky-"],     [class*="bg-blue-"],   [class*="bg-primary"],
-    [class*="bg-destructive"], [class*="bg-gradient"]
-  ).text-white {
-  color: #fff !important;
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
-
-/* Literal dark hex backgrounds used by chat widgets / popovers (scoped) */
-html:not(.dark) :is(.app-shell, .app-chrome) [class*="bg-[#0c0c16]"],
-html:not(.dark) :is(.app-shell, .app-chrome) [class*="bg-[#0d0d18]"],
-html:not(.dark) :is(.app-shell, .app-chrome) [class*="bg-[#0d0d1a]"],
-html:not(.dark) :is(.app-shell, .app-chrome) [class*="bg-[#0a0a14]"] {
-  background-color: hsl(var(--card)) !important;
-  color: hsl(var(--card-foreground));
-}
-html:not(.dark) :is(.app-shell, .app-chrome) [class*="border-[#0c0c16]"],
-html:not(.dark) :is(.app-shell, .app-chrome) [class*="border-[#0d0d18]"],
-html:not(.dark) :is(.app-shell, .app-chrome) [class*="border-[#0d0d1a]"] {
-  border-color: hsl(var(--border)) !important;
-}
-
-/* Recharts: lighter grid + readable tooltips in light mode */
-html:not(.dark) .app-shell .recharts-cartesian-grid line {
-  stroke: hsl(214 32% 91%) !important;
-}
-html:not(.dark) .app-shell .recharts-default-tooltip {
-  background-color: #fff !important;
-  border: 1px solid hsl(214 32% 91%) !important;
-  color: hsl(222 47% 11%) !important;
-  border-radius: 0.75rem !important;
-  box-shadow: 0 8px 24px -8px rgba(15, 23, 42, 0.15) !important;
-}
-html:not(.dark) .app-shell .recharts-tooltip-label,
-html:not(.dark) .app-shell .recharts-tooltip-item {
-  color: hsl(222 47% 11%) !important;
-}
-
-/* ─────────────────────────────────────────────────────────────
-   Landing page light theme (.landing-light)
-   The marketing landing was originally dark. This block flips
-   the dark-first glass utilities + literal hex backgrounds to a
-   premium light SaaS palette. Scoped so dashboards/marketing
-   shells elsewhere are unaffected.
-   ───────────────────────────────────────────────────────────── */
-.landing-light { background-color: #f8fafc; color: #0f172a; }
-
-/* Literal dark hex backgrounds → light surfaces */
-.landing-light [class*="bg-[#06060f]"],
-.landing-light [class*="bg-[#08080f]"],
-.landing-light [class*="bg-[#0a0a14]"],
-.landing-light [class*="bg-[#0c0c16]"],
-.landing-light [class*="bg-[#0d0d18]"],
-.landing-light [class*="bg-[#0d0d1a]"] {
-  background-color: #ffffff !important;
-  color: #0f172a;
-}
-
-/* White-opacity surfaces → soft slate-tinted surfaces */
-.landing-light [class*="bg-white/"] {
-  background-color: rgba(15, 23, 42, 0.035) !important;
-}
-.landing-light [class*="hover\:bg-white/"]:hover {
-  background-color: rgba(15, 23, 42, 0.06) !important;
-}
-
-/* White-opacity borders → light slate borders */
-.landing-light [class*="border-white/"] {
-  border-color: #e5e7eb !important;
-}
-.landing-light [class*="hover\:border-white/"]:hover {
-  border-color: #cbd5e1 !important;
-}
-
-/* White-opacity text → muted slate */
-.landing-light [class*="text-white/"] {
-  color: #64748b !important;
-}
-/* Pure text-white → foreground (icons/labels not on colored bg) */
-.landing-light .text-white { color: #0f172a; }
-.landing-light [class~="hover:text-white"]:hover { color: #0f172a !important; }
-
-/* Keep text-white legible on solid colored buttons/badges */
-.landing-light
-  :is(
-    [class*="bg-violet-"], [class*="bg-purple-"], [class*="bg-indigo-"],
-    [class*="bg-fuchsia-"], [class*="bg-pink-"], [class*="bg-rose-"],
-    [class*="bg-red-"],     [class*="bg-orange-"], [class*="bg-amber-"],
-    [class*="bg-yellow-"],  [class*="bg-lime-"],   [class*="bg-green-"],
-    [class*="bg-emerald-"], [class*="bg-teal-"],   [class*="bg-cyan-"],
-    [class*="bg-sky-"],     [class*="bg-blue-"],   [class*="bg-gradient"]
-  ) .text-white,
-.landing-light
-  :is(
-    [class*="bg-violet-"], [class*="bg-purple-"], [class*="bg-indigo-"],
-    [class*="bg-fuchsia-"], [class*="bg-pink-"], [class*="bg-rose-"],
-    [class*="bg-red-"],     [class*="bg-orange-"], [class*="bg-amber-"],
-    [class*="bg-yellow-"],  [class*="bg-lime-"],   [class*="bg-green-"],
-    [class*="bg-emerald-"], [class*="bg-teal-"],   [class*="bg-cyan-"],
-    [class*="bg-sky-"],     [class*="bg-blue-"],   [class*="bg-gradient"]
-  ).text-white {
-  color: #ffffff !important;
-}
-
-/* Recharts in light mode */
-.landing-light .recharts-cartesian-grid line { stroke: #e5e7eb !important; }
-.landing-light .recharts-cartesian-axis-tick text { fill: #64748b !important; }
-.landing-light .recharts-default-tooltip,
-.landing-light .recharts-tooltip-wrapper > div {
-  background-color: #ffffff !important;
-  border: 1px solid #e5e7eb !important;
-  color: #0f172a !important;
-  border-radius: 12px !important;
-  box-shadow: 0 8px 24px -8px rgba(15, 23, 42, 0.15) !important;
-}
-.landing-light .recharts-tooltip-label { color: #64748b !important; }
-
-/* Soften some neon-on-dark accents that look harsh on white */
-.landing-light .bg-violet-500\/10 { background-color: rgba(139, 92, 246, 0.08) !important; }
-.landing-light .bg-violet-500\/20 { border-color: rgba(139, 92, 246, 0.25) !important; }
-.landing-light .text-violet-300,
-.landing-light .text-violet-400 { color: #7c3aed !important; }
-.landing-light .text-emerald-400 { color: #059669 !important; }
-.landing-light .text-red-400 { color: #dc2626 !important; }
-.landing-light .text-blue-400 { color: #2563eb !important; }
-.landing-light .text-amber-400 { color: #d97706 !important; }
-.landing-light .text-pink-400 { color: #db2777 !important; }
-.landing-light .text-purple-400 { color: #9333ea !important; }
-.landing-light .text-cyan-400 { color: #0891b2 !important; }
-.landing-light .text-green-400 { color: #16a34a !important; }
-
