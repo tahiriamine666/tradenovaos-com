@@ -19,7 +19,6 @@ import MarketingNavbar from '@/components/MarketingNavbar';
 import MarketingFooter from '@/components/marketing/MarketingFooter';
 import BrokersStrip from '@/components/marketing/BrokersStrip';
 import SeoHead from '@/components/SeoHead';
-import logoAsset from '@/assets/tradenova-n-logo.png.asset.json';
 
 const EQUITY_DATA = [
   { day: 'Jan', value: 0 }, { day: 'Feb', value: 1240 }, { day: 'Mar', value: 890 },
@@ -92,7 +91,7 @@ function Navbar({ onLogin, onSignup }: { onLogin: () => void; onSignup: () => vo
     <nav className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${scrolled ? 'bg-card/95 backdrop-blur-xl border-b border-border' : ''}`}>
       <div className="max-w-7xl mx-auto px-5 sm:px-8 flex items-center justify-between h-16">
         <div className="flex items-center gap-2.5">
-          <img src={logoAsset.url} alt="TradeNova" className="w-8 h-8 rounded-lg object-contain" />
+          <img src="/tradenova-logo.png" alt="TradeNova" className="w-8 h-8 rounded-lg object-contain" />
           <span className="font-black text-foreground text-lg tracking-tight">TradeNova</span>
         </div>
         <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
@@ -375,7 +374,7 @@ function Hero({ onSignup }: { onSignup: () => void }) {
               {/* Sidebar */}
               <div className="hidden sm:flex w-44 lg:w-[210px] flex-col border-r border-border bg-sidebar p-3 flex-shrink-0">
                 <div className="flex items-center gap-2 mb-4 px-1">
-                  <img src={logoAsset.url} alt="TradeNova" className="w-9 h-9 rounded-md object-contain shadow-sm shadow-primary/30" />
+                  <img src="/tradenova-logo.png" alt="TradeNova" className="w-9 h-9 rounded-md object-contain shadow-sm shadow-primary/30" />
                   <div className="leading-tight">
                     <p className="text-[12px] font-black text-foreground tracking-tight">TradeNova</p>
                     <p className="text-[8px] font-semibold text-muted-foreground/70 tracking-[0.12em]">TRADING OS</p>

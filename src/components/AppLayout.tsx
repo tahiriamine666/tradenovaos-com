@@ -17,7 +17,6 @@ import { Badge } from '@/components/ui/badge';
 import UserAvatar from '@/components/UserAvatar';
 import { useProfile } from '@/hooks/useProfile';
 import SupportChat from '@/components/SupportChat';
-import logoAsset from '@/assets/tradenova-n-logo.png.asset.json';
 
 
 export const BASE_ITEMS = [
@@ -44,7 +43,7 @@ function Logo() {
   return (
     <div className="flex items-center gap-3">
       <img
-        src={logoAsset.url}
+        src="/tradenova-logo.png"
         alt="TradeNova"
         className="w-11 h-11 rounded-md flex-shrink-0 object-cover shadow-[0_0_24px_hsl(var(--primary)/0.28)] ring-1 ring-primary/25"
       />
