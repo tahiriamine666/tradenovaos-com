@@ -310,10 +310,6 @@ function AvatarMenu({ profile, onNavigate, onLogout, dark, onToggleTheme, onAvat
         <div className="py-1">
           <button onClick={() => onNavigate('settings')} className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-foreground hover:bg-muted/50 transition-colors"><User className="h-4 w-4 text-muted-foreground" /> Profile & Settings</button>
           <button onClick={() => onNavigate('pricing')} className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-foreground hover:bg-muted/50 transition-colors"><CreditCard className="h-4 w-4 text-muted-foreground" /> Billing & Plans</button>
-          <button onClick={onToggleTheme} className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-foreground hover:bg-muted/50 transition-colors">
-            {dark ? <Sun className="h-4 w-4 text-muted-foreground" /> : <Moon className="h-4 w-4 text-muted-foreground" />}
-            {dark ? 'Light Mode' : 'Dark Mode'}
-          </button>
         </div>
         <div className="border-t border-border pt-1">
           <button onClick={onLogout} className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-500 hover:bg-red-500/10 transition-colors"><LogOut className="h-4 w-4" /> Sign Out</button>

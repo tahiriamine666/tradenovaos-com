@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { BarChart3, Twitter, Instagram, ArrowRight } from 'lucide-react';
+import { Twitter, Instagram, ArrowRight } from 'lucide-react';
+import logoAsset from '@/assets/tradenova-n-logo.png.asset.json';
 
 const COLS: { title: string; links: { label: string; to: string; external?: boolean }[] }[] = [
   {
@@ -44,24 +45,24 @@ const SOCIAL = [
 export default function MarketingFooter() {
   const nav = useNavigate();
   return (
-    <footer className="relative bg-white text-slate-900 overflow-hidden">
+    <footer className="relative bg-background text-foreground overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-violet-600/10 rounded-full blur-[120px]" />
-        <div className="absolute bottom-0 right-0 w-[400px] h-[300px] bg-indigo-700/8 rounded-full blur-[100px]" />
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary/10 rounded-full blur-[120px]" />
+        <div className="absolute bottom-0 right-0 w-[400px] h-[300px] bg-cyan-500/5 rounded-full blur-[100px]" />
       </div>
 
       {/* CTA banner */}
       <div className="relative max-w-7xl mx-auto px-5 sm:px-8 pt-20">
-        <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-violet-600/15 via-white/[0.02] to-indigo-600/10 p-10 sm:p-14 flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div className="rounded-lg border border-border bg-gradient-to-br from-primary/15 via-white/[0.02] to-cyan-500/10 p-10 sm:p-14 flex flex-col sm:flex-row items-center justify-between gap-6">
           <div>
             <h3 className="text-2xl sm:text-3xl font-black tracking-tight">
-              Start building your <span className="bg-gradient-to-r from-violet-400 to-purple-300 bg-clip-text text-transparent">trading edge today.</span>
+              Start building your <span className="bg-gradient-to-r from-primary to-cyan-300 bg-clip-text text-transparent">trading edge today.</span>
             </h3>
-            <p className="text-slate-600 text-sm mt-2">Free forever plan · No credit card required</p>
+            <p className="text-muted-foreground text-sm mt-2">Free forever plan · No credit card required</p>
           </div>
           <button
             onClick={() => nav('/signup')}
-            className="group inline-flex items-center gap-2.5 bg-violet-600 hover:bg-violet-500 text-white px-7 py-3.5 rounded-2xl font-black text-sm transition-all hover:shadow-2xl hover:shadow-violet-500/40 hover:-translate-y-0.5 whitespace-nowrap"
+            className="group inline-flex items-center gap-2.5 bg-primary hover:bg-primary text-white px-7 py-3.5 rounded-md font-black text-sm transition-all hover:shadow-2xl hover:shadow-primary/30 hover:-translate-y-0.5 whitespace-nowrap"
           >
             Start Free <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </button>
@@ -72,15 +73,13 @@ export default function MarketingFooter() {
       <div className="relative max-w-7xl mx-auto px-5 sm:px-8 py-16 grid grid-cols-1 md:grid-cols-12 gap-10">
         <div className="md:col-span-4 space-y-5">
           <Link to="/" className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-violet-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
-              <BarChart3 className="h-5 w-5 text-white" />
-            </div>
-            <span className="font-black text-slate-900 text-xl tracking-tight">TradeNova</span>
+            <img src={logoAsset.url} alt="TradeNova" className="h-9 w-9 rounded-md object-cover ring-1 ring-primary/25 shadow-[0_0_24px_hsl(var(--primary)/0.22)]" />
+            <span className="font-black text-foreground text-xl tracking-tight">TradeNova</span>
           </Link>
-          <p className="text-sm text-slate-700 leading-relaxed max-w-sm">
+          <p className="text-sm text-muted-foreground leading-relaxed max-w-sm">
             TradeNova is a Trading Operating System built to help traders plan, journal, analyze, and improve their performance.
           </p>
-          <p className="text-[11px] text-slate-500 leading-relaxed max-w-sm border-l-2 border-slate-200 pl-3">
+          <p className="text-[11px] text-muted-foreground/80 leading-relaxed max-w-sm border-l-2 border-border pl-3">
             Trading involves substantial risk and is not suitable for every investor. Past performance does not guarantee future results.
           </p>
         </div>
@@ -88,11 +87,11 @@ export default function MarketingFooter() {
         <div className="md:col-span-8 grid grid-cols-2 sm:grid-cols-4 gap-8">
           {COLS.map(col => (
             <div key={col.title}>
-              <p className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-4">{col.title}</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-foreground mb-4">{col.title}</p>
               <ul className="space-y-2.5">
                 {col.links.map(l => (
                   <li key={l.label}>
-                    <Link to={l.to} className="text-sm text-slate-600 hover:text-violet-700 transition-colors">
+                    <Link to={l.to} className="text-sm text-muted-foreground hover:text-primary transition-colors">
                       {l.label}
                     </Link>
                   </li>
@@ -101,12 +100,12 @@ export default function MarketingFooter() {
             </div>
           ))}
           <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-slate-900 mb-4">Social</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-foreground mb-4">Social</p>
             <ul className="flex items-center gap-3">
               {SOCIAL.map(s => (
                 <li key={s.label}>
                   <a href={s.href} target="_blank" rel="noreferrer noopener" aria-label={s.label}
-                    className="group flex items-center justify-center w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 text-slate-600 hover:bg-violet-500/15 hover:border-violet-500/30 hover:text-violet-700 transition-colors">
+                    className="group flex items-center justify-center w-10 h-10 rounded-md bg-muted border border-border text-muted-foreground hover:bg-primary/15 hover:border-primary/30 hover:text-primary transition-colors">
                     <s.Icon className="h-4 w-4" />
                   </a>
                 </li>
@@ -116,11 +115,11 @@ export default function MarketingFooter() {
         </div>
       </div>
 
-      <div className="relative border-t border-slate-200">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+      <div className="relative border-t border-border">
+        <div className="max-w-7xl mx-auto px-5 sm:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground/80">
           <p>© {new Date().getFullYear()} TradeNova. All rights reserved.</p>
           <a href="https://tradenovaos.com" target="_blank" rel="noreferrer noopener"
-            className="hover:text-violet-700 transition-colors">tradenovaos.com</a>
+            className="hover:text-primary transition-colors">tradenovaos.com</a>
         </div>
       </div>
     </footer>
