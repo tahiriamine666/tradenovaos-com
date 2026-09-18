@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, BarChart3, BookOpen, Brain, CalendarClock, CalendarDays,
-  CheckCircle2, ChevronRight, Circle, ClipboardCheck, LayoutDashboard,
-  List, Lock, Menu, Search, Settings, Shield, X,
+  CheckCircle2, ChevronRight, Circle, CircleDollarSign, ClipboardCheck,
+  LayoutDashboard, List, Lock, Menu, Search, Settings, Shield, Users, X,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
