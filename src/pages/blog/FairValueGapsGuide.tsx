@@ -32,7 +32,7 @@ export default function FairValueGapsGuide() {
             name: 'TradeNova OS',
             logo: {
               '@type': 'ImageObject',
-              url: 'https://tradenovaos.com/tradenova-icon.png',
+              url: 'https://tradenovaos.com/favicon.png',
             },
           },
           mainEntityOfPage: URL,

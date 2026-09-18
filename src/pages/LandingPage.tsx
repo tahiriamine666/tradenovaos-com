@@ -234,7 +234,7 @@ function Hero({ onSignup }: { onSignup: () => void }) {
         </motion.div>
 
         <motion.h1 initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.08, ease }}
-          className="text-center text-5xl sm:text-6xl lg:text-[76px] font-black text-foreground leading-[1.02] tracking-[-0.03em] mb-6">
+          className="text-center text-5xl sm:text-6xl lg:text-[76px] font-black text-foreground leading-[1.02] mb-6">
           The Trading OS<br />
           <span className="bg-gradient-to-r from-primary via-cyan-300 to-cyan-300 bg-clip-text text-transparent">Built For Serious Traders</span>
         </motion.h1>
@@ -282,7 +282,7 @@ function Hero({ onSignup }: { onSignup: () => void }) {
               className="rounded-md bg-card/95 backdrop-blur-xl border border-primary/20 shadow-2xl shadow-primary/20 p-3 w-[210px]"
             >
               <div className="flex items-center gap-2 mb-1.5">
-                <div className="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center">
+                <div className="w-7 h-7 rounded-md bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center">
                   <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />
                 </div>
                 <div>
@@ -399,7 +399,7 @@ function Hero({ onSignup }: { onSignup: () => void }) {
                   ))}
                 </div>
 
-                <div className="mt-3 rounded-md border border-primary/25 bg-gradient-to-br from-primary/10 to-white p-2.5">
+                <div className="mt-3 rounded-md border border-primary/25 bg-gradient-to-br from-primary/15 to-background p-2.5">
                   <p className="text-[10px] font-black text-foreground">Upgrade to Pro</p>
                   <p className="text-[8px] text-muted-foreground mt-0.5 leading-tight">Unlock AI, CSV import, playbooks</p>
                   <div className="mt-2 bg-primary text-white text-[9px] font-bold py-1.5 rounded-md text-center shadow-sm shadow-primary/30">Start 7-day free trial</div>
@@ -645,14 +645,14 @@ const FEATURES = [
 ];
 
 const CM: Record<string,any> = {
-  violet: {bg:'bg-primary/8',  b:'border-primary/20',  t:'text-primary',  bd:'bg-primary/15 text-primary'},
-  blue:   {bg:'bg-blue-500/8',    b:'border-blue-500/20',    t:'text-blue-600',    bd:'bg-blue-500/15 text-blue-700'},
-  pink:   {bg:'bg-pink-500/8',    b:'border-pink-500/20',    t:'text-pink-600',    bd:'bg-pink-500/15 text-pink-700'},
-  emerald:{bg:'bg-emerald-500/8', b:'border-emerald-500/20', t:'text-emerald-600', bd:'bg-emerald-500/15 text-emerald-700'},
-  amber:  {bg:'bg-amber-500/8',   b:'border-amber-500/20',   t:'text-amber-600',   bd:'bg-amber-500/15 text-amber-700'},
-  purple: {bg:'bg-primary/10',  b:'border-primary/20',  t:'text-primary',  bd:'bg-primary/15 text-primary'},
-  cyan:   {bg:'bg-cyan-500/8',    b:'border-cyan-500/20',    t:'text-cyan-600',    bd:'bg-cyan-500/15 text-cyan-700'},
-  green:  {bg:'bg-green-500/8',   b:'border-green-500/20',   t:'text-green-600',   bd:'bg-green-500/15 text-green-700'},
+  violet: {bg:'bg-primary/10', b:'border-primary/20',  t:'text-primary',  bd:'bg-primary/15 text-primary'},
+  blue:   {bg:'bg-blue-500/10',    b:'border-blue-500/20',    t:'text-blue-400',    bd:'bg-blue-500/15 text-blue-300'},
+  pink:   {bg:'bg-pink-500/10',    b:'border-pink-500/20',    t:'text-pink-400',    bd:'bg-pink-500/15 text-pink-300'},
+  emerald:{bg:'bg-emerald-500/10', b:'border-emerald-500/20', t:'text-emerald-400', bd:'bg-emerald-500/15 text-emerald-300'},
+  amber:  {bg:'bg-amber-500/10',   b:'border-amber-500/20',   t:'text-amber-400',   bd:'bg-amber-500/15 text-amber-300'},
+  purple: {bg:'bg-primary/10', b:'border-primary/20',  t:'text-primary',  bd:'bg-primary/15 text-primary'},
+  cyan:   {bg:'bg-cyan-500/10', b:'border-cyan-500/20',    t:'text-cyan-400',    bd:'bg-cyan-500/15 text-cyan-300'},
+  green:  {bg:'bg-green-500/10', b:'border-green-500/20',   t:'text-green-400',   bd:'bg-green-500/15 text-green-300'},
 };
 
 function Features() {
