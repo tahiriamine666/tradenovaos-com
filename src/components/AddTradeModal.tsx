@@ -41,6 +41,9 @@ interface TradeForm {
   notes: string;
   rr: string;
   session: string;
+  weekly_context: string;
+  daily_bias: string;
+  timeframe: string;
 }
 
 interface ValidationErrors {
@@ -62,9 +65,14 @@ const EMPTY_FORM: TradeForm = {
   notes: '',
   rr: '',
   session: '',
+  weekly_context: '',
+  daily_bias: '',
+  timeframe: '',
 };
 
 const SESSIONS = ['london', 'new_york', 'asia', 'overlap'];
+const TIMEFRAMES = ['1m', '5m', '15m', '30m', '1H', '4H', 'Daily', 'Weekly'];
+const BIASES = ['Bullish', 'Bearish', 'Neutral'];
 
 // ─── Outcome selector ─────────────────────────────────────────────────────────
 function OutcomeSelector({ value, onChange, error }: {
