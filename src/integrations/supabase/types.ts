@@ -1765,6 +1765,7 @@ export type Database = {
           account_type: string
           ai_review: Json
           created_at: string
+          daily_bias: string | null
           discipline_score: number | null
           emotion: string | null
           entry_price: number | null
@@ -1788,15 +1789,18 @@ export type Database = {
           stop_loss: number | null
           tags: string[]
           take_profit: number | null
+          timeframe: string | null
           trade_date: string
           trading_account_id: string | null
           updated_at: string
           user_id: string
+          weekly_context: string | null
         }
         Insert: {
           account_type?: string
           ai_review?: Json
           created_at?: string
+          daily_bias?: string | null
           discipline_score?: number | null
           emotion?: string | null
           entry_price?: number | null
@@ -1820,15 +1824,18 @@ export type Database = {
           stop_loss?: number | null
           tags?: string[]
           take_profit?: number | null
+          timeframe?: string | null
           trade_date?: string
           trading_account_id?: string | null
           updated_at?: string
           user_id: string
+          weekly_context?: string | null
         }
         Update: {
           account_type?: string
           ai_review?: Json
           created_at?: string
+          daily_bias?: string | null
           discipline_score?: number | null
           emotion?: string | null
           entry_price?: number | null
@@ -1852,10 +1859,12 @@ export type Database = {
           stop_loss?: number | null
           tags?: string[]
           take_profit?: number | null
+          timeframe?: string | null
           trade_date?: string
           trading_account_id?: string | null
           updated_at?: string
           user_id?: string
+          weekly_context?: string | null
         }
         Relationships: [
           {
