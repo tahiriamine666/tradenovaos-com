@@ -41,6 +41,9 @@ interface TradeForm {
   notes: string;
   rr: string;
   session: string;
+  weekly_context: string;
+  daily_bias: string;
+  timeframe: string;
 }
 
 interface ValidationErrors {
@@ -62,9 +65,14 @@ const EMPTY_FORM: TradeForm = {
   notes: '',
   rr: '',
   session: '',
+  weekly_context: '',
+  daily_bias: '',
+  timeframe: '',
 };
 
 const SESSIONS = ['london', 'new_york', 'asia', 'overlap'];
+const TIMEFRAMES = ['1m', '5m', '15m', '30m', '1H', '4H', 'Daily', 'Weekly'];
+const BIASES = ['Bullish', 'Bearish', 'Neutral'];
 
 // ─── Outcome selector ─────────────────────────────────────────────────────────
 function OutcomeSelector({ value, onChange, error }: {
@@ -211,6 +219,7 @@ export default function AddTradeModal({
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [saving, setSaving] = useState(false);
   const [playbooks, setPlaybooks] = useState<Playbook[]>([]);
+  const [chartFile, setChartFile] = useState<File | null>(null);
 
   // Load playbooks
   useEffect(() => {
@@ -238,10 +247,14 @@ export default function AddTradeModal({
         notes: editTrade.notes ?? '',
         rr: editTrade.rr != null ? String(editTrade.rr) : '',
         session: editTrade.session ?? '',
+        weekly_context: editTrade.weekly_context ?? '',
+        daily_bias: editTrade.daily_bias ?? '',
+        timeframe: editTrade.timeframe ?? '',
       });
     } else {
       setForm(EMPTY_FORM);
     }
+    setChartFile(null);
     setErrors({});
   }, [editTrade, open]);
 
@@ -300,8 +313,25 @@ export default function AddTradeModal({
       notes: form.notes.trim() || null,
       rr: form.rr ? Number(form.rr) : null,
       session: form.session || null,
+      weekly_context: form.weekly_context.trim() || null,
+      daily_bias: form.daily_bias || null,
+      timeframe: form.timeframe || null,
       trading_account_id: activeAccountId || null,
     };
+
+    if (chartFile) {
+      if (!chartFile.type.startsWith('image/') || chartFile.size > 10 * 1024 * 1024) {
+        toast({ title: 'Chart not uploaded', description: 'Use an image under 10MB.', variant: 'destructive' });
+      } else {
+        const path = `${user.id}/${crypto.randomUUID()}-${chartFile.name.replace(/[^\w.-]/g, '_')}`;
+        const { error: upErr } = await supabase.storage.from('trade-screenshots').upload(path, chartFile, { upsert: false });
+        if (upErr) {
+          toast({ title: 'Chart not uploaded', description: 'The trade will be saved without the chart.', variant: 'destructive' });
+        } else {
+          payload.screenshot_url = path;
+        }
+      }
+    }
 
     let error;
     if (editTrade) {
