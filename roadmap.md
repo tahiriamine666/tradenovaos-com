@@ -7,7 +7,7 @@
 
 # Trading workspace views
 - [x] Rebuild Journal as a dense trade table
-- [ ] Rebuild Trade Logs as a screenshot gallery
-- [ ] Rebuild Analytics with KPI and trend charts
-- [ ] Rebuild Calendar with monthly summary
+- [x] Rebuild Trade Logs as a screenshot gallery
+- [x] Rebuild Analytics with KPI and trend charts
+- [x] Rebuild Calendar with monthly summary
 - [ ] Verify all four views

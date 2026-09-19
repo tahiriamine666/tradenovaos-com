@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
+import { useActiveAccount } from '@/contexts/ActiveAccountContext';
 import { supabase } from '@/integrations/supabase/client';
 import TradeVault from '@/pages/TradeVault';
 import PlaybookLab from '@/pages/PlaybookLab';
@@ -75,6 +76,7 @@ function formatMoney(val: number): string {
 }
 
 function EdgeAnalytics({ dark, user }: { dark: boolean; user: any }) {
+  const { activeAccountId, version } = useActiveAccount();
   const [trades, setTrades] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -82,15 +84,17 @@ function EdgeAnalytics({ dark, user }: { dark: boolean; user: any }) {
     if (!user) return;
     const fetch = async () => {
       setLoading(true);
-      const { data } = await supabase
+      let query = supabase
         .from('trades')
         .select('*')
         .eq('user_id', user.id);
+      if (activeAccountId) query = query.eq('trading_account_id', activeAccountId);
+      const { data } = await query.order('trade_date', { ascending: true });
       setTrades(data ?? []);
       setLoading(false);
     };
     fetch();
-  }, [user]);
+  }, [user, activeAccountId, version]);
 
   const metrics = useMemo(() => {
     const pnlOf = (t: any) => Number(t.result ?? t.pnl ?? 0);
@@ -121,7 +125,19 @@ function EdgeAnalytics({ dark, user }: { dark: boolean; user: any }) {
       }
     });
 
-    return { totalPnl, winRate, avgWin, avgLoss, best, worst, winsCount: wins.length, lossesCount: losses.length, bySide, bySetup };
+    let cumulative = 0;
+    let rollingWins = 0;
+    const trend = trades.map((trade, index) => {
+      const pnl = pnlOf(trade);
+      cumulative += pnl;
+      if (pnl > 0) rollingWins += 1;
+      return { label: new Date(`${trade.trade_date}T12:00:00`).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }), pnl: cumulative, winRate: Math.round((rollingWins / (index + 1)) * 100) };
+    });
+    const grossProfit = wins.reduce((sum, trade) => sum + pnlOf(trade), 0);
+    const grossLoss = Math.abs(losses.reduce((sum, trade) => sum + pnlOf(trade), 0));
+    const profitFactor = grossLoss > 0 ? grossProfit / grossLoss : 0;
+    const avgRR = trades.filter((trade) => trade.rr).reduce((sum, trade) => sum + Number(trade.rr), 0) / Math.max(1, trades.filter((trade) => trade.rr).length);
+    return { totalPnl, winRate, avgWin, avgLoss, best, worst, winsCount: wins.length, lossesCount: losses.length, bySide, bySetup, trend, profitFactor, avgRR };
   }, [trades]);
 
   if (loading) {
@@ -151,8 +167,31 @@ function EdgeAnalytics({ dark, user }: { dark: boolean; user: any }) {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-      <SectionTitle title="Edge Analytics" subtitle="Discover what's working and what's not" />
+      <SectionTitle title="Analytics" subtitle="Performance trends from your selected trading account" />
       <AnalyticsMetrics />
+
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        {[
+          { title: 'Cumulative P&L', key: 'pnl', suffix: '$' },
+          { title: 'Win Rate Trend', key: 'winRate', suffix: '%' },
+        ].map((chart) => (
+          <Card key={chart.key} className="border-border bg-card shadow-none">
+            <CardHeader><CardTitle className="text-base">{chart.title}</CardTitle></CardHeader>
+            <CardContent className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={metrics.trend} margin={{ left: 0, right: 10, top: 8, bottom: 0 }}>
+                  <defs><linearGradient id={`fill-${chart.key}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/><stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0}/></linearGradient></defs>
+                  <CartesianGrid stroke="hsl(var(--border))" vertical={false} />
+                  <XAxis dataKey="label" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} axisLine={false} tickLine={false} minTickGap={24} />
+                  <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} axisLine={false} tickLine={false} width={46} />
+                  <Tooltip contentStyle={{ background: 'hsl(var(--popover))', border: '1px solid hsl(var(--border))', borderRadius: 6 }} formatter={(value: number) => [`${chart.suffix === '$' ? '$' : ''}${Number(value).toFixed(chart.key === 'pnl' ? 2 : 0)}${chart.suffix === '%' ? '%' : ''}`, chart.title]} />
+                  <Area type="monotone" dataKey={chart.key} stroke="hsl(var(--primary))" fill={`url(#fill-${chart.key})`} strokeWidth={2} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="border-0 shadow-sm">
@@ -238,8 +277,10 @@ function SectionTitle({ title, subtitle }: { title: string; subtitle: string }) 
 
 function TradingCalendar({ dark }: { dark: boolean }) {
   const { user } = useAuth();
+  const { activeAccountId, version } = useActiveAccount();
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [dayMap, setDayMap] = useState<Record<number, { pnl: number; trades: number }>>({});
+  const [mode, setMode] = useState<'pnl' | 'psychology'>('pnl');
+  const [dayMap, setDayMap] = useState<Record<number, { pnl: number; trades: number; discipline: number }>>({});
   const [loading, setLoading] = useState(true);
 
   const year = currentDate.getFullYear();
@@ -257,41 +298,51 @@ function TradingCalendar({ dark }: { dark: boolean }) {
       setLoading(true);
       const monthStart = `${year}-${String(month + 1).padStart(2, '0')}-01`;
       const monthEnd = `${year}-${String(month + 1).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
-      const { data } = await supabase
+      let query = supabase
         .from('trades')
-        .select('trade_date, result')
+        .select('trade_date, result, discipline_score')
         .eq('user_id', user.id)
         .gte('trade_date', monthStart)
         .lte('trade_date', monthEnd);
+      if (activeAccountId) query = query.eq('trading_account_id', activeAccountId);
+      const { data } = await query;
 
-      const grouped: Record<number, { pnl: number; trades: number }> = {};
+      const grouped: Record<number, { pnl: number; trades: number; discipline: number }> = {};
       (data ?? []).forEach((t) => {
         const day = getTradeDateDay(t.trade_date);
-        if (!grouped[day]) grouped[day] = { pnl: 0, trades: 0 };
+        if (!grouped[day]) grouped[day] = { pnl: 0, trades: 0, discipline: 0 };
         grouped[day].pnl += (t as any).result ?? (t as any).pnl ?? 0;
         grouped[day].trades += 1;
+        grouped[day].discipline += Number((t as any).discipline_score ?? 0);
       });
       setDayMap(grouped);
       setLoading(false);
     };
     fetchCalendarData();
-  }, [user, year, month, daysInMonth]);
+  }, [user, year, month, daysInMonth, activeAccountId, version]);
 
   const totalCells = Math.ceil((firstDayOfWeek + daysInMonth) / 7) * 7;
+  const monthSummary = Object.values(dayMap).reduce((summary, day) => ({
+    pnl: summary.pnl + day.pnl,
+    trades: summary.trades + day.trades,
+    wins: summary.wins + (day.pnl > 0 ? 1 : 0),
+    losses: summary.losses + (day.pnl < 0 ? 1 : 0),
+    activeDays: summary.activeDays + 1,
+  }), { pnl: 0, trades: 0, wins: 0, losses: 0, activeDays: 0 });
 
   return (
-    <Card className="border-0 shadow-sm">
-      <CardHeader>
+    <div className="space-y-5">
+      <SectionTitle title="Trading Calendar" subtitle="Track your daily performance and psychology" />
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_260px]">
+      <Card className="border-border bg-card shadow-none">
+      <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="font-heading">Trading Calendar</CardTitle>
-            <CardDescription>Monthly P&L and trade activity</CardDescription>
-          </div>
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" onClick={prevMonth}><ChevronLeft className="h-4 w-4" /></Button>
-            <span className="text-sm font-medium text-foreground">{monthLabel}</span>
+            <span className="min-w-32 text-center text-sm font-semibold text-foreground">{monthLabel}</span>
             <Button variant="ghost" size="icon" onClick={nextMonth}><ChevronRight className="h-4 w-4" /></Button>
           </div>
+          <Tabs value={mode} onValueChange={(value) => setMode(value as 'pnl' | 'psychology')}><TabsList><TabsTrigger value="pnl">P&L</TabsTrigger><TabsTrigger value="psychology">Psychology</TabsTrigger></TabsList></Tabs>
         </div>
       </CardHeader>
       <CardContent>
@@ -314,19 +365,19 @@ function TradingCalendar({ dark }: { dark: boolean }) {
               const negative = (entry?.pnl ?? 0) < 0;
               return (
                 <div key={i} className={cx(
-                  'rounded-lg p-2 min-h-[70px] text-xs transition-colors',
+                   'rounded-md border border-border p-2 min-h-[92px] text-xs transition-colors',
                   !inMonth && 'opacity-0',
                   entry && positive && (dark ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-emerald-50 border border-emerald-200'),
                   entry && negative && (dark ? 'bg-red-500/10 border border-red-500/20' : 'bg-red-50 border border-red-200'),
-                  inMonth && !entry && 'bg-muted/30',
+                   inMonth && !entry && 'bg-muted/20',
                 )}>
                   {inMonth && (
                     <>
                       <p className="font-medium text-muted-foreground">{dayNumber}</p>
                       {entry && (
                         <div className="mt-1">
-                          <p className={cx('font-semibold text-[11px]', positive ? 'text-emerald-500' : 'text-red-500')}>
-                            {entry.pnl > 0 ? '+' : ''}${entry.pnl}
+                           <p className={cx('font-semibold text-[11px]', mode === 'psychology' ? 'text-primary' : positive ? 'text-success' : 'text-danger')}>
+                             {mode === 'pnl' ? `${entry.pnl > 0 ? '+' : ''}$${entry.pnl.toFixed(2)}` : `${entry.discipline ? Math.round(entry.discipline / entry.trades) : '—'}/10`}
                           </p>
                           <p className="text-muted-foreground text-[10px]">{entry.trades} trades</p>
                         </div>
@@ -344,6 +395,17 @@ function TradingCalendar({ dark }: { dark: boolean }) {
         </div>
       </CardContent>
     </Card>
+      <div className="space-y-3">
+        <Card className="border-primary/30 bg-card shadow-[0_0_24px_hsl(var(--primary)/0.08)]"><CardContent className="p-5"><p className="text-xs text-muted-foreground">Monthly P&L</p><p className={cx('mt-2 text-2xl font-bold font-mono', monthSummary.pnl >= 0 ? 'text-success' : 'text-danger')}>{formatMoney(monthSummary.pnl)}</p></CardContent></Card>
+        <Card className="border-border bg-card shadow-none"><CardContent className="space-y-4 p-5">{[
+          ['Total Trades', monthSummary.trades],
+          ['Win / Loss Days', `${monthSummary.wins} / ${monthSummary.losses}`],
+          ['Active Days', monthSummary.activeDays],
+          ['Average Daily', monthSummary.activeDays ? formatMoney(monthSummary.pnl / monthSummary.activeDays) : '$0.00'],
+        ].map(([label, value]) => <div key={label} className="flex items-center justify-between border-b border-border pb-3 last:border-0 last:pb-0"><span className="text-xs text-muted-foreground">{label}</span><span className="text-sm font-semibold text-foreground">{value}</span></div>)}</CardContent></Card>
+      </div>
+      </div>
+    </div>
   );
 }
 
@@ -437,7 +499,7 @@ function TradingDashboardInner() {
   useNavigationEvent(setActive);
 
   const chartPrimary = 'hsl(var(--primary))';
-  const chartSuccess = '#22c55e';
+  const chartSuccess = 'hsl(var(--success))';
 
   return (
     <AppLayout
