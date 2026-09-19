@@ -45,8 +45,8 @@ function MetricCard({
   icon: React.ElementType; positive?: boolean;
 }) {
   const valueColor =
-    positive === true ? 'text-emerald-500' :
-    positive === false ? 'text-red-500' :
+    positive === true ? 'text-success' :
+    positive === false ? 'text-danger' :
     'text-foreground';
 
   return (

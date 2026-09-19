@@ -203,7 +203,7 @@ function EdgeAnalytics({ dark, user }: { dark: boolean; user: any }) {
                   <p className="text-sm font-medium text-foreground capitalize">{side}</p>
                   <p className="text-xs text-muted-foreground">{data.count} trades</p>
                 </div>
-                <p className={cx('text-sm font-bold tabular-nums', data.pnl >= 0 ? 'text-emerald-500' : 'text-red-500')}>
+                <p className={cx('text-sm font-bold tabular-nums', data.pnl >= 0 ? 'text-success' : 'text-danger')}>
                   {formatMoney(data.pnl)}
                 </p>
               </div>
@@ -223,7 +223,7 @@ function EdgeAnalytics({ dark, user }: { dark: boolean; user: any }) {
                     <p className="text-sm font-medium text-foreground">{setup}</p>
                     <p className="text-xs text-muted-foreground">{data.count} trades · {Math.round((data.wins / data.count) * 100)}% win rate</p>
                   </div>
-                  <p className={cx('text-sm font-bold tabular-nums', data.pnl >= 0 ? 'text-emerald-500' : 'text-red-500')}>
+                  <p className={cx('text-sm font-bold tabular-nums', data.pnl >= 0 ? 'text-success' : 'text-danger')}>
                     {formatMoney(data.pnl)}
                   </p>
                 </div>
@@ -367,8 +367,8 @@ function TradingCalendar({ dark }: { dark: boolean }) {
                 <div key={i} className={cx(
                    'rounded-md border border-border p-2 min-h-[92px] text-xs transition-colors',
                   !inMonth && 'opacity-0',
-                  entry && positive && (dark ? 'bg-emerald-500/10 border border-emerald-500/20' : 'bg-emerald-50 border border-emerald-200'),
-                  entry && negative && (dark ? 'bg-red-500/10 border border-red-500/20' : 'bg-red-50 border border-red-200'),
+                  entry && positive && 'bg-success/10 border-success/25',
+                  entry && negative && 'bg-danger/10 border-danger/25',
                    inMonth && !entry && 'bg-muted/20',
                 )}>
                   {inMonth && (
@@ -390,8 +390,8 @@ function TradingCalendar({ dark }: { dark: boolean }) {
           </div>
         )}
         <div className="flex items-center gap-4 mt-4 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-emerald-500/20 border border-emerald-500/30" /> Profit Day</span>
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-red-500/20 border border-red-500/30" /> Loss Day</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-success/20 border border-success/30" /> Profit Day</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-danger/20 border border-danger/30" /> Loss Day</span>
         </div>
       </CardContent>
     </Card>
