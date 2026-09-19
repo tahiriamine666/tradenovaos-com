@@ -144,11 +144,11 @@ export default function AnalyticsMetrics() {
   const metrics = [
     { title: 'Net P&L',       value: fmt(data.net_pnl),          hint: `From ${data.total_trades} trades`,         icon: TrendingUp,  positive: data.net_pnl >= 0 },
     { title: 'Win Rate',      value: `${data.win_rate}%`,         hint: `${data.wins} wins · ${data.losses} losses`, icon: Target,      positive: data.win_rate >= 50 },
-    { title: 'Profit Factor', value: data.profit_factor != null ? `${data.profit_factor}x` : '—', hint: 'Gross profit / gross loss', icon: Activity },
+    { title: 'Profit Factor', value: data.profit_factor != null ? `${data.profit_factor.toFixed(2)}x` : '—', hint: 'Gross profit / gross loss', icon: Activity },
     { title: 'Expectancy',    value: fmt(data.expectancy),        hint: 'Avg $ per trade',                           icon: DollarSign,  positive: data.expectancy >= 0 },
     { title: 'Avg Win',       value: fmt(data.avg_win),           hint: `${data.wins} winning trades`,               icon: CheckCircle2, positive: true },
     { title: 'Avg Loss',      value: fmt(data.avg_loss ? -data.avg_loss : 0), hint: `${data.losses} losing trades`, icon: Clock3,      positive: data.avg_loss === 0 ? undefined : false },
-    { title: 'Avg R:R',       value: data.avg_rr != null ? `1:${data.avg_rr}` : '—', hint: 'Average risk/reward',  icon: LineChart },
+    { title: 'Avg R:R',       value: data.avg_rr != null ? `1:${data.avg_rr.toFixed(2)}` : '—', hint: 'Average risk/reward',  icon: LineChart },
     { title: 'Gross Profit',  value: fmt(data.gross_profit),      hint: 'Total from winners',                        icon: TrendingUp,  positive: true },
     { title: 'Gross Loss',    value: fmt(-data.gross_loss),       hint: 'Total from losers',                         icon: ShieldCheck, positive: data.gross_loss === 0 ? undefined : false },
     { title: 'Best Trade',    value: fmt(data.best_trade),        hint: 'Highest single result',                     icon: Zap,         positive: true },

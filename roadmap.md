@@ -10,4 +10,4 @@
 - [x] Rebuild Trade Logs as a screenshot gallery
 - [x] Rebuild Analytics with KPI and trend charts
 - [x] Rebuild Calendar with monthly summary
-- [ ] Verify all four views
+- [x] Verify all four views
