@@ -5,7 +5,7 @@ import { useActiveAccount } from '@/contexts/ActiveAccountContext';
 import {
   Plus, Search, TrendingUp, TrendingDown, Minus, Check, X, Edit, Trash2, Copy, Upload,
   ChevronLeft, ChevronRight, BarChart3, CalendarDays, AlertCircle, Sparkles, RefreshCw,
-  Target, RotateCcw, SlidersHorizontal, BookOpen, Maximize2,
+  Target, RotateCcw, SlidersHorizontal, BookOpen, Maximize2, ImageIcon,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -949,7 +949,7 @@ export default function TradeVault() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editTrade, setEditTrade] = useState<Trade | null>(null);
   const [viewTrade, setViewTrade] = useState<Trade | null>(null);
-  const [view, setView] = useState<'table' | 'calendar'>('table');
+  const [screenshotUrls, setScreenshotUrls] = useState<Record<string, string>>({});
   const [importOpen, setImportOpen] = useState(false);
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [reviewingId, setReviewingId] = useState<string | null>(null);
@@ -965,6 +965,9 @@ export default function TradeVault() {
       supabase.from('playbooks').select('id,title,entry_rules').eq('user_id', user.id),
     ]);
     setTrades((tr.data as Trade[]) ?? []);
+    const imageTrades = ((tr.data as Trade[]) ?? []).filter((trade) => trade.screenshot_url);
+    const resolved = await Promise.all(imageTrades.map(async (trade) => [trade.id, await getSignedUrl(trade.screenshot_url ?? '')] as const));
+    setScreenshotUrls(Object.fromEntries(resolved.filter((entry): entry is readonly [string, string] => Boolean(entry[1]))));
     setPlaybooks(pb.data ?? []);
     setLoading(false);
   }, [user, activeAccountId]);
@@ -1039,22 +1042,10 @@ export default function TradeVault() {
   return (
     <div className="space-y-5">
       <PageHeader
-        title="Trade Vault"
-        description="Every trade, reviewed and searchable."
+        title="Trade Logs"
+        description="Every chart, setup and result in one visual archive."
         actions={
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-0.5 p-0.5 rounded-md border border-border bg-muted/40">
-              <button onClick={() => setView('table')}
-                className={cn('flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-medium transition-colors',
-                  view === 'table' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground')}>
-                <BarChart3 className="h-3.5 w-3.5" /> Table
-              </button>
-              <button onClick={() => setView('calendar')}
-                className={cn('flex items-center gap-1.5 px-2.5 py-1.5 rounded text-xs font-medium transition-colors',
-                  view === 'calendar' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground')}>
-                <CalendarDays className="h-3.5 w-3.5" /> Calendar
-              </button>
-            </div>
             <Button variant="outline" onClick={() => setImportOpen(true)} className="gap-2">
               <Upload className="h-4 w-4" /> Import
             </Button>
@@ -1103,85 +1094,33 @@ export default function TradeVault() {
             </>
           }
         />
-      ) : view === 'calendar' ? (
-        <CalendarView trades={filtered} onSelectDay={(date) => {
-          setView('table');
-          setFilters(f => ({ ...f, dateFrom: date, dateTo: date }));
-        }} />
-      ) : filtered.length === 0 ? (
+      ) : filtered.filter((trade) => trade.screenshot_url).length === 0 ? (
         <EmptyState
-          icon={Search}
-          title="No trades match your filters"
+          icon={ImageIcon}
+          title="No chart screenshots found"
+          description="Only trades with chart screenshots appear in Trade Logs."
           actions={<Button variant="outline" onClick={() => setFilters(EMPTY_FILTERS)}>Clear filters</Button>}
         />
       ) : (
-        <div className="rounded-xl border border-border bg-card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="bg-muted/40 border-b border-border">
-                <tr className="text-left text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
-                  <th className="px-4 py-2.5">Date</th>
-                  <th className="px-4 py-2.5">Pair</th>
-                  <th className="px-4 py-2.5">Side</th>
-                  <th className="px-4 py-2.5">Setup</th>
-                  <th className="px-4 py-2.5">Session</th>
-                  <th className="px-4 py-2.5">Result</th>
-                  <th className="px-4 py-2.5 text-right">P&L</th>
-                  <th className="px-4 py-2.5">R:R</th>
-                  <th className="px-4 py-2.5 w-24"></th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {filtered.map(t => {
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {filtered.filter((trade) => trade.screenshot_url).map(t => {
                   const isWin = (t.result ?? 0) > 0;
                   const isLoss = (t.result ?? 0) < 0;
                   return (
-                    <tr key={t.id} onClick={() => setViewTrade(t)}
-                      className="group cursor-pointer hover:bg-muted/40 transition-colors">
-                      <td className="px-4 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
-                        {new Date(t.trade_date + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                      </td>
-                      <td className="px-4 py-2.5 font-medium text-foreground">{t.pair}</td>
-                      <td className="px-4 py-2.5">
-                        <span className={cn('inline-flex items-center gap-1 text-xs font-medium capitalize',
-                          t.side === 'long' ? 'text-success' : 'text-danger')}>
-                          {t.side === 'long' ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
-                          {t.side}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2.5 text-xs text-muted-foreground truncate max-w-[180px]">{t.setup || '—'}</td>
-                      <td className="px-4 py-2.5 text-xs text-muted-foreground">{t.session || '—'}</td>
-                      <td className="px-4 py-2.5">
-                        <span className={cn('text-[11px] font-medium px-2 py-0.5 rounded capitalize',
-                          isWin && 'bg-success/10 text-success',
-                          isLoss && 'bg-danger/10 text-danger',
-                          !isWin && !isLoss && 'bg-muted text-muted-foreground')}>
-                          {t.outcome}
-                        </span>
-                      </td>
-                      <td className={cn('px-4 py-2.5 text-right font-mono font-medium', pnlColor(t.result ?? 0))}>
-                        {fmtMoney(t.result ?? 0)}
-                      </td>
-                      <td className="px-4 py-2.5 text-xs text-muted-foreground">{t.rr ? `1:${Number(t.rr).toFixed(1)}` : '—'}</td>
-                      <td className="px-4 py-2.5" onClick={e => e.stopPropagation()}>
-                        <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(t)}>
-                            <Edit className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDuplicate(t)}>
-                            <Copy className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-danger hover:text-danger" onClick={() => handleDelete(t)}>
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
+                    <button key={t.id} onClick={() => setViewTrade(t)} className="group overflow-hidden rounded-md border border-border bg-card text-left transition-colors hover:border-primary/50">
+                      <div className="aspect-[16/9] overflow-hidden bg-muted/30">
+                        {screenshotUrls[t.id] ? <img src={screenshotUrls[t.id]} alt={`${t.pair} chart`} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" /> : <div className="flex h-full items-center justify-center"><ImageIcon className="h-7 w-7 text-muted-foreground" /></div>}
+                      </div>
+                      <div className="space-y-2 border-t border-border p-4">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-2"><span className="font-semibold text-foreground">{t.pair}</span><span className={cn('text-[11px] font-medium uppercase', t.side === 'long' ? 'text-success' : 'text-danger')}>{t.side}</span></div>
+                          <span className={cn('font-mono text-sm font-semibold', pnlColor(t.result ?? 0))}>{fmtMoney(t.result ?? 0)}</span>
                         </div>
-                      </td>
-                    </tr>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground"><span>{fmtDate(t.trade_date)}</span><span className={cn(isWin ? 'text-success' : isLoss ? 'text-danger' : '')}>{t.outcome}</span></div>
+                      </div>
+                    </button>
                   );
                 })}
-              </tbody>
-            </table>
-          </div>
         </div>
       )}
 
