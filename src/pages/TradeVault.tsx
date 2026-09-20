@@ -21,7 +21,6 @@ import { PageHeader } from '@/components/ui/page-header';
 import { EmptyState } from '@/components/ui/empty-state';
 import { MetricCard } from '@/components/ui/metric-card';
 import { cn } from '@/lib/utils';
-import CSVImport from '@/components/CSVImport';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 async function getSignedUrl(path: string): Promise<string | null> {
@@ -950,7 +949,6 @@ export default function TradeVault() {
   const [editTrade, setEditTrade] = useState<Trade | null>(null);
   const [viewTrade, setViewTrade] = useState<Trade | null>(null);
   const [screenshotUrls, setScreenshotUrls] = useState<Record<string, string>>({});
-  const [importOpen, setImportOpen] = useState(false);
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [reviewingId, setReviewingId] = useState<string | null>(null);
 
@@ -1044,16 +1042,6 @@ export default function TradeVault() {
       <PageHeader
         title="Trade Logs"
         description="Every chart, setup and result in one visual archive."
-        actions={
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => setImportOpen(true)} className="gap-2">
-              <Upload className="h-4 w-4" /> Import
-            </Button>
-            <Button onClick={() => { setEditTrade(null); setModalOpen(true); }} className="gap-2">
-              <Plus className="h-4 w-4" /> Log Trade
-            </Button>
-          </div>
-        }
       />
 
       {/* Stats */}
@@ -1080,19 +1068,9 @@ export default function TradeVault() {
         </div>
       ) : trades.length === 0 ? (
         <EmptyState
-          icon={BookOpen}
-          title="No trades yet."
-          description="Start your trading history. Every trade logged sharpens your edge."
-          actions={
-            <>
-              <Button onClick={() => { setEditTrade(null); setModalOpen(true); }} className="gap-2">
-                <Plus className="h-4 w-4" /> Log First Trade
-              </Button>
-              <Button variant="outline" onClick={() => setImportOpen(true)} className="gap-2">
-                <Upload className="h-4 w-4" /> Import Trades
-              </Button>
-            </>
-          }
+          icon={ImageIcon}
+          title="No chart screenshots found"
+          description="Trades with chart screenshots will appear here. Add trades from your Journal."
         />
       ) : filtered.filter((trade) => trade.screenshot_url).length === 0 ? (
         <EmptyState
@@ -1145,15 +1123,6 @@ export default function TradeVault() {
           reviewing={reviewingId === viewTrade.id}
         />
       )}
-
-      <Dialog open={importOpen} onOpenChange={setImportOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Import Trades</DialogTitle>
-          </DialogHeader>
-          <CSVImport onImportComplete={() => { setImportOpen(false); load(); }} />
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

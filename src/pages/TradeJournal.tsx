@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { CalendarDays, ImageIcon, Pencil, Trash2 } from 'lucide-react';
+import { BookOpen, ImageIcon, Pencil, Plus, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveAccount } from '@/contexts/ActiveAccountContext';
@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { useTradeDialog, useTradesChanged } from '@/contexts/TradeDialogContext';
 import { toast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
 
 type JournalTrade = {
   id: string;
@@ -46,7 +47,7 @@ function contextValue(trade: JournalTrade, weekly: boolean) {
 export default function TradeJournal() {
   const { user } = useAuth();
   const { activeAccountId, version } = useActiveAccount();
-  const { openEdit } = useTradeDialog();
+  const { openNew, openEdit } = useTradeDialog();
   const [trades, setTrades] = useState<JournalTrade[]>([]);
   const [screenshots, setScreenshots] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -91,12 +92,25 @@ export default function TradeJournal() {
 
   return (
     <div className="space-y-5">
-      <PageHeader title="Trade Journal" description="Your complete trading record, context and review notes." />
+      <PageHeader
+        title="Trade Journal"
+        description="Every trade, setup and result in one complete journal."
+        actions={
+          <Button onClick={openNew} className="gap-2">
+            <Plus className="h-4 w-4" /> Log Trade
+          </Button>
+        }
+      />
       {loading ? <Skeleton className="h-72 w-full" /> : rows.length === 0 ? (
-        <div className="flex min-h-64 flex-col items-center justify-center rounded-md border border-dashed border-border bg-card/40 text-center">
-          <CalendarDays className="mb-3 h-8 w-8 text-muted-foreground" />
-          <p className="font-medium text-foreground">No journal trades yet</p>
-          <p className="mt-1 text-sm text-muted-foreground">Trades you add or sync will appear here.</p>
+        <div className="flex min-h-[300px] flex-col items-center justify-center rounded-md border border-dashed border-border bg-card/40 px-6 text-center">
+          <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-md border border-border bg-background">
+            <BookOpen className="h-5 w-5 text-muted-foreground" />
+          </div>
+          <p className="text-lg font-semibold text-foreground">No trades yet.</p>
+          <p className="mt-2 text-sm text-muted-foreground">Start your trading history. Every trade logged sharpens your edge.</p>
+          <Button onClick={openNew} className="mt-6 gap-2">
+            <Plus className="h-4 w-4" /> Log First Trade
+          </Button>
         </div>
       ) : (
         <div className="overflow-hidden rounded-md border border-border bg-card">
