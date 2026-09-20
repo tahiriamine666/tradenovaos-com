@@ -519,6 +519,56 @@ export default function AddTradeModal({
               </div>
             </div>
 
+            {/* Weekly context + Daily bias */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground block mb-1.5">Weekly Context</label>
+                <Input
+                  value={form.weekly_context}
+                  onChange={e => set('weekly_context', e.target.value)}
+                  placeholder="e.g. Turtle Soup / Bullish CRT"
+                  className="rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground block mb-1.5">Daily Bias</label>
+                <select
+                  value={form.daily_bias}
+                  onChange={e => set('daily_bias', e.target.value)}
+                  className="w-full text-sm rounded-lg border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                >
+                  <option value="">Select bias</option>
+                  {BIASES.map(b => <option key={b} value={b}>{b}</option>)}
+                </select>
+              </div>
+            </div>
+
+            {/* Timeframe + Chart */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground block mb-1.5">Timeframe</label>
+                <select
+                  value={form.timeframe}
+                  onChange={e => set('timeframe', e.target.value)}
+                  className="w-full text-sm rounded-lg border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                >
+                  <option value="">Select timeframe</option>
+                  {TIMEFRAMES.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground block mb-1.5">Chart Screenshot</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={e => setChartFile(e.target.files?.[0] ?? null)}
+                  className="w-full text-xs rounded-lg border border-border bg-background px-3 py-2 text-muted-foreground file:mr-2 file:rounded file:border-0 file:bg-muted file:px-2 file:py-1 file:text-xs file:text-foreground"
+                />
+              </div>
+            </div>
+
+
+
             {/* Setup (text) */}
             <div>
               <label className="text-xs font-medium text-muted-foreground block mb-1.5">Setup Tag</label>
