@@ -26,6 +26,7 @@ import { GlobalFiltersProvider } from '@/contexts/GlobalFiltersContext';
 import AnalyticsMetrics from '@/components/AnalyticsMetrics';
 import CommandCenter from '@/components/CommandCenter';
 import { getTradeDateDay } from '@/lib/dateUtils';
+import TradingReportDialog, { type ReportPeriod } from '@/components/calendar/TradingReportDialog';
 import {
   BarChart3, BookOpen, Brain, CalendarDays, CheckCircle2,
   ChevronLeft, ChevronRight, CircleDollarSign, Clock3,
@@ -282,6 +283,8 @@ function TradingCalendar({ dark }: { dark: boolean }) {
   const [mode, setMode] = useState<'pnl' | 'psychology'>('pnl');
   const [dayMap, setDayMap] = useState<Record<number, { pnl: number; trades: number; discipline: number }>>({});
   const [loading, setLoading] = useState(true);
+  const [reportPeriod, setReportPeriod] = useState<ReportPeriod | null>(null);
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -342,7 +345,12 @@ function TradingCalendar({ dark }: { dark: boolean }) {
             <span className="min-w-32 text-center text-sm font-semibold text-foreground">{monthLabel}</span>
             <Button variant="ghost" size="icon" onClick={nextMonth}><ChevronRight className="h-4 w-4" /></Button>
           </div>
-          <Tabs value={mode} onValueChange={(value) => setMode(value as 'pnl' | 'psychology')}><TabsList><TabsTrigger value="pnl">P&L</TabsTrigger><TabsTrigger value="psychology">Psychology</TabsTrigger></TabsList></Tabs>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button size="sm" variant="outline" onClick={() => { setSelectedDay(new Date().getDate()); setReportPeriod('daily'); }}>Daily Report</Button>
+            <Button size="sm" variant="outline" onClick={() => setReportPeriod('weekly')}>Weekly Report</Button>
+            <Button size="sm" variant="outline" onClick={() => setReportPeriod('monthly')}>Monthly Report</Button>
+            <Tabs value={mode} onValueChange={(value) => setMode(value as 'pnl' | 'psychology')}><TabsList><TabsTrigger value="pnl">P&L</TabsTrigger><TabsTrigger value="psychology">Psychology</TabsTrigger></TabsList></Tabs>
+          </div>
         </div>
       </CardHeader>
       <CardContent>
@@ -364,8 +372,11 @@ function TradingCalendar({ dark }: { dark: boolean }) {
               const positive = (entry?.pnl ?? 0) > 0;
               const negative = (entry?.pnl ?? 0) < 0;
               return (
-                <div key={i} className={cx(
+                <div key={i}
+                  onClick={() => { if (inMonth) { setSelectedDay(dayNumber); setReportPeriod('daily'); } }}
+                  className={cx(
                    'rounded-md border border-border p-2 min-h-[92px] text-xs transition-colors',
+                  inMonth && 'cursor-pointer hover:border-primary/40',
                   !inMonth && 'opacity-0',
                   entry && positive && 'bg-success/10 border-success/25',
                   entry && negative && 'bg-danger/10 border-danger/25',
@@ -405,6 +416,11 @@ function TradingCalendar({ dark }: { dark: boolean }) {
         ].map(([label, value]) => <div key={label} className="flex items-center justify-between border-b border-border pb-3 last:border-0 last:pb-0"><span className="text-xs text-muted-foreground">{label}</span><span className="text-sm font-semibold text-foreground">{value}</span></div>)}</CardContent></Card>
       </div>
       </div>
+      <TradingReportDialog
+        period={reportPeriod}
+        anchor={reportPeriod === 'daily' ? new Date(year, month, selectedDay ?? 1) : new Date(year, month, Math.min(new Date().getDate(), daysInMonth))}
+        onClose={() => setReportPeriod(null)}
+      />
     </div>
   );
 }
