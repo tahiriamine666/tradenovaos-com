@@ -282,6 +282,8 @@ function TradingCalendar({ dark }: { dark: boolean }) {
   const [mode, setMode] = useState<'pnl' | 'psychology'>('pnl');
   const [dayMap, setDayMap] = useState<Record<number, { pnl: number; trades: number; discipline: number }>>({});
   const [loading, setLoading] = useState(true);
+  const [reportPeriod, setReportPeriod] = useState<ReportPeriod | null>(null);
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
