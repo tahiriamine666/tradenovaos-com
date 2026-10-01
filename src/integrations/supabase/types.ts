@@ -1764,6 +1764,7 @@ export type Database = {
         Row: {
           account_type: string
           ai_review: Json
+          before_screenshot_url: string | null
           created_at: string
           daily_bias: string | null
           discipline_score: number | null
@@ -1799,6 +1800,7 @@ export type Database = {
         Insert: {
           account_type?: string
           ai_review?: Json
+          before_screenshot_url?: string | null
           created_at?: string
           daily_bias?: string | null
           discipline_score?: number | null
@@ -1834,6 +1836,7 @@ export type Database = {
         Update: {
           account_type?: string
           ai_review?: Json
+          before_screenshot_url?: string | null
           created_at?: string
           daily_bias?: string | null
           discipline_score?: number | null

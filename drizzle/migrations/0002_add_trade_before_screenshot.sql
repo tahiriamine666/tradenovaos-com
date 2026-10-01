@@ -1,0 +1,1 @@
+ALTER TABLE public.trades ADD COLUMN IF NOT EXISTS before_screenshot_url text;
