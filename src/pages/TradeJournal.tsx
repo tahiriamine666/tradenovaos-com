@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { useTradeDialog, useTradesChanged } from '@/contexts/TradeDialogContext';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
+import { TradeDetailDialog, type DetailTrade } from '@/components/journal/TradeDetailDialog';
 
 type JournalTrade = {
   id: string;
@@ -51,6 +52,7 @@ export default function TradeJournal() {
   const [trades, setTrades] = useState<JournalTrade[]>([]);
   const [screenshots, setScreenshots] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<DetailTrade | null>(null);
 
   const load = useCallback(async () => {
     if (!user) return;
