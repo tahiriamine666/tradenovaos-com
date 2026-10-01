@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { useTradeDialog, useTradesChanged } from '@/contexts/TradeDialogContext';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
+import { TradeDetailDialog, type DetailTrade } from '@/components/journal/TradeDetailDialog';
 
 type JournalTrade = {
   id: string;
@@ -51,6 +52,7 @@ export default function TradeJournal() {
   const [trades, setTrades] = useState<JournalTrade[]>([]);
   const [screenshots, setScreenshots] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+  const [selected, setSelected] = useState<DetailTrade | null>(null);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -128,7 +130,7 @@ export default function TradeJournal() {
                   const pnl = Number(trade.result ?? 0);
                   const result = pnl > 0 ? 'Win' : pnl < 0 ? 'Loss' : 'BE';
                   return (
-                    <tr key={trade.id} className="hover:bg-muted/25">
+                    <tr key={trade.id} onClick={() => setSelected(trade)} className="cursor-pointer hover:bg-muted/25">
                       <td className="whitespace-nowrap px-4 py-3 text-xs text-foreground">{new Date(`${trade.trade_date}T12:00:00`).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</td>
                       <td className="px-4 py-3 font-semibold text-foreground">{trade.pair}</td>
                       <td className="px-4 py-3"><ContextBadge value={trade.weekly} /></td>
@@ -146,7 +148,7 @@ export default function TradeJournal() {
                           <button
                             type="button"
                             aria-label={`Edit ${trade.pair} trade`}
-                            onPointerDown={(e) => { e.stopPropagation(); openEdit(trade as never); }}
+                            onClick={(e) => { e.stopPropagation(); openEdit(trade as never); }}
                             className="rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                           >
                             <Pencil className="h-3.5 w-3.5" />
@@ -154,7 +156,7 @@ export default function TradeJournal() {
                           <button
                             type="button"
                             aria-label={`Delete ${trade.pair} trade`}
-                            onPointerDown={(e) => { e.stopPropagation(); handleDelete(trade); }}
+                            onClick={(e) => { e.stopPropagation(); handleDelete(trade); }}
                             className="rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-danger/15 hover:text-danger"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -169,6 +171,7 @@ export default function TradeJournal() {
           </div>
         </div>
       )}
+      <TradeDetailDialog trade={selected} open={Boolean(selected)} onOpenChange={(open) => { if (!open) setSelected(null); }} />
     </div>
   );
 }
