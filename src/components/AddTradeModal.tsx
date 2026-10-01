@@ -220,6 +220,7 @@ export default function AddTradeModal({
   const [saving, setSaving] = useState(false);
   const [playbooks, setPlaybooks] = useState<Playbook[]>([]);
   const [chartFile, setChartFile] = useState<File | null>(null);
+  const [beforeFile, setBeforeFile] = useState<File | null>(null);
 
   // Load playbooks
   useEffect(() => {
@@ -255,6 +256,7 @@ export default function AddTradeModal({
       setForm(EMPTY_FORM);
     }
     setChartFile(null);
+    setBeforeFile(null);
     setErrors({});
   }, [editTrade, open]);
 
@@ -319,18 +321,24 @@ export default function AddTradeModal({
       trading_account_id: activeAccountId || null,
     };
 
-    if (chartFile) {
-      if (!chartFile.type.startsWith('image/') || chartFile.size > 10 * 1024 * 1024) {
-        toast({ title: 'Chart not uploaded', description: 'Use an image under 10MB.', variant: 'destructive' });
-      } else {
-        const path = `${user.id}/${crypto.randomUUID()}-${chartFile.name.replace(/[^\w.-]/g, '_')}`;
-        const { error: upErr } = await supabase.storage.from('trade-screenshots').upload(path, chartFile, { upsert: false });
-        if (upErr) {
-          toast({ title: 'Chart not uploaded', description: 'The trade will be saved without the chart.', variant: 'destructive' });
-        } else {
-          payload.screenshot_url = path;
-        }
+    for (const [file, field, label] of [
+      [beforeFile, 'before_screenshot_url', 'Before screenshot'],
+      [chartFile, 'screenshot_url', 'After screenshot'],
+    ] as const) {
+      if (!file) continue;
+      if (!['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(file.type) || file.size > 10 * 1024 * 1024) {
+        toast({ title: `${label} not uploaded`, description: 'Use a PNG, JPG, WebP or GIF under 10MB.', variant: 'destructive' });
+        setSaving(false);
+        return;
       }
+      const path = `${user.id}/${crypto.randomUUID()}-${file.name.replace(/[^\w.-]/g, '_')}`;
+      const { error: upErr } = await supabase.storage.from('trade-screenshots').upload(path, file, { upsert: false, contentType: file.type });
+      if (upErr) {
+        toast({ title: `${label} not uploaded`, description: 'Please try again.', variant: 'destructive' });
+        setSaving(false);
+        return;
+      }
+      payload[field] = path;
     }
 
     let error;
@@ -543,8 +551,8 @@ export default function AddTradeModal({
               </div>
             </div>
 
-            {/* Timeframe + Chart */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* Timeframe + before / after screenshots */}
+            <div>
               <div>
                 <label className="text-xs font-medium text-muted-foreground block mb-1.5">Timeframe</label>
                 <select
@@ -556,14 +564,27 @@ export default function AddTradeModal({
                   {TIMEFRAMES.map(t => <option key={t} value={t}>{t}</option>)}
                 </select>
               </div>
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
-                <label className="text-xs font-medium text-muted-foreground block mb-1.5">Chart Screenshot</label>
+                <label className="text-xs font-medium text-muted-foreground block mb-1.5">Before screenshot</label>
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  onChange={e => setBeforeFile(e.target.files?.[0] ?? null)}
+                  className="w-full text-xs rounded-lg border border-border bg-background px-3 py-2 text-muted-foreground file:mr-2 file:rounded file:border-0 file:bg-muted file:px-2 file:py-1 file:text-xs file:text-foreground"
+                />
+                {editTrade?.before_screenshot_url && !beforeFile && <p className="mt-1 text-xs text-muted-foreground">Current before image saved</p>}
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground block mb-1.5">After screenshot</label>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
                   onChange={e => setChartFile(e.target.files?.[0] ?? null)}
                   className="w-full text-xs rounded-lg border border-border bg-background px-3 py-2 text-muted-foreground file:mr-2 file:rounded file:border-0 file:bg-muted file:px-2 file:py-1 file:text-xs file:text-foreground"
                 />
+                {editTrade?.screenshot_url && !chartFile && <p className="mt-1 text-xs text-muted-foreground">Current after image saved</p>}
               </div>
             </div>
 

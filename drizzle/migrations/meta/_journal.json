@@ -15,6 +15,13 @@
       "when": 1789777736257,
       "tag": "0001_add_journal_context_to_trades",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790813662753,
+      "tag": "0002_add_trade_before_screenshot",
+      "breakpoints": true
     }
   ]
 }

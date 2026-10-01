@@ -22,6 +22,7 @@ type JournalTrade = {
   notes: string | null;
   outcome: string | null;
   screenshot_url: string | null;
+  before_screenshot_url: string | null;
   session: string | null;
   tags: string[];
   weekly_context: string | null;
@@ -50,24 +51,27 @@ export default function TradeJournal() {
   const { activeAccountId, version } = useActiveAccount();
   const { openNew, openEdit } = useTradeDialog();
   const [trades, setTrades] = useState<JournalTrade[]>([]);
-  const [screenshots, setScreenshots] = useState<Record<string, string>>({});
+  const [screenshots, setScreenshots] = useState<Record<string, { before?: string; after?: string }>>({});
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<DetailTrade | null>(null);
 
   const load = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    let query = supabase.from('trades').select('id,pair,side,result,rr,trade_date,setup,notes,outcome,screenshot_url,session,tags,weekly_context,daily_bias,timeframe,playbook_id')
+    let query = supabase.from('trades').select('id,pair,side,result,rr,trade_date,setup,notes,outcome,screenshot_url,before_screenshot_url,session,tags,weekly_context,daily_bias,timeframe,playbook_id')
       .eq('user_id', user.id).order('trade_date', { ascending: false });
     if (activeAccountId) query = query.eq('trading_account_id', activeAccountId);
     const { data } = await query;
     const rows = (data ?? []) as JournalTrade[];
     setTrades(rows);
-    const pairs = await Promise.all(rows.filter((trade) => trade.screenshot_url).map(async (trade) => {
-      const url = trade.screenshot_url ? await signedScreenshot(trade.screenshot_url) : null;
-      return [trade.id, url] as const;
+    const pairs = await Promise.all(rows.filter((trade) => trade.screenshot_url || trade.before_screenshot_url).map(async (trade) => {
+      const [before, after] = await Promise.all([
+        trade.before_screenshot_url ? signedScreenshot(trade.before_screenshot_url) : null,
+        trade.screenshot_url ? signedScreenshot(trade.screenshot_url) : null,
+      ]);
+      return [trade.id, { before: before ?? undefined, after: after ?? undefined }] as const;
     }));
-    setScreenshots(Object.fromEntries(pairs.filter((pair): pair is readonly [string, string] => Boolean(pair[1]))));
+    setScreenshots(Object.fromEntries(pairs));
     setLoading(false);
   }, [user, activeAccountId]);
 
@@ -120,7 +124,7 @@ export default function TradeJournal() {
             <table className="w-full min-w-[1280px] text-sm">
               <thead className="border-b border-border bg-muted/35 text-left text-[11px] uppercase text-muted-foreground">
                 <tr>
-                  {['Date','Pair','Weekly context','Daily bias','Result','P/L','R:R','Timeframe','Chart','Notes','Actions'].map((heading) => (
+                   {['Date','Pair','Weekly context','Daily bias','Result','P/L','R:R','Timeframe','Before','After','Notes','Actions'].map((heading) => (
                     <th key={heading} className="whitespace-nowrap px-4 py-3 font-medium">{heading}</th>
                   ))}
                 </tr>
@@ -139,9 +143,9 @@ export default function TradeJournal() {
                       <td className={cn('px-4 py-3 text-right font-mono font-semibold', pnl > 0 ? 'text-success' : pnl < 0 ? 'text-danger' : 'text-muted-foreground')}>{pnl > 0 ? '+' : ''}{pnl.toLocaleString()}</td>
                       <td className="px-4 py-3 text-right font-mono text-foreground">{trade.rr ? Number(trade.rr).toFixed(1) : '—'}</td>
                       <td className="px-4 py-3"><span className="rounded bg-primary/20 px-2 py-1 text-[11px] font-medium text-primary">{trade.timeframe || trade.session || '—'}</span></td>
-                      <td className="px-4 py-2">
-                        {screenshots[trade.id] ? <img src={screenshots[trade.id]} alt={`${trade.pair} chart`} className="h-9 w-14 rounded-sm border border-border object-cover" /> : <div className="flex h-9 w-14 items-center justify-center rounded-sm border border-border bg-muted/30"><ImageIcon className="h-4 w-4 text-muted-foreground" /></div>}
-                      </td>
+                       {(['before', 'after'] as const).map((stage) => <td key={stage} className="px-4 py-2">
+                         {screenshots[trade.id]?.[stage] ? <img src={screenshots[trade.id][stage]} alt={`${trade.pair} ${stage} trade`} className="h-9 w-14 rounded-sm border border-border object-cover" /> : <div className="flex h-9 w-14 items-center justify-center rounded-sm border border-border bg-muted/30"><ImageIcon className="h-4 w-4 text-muted-foreground" /></div>}
+                       </td>)}
                       <td className="max-w-[320px] truncate px-4 py-3 text-xs text-muted-foreground">{trade.notes || trade.setup || '—'}</td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-1.5">
