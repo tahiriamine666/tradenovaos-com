@@ -148,7 +148,7 @@ export default function TradeJournal() {
                           <button
                             type="button"
                             aria-label={`Edit ${trade.pair} trade`}
-                            onPointerDown={(e) => { e.stopPropagation(); openEdit(trade as never); }}
+                            onClick={(e) => { e.stopPropagation(); openEdit(trade as never); }}
                             className="rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
                           >
                             <Pencil className="h-3.5 w-3.5" />
@@ -156,7 +156,7 @@ export default function TradeJournal() {
                           <button
                             type="button"
                             aria-label={`Delete ${trade.pair} trade`}
-                            onPointerDown={(e) => { e.stopPropagation(); handleDelete(trade); }}
+                            onClick={(e) => { e.stopPropagation(); handleDelete(trade); }}
                             className="rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-danger/15 hover:text-danger"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
