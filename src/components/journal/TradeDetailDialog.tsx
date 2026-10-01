@@ -15,6 +15,7 @@ export type DetailTrade = {
   notes: string | null;
   outcome: string | null;
   screenshot_url: string | null;
+  before_screenshot_url: string | null;
   session: string | null;
   tags: string[];
   weekly_context: string | null;
@@ -55,14 +56,21 @@ function Bullet({ children }: { children: React.ReactNode }) {
 }
 
 export function TradeDetailDialog({ trade, open, onOpenChange }: { trade: DetailTrade | null; open: boolean; onOpenChange: (open: boolean) => void }) {
-  const [chartUrl, setChartUrl] = useState<string | null>(null);
+  const [chartUrls, setChartUrls] = useState<{ before: string | null; after: string | null }>({ before: null, after: null });
 
   useEffect(() => {
-    setChartUrl(null);
-    if (!trade?.screenshot_url) return;
-    const storagePath = trade.screenshot_url.match(/trade-screenshots\/(.+)/)?.[1] ?? trade.screenshot_url;
-    supabase.storage.from('trade-screenshots').createSignedUrl(storagePath, 3600).then(({ data }) => setChartUrl(data?.signedUrl ?? null));
-  }, [trade?.id, trade?.screenshot_url]);
+    let active = true;
+    setChartUrls({ before: null, after: null });
+    const resolve = async (path: string | null) => {
+      if (!path) return null;
+      const storagePath = path.match(/trade-screenshots\/(.+)/)?.[1] ?? path;
+      const { data } = await supabase.storage.from('trade-screenshots').createSignedUrl(storagePath, 3600);
+      return data?.signedUrl ?? null;
+    };
+    Promise.all([resolve(trade?.before_screenshot_url ?? null), resolve(trade?.screenshot_url ?? null)])
+      .then(([before, after]) => { if (active) setChartUrls({ before, after }); });
+    return () => { active = false; };
+  }, [trade?.id, trade?.before_screenshot_url, trade?.screenshot_url]);
 
   if (!trade) return null;
   const pnl = Number(trade.result ?? 0);
@@ -154,16 +162,23 @@ export function TradeDetailDialog({ trade, open, onOpenChange }: { trade: Detail
             </Section>
           )}
 
-          {/* Chart */}
-          <Section icon={Layers} title="Chart">
-            {chartUrl ? (
-              <img src={chartUrl} alt={`${trade.pair} chart`} className="w-full rounded-md border border-border" />
-            ) : (
-              <div className="flex h-32 flex-col items-center justify-center gap-2 rounded-md border border-dashed border-border text-muted-foreground">
-                <ImageIcon className="h-5 w-5" />
-                <p className="text-xs">No chart screenshot attached.</p>
-              </div>
-            )}
+          {/* Before / after chart comparison */}
+          <Section icon={Layers} title="Trade screenshots">
+            <div className="grid gap-3 sm:grid-cols-2">
+              {(['before', 'after'] as const).map((stage) => <div key={stage} className="min-w-0">
+                <p className="mb-2 text-xs font-semibold text-foreground">{stage === 'before' ? 'Before entry' : 'After trade'}</p>
+                {chartUrls[stage] ? (
+                  <a href={chartUrls[stage] ?? undefined} target="_blank" rel="noopener noreferrer" aria-label={`Open ${stage} screenshot`}>
+                    <img src={chartUrls[stage] ?? undefined} alt={`${trade.pair} ${stage} trade`} className="aspect-video w-full rounded-md border border-border object-contain bg-background" />
+                  </a>
+                ) : (
+                  <div className="flex aspect-video flex-col items-center justify-center gap-2 rounded-md border border-dashed border-border text-muted-foreground">
+                    <ImageIcon className="h-5 w-5" />
+                    <p className="text-xs">No {stage} screenshot</p>
+                  </div>
+                )}
+              </div>)}
+            </div>
           </Section>
 
           <p className="flex items-center gap-1.5 pb-1 text-[11px] text-muted-foreground"><Clock className="h-3 w-3" /> Logged on {dateLabel}</p>

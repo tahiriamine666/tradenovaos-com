@@ -1,0 +1,1 @@
+Keep the existing trade `screenshot_url` as the after-trade image and store the before-trade image in `before_screenshot_url`, so historical charts remain visible without migration.
