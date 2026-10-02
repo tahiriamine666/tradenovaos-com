@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveAccount } from '@/contexts/ActiveAccountContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -426,6 +426,7 @@ function TradingCalendar({ dark }: { dark: boolean }) {
 }
 
 function TradingDashboardInner() {
+  const reduceMotion = useReducedMotion();
   const [active, setActive] = useState('dashboard');
   const [search, setSearch] = useState('');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
@@ -534,7 +535,13 @@ function TradingDashboardInner() {
         />
       }
     >
-      <div className="space-y-8">
+      <motion.div
+        key={active}
+        initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: reduceMotion ? 0 : 0.24, ease: 'easeOut' }}
+        className="space-y-8"
+      >
           {active === 'dashboard' && (
             <CommandCenter onNavigate={setActive} onAddTrade={openNewTrade} />
           )}
@@ -567,13 +574,9 @@ function TradingDashboardInner() {
 
 
 
-          {active === 'calendar' && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <TradingCalendar dark={dark} />
-            </motion.div>
-          )}
+          {active === 'calendar' && <TradingCalendar dark={dark} />}
 
-      </div>
+      </motion.div>
     </AppLayout>
   );
 }

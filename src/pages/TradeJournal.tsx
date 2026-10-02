@@ -108,7 +108,7 @@ export default function TradeJournal() {
         }
       />
       {loading ? <Skeleton className="h-72 w-full" /> : rows.length === 0 ? (
-        <div className="flex min-h-[300px] flex-col items-center justify-center rounded-md border border-dashed border-border bg-card/40 px-6 text-center">
+        <div className="feature-reveal flex min-h-[300px] flex-col items-center justify-center rounded-md border border-dashed border-border bg-card/40 px-6 text-center">
           <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-md border border-border bg-background">
             <BookOpen className="h-5 w-5 text-muted-foreground" />
           </div>
@@ -119,7 +119,7 @@ export default function TradeJournal() {
           </Button>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-md border border-border bg-card">
+        <div className="feature-reveal overflow-hidden rounded-md border border-border bg-card">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1280px] text-sm">
               <thead className="border-b border-border bg-muted/35 text-left text-[11px] uppercase text-muted-foreground">
@@ -129,12 +129,12 @@ export default function TradeJournal() {
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border">
+              <tbody className="journal-rows divide-y divide-border">
                 {rows.map((trade) => {
                   const pnl = Number(trade.result ?? 0);
                   const result = pnl > 0 ? 'Win' : pnl < 0 ? 'Loss' : 'BE';
                   return (
-                    <tr key={trade.id} onClick={() => setSelected(trade)} className="cursor-pointer hover:bg-muted/25">
+                    <tr key={trade.id} onClick={() => setSelected(trade)} className="cursor-pointer transition-colors duration-200 hover:bg-primary/5 focus-within:bg-primary/5">
                       <td className="whitespace-nowrap px-4 py-3 text-xs text-foreground">{new Date(`${trade.trade_date}T12:00:00`).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</td>
                       <td className="px-4 py-3 font-semibold text-foreground">{trade.pair}</td>
                       <td className="px-4 py-3"><ContextBadge value={trade.weekly} /></td>
