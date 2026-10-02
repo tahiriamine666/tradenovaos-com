@@ -1080,12 +1080,12 @@ export default function TradeVault() {
           actions={<Button variant="outline" onClick={() => setFilters(EMPTY_FILTERS)}>Clear filters</Button>}
         />
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="trade-gallery grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {filtered.filter((trade) => trade.screenshot_url).map(t => {
                   const isWin = (t.result ?? 0) > 0;
                   const isLoss = (t.result ?? 0) < 0;
                   return (
-                    <button key={t.id} onClick={() => setViewTrade(t)} className="group overflow-hidden rounded-md border border-border bg-card text-left transition-colors hover:border-primary/50">
+                    <Button key={t.id} variant="ghost" onClick={() => setViewTrade(t)} className="group h-auto min-w-0 flex-col items-stretch overflow-hidden rounded-md border border-border bg-card p-0 text-left font-normal transition-[border-color,box-shadow,transform] duration-200 hover:-translate-y-1 hover:border-primary/50 hover:bg-card hover:shadow-[0_12px_32px_hsl(var(--primary)/0.10)] focus-visible:border-primary/50">
                       <div className="aspect-[16/9] overflow-hidden bg-muted/30">
                         {screenshotUrls[t.id] ? <img src={screenshotUrls[t.id]} alt={`${t.pair} chart`} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" /> : <div className="flex h-full items-center justify-center"><ImageIcon className="h-7 w-7 text-muted-foreground" /></div>}
                       </div>
@@ -1096,7 +1096,7 @@ export default function TradeVault() {
                         </div>
                         <div className="flex items-center justify-between text-xs text-muted-foreground"><span>{fmtDate(t.trade_date)}</span><span className={cn(isWin ? 'text-success' : isLoss ? 'text-danger' : '')}>{t.outcome}</span></div>
                       </div>
-                    </button>
+                    </Button>
                   );
                 })}
         </div>

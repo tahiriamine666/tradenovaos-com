@@ -15,3 +15,8 @@
 # Journal images and navigation
 - [x] Add before and after screenshots to journal trades and details
 - [x] Add a collapsible desktop sidebar with a visible restore control
+
+# Feature animations
+- [x] Add subtle page transitions across the signed-in features
+- [x] Add staged reveals and hover feedback to Journal and Trade Logs
+- [x] Respect reduced-motion preferences
