@@ -401,38 +401,6 @@ export default function TradePlanWorkspace() {
         </div>
       </div>
 
-      {/* ── MODE SELECTOR ── */}
-      <div className="mb-4 rounded-2xl border border-white/[0.08] bg-white/[0.02] px-4 py-3">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-2.5">Trade Plan Mode</p>
-            <div className="flex gap-2">
-              {([
-                { v:'manual' as const, label:'Manual Plan',      icon: Edit3,    desc:'You fill everything' },
-              ]).map(m => {
-                const Icon = m.icon;
-                const active = true;
-                return (
-                  <button key={m.v} onClick={() => {}}
-                    className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl border text-left transition-all ${
-                      active ? 'bg-violet-500/12 border-violet-500/30 text-violet-300 shadow-md' : 'border-white/[0.07] text-white/35 hover:border-white/[0.15] hover:text-white/60'
-                    }`}>
-                    <span className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${active ? 'border-violet-400' : 'border-white/20'}`}>
-                      {active && <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />}
-                    </span>
-                    <Icon className="h-3.5 w-3.5" />
-                    <span>
-                      <span className="block text-xs font-black">{m.label}</span>
-                      <span className="block text-[10px] opacity-60">{m.desc}</span>
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-        </div>
-      </div>
 
       {/* ── MAIN CARD ── */}
       <div className="rounded-3xl border border-white/[0.08] bg-white/[0.02] overflow-hidden shadow-2xl shadow-black/30">
