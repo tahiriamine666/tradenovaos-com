@@ -245,7 +245,7 @@ export default function NovaAI() {
         <div className="flex items-center gap-4">
           <Robot className="h-20 w-14 shrink-0 sm:h-24 sm:w-16" thinking={busy} />
           <div>
-            <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground">NOVA <span className="text-base font-medium text-muted-foreground">· Your AI Trading Assistant</span></h1>
+            <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground">NOVA <span className="text-base font-medium text-muted-foreground">· Trading Intelligence Workspace</span></h1>
             <p className="mt-1 text-sm text-muted-foreground">Analyze your trading. Understand your behavior. Improve your execution.</p>
           </div>
         </div>
@@ -268,7 +268,7 @@ export default function NovaAI() {
                 <Robot className="h-36 w-28 sm:h-44 sm:w-32" />
                 <p className="mt-2 text-xs text-muted-foreground">Ready when you are.</p>
                 <div className="mt-5 max-w-lg rounded-2xl border border-primary/25 bg-card p-4 text-left text-sm leading-relaxed text-foreground shadow-[0_0_24px_hsl(var(--primary)/0.08)]">
-                  Hey {firstName || 'trader'}, your AI Trading Assistant is ready.<br />I can analyze your trades, plans, journal, execution and performance. What would you like to review?
+                  Hey {firstName || 'trader'}, NOVA is ready.<br />I can analyze your trades, plans, journal, execution and performance. What would you like to review?
                 </div>
                 <div className="mt-4 flex max-w-xl flex-wrap justify-center gap-2">
                   {SUGGESTIONS.map(s => <button key={s} onClick={() => send(s)} className="rounded-full border border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary">{s}</button>)}
