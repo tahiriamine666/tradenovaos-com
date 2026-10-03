@@ -401,9 +401,9 @@ function Hero({ onSignup }: { onSignup: () => void }) {
                 </div>
 
                 <div className="mt-3 rounded-md border border-primary/25 bg-gradient-to-br from-primary/15 to-background p-2.5">
-                  <p className="text-[10px] font-black text-foreground">Upgrade to Pro</p>
-                  <p className="text-[8px] text-muted-foreground mt-0.5 leading-tight">Unlock AI, CSV import, playbooks</p>
-                  <div className="mt-2 bg-primary text-white text-[9px] font-bold py-1.5 rounded-md text-center shadow-sm shadow-primary/30">Start 7-day free trial</div>
+                  <p className="text-[10px] font-black text-foreground">Pro · $14/mo</p>
+                  <p className="text-[8px] text-muted-foreground mt-0.5 leading-tight">Journal, plans, analytics & NOVA AI</p>
+                  <div className="mt-2 bg-primary text-white text-[9px] font-bold py-1.5 rounded-md text-center shadow-sm shadow-primary/30">Start 14-day free trial</div>
                 </div>
                 <div className="mt-2 flex items-center gap-2 pt-2 border-t border-border/70">
                   <div className="w-6 h-6 rounded-full bg-primary text-white text-[9px] font-bold flex items-center justify-center">U</div>
@@ -675,11 +675,11 @@ function StatsBar() {
 
 const FEATURES = [
   {icon:BookOpen,  title:'Trade Journal',          desc:'Log every trade with emotion, execution score, and outcome. Build habits that compound.',tag:'Core',       c:'violet'},
-  {icon:Sparkles,  title:'AI Insights',            desc:'Claude analyzes your trades and surfaces patterns you\'d never catch manually.',         tag:'AI',         c:'purple'},
-  {icon:Calendar,  title:'Trading Calendar',       desc:'See P&L heatmap across the month. Identify your best and worst trading days.',           tag:'Visual',     c:'cyan'},
-  {icon:Upload,    title:'CSV Import',             desc:'Import from any broker — MT4, MT5, cTrader, IBKR. Smart column mapping.',               tag:'Import',     c:'green'},
-  {icon:CalendarDays,title:'Economic Calendar',   desc:'High-impact news alerts, volatility scanner, and session tracker for every trading day.', tag:'News',       c:'blue'},
-  {icon:Sparkles,  title:'AI Trading Assistant',   desc:'Get daily bias, model recommendations, and risk warnings built from your data.',         tag:'AI Coach',   c:'violet'},
+  {icon:Sparkles,  title:'NOVA AI',                desc:'Ask questions and get answers grounded in your own trades, journal and plans.',            tag:'AI',         c:'purple'},
+  {icon:Calendar,  title:'Trading Calendar',       desc:'Daily P&L and psychology, weekly summaries, and full details for any past day.',           tag:'Visual',     c:'cyan'},
+  {icon:Upload,    title:'Account Sync',           desc:'Connect your MT4 / MT5 account and trades sync into your journal automatically.',        tag:'Sync',       c:'green'},
+  {icon:CalendarDays,title:'Economic Calendar',   desc:'Upcoming events with impact, currency and category filters, saved presets and defaults.', tag:'News',       c:'blue'},
+  {icon:Sparkles,  title:'Trade Plan',             desc:'Weekly Outlook, Daily Plan, custom rules and reusable pre-trade checklists.',            tag:'Plan',       c:'violet'},
 ];
 
 const CM: Record<string,any> = {

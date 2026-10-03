@@ -305,16 +305,16 @@ export function HelpCenterPage() {
     { title: 'Getting Started', desc: 'Set up your account, add first trades, and configure your workspace.', icon: Sparkles },
     { title: 'Trade Journal',   desc: 'Learn how to log trades, add screenshots, and review sessions.',       icon: BookOpen },
     { title: 'Analytics',       desc: 'Understand win rate, profit factor, and all performance metrics.',     icon: BarChart3 },
-    { title: 'CSV Import',      desc: 'Import trades from MT4, MT5, cTrader, IBKR, and other brokers.',       icon: Upload },
-    { title: 'Billing',         desc: 'Manage your plan, upgrade via Payoneer, and billing questions.',        icon: Check },
-    { title: 'AI Insights',     desc: 'How Claude analyzes your trades and generates improvement plans.',      icon: Sparkles },
+    { title: 'Account Sync',    desc: 'Connect an MT4 / MT5 account and sync your trades automatically.',     icon: Upload },
+    { title: 'Billing',         desc: 'Manage your plan, trial and payment method.',        icon: Check },
+    { title: 'NOVA AI',         desc: 'How NOVA answers from your data, and how credits work.',               icon: Sparkles },
   ];
   return (
     <div className="min-h-screen bg-white text-slate-900">
       <SeoHead
         path="/resources/help-center"
         title="Help Center — TradeNova OS guides & tutorials"
-        description="Find answers, setup guides, CSV import tutorials, AI Insights walkthroughs, and billing help for TradeNova OS."
+        description="Find answers, setup guides, account sync guides, NOVA AI walkthroughs, and billing help for TradeNova OS."
       />
       <MarketingNavbar onLogin={() => navigate('/login')} onSignup={() => navigate('/signup')} />
       <div className="max-w-4xl mx-auto px-5 sm:px-8 pt-32 pb-24">
