@@ -106,7 +106,6 @@ const App = () => (
 
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-                <AIChatWidget />
               </LearningNavProvider>
               </ActiveAccountProvider>
             </PlanProvider>
