@@ -2,17 +2,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowLeft, Award, BarChart3, BookOpen, Brain, CalendarClock, CalendarDays,
-  CheckCircle2, ChevronRight, Circle, CircleDollarSign, ClipboardCheck,
-  LayoutDashboard, List, Lock, Menu, PanelLeftClose, PanelLeftOpen, Search, Settings, Shield, Users, X,
+  Award, BarChart3, BookOpen, Brain, CalendarClock, CalendarDays,
+  ChevronRight, CircleDollarSign, ClipboardCheck, LayoutDashboard, List,
+  Menu, PanelLeftClose, PanelLeftOpen, Settings, Shield, X,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { useLearningNav, type LearningTreeLesson } from '@/contexts/LearningNavContext';
 
 export const ADMIN_ITEM = { id: 'admin', label: 'Admin Panel', icon: Shield };
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import UserAvatar from '@/components/UserAvatar';
 import { useProfile } from '@/hooks/useProfile';
@@ -80,259 +78,18 @@ function SidebarUser({ onNavigate }: { onNavigate: (id: string) => void }) {
   );
 }
 
-function CourseTreeNav({
-  onBack,
-}: {
-  onBack: () => void;
-}) {
-  const { tree } = useLearningNav();
-  const [open, setOpen] = useState<Record<string, boolean>>({});
-  const [lockedModal, setLockedModal] = useState<string | null>(null);
-  const [notifyState, setNotifyState] = useState<'idle' | 'saving' | 'done'>('idle');
-
-
-  // Auto-open category that contains the selected lesson; otherwise first cat.
-  useEffect(() => {
-    if (!tree) return;
-    const selectedCat = tree.lessons.find((l) => l.id === tree.selectedLessonId)?.category;
-    setOpen((prev) => {
-      const next = { ...prev };
-      if (selectedCat && !(selectedCat in next)) next[selectedCat] = true;
-      if (Object.keys(next).length === 0 && tree.categories[0]) {
-        next[tree.categories[0].name] = true;
-      }
-      return next;
-    });
-  }, [tree?.selectedLessonId, tree?.categories.length]);
-
-  if (!tree) {
-    return (
-      <div className="px-3 py-6 text-xs text-muted-foreground">
-        Loading lessons…
-      </div>
-    );
-  }
-
-  const search = tree.search.trim().toLowerCase();
-  const matches = (l: LearningTreeLesson) =>
-    !search || l.title.toLowerCase().includes(search);
-
-  const lessonsByCat: Record<string, LearningTreeLesson[]> = {};
-  tree.lessons.forEach((l) => {
-    (lessonsByCat[l.category] = lessonsByCat[l.category] || []).push(l);
-  });
-  Object.values(lessonsByCat).forEach((arr) =>
-    arr.sort((a, b) => a.order_index - b.order_index),
-  );
-
-  return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center gap-2 px-3 pt-3 pb-2 flex-shrink-0">
-        <button
-          onClick={onBack}
-          className="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          All apps
-        </button>
-      </div>
-
-      <div className="px-3 pb-3 flex-shrink-0">
-        <div className="relative">
-          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-          <input
-            value={tree.search}
-            onChange={(e) => tree.setSearch(e.target.value)}
-            placeholder="Search lessons…"
-            className="w-full pl-8 pr-3 py-2 text-xs bg-background border border-border rounded-lg text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/40"
-          />
-        </div>
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mt-3 px-1">
-          Course library
-        </p>
-      </div>
-
-      <div className="flex-1 overflow-y-auto px-2 pb-3">
-        {tree.categories.map((cat) => {
-          const allLs = lessonsByCat[cat.name] || [];
-          const ls = allLs.filter(matches);
-          if (cat.is_locked) {
-            // Locked category: show name + count only, no expand, click → modal
-            return (
-              <div key={cat.id} className="mb-0.5">
-                <button
-                  onClick={() => { setLockedModal(cat.name); setNotifyState('idle'); }}
-                  className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-xs font-medium text-muted-foreground hover:bg-muted transition-colors"
-                >
-                  <Lock className="h-3.5 w-3.5 flex-shrink-0 text-primary" />
-                  {cat.emoji && <span className="text-sm flex-shrink-0 opacity-60">{cat.emoji}</span>}
-                  <span className="flex-1 truncate">{cat.name}</span>
-                  <span className="text-[10px] text-muted-foreground tabular-nums">{allLs.length}</span>
-                </button>
-              </div>
-            );
-          }
-          if (ls.length === 0 && search) return null;
-          const done = ls.filter((l) => tree.progress[l.id]?.completed).length;
-          const isOpen = !!open[cat.name] || (!!search && ls.length > 0);
-          const hasSelected = ls.some((l) => l.id === tree.selectedLessonId);
-          return (
-            <div key={cat.id} className="mb-0.5">
-              <button
-                onClick={() =>
-                  setOpen((o) => ({ ...o, [cat.name]: !isOpen }))
-                }
-                className={cx(
-                  'w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-xs font-medium transition-colors',
-                  hasSelected
-                    ? 'text-primary'
-                    : 'text-foreground hover:bg-muted',
-                )}
-              >
-                <ChevronRight
-                  className={cx(
-                    'h-3.5 w-3.5 flex-shrink-0 text-muted-foreground transition-transform',
-                    isOpen && 'rotate-90',
-                  )}
-                />
-                {cat.emoji && (
-                  <span className="text-sm flex-shrink-0">{cat.emoji}</span>
-                )}
-                <span className="flex-1 truncate">{cat.name}</span>
-                <span className="text-[10px] text-muted-foreground tabular-nums">
-                  {done}/{ls.length || allLs.length}
-                </span>
-              </button>
-
-              <AnimatePresence initial={false}>
-                {isOpen && ls.length > 0 && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.18 }}
-                    className="overflow-hidden"
-                  >
-                    <div className="ml-3 pl-3 border-l border-border my-1 space-y-0.5">
-                      {ls.map((l) => {
-                        const p = tree.progress[l.id];
-                        const isDone = p?.completed ?? false;
-                        const inProg = !isDone && (p?.progress_pct ?? 0) > 0;
-                        const locked = l.is_premium || l.is_pro;
-                        const active = l.id === tree.selectedLessonId;
-                        return (
-                          <button
-                            key={l.id}
-                            onClick={() => tree.onSelect(l)}
-                            className={cx(
-                              'w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-left text-xs transition-colors',
-                              active
-                                ? 'bg-primary text-primary-foreground font-medium'
-                                : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                            )}
-                          >
-                            <span className="flex-1 truncate leading-snug">
-                              {l.title}
-                            </span>
-                            <span className="flex-shrink-0">
-                              {locked ? (
-                                <Lock className={cx('h-3 w-3', active ? 'text-primary-foreground/80' : 'text-muted-foreground')} />
-                              ) : isDone ? (
-                                <CheckCircle2 className={cx('h-3.5 w-3.5', active ? 'text-primary-foreground' : 'text-success')} />
-                              ) : inProg ? (
-                                <div className={cx('h-2 w-2 rounded-full', active ? 'bg-primary-foreground' : 'bg-primary')} />
-                              ) : (
-                                <Circle className="h-3 w-3 text-muted-foreground/50" />
-                              )}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          );
-        })}
-      </div>
-
-      <LockedCategoryModal
-        categoryName={lockedModal}
-        onClose={() => setLockedModal(null)}
-        notifyState={notifyState}
-        onNotify={async () => {
-          if (notifyState !== 'idle' || !lockedModal) return;
-          setNotifyState('saving');
-          try {
-            const { data: { user: u } } = await supabase.auth.getUser();
-            await supabase.from('support_messages').insert({
-              user_id: u?.id ?? null,
-              subject: `Notify me: ${lockedModal}`,
-              message: `User requested to be notified when the "${lockedModal}" learning path is released.`,
-              status: 'new',
-            } as any);
-          } catch { /* swallow — UX is the same */ }
-          setNotifyState('done');
-        }}
-      />
-    </div>
-  );
-}
-
-function LockedCategoryModal({
-  categoryName, onClose, onNotify, notifyState,
-}: {
-  categoryName: string | null;
-  onClose: () => void;
-  onNotify: () => void;
-  notifyState: 'idle' | 'saving' | 'done';
-}) {
-  return (
-    <Dialog open={!!categoryName} onOpenChange={(v) => { if (!v) onClose(); }}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <div className="mb-3 flex items-center gap-2">
-            <Badge className="rounded-full bg-primary/10 text-primary hover:bg-primary/10">
-              <Lock className="mr-1 h-3 w-3" />
-              Coming soon
-            </Badge>
-          </div>
-          <DialogTitle className="font-heading text-xl">Category Locked</DialogTitle>
-          <DialogDescription className="text-sm leading-relaxed text-muted-foreground">
-            {categoryName ? <><span className="text-foreground font-medium">{categoryName}</span> — t</> : 'T'}his learning path is not available yet and will be released in a future TradeNova Academy update.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter className="flex-col gap-2 sm:flex-row">
-          <Button variant="ghost" onClick={onClose}>Close</Button>
-          <Button onClick={onNotify} disabled={notifyState !== 'idle'}>
-            {notifyState === 'done' ? '✓ You\'ll be notified' : notifyState === 'saving' ? 'Saving…' : 'Notify Me'}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-
 function SidebarContent({ active, onNavigate, collapsed = false, onToggleCollapse }: {
   active: string; onNavigate: (id: string) => void; collapsed?: boolean; onToggleCollapse?: () => void;
 }) {
   const { user } = useAuth();
-  const { tree } = useLearningNav();
   const [isAdmin, setIsAdmin] = useState(false);
-  const [forceMainNav, setForceMainNav] = useState(false);
 
   useEffect(() => {
     if (!user) { setIsAdmin(false); return; }
     supabase.rpc('is_admin').then(({ data }) => setIsAdmin(!!data));
   }, [user]);
 
-  // Reset the "All apps" override whenever the active route changes.
-  useEffect(() => { setForceMainNav(false); }, [active]);
-
   const items = isAdmin ? [...BASE_ITEMS, ADMIN_ITEM] : BASE_ITEMS;
-  const showCourseTree = active === 'resources' && !!tree && !forceMainNav;
 
   return (
     <div className="flex flex-col h-full">
@@ -347,38 +104,43 @@ function SidebarContent({ active, onNavigate, collapsed = false, onToggleCollaps
         </>}
       </div>
 
-      {showCourseTree && !collapsed ? (
-        <CourseTreeNav onBack={() => setForceMainNav(true)} />
-      ) : (
-        <div className={cx('flex-1 overflow-y-auto', collapsed ? 'px-2' : 'px-3')}>
-          <nav className="space-y-0.5">
-            {items.map((item) => {
-              const Icon = item.icon;
-              const sel  = active === item.id;
-              const isAdminItem = item.id === 'admin';
-              return (
-                 <Button key={item.id} variant="ghost" title={collapsed ? item.label : undefined} aria-label={item.label} aria-current={sel ? 'page' : undefined} onClick={() => onNavigate(item.id)}
-                  className={cx(
-                     'flex w-full items-center rounded-md text-sm font-medium transition-all',
-                     collapsed ? 'h-10 justify-center px-0' : 'h-10 justify-start gap-3 px-3',
-                    sel
-                      ? 'bg-primary/15 text-primary border border-primary/25 shadow-[inset_3px_0_0_hsl(var(--primary)),0_0_24px_hsl(var(--primary)/0.10)]'
-                      : 'border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground hover:border-border',
-                  )}>
-                  <Icon className="h-4 w-4 flex-shrink-0" />
-                   {!collapsed && <span className="flex-1 text-left">{item.label}</span>}
-                   {!collapsed && isAdminItem && !sel && (
-                    <span className="text-[9px] font-semibold tracking-wider px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">ADMIN</span>
-                  )}
-                 </Button>
-              );
-            })}
-          </nav>
-        </div>
-      )}
+      <div className={cx('flex-1 overflow-y-auto', collapsed ? 'px-2' : 'px-3')}>
+        <nav className="space-y-0.5">
+          {items.map((item) => {
+            const Icon = item.icon;
+            const sel = active === item.id;
+            const isAdminItem = item.id === 'admin';
+            return (
+              <Button
+                key={item.id}
+                variant="ghost"
+                title={collapsed ? item.label : undefined}
+                aria-label={item.label}
+                aria-current={sel ? 'page' : undefined}
+                onClick={() => onNavigate(item.id)}
+                className={cx(
+                  'flex w-full items-center rounded-md text-sm font-medium transition-all',
+                  collapsed ? 'h-10 justify-center px-0' : 'h-10 justify-start gap-3 px-3',
+                  sel
+                    ? 'bg-primary/15 text-primary border border-primary/25 shadow-[inset_3px_0_0_hsl(var(--primary)),0_0_24px_hsl(var(--primary)/0.10)]'
+                    : 'border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground hover:border-border',
+                )}
+              >
+                <Icon className="h-4 w-4 flex-shrink-0" />
+                {!collapsed && <span className="flex-1 text-left">{item.label}</span>}
+                {!collapsed && isAdminItem && !sel && (
+                  <span className="text-[9px] font-semibold tracking-wider px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">ADMIN</span>
+                )}
+              </Button>
+            );
+          })}
+        </nav>
+      </div>
 
       <div className={cx('flex-shrink-0', collapsed ? 'p-2' : 'p-4')}>
-        {collapsed ? <Button variant="ghost" size="icon" title="Settings" aria-label="Settings" onClick={() => onNavigate('settings')} className="w-full"><Settings className="h-4 w-4" /></Button> : <SidebarUser onNavigate={onNavigate} />}
+        {collapsed
+          ? <Button variant="ghost" size="icon" title="Settings" aria-label="Settings" onClick={() => onNavigate('settings')} className="w-full"><Settings className="h-4 w-4" /></Button>
+          : <SidebarUser onNavigate={onNavigate} />}
       </div>
     </div>
   );
