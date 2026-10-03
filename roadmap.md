@@ -23,4 +23,4 @@
 
 # Calendar day details
 - [x] Open prior dates in a right-side day-details drawer with trades and before/after chart captures
-- [ ] Verify day-details interaction in the signed-in preview
+- [x] Verify day-details interaction in the signed-in preview
