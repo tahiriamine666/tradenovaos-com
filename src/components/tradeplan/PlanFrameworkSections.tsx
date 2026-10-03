@@ -99,7 +99,7 @@ function OptionalCard({ title, icon: Icon, enabled, onEnable, onSkip, enableLabe
   const [open, setOpen] = useState(false);
   return (
     <div className="border-b border-white/[0.06]">
-      <div className="flex items-center justify-between w-full px-6 py-4 gap-3">
+      <div className="flex items-center justify-between w-full px-5 py-3 gap-3">
         <button type="button" onClick={() => setOpen(v => !v)} className="flex items-center gap-2.5 flex-1 text-left group">
           <div className="w-6 h-6 rounded-lg bg-white/[0.04] flex items-center justify-center">
             <Icon className="h-3.5 w-3.5 text-primary" />
@@ -121,7 +121,7 @@ function OptionalCard({ title, icon: Icon, enabled, onEnable, onSkip, enableLabe
         {open && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }} className="overflow-hidden">
-            <div className="px-6 pb-5">
+            <div className="px-5 pb-4">
               {enabled ? children : (
                 <div className="flex items-center justify-between gap-3 rounded-xl border border-dashed border-white/[0.08] px-4 py-3">
                   <p className="text-xs text-white/35">{title.charAt(0) + title.slice(1).toLowerCase()} is optional</p>
@@ -144,7 +144,7 @@ export default function PlanFrameworkSections({ value, onChange }: { value: Plan
   const setW = (patch: Partial<PlanFramework['weekly']>) => onChange({ ...value, weekly: { ...w, ...patch } });
   const setS = (patch: Partial<PlanFramework['scenario']>) => onChange({ ...value, scenario: { ...s, ...patch } });
   const setD = (patch: Partial<PlanFramework['daily']>) => onChange({ ...value, daily: { ...d, ...patch } });
-  const grid = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4';
+  const grid = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3';
 
   return (
     <>
