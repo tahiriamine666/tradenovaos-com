@@ -628,7 +628,6 @@ function TradingDashboardInner() {
 
 
 
-          {active === 'calendar' && <TradingCalendar dark={dark} />}
 
       </motion.div>
     </AppLayout>
