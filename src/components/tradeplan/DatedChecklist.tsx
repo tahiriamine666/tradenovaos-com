@@ -190,7 +190,7 @@ export default function DatedChecklist<T extends Record<string, any>>({ type, ti
       <AnimatePresence initial={false}>
         {open && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }} className="overflow-hidden">
+            transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }} className="overflow-hidden">
             <div className="px-5 pb-4 space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2">
                 <div className="flex items-center gap-1.5">
@@ -209,6 +209,7 @@ export default function DatedChecklist<T extends Record<string, any>>({ type, ti
 
               {notice && <p className="text-[11px] text-white/45 px-1">{notice}</p>}
 
+              <div key={`${type}-${toKey(period)}`} className="content-crossfade">
               {loading ? (
                 <div className="flex items-center gap-2 text-xs text-white/40 py-6 justify-center"><Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading checklist...</div>
               ) : data ? (
@@ -227,6 +228,7 @@ export default function DatedChecklist<T extends Record<string, any>>({ type, ti
                   </button>
                 </div>
               )}
+              </div>
             </div>
           </motion.div>
         )}
