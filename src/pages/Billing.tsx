@@ -11,13 +11,12 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 
 interface BillingRow {
-  plan: string;
-  status: string;
-  trial_ends_at: string | null;
+  plan: 'pro' | 'elite' | null;
+  status: string | null;
+  trial_end: string | null;
   renews_at: string | null;
   ends_at: string | null;
-  subscription_id: string | null;
-  customer_portal_url: string | null;
+  dodo_subscription_id: string | null;
 }
 
 function fmtDate(iso: string | null): string {
@@ -52,8 +51,8 @@ export default function Billing() {
     if (!user) return;
     (async () => {
       const { data } = await supabase
-        .from('billing_subscriptions')
-        .select('plan,status,trial_ends_at,renews_at,ends_at,subscription_id,customer_portal_url')
+        .from('subscriptions')
+        .select('plan,status,trial_end,renews_at,ends_at,dodo_subscription_id')
         .eq('user_id', user.id)
         .maybeSingle();
       setRow(data as BillingRow | null);
@@ -61,16 +60,16 @@ export default function Billing() {
     })();
   }, [user]);
 
-  const effectivePlan = (row?.plan ?? plan) || 'free';
+  const effectivePlan = row?.plan ?? plan ?? null;
   const effectiveStatus = row?.status ?? status;
   const statusInfo = STATUS_LABEL[effectiveStatus] ?? { label: effectiveStatus || 'Unknown', color: 'bg-muted text-muted-foreground' };
-  const trial = row?.trial_ends_at ?? (trialEndsAt ? trialEndsAt.toISOString() : null);
+  const trial = row?.trial_end ?? (trialEndsAt ? trialEndsAt.toISOString() : null);
   const renews = row?.renews_at ?? null;
   const ends = row?.ends_at ?? null;
 
   const PlanIcon = effectivePlan === 'elite' ? Crown : effectivePlan === 'pro' ? Sparkles : CreditCard;
-  const hasSubscription = !!row?.subscription_id;
-  const isCancelling = effectiveStatus === 'cancelled' || effectiveStatus === 'canceled';
+  const hasSubscription = !!row?.dodo_subscription_id;
+  const isCancelling = effectiveStatus === 'canceled';
 
   const handlePortal = async () => {
     try {
@@ -122,7 +121,7 @@ export default function Billing() {
                   </div>
                   <div>
                     <div className="text-xs text-muted-foreground uppercase tracking-wide">Current Plan</div>
-                    <div className="text-xl font-bold capitalize">{effectivePlan}</div>
+                    <div className="text-xl font-bold capitalize">{effectivePlan ?? 'No active plan'}</div>
                   </div>
                 </div>
                 <Badge className={`${statusInfo.color} border-0 px-3 py-1`}>{statusInfo.label}</Badge>
@@ -172,7 +171,7 @@ export default function Billing() {
 
             <p className="text-xs text-muted-foreground flex items-center gap-2">
               <Shield className="h-3.5 w-3.5" />
-              Cancel or update payment in the secure Lemon Squeezy portal. Your access continues until the end of the paid period.
+              Cancel or update payment in the secure Dodo Payments portal. Your access continues until the end of the paid period.
             </p>
           </>
         )}
