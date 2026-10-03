@@ -18,6 +18,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import PsychologyScoreCard from "@/components/dashboard/PsychologyScoreCard";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Trade {
@@ -634,6 +635,9 @@ export default function CommandCenter({ onNavigate, onAddTrade }: Props) {
 
           {/* Trader Score */}
           <TraderScoreCard trades={trades} />
+
+          {/* Psychology Score */}
+          <PsychologyScoreCard onNavigate={onNavigate} />
 
           {/* Recent Trades + Best Setups */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
