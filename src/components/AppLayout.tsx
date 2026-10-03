@@ -45,7 +45,7 @@ function cx(...v: (string|boolean|undefined|null)[]) { return v.filter(Boolean).
 function Logo() {
   return (
     <div className="flex items-center gap-3">
-      <BrandLogo className="w-11 h-11 rounded-md flex-shrink-0 object-cover shadow-[0_0_24px_hsl(var(--primary)/0.28)] ring-1 ring-primary/25" />
+      <BrandLogo className="w-11 h-11 flex-shrink-0 object-contain shadow-[0_0_20px_hsl(var(--primary)/0.22)]" />
       <div className="leading-tight">
         <p className="font-heading font-bold text-foreground tracking-tight text-[15px]">TradeNova</p>
         <p className="text-[10px] text-primary/70 uppercase">Trading OS</p>
