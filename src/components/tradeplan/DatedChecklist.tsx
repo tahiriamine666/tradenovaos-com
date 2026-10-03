@@ -114,7 +114,7 @@ export default function DatedChecklist<T extends Record<string, any>>({ type, se
         .eq('user_id', user.id).eq('account_key', accountKey).eq('checklist_type', type)
         .eq('period_date', toKey(period)).maybeSingle();
       if (id !== reqId.current) return;
-      const fallback = legacyData && statusFields.some(field => !!legacyData[field]);
+      const fallback = readOnly && legacyData && statusFields.some(field => !!legacyData[field]);
       setFromLegacy(!row && !!fallback);
       setData(row ? ({ ...template, ...(row.data as any) }) : fallback ? ({ ...template, ...legacyData }) : null);
       setSave(row ? 'saved' : 'idle');
