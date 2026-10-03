@@ -19,6 +19,7 @@ import EconomicCalendar from '@/pages/EconomicCalendar';
 import TraderScore from '@/components/TraderScore';
 
 import AppLayout, { BASE_ITEMS, ADMIN_ITEM } from '@/components/AppLayout';
+import WelcomeSplash from '@/components/WelcomeSplash';
 import AdminPanel from '@/pages/AdminPanel';
 const sidebarItems = [...BASE_ITEMS, ADMIN_ITEM];
 import TopBar from '@/components/TopBar';
