@@ -20,3 +20,7 @@
 - [x] Add subtle page transitions across the signed-in features
 - [x] Add staged reveals and hover feedback to Journal and Trade Logs
 - [x] Respect reduced-motion preferences
+
+# Calendar day details
+- [x] Open prior dates in a right-side day-details drawer with trades and before/after chart captures
+- [ ] Verify day-details interaction in the signed-in preview

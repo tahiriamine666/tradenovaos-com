@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, CalendarDays, Pencil, BookOpen, Target, Sun, CalendarRange, Crosshair, Image as ImageIcon, Loader2, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, CalendarDays, Pencil, BookOpen, Target, Sun, CalendarRange, Loader2, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -105,7 +105,6 @@ export default function DayDetailsDialog({ date, onClose, onDateChange }: { date
   const scenario = plan?.ai_analysis?.framework?.scenario;
   const hasScenario = scenario && (scenario.enabled || ['market', 'setup', 'confirmation', 'trigger', 'invalidation'].some(k => has(scenario[k])));
   const checklist: any[] = Array.isArray(plan?.checklist) ? plan.checklist : [];
-  const anyShots = trades.some(t => data?.shots[t.id]?.before || data?.shots[t.id]?.after);
   const empty = data && !trades.length && !j && !plan && !daily && !weekly;
 
   return (
@@ -203,6 +202,7 @@ export default function DayDetailsDialog({ date, onClose, onDateChange }: { date
                   ['What Went Well', j.what_went_well], ['Mistakes', has(j.mistakes_list) ? j.mistakes_list : j.mistakes],
                   ['Bias', j.bias], ['Lessons Learned', j.lesson], ['Notes', j.notes],
                   ['Confidence', j.confidence_level], ['Rule Adherence', j.rule_adherence],
+                  ['Energy', j.energy_level], ['Stress', j.stress_label ?? j.stress_score], ['Session Time', j.session_time],
                 ]} />
               </Section>
             )}
