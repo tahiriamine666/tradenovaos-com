@@ -217,6 +217,7 @@ export default function TradePlanWorkspace() {
   const [newsFilter,setNewsFilter]= useState<'high'|'medium'|'low'|'all'>('all');
   const [lastSaved, setLastSaved] = useState<Date|null>(null);
   const [saveError, setSaveError] = useState<string|null>(null);
+  const [loadError, setLoadError] = useState(false);
   const [dirty,     setDirty]     = useState(false);
   const autoSaveTimer = useRef<any>(null);
 
@@ -239,12 +240,12 @@ export default function TradePlanWorkspace() {
     let cancelled = false;
     const load = async () => {
       setLoading(true);
-      setSaveError(null);
+      setSaveError(null); setLoadError(false);
       const { data, error } = await supabase
         .from('trade_plans').select('*')
         .eq('user_id', user.id).eq('plan_date', selectedDate).maybeSingle();
       if (cancelled) return;
-      if (error) { setSaveError(error.message); setLoading(false); return; }
+      if (error) { setSaveError(error.message); setLoadError(true); setLoading(false); return; }
       loadedDate.current = selectedDate;
       setExists(!!data);
       setCreating(false);
@@ -282,7 +283,7 @@ export default function TradePlanWorkspace() {
   }, [viewOnly, selectedDate, today, exists, creating]);
 
   const save = useCallback(async (planData: TradePlan, date = loadedDate.current) => {
-    if (!user || saveError || viewOnly || (date !== today && !exists && !creating)) return;
+    if (!user || loadError || viewOnly || (date !== today && !exists && !creating)) return;
     setSaving(true);
     try {
       const changes: Record<string, any> = {};
@@ -316,7 +317,7 @@ export default function TradePlanWorkspace() {
     } finally {
       setSaving(false);
     }
-  }, [user, today, exists, creating, viewOnly, saveError]);
+  }, [user, today, exists, creating, viewOnly, loadError]);
 
   // Keep a ref of the latest plan so we can flush on unmount / tab close
   const planRef = useRef(plan);
@@ -332,8 +333,10 @@ export default function TradePlanWorkspace() {
   }, [revision]);
 
   // Flush pending edits when leaving the page or hiding the tab
+  const saveRef = useRef(save);
+  useEffect(() => { saveRef.current = save; }, [save]);
   useEffect(() => {
-    const flush = () => { if (dirtyRef.current) { clearTimeout(autoSaveTimer.current); dirtyRef.current = false; const data = planRef.current; const date = loadedDate.current; inFlight.current = inFlight.current.then(() => save(data, date)); } };
+    const flush = () => { if (dirtyRef.current) { clearTimeout(autoSaveTimer.current); dirtyRef.current = false; const data = planRef.current; const date = loadedDate.current; inFlight.current = inFlight.current.then(() => saveRef.current(data, date)); } };
     const onHide = () => { if (document.visibilityState === 'hidden') flush(); };
     window.addEventListener('pagehide', flush);
     document.addEventListener('visibilitychange', onHide);
@@ -342,7 +345,7 @@ export default function TradePlanWorkspace() {
       document.removeEventListener('visibilitychange', onHide);
       flush();
     };
-  }, [save]);
+  }, []);
 
   const navigate = async (date: string) => {
     if (date === selectedDate || loading) return;
@@ -353,7 +356,7 @@ export default function TradePlanWorkspace() {
       inFlight.current = inFlight.current.then(() => save(data, oldDate));
     }
     await inFlight.current;
-    if (saveError) return;
+    if (saveError || loadError) return;
     setSelectedDate(date);
   };
   const shiftDay = (amount: number) => {
