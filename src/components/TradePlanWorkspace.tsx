@@ -484,12 +484,12 @@ export default function TradePlanWorkspace() {
         <Button size="sm" onClick={() => { setCreating(true); setViewOnly(false); }}>Create Plan</Button>
       </div>}
       {!exists && selectedDate === today && <Button size="sm" variant="outline" className="mb-4" onClick={() => void copyPrevious()}><Copy className="h-4 w-4 mr-2" />Copy Previous Plan</Button>}
-      <fieldset disabled={viewOnly || (selectedDate !== today && !exists && !creating)} className="min-w-0">
-
+      {(exists || selectedDate === today || creating) && <>
       {/* ── MAIN CARD ── */}
       <div className="rounded-3xl border border-white/[0.08] bg-white/[0.02] overflow-hidden shadow-2xl shadow-black/30">
 
         <PlanFrameworkSections value={framework} onChange={setFramework} selectedDate={selectedDate} readOnly={viewOnly || (selectedDate !== today && !exists && !creating)} />
+        <fieldset disabled={viewOnly} className="min-w-0">
 
         {/* SECTION 1: MARKET OVERVIEW */}
         <Section title="Market Overview" icon={Activity} color="text-violet-400">
@@ -798,8 +798,8 @@ export default function TradePlanWorkspace() {
           </div>
         </Section>
 
+        </fieldset>
       </div>
-      </fieldset>
       <div className="flex items-center justify-center gap-2 pt-2 pb-4">
         <div className={`w-1.5 h-1.5 rounded-full ${saveError ? 'bg-red-500' : saving?'bg-violet-500 animate-pulse':'bg-emerald-500/50'}`}/>
         <span className={`text-[10px] ${saveError ? 'text-red-400/70' : 'text-white/25'}`}>
@@ -814,6 +814,7 @@ export default function TradePlanWorkspace() {
                 : 'All changes save automatically'}
         </span>
       </div>
+      </>}
       </div>
 
 
