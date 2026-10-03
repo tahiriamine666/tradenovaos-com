@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Award, BarChart3, BookOpen, Brain, CalendarClock, CalendarDays,
+  BarChart3, BookOpen, Brain, CalendarClock, CalendarDays,
   ChevronRight, CircleDollarSign, ClipboardCheck, LayoutDashboard, List,
   Menu, PanelLeftClose, PanelLeftOpen, Settings, Shield, X,
 } from 'lucide-react';
@@ -26,7 +26,6 @@ export const BASE_ITEMS = [
   { id: 'ai',        label: 'NOVA AI',    icon: Brain },
   { id: 'plan',      label: 'Checklist',  icon: ClipboardCheck },
   { id: 'economic',  label: 'Economic',   icon: CalendarClock },
-  { id: 'certificates', label: 'Certificates', icon: Award },
   { id: 'settings',  label: 'Settings',   icon: Settings },
 ];
 
@@ -54,7 +53,7 @@ function Logo() {
 
 function SidebarUser({ onNavigate }: { onNavigate: (id: string) => void }) {
   const { profile, displayName } = useProfile();
-  const plan = profile?.plan_type ?? 'free';
+  const plan = profile?.plan_type ?? null;
   const badge = plan === 'elite'
     ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
     : plan === 'pro'
@@ -70,7 +69,7 @@ function SidebarUser({ onNavigate }: { onNavigate: (id: string) => void }) {
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-foreground truncate">{displayName}</p>
         <Badge variant="outline" className={`text-[10px] rounded-full px-2 py-0 h-4 border mt-0.5 capitalize ${badge}`}>
-          {plan}
+          {plan ?? 'No plan'}
         </Badge>
       </div>
       <ChevronRight className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
