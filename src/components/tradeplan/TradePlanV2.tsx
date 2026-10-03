@@ -8,7 +8,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import BrandLogo from '@/components/BrandLogo';
+import robotAsset from '@/assets/tradenova-robot-full.jpg.asset.json';
+// Local Vite preview doesn't proxy CDN asset paths; hosted preview does.
+const robotSrc = import.meta.env.DEV ? `https://id-preview--0ee4a120-abbf-401b-9623-1114b47e7fda.lovable.app${robotAsset.url}` : robotAsset.url;
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Impact = 'low' | 'medium' | 'high';
@@ -280,7 +282,7 @@ function Checklist({ daily, set, models, onModelsChange, readOnly }: { daily: Da
         <div className="h-full rounded-full bg-primary transition-[width] duration-500" style={{ width: `${pct}%` }} />
       </div>
 
-      <div className="mt-5 grid gap-6 sm:grid-cols-[1fr_auto] sm:items-center">
+      <div className="mt-5 grid gap-6 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] sm:items-center">
         <div className="space-y-1.5">
           {items.map(i => (
             <div key={i.id} draggable={!readOnly} onDragStart={() => (dragId.current = i.id)} onDragOver={e => e.preventDefault()} onDrop={() => drop(i.id)}
@@ -301,9 +303,12 @@ function Checklist({ daily, set, models, onModelsChange, readOnly }: { daily: Da
             </div>
           )}
         </div>
-        <div className="relative mx-auto w-28 sm:w-40">
-          <div className={`absolute inset-0 rounded-full bg-primary blur-3xl transition-opacity duration-700 ${complete ? 'opacity-30' : 'opacity-[0.08]'}`} />
-          <BrandLogo className="relative w-full select-none rounded-3xl" />
+        <div className="relative mx-auto flex w-40 flex-col items-center sm:w-full">
+          <div className={`pointer-events-none absolute inset-x-[10%] inset-y-[15%] rounded-full bg-primary blur-3xl transition-opacity duration-1000 ${complete ? 'animate-pulse' : ''}`}
+            style={{ opacity: complete ? 0.32 : 0.05 + (pct / 100) * 0.18, animationDuration: '4s' }} />
+          <img src={robotSrc} alt="TradeNova robot" draggable={false}
+            className="relative max-h-[420px] w-full select-none object-contain mix-blend-lighten" />
+          {complete && <p className="relative mt-2 text-xs font-semibold text-primary animate-fade-in">✓ Checklist Complete</p>}
         </div>
       </div>
     </div>
