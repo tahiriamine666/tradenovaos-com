@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -363,6 +363,7 @@ export default function TradePlanWorkspace() {
     }
     await inFlight.current;
     if (saveFailed.current || loadError) return;
+    setLoading(true);
     setSelectedDate(date);
   };
   const shiftDay = (amount: number) => {
@@ -401,7 +402,7 @@ export default function TradePlanWorkspace() {
   const totalCount = plan.checklist.length;
   const progress   = totalCount > 0 ? Math.round((doneCount/totalCount)*100) : 0;
 
-  const framework = normalizeFramework((plan.ai_analysis as any)?.framework);
+  const framework = useMemo(() => normalizeFramework((plan.ai_analysis as any)?.framework), [plan.ai_analysis]);
   const setFramework = (f: PlanFramework) => {
     set('ai_analysis', { ...(plan.ai_analysis ?? {}), plan_mode: 'manual', framework: f });
   };

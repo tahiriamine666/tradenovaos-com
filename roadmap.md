@@ -24,3 +24,8 @@
 # Calendar day details
 - [x] Open prior dates in a right-side day-details drawer with trades and before/after chart captures
 - [x] Verify day-details interaction in the signed-in preview
+
+# Trade Plan history
+- [x] Browse saved daily plans in a compact calendar and load dates without copying or overwriting plans
+- [x] Keep historical plans read-only until editing and preserve separate dated outlooks
+- [ ] Verify history, autosave and mobile behavior in the signed-in preview
