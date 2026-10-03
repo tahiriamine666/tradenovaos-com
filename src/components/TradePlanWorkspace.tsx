@@ -402,7 +402,7 @@ export default function TradePlanWorkspace() {
       </div>
 
       {/* ── MODE SELECTOR ── */}
-      <div className="mb-5 rounded-2xl border border-white/[0.08] bg-white/[0.02] px-5 py-4">
+      <div className="mb-4 rounded-2xl border border-white/[0.08] bg-white/[0.02] px-4 py-3">
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
             <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-2.5">Trade Plan Mode</p>
