@@ -11,7 +11,7 @@ import StudioSettings from '@/pages/StudioSettings';
 import ReplayStudio from '@/pages/ReplayStudio';
 import CommunitySpace from '@/pages/CommunitySpace';
 import TradePlanWorkspace from '@/components/tradeplan/TradePlanV2';
-import AIInsights from '@/pages/AIInsights';
+import NovaAI from '@/pages/NovaAI';
 import PricingPage from '@/pages/Pricing';
 import { TradeDialogProvider, useTradeDialog, useTradesChanged, useNavigationEvent } from '@/contexts/TradeDialogContext';
 import LearningHub from '@/pages/LearningHub';
@@ -615,7 +615,7 @@ function TradingDashboardInner() {
 
           {active === 'playbooks' && <PlaybookLab />}
 
-          {active === 'ai' && <AIInsights />}
+          {active === 'ai' && <NovaAI />}
 
           {active === 'replay' && <ReplayStudio />}
 
