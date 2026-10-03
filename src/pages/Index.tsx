@@ -5,16 +5,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useActiveAccount } from '@/contexts/ActiveAccountContext';
 import { supabase } from '@/integrations/supabase/client';
 import TradeVault from '@/pages/TradeVault';
-import PlaybookLab from '@/pages/PlaybookLab';
 import TradeJournal from '@/pages/TradeJournal';
 import StudioSettings from '@/pages/StudioSettings';
-import ReplayStudio from '@/pages/ReplayStudio';
-import CommunitySpace from '@/pages/CommunitySpace';
 import TradePlanWorkspace from '@/components/tradeplan/TradePlanV2';
 import NovaAI from '@/pages/NovaAI';
-import PricingPage from '@/pages/Pricing';
 import { TradeDialogProvider, useTradeDialog, useTradesChanged, useNavigationEvent } from '@/contexts/TradeDialogContext';
-import LearningHub from '@/pages/LearningHub';
 import EconomicCalendar from '@/pages/EconomicCalendar';
 import Certificates from '@/pages/Certificates';
 import TraderScore from '@/components/TraderScore';
@@ -147,7 +142,7 @@ function EdgeAnalytics({ dark, user }: { dark: boolean; user: any }) {
   if (loading) {
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-        <SectionTitle title="Edge Analytics" subtitle="Discover what's working and what's not" />
+        <SectionTitle title="Analytics" subtitle="Discover what's working and what's not" />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1,2,3,4,5,6,7,8].map(i => <Skeleton key={i} className="h-24 rounded-xl" />)}
         </div>
@@ -158,11 +153,11 @@ function EdgeAnalytics({ dark, user }: { dark: boolean; user: any }) {
   if (trades.length === 0) {
     return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-        <SectionTitle title="Edge Analytics" subtitle="Discover what's working and what's not" />
+        <SectionTitle title="Analytics" subtitle="Discover what's working and what's not" />
         <Card className="border-0 shadow-sm">
           <CardContent className="pt-6 text-center py-12">
             <BarChart3 className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-            <p className="text-muted-foreground">No trades yet. Add trades in Trade Vault to see analytics.</p>
+            <p className="text-muted-foreground">No trades yet. Add trades in your Journal to see analytics.</p>
           </CardContent>
         </Card>
       </motion.div>
@@ -481,7 +476,13 @@ function TradingCalendar({ dark }: { dark: boolean }) {
 
 function TradingDashboardInner() {
   const reduceMotion = useReducedMotion();
-  const [active, setActive] = useState('dashboard');
+  const [activeRaw, setActiveRaw] = useState('dashboard');
+  // Retired views (Replay, Community, Learning Hub, Playbooks) fall back to the dashboard; pricing lives at /pricing.
+  const setActive = useCallback((v: string) => {
+    if (v === 'pricing') { window.location.assign('/pricing'); return; }
+    setActiveRaw(['playbooks', 'replay', 'community', 'resources'].includes(v) ? 'dashboard' : v);
+  }, []);
+  const active = activeRaw;
   const [search, setSearch] = useState('');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const dark = theme === 'dark';
@@ -613,23 +614,13 @@ function TradingDashboardInner() {
 
           {active === 'analytics' && <EdgeAnalytics dark={dark} user={user} />}
 
-          {active === 'playbooks' && <PlaybookLab />}
-
           {active === 'ai' && <NovaAI />}
-
-          {active === 'replay' && <ReplayStudio />}
-
-          {active === 'community' && <CommunitySpace />}
-
-          {active === 'resources' && <LearningHub />}
 
           {active === 'economic' && <EconomicCalendar />}
 
           {active === 'certificates' && <Certificates />}
 
           {active === 'settings' && <StudioSettings />}
-
-          {active === 'pricing' && <PricingPage />}
 
           {active === 'admin' && <AdminPanel />}
 

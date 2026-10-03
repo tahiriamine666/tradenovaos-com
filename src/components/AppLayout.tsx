@@ -25,7 +25,7 @@ export const BASE_ITEMS = [
   { id: 'journal',   label: 'Journal',    icon: BookOpen },
   { id: 'trades',    label: 'Trade Logs', icon: List },
   { id: 'analytics', label: 'Analytics',  icon: BarChart3 },
-  { id: 'ai',        label: 'Nova AI',    icon: Brain },
+  { id: 'ai',        label: 'NOVA AI',    icon: Brain },
   { id: 'plan',      label: 'Checklist',  icon: ClipboardCheck },
   { id: 'economic',  label: 'Economic',   icon: CalendarClock },
   { id: 'certificates', label: 'Certificates', icon: Award },
@@ -36,7 +36,7 @@ const BOTTOM_NAV = [
   { id: 'dashboard', icon: LayoutDashboard, label: 'Home' },
   { id: 'plan',    icon: CalendarDays,    label: 'Plan' },
   { id: 'trades',  icon: CircleDollarSign, label: 'Trades' },
-  { id: 'community', icon: Users,          label: 'Community' },
+  { id: 'ai',      icon: Brain,           label: 'NOVA' },
   { id: 'settings', icon: Settings,         label: 'Settings' },
 ];
 

@@ -17,14 +17,12 @@ const NAV_ITEMS = [
   {
     label: 'Products',
     dropdown: [
-      { icon: BookOpen,   label: 'Trade Journal',    desc: 'Log every trade with emotion and execution score', path: '/features/trade-journal',    color: 'text-primary' },
-      { icon: BarChart3,  label: 'Edge Analytics',   desc: 'Win rate, profit factor, expectancy metrics',      path: '/features/edge-analytics',   color: 'text-blue-600' },
-      { icon: Brain,      label: 'Mind Journal',     desc: 'Track your psychology and mental edge',            path: '/features/mind-journal',     color: 'text-pink-600' },
-      { icon: Target,     label: 'Playbook Lab',     desc: 'Define setups, rules, and checklists',             path: '/features/playbook-lab',     color: 'text-emerald-600' },
-      { icon: PlayCircle, label: 'Replay Studio',    desc: 'Replay sessions bar by bar',                       path: '/features/replay-studio',    color: 'text-amber-600' },
-      { icon: Sparkles,   label: 'AI Insights',      desc: 'Claude analyzes your trading patterns',            path: '/features/ai-insights',      color: 'text-primary' },
-      { icon: Calendar,   label: 'Trading Calendar', desc: 'Monthly P&L heatmap and trade activity',           path: '/features/trading-calendar', color: 'text-cyan-600' },
-      { icon: Upload,     label: 'CSV Import',       desc: 'Import from any broker automatically',             path: '/features/csv-import',       color: 'text-green-600' },
+      { icon: BookOpen,   label: 'Trade Journal',     desc: 'Log trades with context, bias and charts',   path: '/features/trade-journal',    color: 'text-primary' },
+      { icon: Calendar,   label: 'Trading Calendar',  desc: 'Daily P&L, psychology and day details',      path: '/features/trading-calendar', color: 'text-primary' },
+      { icon: BarChart3,  label: 'Analytics',         desc: 'Win rate, profit factor, cumulative P&L',    path: '/features/edge-analytics',   color: 'text-primary' },
+      { icon: Target,     label: 'Trade Plan',        desc: 'Weekly Outlook, Daily Plan and checklists',  path: '/features/playbook-lab',     color: 'text-primary' },
+      { icon: Brain,      label: 'Psychology',        desc: 'Emotions, discipline and Psychology Score',  path: '/features/mind-journal',     color: 'text-primary' },
+      { icon: Sparkles,   label: 'NOVA AI',           desc: 'AI answers from your own trading data',      path: '/features/ai-insights',      color: 'text-primary' },
     ],
   },
   {

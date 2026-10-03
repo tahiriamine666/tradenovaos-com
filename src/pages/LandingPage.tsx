@@ -384,13 +384,14 @@ function Hero({ onSignup }: { onSignup: () => void }) {
 
                 <div className="flex-1 flex flex-col gap-0.5">
                   {[
-                    {l:'Command Center', a:true},
+                    {l:'Dashboard', a:true},
+                    {l:'Journal'},
+                    {l:'Trade Logs'},
+                    {l:'Analytics'},
+                    {l:'NOVA AI'},
                     {l:'Trade Plan'},
-                    {l:'Trade Vault'},
-                    {l:'Community'},
-                    {l:'Learning Hub'},
                     {l:'Economic Calendar'},
-                    {l:'Studio Settings'},
+                    {l:'Settings'},
                   ].map(item => (
                     <div key={item.l} className={`text-[11px] px-3 py-1.5 rounded-lg font-medium flex items-center gap-2 ${item.a ? 'bg-primary text-white shadow-sm shadow-primary/30' : 'text-muted-foreground'}`}>
                       <span className="w-1 h-1 rounded-full bg-current opacity-60" />
@@ -400,9 +401,9 @@ function Hero({ onSignup }: { onSignup: () => void }) {
                 </div>
 
                 <div className="mt-3 rounded-md border border-primary/25 bg-gradient-to-br from-primary/15 to-background p-2.5">
-                  <p className="text-[10px] font-black text-foreground">Upgrade to Pro</p>
-                  <p className="text-[8px] text-muted-foreground mt-0.5 leading-tight">Unlock AI, CSV import, playbooks</p>
-                  <div className="mt-2 bg-primary text-white text-[9px] font-bold py-1.5 rounded-md text-center shadow-sm shadow-primary/30">Start 7-day free trial</div>
+                  <p className="text-[10px] font-black text-foreground">Pro · $14/mo</p>
+                  <p className="text-[8px] text-muted-foreground mt-0.5 leading-tight">Journal, plans, analytics & NOVA AI</p>
+                  <div className="mt-2 bg-primary text-white text-[9px] font-bold py-1.5 rounded-md text-center shadow-sm shadow-primary/30">Start 14-day free trial</div>
                 </div>
                 <div className="mt-2 flex items-center gap-2 pt-2 border-t border-border/70">
                   <div className="w-6 h-6 rounded-full bg-primary text-white text-[9px] font-bold flex items-center justify-center">U</div>
@@ -417,7 +418,7 @@ function Hero({ onSignup }: { onSignup: () => void }) {
               <div className="flex-1 min-w-0 flex flex-col">
                 {/* Top bar */}
                 <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-card">
-                  <p className="text-[11px] font-semibold text-foreground/80">Command Center</p>
+                  <p className="text-[11px] font-semibold text-foreground/80">Dashboard</p>
                   <div className="flex items-center gap-1.5">
                     {['All Time','Filters','All Accounts'].map(t => (
                       <div key={t} className="text-[9px] font-medium text-muted-foreground border border-border rounded-lg px-2.5 py-1 bg-card">{t} ▾</div>
@@ -429,7 +430,7 @@ function Hero({ onSignup }: { onSignup: () => void }) {
                 <div className="p-4 sm:p-5 space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-[18px] font-black text-foreground leading-tight">Command Center</p>
+                      <p className="text-[18px] font-black text-foreground leading-tight">Dashboard</p>
                       <p className="text-[10px] text-muted-foreground mt-0.5">Wednesday, May 13</p>
                     </div>
                     <div className="inline-flex items-center gap-1.5 bg-primary text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-sm shadow-primary/30">+ New Trade</div>
@@ -674,11 +675,11 @@ function StatsBar() {
 
 const FEATURES = [
   {icon:BookOpen,  title:'Trade Journal',          desc:'Log every trade with emotion, execution score, and outcome. Build habits that compound.',tag:'Core',       c:'violet'},
-  {icon:Sparkles,  title:'AI Insights',            desc:'Claude analyzes your trades and surfaces patterns you\'d never catch manually.',         tag:'AI',         c:'purple'},
-  {icon:Calendar,  title:'Trading Calendar',       desc:'See P&L heatmap across the month. Identify your best and worst trading days.',           tag:'Visual',     c:'cyan'},
-  {icon:Upload,    title:'CSV Import',             desc:'Import from any broker — MT4, MT5, cTrader, IBKR. Smart column mapping.',               tag:'Import',     c:'green'},
-  {icon:CalendarDays,title:'Economic Calendar',   desc:'High-impact news alerts, volatility scanner, and session tracker for every trading day.', tag:'News',       c:'blue'},
-  {icon:Sparkles,  title:'AI Trading Assistant',   desc:'Get daily bias, model recommendations, and risk warnings built from your data.',         tag:'AI Coach',   c:'violet'},
+  {icon:Sparkles,  title:'NOVA AI',                desc:'Ask questions and get answers grounded in your own trades, journal and plans.',            tag:'AI',         c:'purple'},
+  {icon:Calendar,  title:'Trading Calendar',       desc:'Daily P&L and psychology, weekly summaries, and full details for any past day.',           tag:'Visual',     c:'cyan'},
+  {icon:Upload,    title:'Account Sync',           desc:'Connect your MT4 / MT5 account and trades sync into your journal automatically.',        tag:'Sync',       c:'green'},
+  {icon:CalendarDays,title:'Economic Calendar',   desc:'Upcoming events with impact, currency and category filters, saved presets and defaults.', tag:'News',       c:'blue'},
+  {icon:Sparkles,  title:'Trade Plan',             desc:'Weekly Outlook, Daily Plan, custom rules and reusable pre-trade checklists.',            tag:'Plan',       c:'violet'},
 ];
 
 const CM: Record<string,any> = {
