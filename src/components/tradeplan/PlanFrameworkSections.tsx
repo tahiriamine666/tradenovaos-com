@@ -150,7 +150,7 @@ export default function PlanFrameworkSections({ value, onChange }: { value: Plan
     <>
       <OptionalCard title="Weekly Outlook" icon={CalendarDays} enabled={w.enabled} enableLabel="Add Weekly Outlook"
         onEnable={() => setW({ enabled: true })} onSkip={() => setW({ enabled: false })}>
-        <div className="space-y-5">
+        <div className="space-y-4">
           <div className={grid}>
             <Field label="01 — Weekly Structure" value={w.structure} options={['Bullish', 'Bearish', 'Range']} onChange={v => setW({ structure: v })} />
             <Field label="02 — Major Liquidity" value={w.major_liquidity} options={['Major High', 'Major Low', 'Both']} onChange={v => setW({ major_liquidity: v })} />
@@ -195,7 +195,7 @@ export default function PlanFrameworkSections({ value, onChange }: { value: Plan
 
       <OptionalCard title="Daily Outlook" icon={CalendarDays} enabled={d.enabled} enableLabel="Enable Daily Outlook"
         onEnable={() => setD({ enabled: true })} onSkip={() => setD({ enabled: false })}>
-        <div className="space-y-5">
+        <div className="space-y-4">
           <div className={grid}>
             <Field label="01 — Weekly Context" value={d.weekly_context} options={['Bullish', 'Bearish', 'Range']} onChange={v => setD({ weekly_context: v })} />
             <Field label="02 — Daily Structure" value={d.structure} options={['Bullish', 'Bearish', 'Range', 'Transition']} onChange={v => setD({ structure: v })} />
