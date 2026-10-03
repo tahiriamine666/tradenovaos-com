@@ -100,11 +100,11 @@ export default function Onboarding() {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("profiles").select("market_types, trading_experience, main_trading_problem").eq("id", user.id).maybeSingle()
+    supabase.from("onboarding_profiles").select("market_types, experience_level, main_trading_problem").eq("user_id", user.id).maybeSingle()
       .then(({ data }) => {
         if (!data) return;
         setMarkets((data as any).market_types ?? []);
-        setExperience((data as any).trading_experience ?? null);
+        setExperience((data as any).experience_level ?? null);
         const pr = (data as any).main_trading_problem as string | null;
         if (pr) { if (PROBLEMS.includes(pr)) setProblem(pr); else { setProblem("Other"); setOther(pr); } }
       });
