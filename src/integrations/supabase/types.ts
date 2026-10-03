@@ -1219,6 +1219,27 @@ export type Database = {
         }
         Relationships: []
       }
+      nova_usage: {
+        Row: {
+          credits_used: number
+          period_start: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          credits_used?: number
+          period_start: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          credits_used?: number
+          period_start?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       playbooks: {
         Row: {
           ai_insight: string | null
@@ -2474,6 +2495,7 @@ export type Database = {
         Returns: number
       }
       community_user_tier: { Args: never; Returns: string }
+      consume_nova_credit: { Args: never; Returns: Json }
       get_access_state: { Args: never; Returns: Json }
       get_active_users_now: { Args: never; Returns: Json }
       get_admin_analytics: { Args: { days_back?: number }; Returns: Json }
@@ -2490,11 +2512,13 @@ export type Database = {
         }[]
       }
       get_my_profile: { Args: never; Returns: Json }
+      get_nova_usage: { Args: never; Returns: Json }
       get_user_plan_info: { Args: never; Returns: Json }
       has_internal_access: { Args: { _uid: string }; Returns: boolean }
       is_admin:
         | { Args: never; Returns: boolean }
         | { Args: { _uid: string }; Returns: boolean }
+      nova_period_start: { Args: { _uid: string }; Returns: string }
       request_upgrade: {
         Args: { p_message: string; p_payoneer_ref: string; p_plan: string }
         Returns: string
