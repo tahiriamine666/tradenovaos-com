@@ -15,7 +15,6 @@ import Login from "./pages/Login.tsx";
 import Signup from "./pages/Signup.tsx";
 import LandingPage from "./pages/LandingPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
-import AIChatWidget from "@/components/AIChatWidget";
 import SupportedBrokersPage from "./pages/SupportedBrokersPage.tsx";
 import Pricing from "./pages/Pricing.tsx";
 import MarketingPlaceholder from "./pages/marketing/MarketingPlaceholder.tsx";
