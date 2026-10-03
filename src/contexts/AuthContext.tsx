@@ -42,6 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (!error) { try { sessionStorage.setItem('tradenova-welcome-pending', '1'); } catch { /* ignore */ } }
     return { error: error as Error | null };
   };
 
