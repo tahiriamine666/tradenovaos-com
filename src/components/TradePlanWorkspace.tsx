@@ -203,6 +203,7 @@ export default function TradePlanWorkspace() {
   const [historyRefresh, setHistoryRefresh] = useState(0);
   const [revision, setRevision] = useState(0);
   const baseline = useRef<TradePlan>(EMPTY_PLAN);
+  const persisted = useRef(false);
   const loadedDate = useRef(selectedDate);
   const inFlight = useRef<Promise<void>>(Promise.resolve());
 
@@ -248,6 +249,7 @@ export default function TradePlanWorkspace() {
       if (error) { setSaveError(error.message); setLoadError(true); setLoading(false); return; }
       loadedDate.current = selectedDate;
       setExists(!!data);
+      persisted.current = !!data;
       setCreating(false);
       setViewOnly(selectedDate !== toKey(new Date()));
       setLastSaved(null);
@@ -291,10 +293,10 @@ export default function TradePlanWorkspace() {
         if (key === 'id' || key === 'updated_at') continue;
         if (JSON.stringify(planData[key]) !== JSON.stringify(baseline.current[key])) changes[key] = planData[key];
       }
-      if (!Object.keys(changes).length && exists) { setDirty(false); return; }
-      const payload = exists ? changes : { ...planData, user_id: user.id, plan_date: date, name: planData.market_bias };
+      if (!Object.keys(changes).length && persisted.current) { setDirty(false); return; }
+      const payload = persisted.current ? changes : { ...planData, user_id: user.id, plan_date: date, name: planData.market_bias };
       delete (payload as any).id; delete (payload as any).updated_at;
-      const query = exists
+      const query = persisted.current
         ? supabase.from('trade_plans').update(payload).eq('user_id', user.id).eq('plan_date', date)
         : supabase.from('trade_plans').upsert(payload, { onConflict: 'user_id,plan_date' });
       const { data, error } = await query.select('id').single();
@@ -306,6 +308,7 @@ export default function TradePlanWorkspace() {
       }
       setSaveError(null);
       if (loadedDate.current === date) {
+        persisted.current = true;
         if (data?.id) setPlanId(data.id);
         baseline.current = { ...baseline.current, ...changes };
         setExists(true);
