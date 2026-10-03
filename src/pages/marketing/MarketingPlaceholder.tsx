@@ -6,13 +6,11 @@ import SeoHead from '@/components/SeoHead';
 type Entry = { title: string; description: string; eyebrow?: string };
 
 const PRODUCT: Record<string, Entry> = {
-  'trade-journal':  { title: 'Trade Journal',  description: 'Log every trade with screenshots, tags, notes and emotions — the foundation of every winning trader.' },
-  'edge-analytics': { title: 'Edge Analytics', description: 'Discover exactly what makes you profitable with deep performance breakdowns by setup, time, instrument and more.' },
-  'mind-journal':   { title: 'Mind Journal',   description: 'Track your psychology, emotions and discipline in real time. Build the mental edge that separates pros from amateurs.' },
-  'playbook-lab':   { title: 'Playbook Lab',   description: 'Design, refine and back-validate your trading setups in a structured playbook your future self will thank you for.' },
-  'replay-studio':  { title: 'Replay Studio',  description: 'Replay your trades bar-by-bar to study execution, missed exits and pattern repeatability.' },
-  'ai-insights':    { title: 'AI Insights',    description: 'Your personal AI trading coach — surfacing patterns, leaks and opportunities directly from your data.' },
-  'csv-import':     { title: 'CSV Import',     description: 'One-click import from any broker. Map columns, dedupe, and analyze your full trading history in minutes.' },
+  'trade-journal':  { title: 'Trade Journal',      description: 'Log every trade with context, bias, notes and before/after charts.' },
+  'edge-analytics': { title: 'Analytics',          description: 'Win rate, profit factor, R:R and cumulative P&L from your own trades.' },
+  'mind-journal':   { title: 'Psychology Tracking', description: 'Emotions, mistakes, discipline and a daily Psychology Score.' },
+  'playbook-lab':   { title: 'Trade Plan',         description: 'Weekly Outlook, Daily Plan, rules and reusable pre-trade checklists.' },
+  'ai-insights':    { title: 'NOVA AI',            description: 'An AI assistant that answers from your own trading data.' },
 };
 
 const SOLUTION: Record<string, Entry> = {

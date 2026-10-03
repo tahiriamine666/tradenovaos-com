@@ -314,6 +314,72 @@ export type Database = {
         }
         Relationships: []
       }
+      certificates: {
+        Row: {
+          account_size: number | null
+          amount: number | null
+          cert_date: string
+          created_at: string
+          id: string
+          image_url: string | null
+          notes: string | null
+          prop_firm: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          account_size?: number | null
+          amount?: number | null
+          cert_date?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          notes?: string | null
+          prop_firm: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          account_size?: number | null
+          amount?: number | null
+          cert_date?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          notes?: string | null
+          prop_firm?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      checklist_models: {
+        Row: {
+          created_at: string
+          id: string
+          items: Json
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          items?: Json
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          items?: Json
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       community_bookmarks: {
         Row: {
           created_at: string
@@ -544,6 +610,57 @@ export type Database = {
         }
         Relationships: []
       }
+      economic_calendar_preferences: {
+        Row: {
+          created_at: string
+          default_filters: Json
+          preferred_view: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          default_filters?: Json
+          preferred_view?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          default_filters?: Json
+          preferred_view?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      economic_calendar_presets: {
+        Row: {
+          created_at: string
+          filters: Json
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          filters?: Json
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          filters?: Json
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       economic_events: {
         Row: {
           actual: string | null
@@ -715,6 +832,21 @@ export type Database = {
           status?: string
           total_rows?: number
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      internal_access: {
+        Row: {
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
           user_id?: string
         }
         Relationships: []
@@ -992,6 +1124,122 @@ export type Database = {
         }
         Relationships: []
       }
+      nova_conversations: {
+        Row: {
+          created_at: string
+          id: string
+          preview: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          preview?: string | null
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          preview?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      nova_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nova_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "nova_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nova_preferences: {
+        Row: {
+          created_at: string
+          custom_notes: string | null
+          main_session: string | null
+          markets: string[]
+          response_style: string
+          trading_style: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          custom_notes?: string | null
+          main_session?: string | null
+          markets?: string[]
+          response_style?: string
+          trading_style?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          custom_notes?: string | null
+          main_session?: string | null
+          markets?: string[]
+          response_style?: string
+          trading_style?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      nova_usage: {
+        Row: {
+          credits_used: number
+          period_start: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          credits_used?: number
+          period_start: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          credits_used?: number
+          period_start?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       playbooks: {
         Row: {
           ai_insight: string | null
@@ -1103,15 +1351,22 @@ export type Database = {
           full_name: string | null
           id: string
           last_seen_at: string | null
+          main_trading_problem: string | null
+          market_types: string[]
+          onboarding_completed: boolean
+          onboarding_step: number
           paddle_customer_id: string | null
           paddle_price_id: string | null
           paddle_subscription_id: string | null
           plan_type: string
           preferred_market: string | null
           risk_per_trade: number | null
+          selected_billing: string | null
+          selected_plan: string | null
           subscription_plan: string
           subscription_status: string
           timezone: string
+          trading_experience: string | null
           trading_style: string
           trial_ends_at: string | null
           updated_at: string
@@ -1129,15 +1384,22 @@ export type Database = {
           full_name?: string | null
           id: string
           last_seen_at?: string | null
+          main_trading_problem?: string | null
+          market_types?: string[]
+          onboarding_completed?: boolean
+          onboarding_step?: number
           paddle_customer_id?: string | null
           paddle_price_id?: string | null
           paddle_subscription_id?: string | null
           plan_type?: string
           preferred_market?: string | null
           risk_per_trade?: number | null
+          selected_billing?: string | null
+          selected_plan?: string | null
           subscription_plan?: string
           subscription_status?: string
           timezone?: string
+          trading_experience?: string | null
           trading_style?: string
           trial_ends_at?: string | null
           updated_at?: string
@@ -1155,15 +1417,22 @@ export type Database = {
           full_name?: string | null
           id?: string
           last_seen_at?: string | null
+          main_trading_problem?: string | null
+          market_types?: string[]
+          onboarding_completed?: boolean
+          onboarding_step?: number
           paddle_customer_id?: string | null
           paddle_price_id?: string | null
           paddle_subscription_id?: string | null
           plan_type?: string
           preferred_market?: string | null
           risk_per_trade?: number | null
+          selected_billing?: string | null
+          selected_plan?: string | null
           subscription_plan?: string
           subscription_status?: string
           timezone?: string
+          trading_experience?: string | null
           trading_style?: string
           trial_ends_at?: string | null
           updated_at?: string
@@ -1655,6 +1924,53 @@ export type Database = {
         }
         Relationships: []
       }
+      trade_plan_checklists: {
+        Row: {
+          account_id: string | null
+          account_key: string
+          checklist_type: string
+          created_at: string
+          data: Json
+          id: string
+          period_date: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_id?: string | null
+          account_key?: string
+          checklist_type: string
+          created_at?: string
+          data?: Json
+          id?: string
+          period_date: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string | null
+          account_key?: string
+          checklist_type?: string
+          created_at?: string
+          data?: Json
+          id?: string
+          period_date?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trade_plan_checklists_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "trading_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trade_plans: {
         Row: {
           account_protection: boolean
@@ -1764,7 +2080,9 @@ export type Database = {
         Row: {
           account_type: string
           ai_review: Json
+          before_screenshot_url: string | null
           created_at: string
+          daily_bias: string | null
           discipline_score: number | null
           emotion: string | null
           entry_price: number | null
@@ -1788,15 +2106,19 @@ export type Database = {
           stop_loss: number | null
           tags: string[]
           take_profit: number | null
+          timeframe: string | null
           trade_date: string
           trading_account_id: string | null
           updated_at: string
           user_id: string
+          weekly_context: string | null
         }
         Insert: {
           account_type?: string
           ai_review?: Json
+          before_screenshot_url?: string | null
           created_at?: string
+          daily_bias?: string | null
           discipline_score?: number | null
           emotion?: string | null
           entry_price?: number | null
@@ -1820,15 +2142,19 @@ export type Database = {
           stop_loss?: number | null
           tags?: string[]
           take_profit?: number | null
+          timeframe?: string | null
           trade_date?: string
           trading_account_id?: string | null
           updated_at?: string
           user_id: string
+          weekly_context?: string | null
         }
         Update: {
           account_type?: string
           ai_review?: Json
+          before_screenshot_url?: string | null
           created_at?: string
+          daily_bias?: string | null
           discipline_score?: number | null
           emotion?: string | null
           entry_price?: number | null
@@ -1852,10 +2178,12 @@ export type Database = {
           stop_loss?: number | null
           tags?: string[]
           take_profit?: number | null
+          timeframe?: string | null
           trade_date?: string
           trading_account_id?: string | null
           updated_at?: string
           user_id?: string
+          weekly_context?: string | null
         }
         Relationships: [
           {
@@ -2167,6 +2495,8 @@ export type Database = {
         Returns: number
       }
       community_user_tier: { Args: never; Returns: string }
+      consume_nova_credit: { Args: never; Returns: Json }
+      get_access_state: { Args: never; Returns: Json }
       get_active_users_now: { Args: never; Returns: Json }
       get_admin_analytics: { Args: { days_back?: number }; Returns: Json }
       get_admin_stats: { Args: never; Returns: Json }
@@ -2182,13 +2512,28 @@ export type Database = {
         }[]
       }
       get_my_profile: { Args: never; Returns: Json }
+      get_nova_usage: { Args: never; Returns: Json }
       get_user_plan_info: { Args: never; Returns: Json }
+      has_internal_access: { Args: { _uid: string }; Returns: boolean }
       is_admin:
         | { Args: never; Returns: boolean }
         | { Args: { _uid: string }; Returns: boolean }
+      nova_period_start: { Args: { _uid: string }; Returns: string }
       request_upgrade: {
         Args: { p_message: string; p_payoneer_ref: string; p_plan: string }
         Returns: string
+      }
+      save_onboarding: {
+        Args: {
+          p_billing: string
+          p_completed: boolean
+          p_experience: string
+          p_market_types: string[]
+          p_plan: string
+          p_problem: string
+          p_step: number
+        }
+        Returns: undefined
       }
       update_last_seen: { Args: never; Returns: undefined }
       update_learning_streak: {

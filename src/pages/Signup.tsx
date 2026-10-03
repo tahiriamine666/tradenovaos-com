@@ -4,15 +4,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Zap } from 'lucide-react';
+import BrandLogo from '@/components/BrandLogo';
 import { toast } from 'sonner';
 import PasswordStrength, { checkPasswordStrength } from '@/components/PasswordStrength';
 import { supabase } from '@/integrations/supabase/client';
 
 async function handleGoogle() {
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo: window.location.origin + '/app' },
+  try { sessionStorage.setItem('tradenova-welcome-pending', '1'); } catch { /* ignore */ }
+  const result = await lovable.auth.signInWithOAuth('google', {
+    redirect_uri: window.location.origin + '/app',
   });
   const result = { error };
   if (result.error) toast.error(result.error.message ?? 'Google sign-in failed');
@@ -46,9 +46,7 @@ export default function Signup() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md border-0 shadow-xl">
         <CardHeader className="text-center space-y-4">
-          <div className="mx-auto w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
-            <Zap className="h-6 w-6 text-primary-foreground" />
-          </div>
+          <BrandLogo className="mx-auto w-12 h-12 rounded-md object-cover" />
           <div>
             <CardTitle className="text-2xl font-heading">Create your account</CardTitle>
             <CardDescription>Start your TradeNova journey</CardDescription>

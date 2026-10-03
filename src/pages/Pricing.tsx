@@ -1,404 +1,134 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { Check, ChevronLeft, Minus } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from '@/hooks/use-toast';
-import { startCheckout } from '@/lib/dodo';
-import {
-  Check, X, Sparkles, Zap, Crown, Shield, BookOpen, BarChart3, Users,
-  Play, Brain, ChevronLeft, Loader2,
-} from 'lucide-react';
+import { usePlan } from '@/hooks/usePlan';
+import { openCustomerPortal } from '@/lib/dodo';
+import { Button } from '@/components/ui/button';
+import BrandLogo from '@/components/BrandLogo';
+import robotAsset from '@/assets/tradenova-robot-full.jpg.asset.json';
+import { cn } from '@/lib/utils';
 
-type PlanId = 'free' | 'pro' | 'elite';
-type Billing = 'monthly' | 'yearly';
+type PlanId = 'pro' | 'elite';
 
-const PLANS: Array<{
-  id: PlanId;
-  name: string;
-  icon: any;
-  tagline: string;
-  monthly: number;
-  yearly: number;
-  badge?: string;
-  cta: string;
-  features: string[];
-  highlight?: boolean;
-}> = [
-  {
-    id: 'free',
-    name: 'Free',
-    icon: Zap,
-    tagline: 'Start journaling your trades',
-    monthly: 0,
-    yearly: 0,
-    cta: 'Get Started',
-    features: [
-      'Dashboard',
-      'Trade Journal',
-      'Basic Analytics',
-      'Up to 50 trades / month',
-    ],
+const CORE = [
+  'Dashboard & Trading Calendar', 'Trade Journal & Trade Logs', 'Core Analytics',
+  'Trade Plan, Weekly Outlook & Daily Plan', 'Custom checklists & Checklist Models', 'Custom rules tracking',
+  'Psychology tracking & Psychology Score', 'Economic Calendar', 'Before / after trade screenshots',
+  'Historical journal & plan review', 'Certificates wall',
+];
+
+const PLANS: Record<PlanId, { name: string; tagline: string; price: number; badge?: string; summary: string[] }> = {
+  pro: {
+    name: 'Pro', price: 14, tagline: 'For serious traders building consistency.',
+    summary: ['The complete core TradeNova experience', '1 connected trading account (MT4 / MT5 sync)', 'NOVA AI — 500 credits / month', ...CORE.slice(0, 6)],
   },
-  {
-    id: 'pro',
-    name: 'Pro',
-    icon: Sparkles,
-    tagline: 'For serious active traders',
-    monthly: 14,
-    yearly: 11,
-    badge: 'Most Popular',
-    cta: 'Start 7-Day Free Trial',
-    highlight: true,
-    features: [
-      'Unlimited Trades',
-      'Trade Vault',
-      'Replay Studio',
-      'Trade Plan',
-      'Community Access',
-      'Advanced Analytics',
-      '1 connected trading account',
-      '500 AI Credits / month',
-    ],
+  elite: {
+    name: 'Elite', price: 28, badge: 'MOST POWERFUL', tagline: 'For traders managing more accounts.',
+    summary: ['Everything in Pro', 'Unlimited connected trading accounts', 'NOVA AI — 1,000 credits / month', 'Priority support'],
   },
-  {
-    id: 'elite',
-    name: 'Elite',
-    icon: Crown,
-    tagline: 'For funded & professional traders',
-    monthly: 28,
-    yearly: 22,
-    cta: 'Upgrade to Elite',
-    features: [
-      'Everything in Pro',
-      'Unlimited connected trading accounts',
-      '1000 AI Credits / month',
-      'Learning Hub',
-      'Mind Journal',
-      'Edge Analytics',
-      'Premium Playbooks',
-      'Elite Community',
-      'Priority Support',
-      'Advanced Replay Analytics',
-      'Command Center, Trade Plan & Mind Journal customization',
-    ],
-  },
+};
+
+type Cell = boolean | string;
+const COMPARE: { group: string; rows: [string, Cell, Cell][] }[] = [
+  { group: 'Trading', rows: [['Connected trading accounts', '1', 'Unlimited'], ['MT4 / MT5 trade sync', true, true], ['Trade Logs', true, true], ['Trading Calendar', true, true]] },
+  { group: 'Journal', rows: [['Trade Journal', true, true], ['Before / after screenshots', true, true], ['Historical review', true, true]] },
+  { group: 'Planning', rows: [['Trade Plan', true, true], ['Weekly Outlook', true, true], ['Daily Plan', true, true], ['Pre-trade checklist', true, true], ['Checklist Models', true, true], ['Custom rules', true, true]] },
+  { group: 'Analytics', rows: [['Core analytics', true, true]] },
+  { group: 'Psychology', rows: [['Psychology tracking', true, true], ['Psychology Score', true, true]] },
+  { group: 'Market', rows: [['Economic Calendar', true, true]] },
+  { group: 'AI', rows: [['NOVA AI', true, true], ['Monthly NOVA credits', '500', '1,000']] },
+  { group: 'Support', rows: [['Standard support', true, true], ['Priority support', false, true]] },
 ];
 
-
-const COMPARISON: Array<{ label: string; free: boolean | string; pro: boolean | string; elite: boolean | string }> = [
-  { label: 'Trades per month',           free: '50', pro: 'Unlimited', elite: 'Unlimited' },
-  { label: 'Connected trading accounts', free: '—', pro: '1', elite: 'Unlimited' },
-  { label: 'Trade Journal',              free: true, pro: true, elite: true },
-  { label: 'Basic Analytics',            free: true, pro: true, elite: true },
-  { label: 'Advanced Analytics',         free: false, pro: true, elite: true },
-  { label: 'Trade Vault',                free: false, pro: true, elite: true },
-  { label: 'Replay Studio',              free: false, pro: true, elite: true },
-  { label: 'Trade Plan',                 free: false, pro: true, elite: true },
-  { label: 'Community Access',           free: false, pro: true, elite: true },
-  { label: 'AI Credits / month',         free: '—', pro: '500', elite: '1,000' },
-  { label: 'Learning Hub',               free: false, pro: false, elite: true },
-  { label: 'Mind Journal',               free: false, pro: false, elite: true },
-  { label: 'Edge Analytics',             free: false, pro: false, elite: true },
-  { label: 'Premium Playbooks',          free: false, pro: false, elite: true },
-  { label: 'Elite Community',            free: false, pro: false, elite: true },
-  { label: 'Priority Support',           free: false, pro: false, elite: true },
-  { label: 'Advanced Replay Analytics',  free: false, pro: false, elite: true },
-  { label: 'Layout customization',       free: false, pro: false, elite: true },
-];
-
-const TRUST_CARDS = [
-  { icon: BookOpen, title: 'Trade Journal',  desc: 'Log every trade with screenshots, tags, and emotion tracking.' },
-  { icon: Play,      title: 'Replay Studio',  desc: 'Re-walk past sessions bar-by-bar to study your execution.' },
-  { icon: Brain,     title: 'AI Reviews',      desc: 'Get instant feedback on your setups, exits, and discipline.' },
-  { icon: BarChart3, title: 'Learning Hub',   desc: 'Structured lessons on SMC, risk, psychology, and more.' },
-  { icon: Users,     title: 'Community',       desc: 'Join serious traders sharing setups, journals, and reviews.' },
-];
-
-const FAQS = [
-  { q: 'Can I cancel anytime?',     a: 'Yes — cancel in one click from your billing settings. No questions asked.' },
-  { q: 'Do I get a free trial?',     a: 'Every new account gets a 7-day free Pro trial — no card required to keep exploring afterwards. Elite plans are billed immediately and do not include a free trial.' },
-  { q: 'What happens when my Pro trial ends?', a: 'Your account stays active on the Free plan. You keep all your data — only Pro-only features become locked until you upgrade.' },
-  { q: 'Can I upgrade later?',       a: 'Of course — upgrade from Free or Pro to Elite anytime. Your billing prorates automatically.' },
-  { q: 'Will I lose my data if I downgrade?', a: 'Never. All your trades, journals, and playbooks stay safe in your account.' },
-];
+const CellView = ({ v }: { v: Cell }) =>
+  typeof v === 'string' ? <span className="font-medium text-foreground">{v}</span>
+    : v ? <Check className="mx-auto h-4 w-4 text-primary" /> : <Minus className="mx-auto h-4 w-4 text-muted-foreground/50" />;
 
 export default function Pricing() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [billing, setBilling] = useState<Billing>('monthly');
-  const [loadingPlan, setLoadingPlan] = useState<PlanId | null>(null);
+  const { isPro, isElite } = usePlan();
 
-  const handleCta = async (plan: PlanId) => {
-    if (plan === 'free') {
-      navigate(user ? '/app' : '/signup');
-      return;
-    }
-    if (!user) {
-      navigate(`/signup?redirect=/checkout?plan=${plan}`);
-      return;
-    }
-    setLoadingPlan(plan);
-    navigate(`/checkout?plan=${plan}`);
+  const cta = (plan: PlanId) => {
+    if (!user) return navigate('/signup');
+    if (isPro || isElite) return openCustomerPortal().catch(() => navigate('/billing'));
+    navigate('/onboarding?step=plan');
   };
+  const label = (plan: PlanId) =>
+    isElite ? (plan === 'elite' ? 'Current plan' : 'Manage billing')
+      : isPro ? (plan === 'pro' ? 'Current plan' : 'Upgrade to Elite')
+      : 'Start 14-Day Free Trial';
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Header bar */}
-      <div className="border-b border-border/60 bg-background/80 backdrop-blur sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
+      <div className="sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur">
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
+          <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground">
             <ChevronLeft className="h-4 w-4" /> Back
           </button>
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-violet-600 flex items-center justify-center">
-              <Zap className="h-3.5 w-3.5 text-white" />
-            </div>
+            <BrandLogo className="h-9 w-9 object-contain mix-blend-screen" />
             <span className="text-sm font-bold">TradeNova</span>
           </div>
         </div>
       </div>
 
-      {/* Hero */}
-      <section className="max-w-5xl mx-auto px-6 pt-16 pb-10 text-center">
-        <motion.h1
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-4xl sm:text-5xl font-bold tracking-tight"
-        >
-          Choose Your Trading{' '}
-          <span className="bg-gradient-to-r from-violet-500 to-fuchsia-500 bg-clip-text text-transparent">
-            Edge
-          </span>
-        </motion.h1>
-        <p className="mt-4 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
-          Everything you need to journal, analyze, replay, and improve your trading performance.
-        </p>
-
-        {/* Billing toggle */}
-        <div className="mt-8 inline-flex items-center gap-1 p-1 rounded-full bg-muted border border-border">
-          {(['monthly', 'yearly'] as Billing[]).map((b) => (
-            <button
-              key={b}
-              onClick={() => setBilling(b)}
-              className={`px-5 py-2 rounded-full text-sm font-semibold transition-all ${
-                billing === b
-                  ? 'bg-background text-foreground shadow-sm'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              {b === 'monthly' ? 'Monthly' : 'Yearly'}
-              {b === 'yearly' && (
-                <span className="ml-2 text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full">
-                  Save 20%
-                </span>
-              )}
-            </button>
-          ))}
+      <section className="mx-auto max-w-5xl px-6 pb-10 pt-14 text-center">
+        <div className="mb-6 flex items-end justify-center gap-3">
+          <img src={robotAsset.url} alt="" className="h-24 w-auto object-contain mix-blend-screen animate-[tn-float_6s_ease-in-out_infinite] motion-reduce:animate-none" />
+          <div className="mb-10 rounded-xl border border-border bg-card px-3 py-1.5 text-xs text-muted-foreground">Start with 14 days free.</div>
         </div>
+        <h1 className="font-heading text-4xl font-bold tracking-tight sm:text-5xl">Start mastering your trading.</h1>
+        <p className="mx-auto mt-4 max-w-xl text-muted-foreground">Two plans. 14 days free, then billed monthly. Cancel anytime.</p>
       </section>
 
-      {/* Plan cards */}
-      <section className="max-w-6xl mx-auto px-6 pb-16">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {PLANS.map((p, i) => {
-            const Icon = p.icon;
-            const price = billing === 'yearly' ? p.yearly : p.monthly;
-            const loading = loadingPlan === p.id;
-            return (
-              <motion.div
-                key={p.id}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.07 }}
-                className={`relative rounded-2xl border bg-card p-6 flex flex-col ${
-                  p.highlight
-                    ? 'border-violet-500/60 shadow-xl shadow-violet-500/10 ring-1 ring-violet-500/30'
-                    : 'border-border shadow-sm'
-                }`}
-              >
-                {p.badge && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-violet-600 text-white text-[11px] font-bold shadow-md">
-                    {p.badge}
-                  </div>
-                )}
+      <section className="mx-auto grid max-w-4xl gap-5 px-6 md:grid-cols-2">
+        {(Object.keys(PLANS) as PlanId[]).map((id) => {
+          const p = PLANS[id];
+          const current = (id === 'pro' && isPro) || (id === 'elite' && isElite);
+          return (
+            <div key={id} className={cn('relative flex flex-col rounded-2xl border bg-card p-7 transition-colors duration-300',
+              id === 'elite' ? 'border-primary/50' : 'border-border')}>
+              {p.badge && <span className="absolute -top-3 left-7 rounded-full border border-primary/40 bg-background px-3 py-0.5 text-[10px] font-semibold tracking-[0.15em] text-primary">{p.badge}</span>}
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">{p.name}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{p.tagline}</p>
+              <p className="mt-5 text-5xl font-bold">${p.price}<span className="text-base font-normal text-muted-foreground"> / month</span></p>
+              <p className="mt-1 text-xs text-primary">14 days free · Cancel anytime</p>
+              <Button className="mt-6" variant={id === 'elite' ? 'default' : 'outline'} disabled={current} onClick={() => cta(id)}>{label(id)}</Button>
+              <ul className="mt-6 space-y-2.5 text-sm">
+                {p.summary.map((f) => <li key={f} className="flex gap-2.5"><Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />{f}</li>)}
+              </ul>
+            </div>
+          );
+        })}
+      </section>
 
-                <div className="flex items-center gap-3 mb-5">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                    p.highlight ? 'bg-violet-500/15 text-violet-600 dark:text-violet-400'
-                                : p.id === 'elite' ? 'bg-amber-500/15 text-amber-500'
-                                : 'bg-muted text-muted-foreground'
-                  }`}>
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-lg">{p.name}</h3>
-                    <p className="text-xs text-muted-foreground">{p.tagline}</p>
-                  </div>
-                </div>
-
-                <div className="mb-6">
-                  {price === 0 ? (
-                    <p className="text-4xl font-bold">$0</p>
-                  ) : (
-                    <div className="flex items-end gap-1.5">
-                      <span className="text-4xl font-bold">${price}</span>
-                      <span className="text-sm text-muted-foreground mb-1.5">/month</span>
-                    </div>
-                  )}
-                  {billing === 'yearly' && price > 0 && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Billed ${price * 12} annually
-                    </p>
-                  )}
-                  {billing === 'monthly' && price > 0 && (
-                    <p className="text-xs text-muted-foreground mt-1">Billed monthly</p>
-                  )}
-                </div>
-
-                <button
-                  onClick={() => handleCta(p.id)}
-                  disabled={loading}
-                  className={`w-full py-3 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
-                    p.highlight
-                      ? 'bg-violet-600 hover:bg-violet-500 text-white shadow-md shadow-violet-500/25'
-                      : p.id === 'elite'
-                      ? 'bg-foreground text-background hover:opacity-90'
-                      : 'bg-muted text-foreground hover:bg-muted/70 border border-border'
-                  } disabled:opacity-60`}
-                >
-                  {loading ? (
-                    <><Loader2 className="h-4 w-4 animate-spin" /> Opening checkout…</>
-                  ) : (
-                    p.cta
-                  )}
-                </button>
-
-                {p.id === 'pro' && (
-                  <p className="text-[11px] text-center text-muted-foreground mt-2">
-                    7-day free trial · Cancel anytime
-                  </p>
-                )}
-                {p.id === 'elite' && (
-                  <p className="text-[11px] text-center text-muted-foreground mt-2">
-                    Billed immediately · Cancel anytime
-                  </p>
-                )}
-
-
-                <div className="mt-6 pt-6 border-t border-border space-y-2.5">
-                  {p.features.map((f) => (
-                    <div key={f} className="flex items-start gap-2.5 text-sm">
-                      <Check className="h-4 w-4 text-emerald-500 mt-0.5 flex-shrink-0" strokeWidth={2.5} />
-                      <span>{f}</span>
-                    </div>
+      <section className="mx-auto max-w-4xl px-6 py-20">
+        <h2 className="mb-6 text-center text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">Compare plans</h2>
+        <div className="overflow-x-auto rounded-2xl border border-border">
+          <table className="w-full text-sm">
+            <thead><tr className="border-b border-border bg-card">
+              <th className="px-5 py-3 text-left font-semibold">Feature</th>
+              <th className="w-28 px-5 py-3 text-center font-semibold">Pro</th>
+              <th className="w-28 px-5 py-3 text-center font-semibold text-primary">Elite</th>
+            </tr></thead>
+            <tbody>
+              {COMPARE.map((g) => (
+                <>
+                  <tr key={g.group} className="border-b border-border/60"><td colSpan={3} className="bg-background px-5 pb-1.5 pt-4 text-[11px] font-semibold uppercase tracking-[0.15em] text-muted-foreground">{g.group}</td></tr>
+                  {g.rows.map(([f, a, b]) => (
+                    <tr key={f} className="border-b border-border/40 last:border-0">
+                      <td className="px-5 py-2.5 text-foreground/90">{f}</td>
+                      <td className="px-5 py-2.5 text-center"><CellView v={a} /></td>
+                      <td className="px-5 py-2.5 text-center"><CellView v={b} /></td>
+                    </tr>
                   ))}
-                </div>
-              </motion.div>
-            );
-          })}
+                </>
+              ))}
+            </tbody>
+          </table>
         </div>
-
-        <p className="text-center text-xs text-muted-foreground mt-8 flex items-center justify-center gap-2">
-          <Shield className="h-3.5 w-3.5" /> Secure checkout by Dodo Payments · All major cards & Apple Pay
-        </p>
-      </section>
-
-      {/* Comparison table */}
-      <section className="max-w-5xl mx-auto px-6 pb-16">
-        <h2 className="text-2xl font-bold text-center mb-2">Compare plans</h2>
-        <p className="text-center text-sm text-muted-foreground mb-8">
-          Every feature, side by side.
-        </p>
-        <div className="rounded-2xl border border-border bg-card overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/30">
-                  <th className="text-left font-semibold py-4 px-5">Feature</th>
-                  <th className="font-semibold py-4 px-5 text-center">Free</th>
-                  <th className="font-semibold py-4 px-5 text-center text-violet-600 dark:text-violet-400">Pro</th>
-                  <th className="font-semibold py-4 px-5 text-center text-amber-600 dark:text-amber-500">Elite</th>
-                </tr>
-              </thead>
-              <tbody>
-                {COMPARISON.map((row, i) => (
-                  <tr key={row.label} className={i % 2 ? 'bg-muted/10' : ''}>
-                    <td className="py-3.5 px-5 font-medium">{row.label}</td>
-                    {(['free', 'pro', 'elite'] as const).map((tier) => {
-                      const v = row[tier];
-                      return (
-                        <td key={tier} className="py-3.5 px-5 text-center">
-                          {v === true ? (
-                            <Check className="h-4 w-4 text-emerald-500 mx-auto" strokeWidth={2.5} />
-                          ) : v === false ? (
-                            <X className="h-4 w-4 text-muted-foreground/40 mx-auto" />
-                          ) : (
-                            <span className="text-xs text-muted-foreground">{v}</span>
-                          )}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      {/* Trust section */}
-      <section className="max-w-6xl mx-auto px-6 pb-16">
-        <h2 className="text-2xl font-bold text-center mb-2">Trusted by serious traders</h2>
-        <p className="text-center text-sm text-muted-foreground mb-8">
-          Built for the people who treat trading like a profession.
-        </p>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {TRUST_CARDS.map((c) => {
-            const Icon = c.icon;
-            return (
-              <div
-                key={c.title}
-                className="rounded-xl border border-border bg-card p-5 hover:border-violet-500/40 transition-colors"
-              >
-                <div className="w-9 h-9 rounded-lg bg-violet-500/10 text-violet-600 dark:text-violet-400 flex items-center justify-center mb-3">
-                  <Icon className="h-4.5 w-4.5" />
-                </div>
-                <p className="font-semibold text-sm mb-1">{c.title}</p>
-                <p className="text-xs text-muted-foreground leading-relaxed">{c.desc}</p>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section className="max-w-3xl mx-auto px-6 pb-20">
-        <h2 className="text-2xl font-bold text-center mb-8">Frequently asked</h2>
-        <div className="space-y-3">
-          {FAQS.map((f) => (
-            <details
-              key={f.q}
-              className="group rounded-xl border border-border bg-card p-5 [&_summary::-webkit-details-marker]:hidden"
-            >
-              <summary className="flex items-center justify-between cursor-pointer font-semibold text-sm">
-                {f.q}
-                <span className="text-muted-foreground group-open:rotate-45 transition-transform text-xl leading-none">+</span>
-              </summary>
-              <p className="text-sm text-muted-foreground mt-3 leading-relaxed">{f.a}</p>
-            </details>
-          ))}
-        </div>
-
-        <p className="text-center text-xs text-muted-foreground mt-10">
-          By subscribing you agree to our{' '}
-          <a href="/terms" className="underline hover:text-foreground">Terms</a> and{' '}
-          <a href="/privacy" className="underline hover:text-foreground">Privacy Policy</a>.
-          7-day refund available — see our{' '}
-          <a href="/help" className="underline hover:text-foreground">refund policy</a>.
-        </p>
+        <p className="mt-4 text-center text-xs text-muted-foreground">One NOVA credit = one message. Credits reset every billing period. A payment method is required to start the trial; you won't be charged until it ends.</p>
       </section>
     </div>
   );

@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowLeft, Brain, CalendarClock, CalendarDays, CheckCircle2, ChevronRight,
-  Circle, CircleDollarSign, LayoutDashboard, Lock, Menu, Search,
-  Settings, Shield, Users, X,
+  ArrowLeft, Award, BarChart3, BookOpen, Brain, CalendarClock, CalendarDays,
+  CheckCircle2, ChevronRight, Circle, CircleDollarSign, ClipboardCheck,
+  LayoutDashboard, List, Lock, Menu, PanelLeftClose, PanelLeftOpen, Search, Settings, Shield, Users, X,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,23 +17,26 @@ import { Badge } from '@/components/ui/badge';
 import UserAvatar from '@/components/UserAvatar';
 import { useProfile } from '@/hooks/useProfile';
 import SupportChat from '@/components/SupportChat';
+import BrandLogo from '@/components/BrandLogo';
 
 
 export const BASE_ITEMS = [
-  { id: 'dashboard', label: 'Command Center',    icon: LayoutDashboard },
-  { id: 'plan',      label: 'Trade Plan',        icon: CalendarDays },
-  { id: 'trades',    label: 'Trade Vault',       icon: CircleDollarSign },
-  { id: 'community', label: 'Community',         icon: Users },
-  { id: 'resources', label: 'Learning Hub',      icon: Brain },
-  { id: 'economic',  label: 'Economic Calendar', icon: CalendarClock },
-  { id: 'settings',  label: 'Studio Settings',   icon: Settings },
+  { id: 'dashboard', label: 'Dashboard',  icon: LayoutDashboard },
+  { id: 'journal',   label: 'Journal',    icon: BookOpen },
+  { id: 'trades',    label: 'Trade Logs', icon: List },
+  { id: 'analytics', label: 'Analytics',  icon: BarChart3 },
+  { id: 'ai',        label: 'NOVA AI',    icon: Brain },
+  { id: 'plan',      label: 'Checklist',  icon: ClipboardCheck },
+  { id: 'economic',  label: 'Economic',   icon: CalendarClock },
+  { id: 'certificates', label: 'Certificates', icon: Award },
+  { id: 'settings',  label: 'Settings',   icon: Settings },
 ];
 
 const BOTTOM_NAV = [
   { id: 'dashboard', icon: LayoutDashboard, label: 'Home' },
   { id: 'plan',    icon: CalendarDays,    label: 'Plan' },
   { id: 'trades',  icon: CircleDollarSign, label: 'Trades' },
-  { id: 'community', icon: Users,          label: 'Community' },
+  { id: 'ai',      icon: Brain,           label: 'NOVA' },
   { id: 'settings', icon: Settings,         label: 'Settings' },
 ];
 
@@ -42,14 +45,10 @@ function cx(...v: (string|boolean|undefined|null)[]) { return v.filter(Boolean).
 function Logo() {
   return (
     <div className="flex items-center gap-3">
-      <img
-        src="/tradenova-icon.png"
-        alt="TradeNova"
-        className="w-11 h-11 rounded-xl flex-shrink-0 object-contain shadow-lg shadow-primary/25 ring-1 ring-primary/15"
-      />
+      <BrandLogo className="w-11 h-11 flex-shrink-0 object-contain shadow-[0_0_20px_hsl(var(--primary)/0.22)]" />
       <div className="leading-tight">
         <p className="font-heading font-bold text-foreground tracking-tight text-[15px]">TradeNova</p>
-        <p className="text-[10px] text-muted-foreground tracking-wide uppercase">Trading OS</p>
+        <p className="text-[10px] text-primary/70 uppercase">Trading OS</p>
       </div>
     </div>
   );
@@ -316,8 +315,8 @@ function LockedCategoryModal({
 }
 
 
-function SidebarContent({ active, onNavigate }: {
-  active: string; onNavigate: (id: string) => void;
+function SidebarContent({ active, onNavigate, collapsed = false, onToggleCollapse }: {
+  active: string; onNavigate: (id: string) => void; collapsed?: boolean; onToggleCollapse?: () => void;
 }) {
   const { user } = useAuth();
   const { tree } = useLearningNav();
@@ -337,39 +336,49 @@ function SidebarContent({ active, onNavigate }: {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="p-5 pb-4 flex-shrink-0"><Logo /></div>
+      <div className={cx('flex items-center flex-shrink-0 pb-4', collapsed ? 'justify-center px-2 pt-5' : 'justify-between gap-2 p-5 pb-4')}>
+        {collapsed ? (
+          <Button variant="ghost" size="icon" onClick={onToggleCollapse} title="Expand sidebar" aria-label="Expand sidebar" className="h-10 w-10 text-primary">
+            <PanelLeftOpen className="h-5 w-5" />
+          </Button>
+        ) : <>
+          <Logo />
+          {onToggleCollapse && <Button variant="ghost" size="icon" onClick={onToggleCollapse} title="Collapse sidebar" aria-label="Collapse sidebar" className="h-8 w-8 shrink-0 text-muted-foreground"><PanelLeftClose className="h-4 w-4" /></Button>}
+        </>}
+      </div>
 
-      {showCourseTree ? (
+      {showCourseTree && !collapsed ? (
         <CourseTreeNav onBack={() => setForceMainNav(true)} />
       ) : (
-        <div className="px-3 flex-1 overflow-y-auto">
+        <div className={cx('flex-1 overflow-y-auto', collapsed ? 'px-2' : 'px-3')}>
           <nav className="space-y-0.5">
             {items.map((item) => {
               const Icon = item.icon;
               const sel  = active === item.id;
               const isAdminItem = item.id === 'admin';
               return (
-                <button key={item.id} onClick={() => onNavigate(item.id)}
+                 <Button key={item.id} variant="ghost" title={collapsed ? item.label : undefined} aria-label={item.label} aria-current={sel ? 'page' : undefined} onClick={() => onNavigate(item.id)}
                   className={cx(
-                    'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-all',
+                     'flex w-full items-center rounded-md text-sm font-medium transition-all',
+                     collapsed ? 'h-10 justify-center px-0' : 'h-10 justify-start gap-3 px-3',
                     sel
-                      ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
-                      : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                      ? 'bg-primary/15 text-primary border border-primary/25 shadow-[inset_3px_0_0_hsl(var(--primary)),0_0_24px_hsl(var(--primary)/0.10)]'
+                      : 'border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground hover:border-border',
                   )}>
                   <Icon className="h-4 w-4 flex-shrink-0" />
-                  <span className="flex-1">{item.label}</span>
-                  {isAdminItem && !sel && (
+                   {!collapsed && <span className="flex-1 text-left">{item.label}</span>}
+                   {!collapsed && isAdminItem && !sel && (
                     <span className="text-[9px] font-semibold tracking-wider px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">ADMIN</span>
                   )}
-                </button>
+                 </Button>
               );
             })}
           </nav>
         </div>
       )}
 
-      <div className="p-4 flex-shrink-0">
-        <SidebarUser onNavigate={onNavigate} />
+      <div className={cx('flex-shrink-0', collapsed ? 'p-2' : 'p-4')}>
+        {collapsed ? <Button variant="ghost" size="icon" title="Settings" aria-label="Settings" onClick={() => onNavigate('settings')} className="w-full"><Settings className="h-4 w-4" /></Button> : <SidebarUser onNavigate={onNavigate} />}
       </div>
     </div>
   );
@@ -383,6 +392,11 @@ interface AppLayoutProps {
 
 export default function AppLayout({ active, onNavigate, dark, children, topBar }: AppLayoutProps) {
   const [open, setOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(() => { try { return localStorage.getItem('tradenova-sidebar-collapsed') === 'true'; } catch { return false; } });
+  const toggleCollapsed = () => setCollapsed((value) => {
+    try { localStorage.setItem('tradenova-sidebar-collapsed', String(!value)); } catch { /* storage unavailable */ }
+    return !value;
+  });
 
   useEffect(() => { setOpen(false); }, [active]);
   useEffect(() => {
@@ -399,8 +413,8 @@ export default function AppLayout({ active, onNavigate, dark, children, topBar }
     <div className={cx('app-shell flex h-screen overflow-hidden font-body bg-background text-foreground', dark ? 'dark' : '')}>
 
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex w-72 flex-shrink-0 flex-col border-r overflow-hidden bg-sidebar border-border">
-        <SidebarContent active={active} onNavigate={onNavigate} />
+      <aside className={cx('hidden lg:flex flex-shrink-0 flex-col border-r overflow-hidden bg-sidebar border-border transition-[width] duration-200', collapsed ? 'w-16' : 'w-64')}>
+        <SidebarContent active={active} onNavigate={onNavigate} collapsed={collapsed} onToggleCollapse={toggleCollapsed} />
       </aside>
 
       {/* Mobile drawer */}

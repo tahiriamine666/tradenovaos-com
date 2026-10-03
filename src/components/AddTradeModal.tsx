@@ -41,6 +41,9 @@ interface TradeForm {
   notes: string;
   rr: string;
   session: string;
+  weekly_context: string;
+  daily_bias: string;
+  timeframe: string;
 }
 
 interface ValidationErrors {
@@ -62,9 +65,14 @@ const EMPTY_FORM: TradeForm = {
   notes: '',
   rr: '',
   session: '',
+  weekly_context: '',
+  daily_bias: '',
+  timeframe: '',
 };
 
 const SESSIONS = ['london', 'new_york', 'asia', 'overlap'];
+const TIMEFRAMES = ['1m', '5m', '15m', '30m', '1H', '4H', 'Daily', 'Weekly'];
+const BIASES = ['Bullish', 'Bearish', 'Neutral'];
 
 // ─── Outcome selector ─────────────────────────────────────────────────────────
 function OutcomeSelector({ value, onChange, error }: {
@@ -211,6 +219,8 @@ export default function AddTradeModal({
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [saving, setSaving] = useState(false);
   const [playbooks, setPlaybooks] = useState<Playbook[]>([]);
+  const [chartFile, setChartFile] = useState<File | null>(null);
+  const [beforeFile, setBeforeFile] = useState<File | null>(null);
 
   // Load playbooks
   useEffect(() => {
@@ -238,10 +248,15 @@ export default function AddTradeModal({
         notes: editTrade.notes ?? '',
         rr: editTrade.rr != null ? String(editTrade.rr) : '',
         session: editTrade.session ?? '',
+        weekly_context: editTrade.weekly_context ?? '',
+        daily_bias: editTrade.daily_bias ?? '',
+        timeframe: editTrade.timeframe ?? '',
       });
     } else {
       setForm(EMPTY_FORM);
     }
+    setChartFile(null);
+    setBeforeFile(null);
     setErrors({});
   }, [editTrade, open]);
 
@@ -300,8 +315,31 @@ export default function AddTradeModal({
       notes: form.notes.trim() || null,
       rr: form.rr ? Number(form.rr) : null,
       session: form.session || null,
+      weekly_context: form.weekly_context.trim() || null,
+      daily_bias: form.daily_bias || null,
+      timeframe: form.timeframe || null,
       trading_account_id: activeAccountId || null,
     };
+
+    for (const [file, field, label] of [
+      [beforeFile, 'before_screenshot_url', 'Before screenshot'],
+      [chartFile, 'screenshot_url', 'After screenshot'],
+    ] as const) {
+      if (!file) continue;
+      if (!['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(file.type) || file.size > 10 * 1024 * 1024) {
+        toast({ title: `${label} not uploaded`, description: 'Use a PNG, JPG, WebP or GIF under 10MB.', variant: 'destructive' });
+        setSaving(false);
+        return;
+      }
+      const path = `${user.id}/${crypto.randomUUID()}-${file.name.replace(/[^\w.-]/g, '_')}`;
+      const { error: upErr } = await supabase.storage.from('trade-screenshots').upload(path, file, { upsert: false, contentType: file.type });
+      if (upErr) {
+        toast({ title: `${label} not uploaded`, description: 'Please try again.', variant: 'destructive' });
+        setSaving(false);
+        return;
+      }
+      payload[field] = path;
+    }
 
     let error;
     if (editTrade) {
@@ -488,6 +526,69 @@ export default function AddTradeModal({
                 </select>
               </div>
             </div>
+
+            {/* Weekly context + Daily bias */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground block mb-1.5">Weekly Context</label>
+                <Input
+                  value={form.weekly_context}
+                  onChange={e => set('weekly_context', e.target.value)}
+                  placeholder="e.g. Turtle Soup / Bullish CRT"
+                  className="rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground block mb-1.5">Daily Bias</label>
+                <select
+                  value={form.daily_bias}
+                  onChange={e => set('daily_bias', e.target.value)}
+                  className="w-full text-sm rounded-lg border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                >
+                  <option value="">Select bias</option>
+                  {BIASES.map(b => <option key={b} value={b}>{b}</option>)}
+                </select>
+              </div>
+            </div>
+
+            {/* Timeframe + before / after screenshots */}
+            <div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground block mb-1.5">Timeframe</label>
+                <select
+                  value={form.timeframe}
+                  onChange={e => set('timeframe', e.target.value)}
+                  className="w-full text-sm rounded-lg border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                >
+                  <option value="">Select timeframe</option>
+                  {TIMEFRAMES.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground block mb-1.5">Before screenshot</label>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  onChange={e => setBeforeFile(e.target.files?.[0] ?? null)}
+                  className="w-full text-xs rounded-lg border border-border bg-background px-3 py-2 text-muted-foreground file:mr-2 file:rounded file:border-0 file:bg-muted file:px-2 file:py-1 file:text-xs file:text-foreground"
+                />
+                {editTrade?.before_screenshot_url && !beforeFile && <p className="mt-1 text-xs text-muted-foreground">Current before image saved</p>}
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground block mb-1.5">After screenshot</label>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  onChange={e => setChartFile(e.target.files?.[0] ?? null)}
+                  className="w-full text-xs rounded-lg border border-border bg-background px-3 py-2 text-muted-foreground file:mr-2 file:rounded file:border-0 file:bg-muted file:px-2 file:py-1 file:text-xs file:text-foreground"
+                />
+                {editTrade?.screenshot_url && !chartFile && <p className="mt-1 text-xs text-muted-foreground">Current after image saved</p>}
+              </div>
+            </div>
+
+
 
             {/* Setup (text) */}
             <div>

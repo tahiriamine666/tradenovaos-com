@@ -8,6 +8,69 @@
       "when": 1788310516189,
       "tag": "0000_trades_external_id_unique_index",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789777736257,
+      "tag": "0001_add_journal_context_to_trades",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790813662753,
+      "tag": "0002_add_trade_before_screenshot",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790998449794,
+      "tag": "0003_create_trade_plan_checklists",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791003898981,
+      "tag": "0004_create_certificates",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791017319677,
+      "tag": "0005_trade_plan_v2_models_and_weekly_outlook",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791018023088,
+      "tag": "0006_create_nova_chat",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791018317599,
+      "tag": "0007_economic_calendar_prefs",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791019792389,
+      "tag": "0008_onboarding_access_gate",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791020023168,
+      "tag": "0009_plan_entitlements_nova_credits",
+      "breakpoints": true
     }
   ]
 }

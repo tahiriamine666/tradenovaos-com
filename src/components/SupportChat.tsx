@@ -1,3 +1,4 @@
+import BrandLogo from '@/components/BrandLogo';
 // src/components/SupportChat.tsx
 // Floating support chat widget — Intercom-style, premium dark UI
 // Drop this component anywhere in your app layout (e.g. AppLayout or Index.tsx)
@@ -170,13 +171,11 @@ export default function SupportChat() {
               style={{ transformOrigin: 'bottom right' }}
             >
               {/* Header */}
-              <div className="relative px-5 pt-5 pb-4 bg-gradient-to-br from-violet-600/20 via-violet-500/5 to-transparent border-b border-white/[0.06]">
-                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-500/50 to-transparent" />
+              <div className="relative px-5 pt-5 pb-4 bg-gradient-to-br from-primary/20 via-primary/5 to-transparent border-b border-white/[0.06]">
+                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-violet-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
-                      <Zap className="h-5 w-5 text-white" />
-                    </div>
+                    <BrandLogo className="w-10 h-10 object-contain mix-blend-screen" />
                     <div>
                       <p className="font-bold text-white text-sm">TradeNova Support</p>
                       <div className="flex items-center gap-1.5 mt-0.5">

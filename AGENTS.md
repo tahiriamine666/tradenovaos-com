@@ -1,0 +1,8 @@
+Keep the existing trade `screenshot_url` as the after-trade image and store the before-trade image in `before_screenshot_url`, so historical charts remain visible without migration.
+Use one keyed motion boundary for signed-in feature navigation, with shared CSS reveals for repeated trade items, so transitions remain consistent without animating every screen independently.
+Weekly/Daily Outlook checklists live in `trade_plan_checklists` (one row per user+account_key+type+period_date, upserted), never in the trade plan row — keeps history per date/week/account.
+Trade Plan history reads and edits the existing user-owned daily `trade_plans` rows by date; leave dated outlooks separate and show legacy embedded outlooks read-only when no dated row exists, so historical records remain intact.
+Use the shared BrandLogo component for in-app brand placements and derive the favicon from the same uploaded image, so brand changes remain consistent across screens.
+- NOVA chat streams from the `nova-chat` edge function, which reads the caller's own data via their JWT (RLS-scoped); conversations/messages/preferences persist in `nova_*` tables, so answers stay grounded and history survives sessions.
+- Economic Calendar: saved default filters + preferred view live in `economic_calendar_preferences`, named presets in `economic_calendar_presets`; the current temporary filter stays in sessionStorage and only overwrites the default via Save as Default, so defaults survive devices while ad-hoc browsing doesn't clobber them.
+- App access is decided server-side by the `get_access_state` RPC (internal_access → billing subscription/admin override → onboarding) and enforced by `RequireAccess` on /app; never gate on client flags, so bypasses and billing stay authoritative.

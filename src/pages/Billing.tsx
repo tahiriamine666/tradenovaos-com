@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CreditCard, ExternalLink, Loader2, Crown, Sparkles, Zap, ChevronLeft, Shield } from 'lucide-react';
+import { CreditCard, ExternalLink, Loader2, Crown, Sparkles, ChevronLeft, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePlan } from '@/hooks/usePlan';
@@ -68,7 +68,7 @@ export default function Billing() {
   const renews = row?.renews_at ?? null;
   const ends = row?.ends_at ?? null;
 
-  const PlanIcon = effectivePlan === 'elite' ? Crown : effectivePlan === 'pro' ? Sparkles : Zap;
+  const PlanIcon = effectivePlan === 'elite' ? Crown : effectivePlan === 'pro' ? Sparkles : CreditCard;
   const hasSubscription = !!row?.subscription_id;
   const isCancelling = effectiveStatus === 'cancelled' || effectiveStatus === 'canceled';
 

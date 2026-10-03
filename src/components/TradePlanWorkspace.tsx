@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -10,7 +10,12 @@ import {
   Moon, Sun, Coffee, Battery, Activity, X,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import AiTradePlanAssistant from '@/components/tradeplan/AiTradePlanAssistant';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import PlanFrameworkSections, { normalizeFramework, type PlanFramework } from '@/components/tradeplan/PlanFrameworkSections';
+import PlanHistoryCalendar from '@/components/tradeplan/PlanHistoryCalendar';
+import { toKey } from '@/components/tradeplan/DatedChecklist';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft, ChevronRight, Copy } from 'lucide-react';
 
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -105,7 +110,7 @@ const EMPTY_PLAN: TradePlan = {
 };
 
 // ── Section wrapper ───────────────────────────────────────────────────────────
-function Section({ title, icon: Icon, color='text-violet-400', children, defaultOpen=true }: {
+function Section({ title, icon: Icon, color='text-violet-400', children, defaultOpen=false }: {
   title: string; icon: React.ElementType; color?: string;
   children: React.ReactNode; defaultOpen?: boolean;
 }) {
@@ -113,7 +118,7 @@ function Section({ title, icon: Icon, color='text-violet-400', children, default
   return (
     <div className="border-b border-white/[0.06] last:border-0">
       <button onClick={() => setOpen(v => !v)}
-        className="flex items-center justify-between w-full px-6 py-4 hover:bg-white/[0.02] transition-colors group">
+        className="flex items-center justify-between w-full px-5 py-3 hover:bg-white/[0.02] transition-colors group">
         <div className="flex items-center gap-2.5">
           <div className="w-6 h-6 rounded-lg bg-white/[0.04] flex items-center justify-center">
             <Icon className={`h-3.5 w-3.5 ${color}`} />
@@ -128,7 +133,7 @@ function Section({ title, icon: Icon, color='text-violet-400', children, default
           <motion.div initial={{ height:0, opacity:0 }} animate={{ height:'auto', opacity:1 }}
             exit={{ height:0, opacity:0 }} transition={{ duration:0.22, ease:[0.22,1,0.36,1] }}
             className="overflow-hidden">
-            <div className="px-6 pb-5">{children}</div>
+            <div className="px-5 pb-4">{children}</div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -190,13 +195,23 @@ function ScoreCircle({ value, label, color }: { value:number; label:string; colo
 // ── Main component ────────────────────────────────────────────────────────────
 export default function TradePlanWorkspace() {
   const { user } = useAuth();
-  const today = new Date().toISOString().split('T')[0];
+  const today = toKey(new Date());
+  const [selectedDate, setSelectedDate] = useState(today);
+  const [viewOnly, setViewOnly] = useState(false);
+  const [exists, setExists] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [historyRefresh, setHistoryRefresh] = useState(0);
+  const [revision, setRevision] = useState(0);
+  const baseline = useRef<TradePlan>(EMPTY_PLAN);
+  const persisted = useRef(false);
+  const saveFailed = useRef(false);
+  const loadedDate = useRef(selectedDate);
+  const inFlight = useRef<Promise<void>>(Promise.resolve());
 
   const [plan,      setPlan]      = useState<TradePlan>(EMPTY_PLAN);
   const [planId,    setPlanId]    = useState<string|null>(null);
   const [loading,   setLoading]   = useState(true);
   const [saving,    setSaving]    = useState(false);
-  const [analyzing, setAnalyzing] = useState(false);
   const [newTask,   setNewTask]   = useState('');
   const [newTaskCat,setNewTaskCat]= useState<ChecklistItem['category']>('execution');
   const [addingTask,setAddingTask]= useState(false);
@@ -204,8 +219,8 @@ export default function TradePlanWorkspace() {
   const [newsFilter,setNewsFilter]= useState<'high'|'medium'|'low'|'all'>('all');
   const [lastSaved, setLastSaved] = useState<Date|null>(null);
   const [saveError, setSaveError] = useState<string|null>(null);
-  const [mode,      setMode]      = useState<'manual'|'ai'>('ai');
-  const [generating,setGenerating]= useState(false);
+  const [loadError, setLoadError] = useState(false);
+  const [dirty,     setDirty]     = useState(false);
   const autoSaveTimer = useRef<any>(null);
 
 
@@ -219,7 +234,7 @@ export default function TradePlanWorkspace() {
     return { label:'Market Closed', dot:'bg-white/20', active:false };
   })();
 
-  const dateLabel = new Date().toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' });
+  const dateLabel = new Date(`${selectedDate}T12:00:00`).toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric', year:'numeric' });
 
   // ── Load ──────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -227,66 +242,88 @@ export default function TradePlanWorkspace() {
     let cancelled = false;
     const load = async () => {
       setLoading(true);
+      setSaveError(null); setLoadError(false); saveFailed.current = false;
       const { data, error } = await supabase
         .from('trade_plans').select('*')
-        .eq('user_id', user.id).eq('plan_date', today).maybeSingle();
+        .eq('user_id', user.id).eq('plan_date', selectedDate).maybeSingle();
       if (cancelled) return;
-      if (error) toast({ title: 'Could not load your plan', description: error.message, variant: 'destructive' });
+      if (error) { setSaveError(error.message); setLoadError(true); setLoading(false); return; }
+      loadedDate.current = selectedDate;
+      setExists(!!data);
+      persisted.current = !!data;
+      setCreating(false);
+      setViewOnly(selectedDate !== toKey(new Date()));
+      setLastSaved(null);
+      setDirty(false);
+      dirtyRef.current = false;
+      let next = { ...EMPTY_PLAN, checklist: DEFAULT_CHECKLIST.map(i => ({ ...i })), setups_to_trade: ['', ''] };
       if (data) {
         setPlanId(data.id);
         const row: any = { ...data };
         delete row.id; delete row.user_id; delete row.plan_date; delete row.created_at;
         const cl = row.checklist as ChecklistItem[] | null;
         const setups = row.setups_to_trade as string[] | null;
-        setPlan({
+        next = {
           ...EMPTY_PLAN, ...row,
           checklist: cl && cl.length ? cl : DEFAULT_CHECKLIST,
           setups_to_trade: setups && setups.length >= 2 ? setups : [setups?.[0] ?? '', setups?.[1] ?? ''],
-        });
-        const savedMode = (row.ai_analysis as any)?.plan_mode;
-        if (savedMode === 'manual' || savedMode === 'ai') setMode(savedMode);
-      }
+        };
+      } else setPlanId(null);
+      baseline.current = next;
+      planRef.current = next;
+      setPlan(next);
       setLoading(false);
     };
     load();
     return () => { cancelled = true; };
-  }, [user, today]);
+  }, [user, selectedDate]);
 
   // ── Auto-save ─────────────────────────────────────────────────────────────
   const set = useCallback(<K extends keyof TradePlan>(key: K, value: TradePlan[K]) => {
-    setPlan(p => ({ ...p, [key]: value }));
-  }, []);
+    if (viewOnly || (selectedDate !== today && !exists && !creating)) return;
+    setPlan(p => { const next = { ...p, [key]: value }; planRef.current = next; return next; });
+    dirtyRef.current = true; setDirty(true); setRevision(r => r + 1);
+  }, [viewOnly, selectedDate, today, exists, creating]);
 
-  const save = useCallback(async (planData: TradePlan = plan) => {
-    if (!user) return;
+  const save = useCallback(async (planData: TradePlan, date = loadedDate.current) => {
+    if (!user || loadError || viewOnly || (date !== today && !exists && !creating)) return;
     setSaving(true);
     try {
-      const payload: any = {
-        ...planData, user_id: user.id, plan_date: today,
-        name: planData.market_bias,
-        updated_at: new Date().toISOString(),
-      };
-      // Strip server-managed / non-column fields
-      delete payload.id; delete payload.created_at;
-
-      const { data, error } = await supabase
-        .from('trade_plans')
-        .upsert(payload, { onConflict: 'user_id,plan_date' })
-        .select('id')
-        .single();
+      const changes: Record<string, any> = {};
+      for (const key of Object.keys(planData) as (keyof TradePlan)[]) {
+        if (key === 'id' || key === 'updated_at') continue;
+        if (JSON.stringify(planData[key]) !== JSON.stringify(baseline.current[key])) changes[key] = planData[key];
+      }
+      if (!Object.keys(changes).length && persisted.current) { setDirty(false); setSaveError(null); saveFailed.current = false; return; }
+      const payload = persisted.current ? changes : { ...planData, user_id: user.id, plan_date: date, name: planData.market_bias };
+      delete (payload as any).id; delete (payload as any).updated_at;
+      const result = persisted.current
+        ? await supabase.from('trade_plans').update(payload as any).eq('user_id', user.id).eq('plan_date', date).select('id').single()
+        : await supabase.from('trade_plans').upsert(payload as any, { onConflict: 'user_id,plan_date' }).select('id').single();
+      const { data, error } = result;
 
       if (error) {
         setSaveError(error.message);
+        saveFailed.current = true;
         toast({ title: 'Plan not saved', description: error.message, variant: 'destructive' });
         return;
       }
+      saveFailed.current = false;
       setSaveError(null);
-      if (data?.id) setPlanId(data.id);
-      setLastSaved(new Date());
+      if (loadedDate.current === date) {
+        persisted.current = true;
+        if (data?.id) setPlanId(data.id);
+        baseline.current = { ...baseline.current, ...changes };
+        setExists(true);
+        setCreating(false);
+        setHistoryRefresh(v => v + 1);
+        setLastSaved(new Date());
+        if (JSON.stringify(planRef.current) === JSON.stringify(planData)) setDirty(false);
+      }
     } finally {
       setSaving(false);
     }
-  }, [user, today, plan]);
+  }, [user, today, exists, creating, viewOnly, loadError]);
 
   // Keep a ref of the latest plan so we can flush on unmount / tab close
   const planRef = useRef(plan);
@@ -294,17 +331,18 @@ export default function TradePlanWorkspace() {
   const dirtyRef = useRef(false);
 
   useEffect(() => {
-    if (loading) return;
-    dirtyRef.current = true;
+    if (!revision || loading || !dirtyRef.current) return;
     clearTimeout(autoSaveTimer.current);
-    autoSaveTimer.current = setTimeout(() => { dirtyRef.current = false; save(plan); }, 1200);
+    autoSaveTimer.current = setTimeout(() => { dirtyRef.current = false; const data = planRef.current; const date = loadedDate.current; inFlight.current = inFlight.current.then(() => save(data, date)); }, 1200);
     return () => clearTimeout(autoSaveTimer.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [plan, loading]);
+  }, [revision]);
 
   // Flush pending edits when leaving the page or hiding the tab
+  const saveRef = useRef(save);
+  useEffect(() => { saveRef.current = save; }, [save]);
   useEffect(() => {
-    const flush = () => { if (dirtyRef.current) { dirtyRef.current = false; save(planRef.current); } };
+    const flush = () => { if (dirtyRef.current) { clearTimeout(autoSaveTimer.current); dirtyRef.current = false; const data = planRef.current; const date = loadedDate.current; inFlight.current = inFlight.current.then(() => saveRef.current(data, date)); } };
     const onHide = () => { if (document.visibilityState === 'hidden') flush(); };
     window.addEventListener('pagehide', flush);
     document.addEventListener('visibilitychange', onHide);
@@ -313,7 +351,37 @@ export default function TradePlanWorkspace() {
       document.removeEventListener('visibilitychange', onHide);
       flush();
     };
-  }, [save]);
+  }, []);
+
+  const navigate = async (date: string) => {
+    if (date === selectedDate || loading) return;
+    clearTimeout(autoSaveTimer.current);
+    if (dirtyRef.current) {
+      dirtyRef.current = false;
+      const data = planRef.current; const oldDate = loadedDate.current;
+      inFlight.current = inFlight.current.then(() => save(data, oldDate));
+    }
+    await inFlight.current;
+    if (saveFailed.current || loadError) return;
+    setLoading(true);
+    setSelectedDate(date);
+  };
+  const shiftDay = (amount: number) => {
+    const [y, m, d] = selectedDate.split('-').map(Number);
+    void navigate(toKey(new Date(y, m - 1, d + amount)));
+  };
+  const copyPrevious = async () => {
+    if (!user || exists || viewOnly) return;
+    const [y, m, d] = selectedDate.split('-').map(Number);
+    const previous = toKey(new Date(y, m - 1, d - 1));
+    const { data, error } = await supabase.from('trade_plans').select('*').eq('user_id', user.id).eq('plan_date', previous).maybeSingle();
+    if (error || !data) { toast({ title: 'No previous plan to copy' }); return; }
+    const { id, user_id, plan_date, created_at, updated_at, ...fields } = data;
+    const next = { ...EMPTY_PLAN, ...fields } as unknown as TradePlan;
+    planRef.current = next;
+    setPlan(next);
+    dirtyRef.current = true; setDirty(true); setRevision(r => r + 1);
+  };
 
 
   // ── Checklist ─────────────────────────────────────────────────────────────
@@ -334,138 +402,9 @@ export default function TradePlanWorkspace() {
   const totalCount = plan.checklist.length;
   const progress   = totalCount > 0 ? Math.round((doneCount/totalCount)*100) : 0;
 
-  // ── AI analysis ───────────────────────────────────────────────────────────
-  const runAI = async () => {
-    setAnalyzing(true);
-    const result = { ...(await generateAIAnalysis(plan)), plan_mode: mode };
-    set('ai_analysis', result);
-    await save({ ...plan, ai_analysis: result });
-    setAnalyzing(false);
-    toast({ title:'✅ AI analysis complete' });
-  };
-
-  // ── Mode switch (persisted inside ai_analysis) ────────────────────────────
-  const changeMode = (m: 'manual'|'ai') => {
-    setMode(m);
-    set('ai_analysis', { ...(plan.ai_analysis ?? {}), plan_mode: m });
-  };
-
-  // ── AI: generate a full trade plan from user context ──────────────────────
-  const generatePlan = async () => {
-    if (!user) return;
-    setGenerating(true);
-    try {
-      // 1. Recent performance
-      const { data: trades } = await supabase
-        .from('trades')
-        .select('result, session, setup, pair, trade_date')
-        .eq('user_id', user.id)
-        .order('trade_date', { ascending: false })
-        .limit(60);
-
-      const rows = trades ?? [];
-      const wins = rows.filter(t => Number(t.result ?? 0) > 0).length;
-      const winRate = rows.length ? Math.round((wins / rows.length) * 100) : 0;
-
-      const bestOf = (key: 'session' | 'setup') => {
-        const agg: Record<string, { n: number; pnl: number }> = {};
-        rows.forEach(t => {
-          const k = (t as any)[key];
-          if (!k) return;
-          agg[k] = agg[k] || { n: 0, pnl: 0 };
-          agg[k].n++; agg[k].pnl += Number(t.result ?? 0);
-        });
-        return Object.entries(agg).sort((a, b) => b[1].pnl - a[1].pnl).map(([k]) => k);
-      };
-      const bestSessions = bestOf('session');
-      const bestSetups   = bestOf('setup');
-
-      // 2. Today's economic events
-      const dayStart = new Date(); dayStart.setHours(0, 0, 0, 0);
-      const dayEnd   = new Date(); dayEnd.setHours(23, 59, 59, 999);
-      const { data: events } = await supabase
-        .from('economic_events')
-        .select('title, impact, currency, event_time')
-        .gte('event_time', dayStart.toISOString())
-        .lte('event_time', dayEnd.toISOString())
-        .order('event_time', { ascending: true })
-        .limit(40);
-
-      const highImpact = (events ?? []).filter(e => (e.impact ?? '').toLowerCase() === 'high');
-
-      // 3. Derive plan values
-      const recentPnl = rows.slice(0, 10).reduce((s, t) => s + Number(t.result ?? 0), 0);
-      const derivedBias =
-        recentPnl > 0 ? (plan.market_bias !== 'neutral' ? plan.market_bias : 'bullish')
-        : highImpact.length > 1 ? 'ranging'
-        : plan.market_bias;
-
-      const session = bestSessions[0] || sessionInfo.label.replace(' Open', '').replace(' Session', '').replace(' Close', '') || 'London';
-      const normalizedSession = SESSIONS.find(s => s.toLowerCase().includes(session.toLowerCase())) ?? SESSIONS[0];
-
-      const volatility = highImpact.length >= 2 ? 'high' : highImpact.length === 1 ? 'normal' : 'low';
-      const confidence = Math.max(25, Math.min(90, Math.round((winRate || 50) * 0.8 + (highImpact.length ? -5 : 5) + 20)));
-
-      const mainSetup      = bestSetups[0] || (derivedBias === 'ranging' ? 'Liquidity Sweep Reversal' : 'Order Block + FVG Continuation');
-      const secondarySetup = bestSetups[1] || (derivedBias === 'ranging' ? 'Mean Reversion to VWAP' : 'Break of Structure Retest');
-
-      const aiChecklist: ChecklistItem[] = [
-        { id: crypto.randomUUID(), text: `Mark HTF levels and confirm ${derivedBias} bias`, done: false, category: 'prep' },
-        { id: crypto.randomUUID(), text: `Trade only the ${normalizedSession} session window`, done: false, category: 'execution' },
-        { id: crypto.randomUUID(), text: `Wait for confirmation on "${mainSetup}" before entry`, done: false, category: 'execution' },
-        ...(highImpact.length
-          ? [{ id: crypto.randomUUID(), text: `Avoid entries 15 min around: ${highImpact.slice(0, 2).map(e => e.title).join(', ')}`, done: false, category: 'news' as const }]
-          : []),
-        { id: crypto.randomUUID(), text: 'Stop trading after max daily loss or max trades hit', done: false, category: 'risk' },
-        { id: crypto.randomUUID(), text: winRate < 45 ? 'Half size today — win rate is below baseline' : 'Review last session notes before first entry', done: false, category: 'psychology' },
-      ];
-
-      const riskPerTrade = winRate >= 55 ? 1 : winRate >= 45 ? 0.75 : 0.5;
-      const nextPlan: TradePlan = {
-        ...plan,
-        market_bias: derivedBias,
-        setups_to_trade: [mainSetup, secondarySetup],
-        session: normalizedSession,
-        confidence,
-        volatility,
-        news_impact: highImpact.length ? 'high' : 'none',
-        avoid_before_news: highImpact.length > 0,
-        checklist: aiChecklist,
-        news_events: highImpact.slice(0, 4).map(e => ({
-          id: crypto.randomUUID(),
-          name: e.title,
-          time: new Date(e.event_time).toISOString().slice(11, 16),
-          impact: 'high' as const,
-          currency: e.currency ?? '',
-        })),
-        max_risk_per_trade: plan.max_risk_per_trade ?? riskPerTrade,
-        max_trades: plan.max_trades ?? (winRate < 45 ? 2 : 4),
-        max_consec_losses: winRate < 45 ? 2 : 3,
-      };
-
-      setPlan(nextPlan);
-
-      // 4. Deep AI review of the generated plan
-      const result = {
-        ...(await generateAIAnalysis(nextPlan)),
-        plan_mode: 'ai',
-        generated_context: {
-          trades_analyzed: rows.length,
-          win_rate: winRate,
-          best_session: bestSessions[0] ?? null,
-          best_setup: bestSetups[0] ?? null,
-          high_impact_events: highImpact.length,
-        },
-      };
-      const finalPlan = { ...nextPlan, ai_analysis: result };
-      setPlan(finalPlan);
-      await save(finalPlan);
-      toast({ title: '✨ Trade plan generated', description: `Based on ${rows.length} trades · ${winRate}% win rate · ${highImpact.length} high-impact events.` });
-    } catch (e: any) {
-      toast({ title: 'Could not generate plan', description: e?.message ?? 'Please try again.', variant: 'destructive' });
-    } finally {
-      setGenerating(false);
-    }
+  const framework = useMemo(() => normalizeFramework((plan.ai_analysis as any)?.framework), [plan.ai_analysis]);
+  const setFramework = (f: PlanFramework) => {
+    set('ai_analysis', { ...(plan.ai_analysis ?? {}), plan_mode: 'manual', framework: f });
   };
 
   // ── Drag reorder ──────────────────────────────────────────────────────────
@@ -490,13 +429,13 @@ export default function TradePlanWorkspace() {
   );
 
   return (
-    <div className={`max-w-[1400px] mx-auto grid grid-cols-1 gap-6 items-start ${mode === 'ai' ? 'xl:grid-cols-[minmax(0,1fr)_360px]' : ''}`}>
+    <div className="max-w-[1150px] mx-auto">
       <div className="min-w-0 space-y-0">
 
 
 
       {/* ── TOP HEADER ── */}
-      <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
+      <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
         <div>
           <h2 className="text-xl font-black text-white">Trade Plan</h2>
           <div className="flex items-center gap-3 mt-1">
@@ -524,111 +463,49 @@ export default function TradePlanWorkspace() {
             {bias.label}
           </div>
 
-          {mode === 'ai' && (
-            <button onClick={runAI} disabled={analyzing}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-violet-500/25 bg-violet-500/10 text-violet-400 text-xs font-bold hover:bg-violet-500/15 transition-all disabled:opacity-50">
-              <Sparkles className={`h-3.5 w-3.5 ${analyzing?'animate-spin':''}`}/>
-              {analyzing ? 'Analyzing...' : 'AI Analysis'}
-            </button>
-          )}
 
-          <button onClick={() => save(plan)} disabled={saving}
+          <Button onClick={() => { clearTimeout(autoSaveTimer.current); dirtyRef.current = false; const data = planRef.current; const date = loadedDate.current; inFlight.current = inFlight.current.then(() => save(data, date)); }} disabled={saving || viewOnly || (selectedDate !== today && !exists && !creating) || loadError}
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-black transition-all shadow-lg shadow-violet-500/20 disabled:opacity-50">
             <Save className="h-3.5 w-3.5"/>
             {saving ? 'Saving...' : 'Save Plan'}
-          </button>
+          </Button>
         </div>
       </div>
 
-      {/* ── MODE SELECTOR ── */}
-      <div className="mb-5 rounded-2xl border border-white/[0.08] bg-white/[0.02] px-5 py-4">
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div>
-            <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-2.5">Trade Plan Mode</p>
-            <div className="flex gap-2">
-              {([
-                { v:'manual' as const, label:'Manual Plan',      icon: Edit3,    desc:'You fill everything' },
-                { v:'ai' as const,     label:'AI Assisted Plan', icon: Sparkles, desc:'AI drafts your plan' },
-              ]).map(m => {
-                const Icon = m.icon;
-                const active = mode === m.v;
-                return (
-                  <button key={m.v} onClick={() => changeMode(m.v)}
-                    className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl border text-left transition-all ${
-                      active ? 'bg-violet-500/12 border-violet-500/30 text-violet-300 shadow-md' : 'border-white/[0.07] text-white/35 hover:border-white/[0.15] hover:text-white/60'
-                    }`}>
-                    <span className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${active ? 'border-violet-400' : 'border-white/20'}`}>
-                      {active && <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />}
-                    </span>
-                    <Icon className="h-3.5 w-3.5" />
-                    <span>
-                      <span className="block text-xs font-black">{m.label}</span>
-                      <span className="block text-[10px] opacity-60">{m.desc}</span>
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {mode === 'ai' && (
-            <button onClick={generatePlan} disabled={generating}
-              className="flex items-center gap-2 px-5 py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-black transition-all shadow-lg shadow-violet-500/25 disabled:opacity-50">
-              <Sparkles className={`h-4 w-4 ${generating ? 'animate-spin' : ''}`} />
-              {generating ? 'Generating plan...' : 'Generate Trade Plan'}
-            </button>
-          )}
-        </div>
+      {user && <PlanHistoryCalendar userId={user.id} selectedDate={selectedDate} onSelect={date => void navigate(date)} refresh={historyRefresh} />}
+      <div className="flex flex-wrap items-center gap-2 mb-4 text-xs text-muted-foreground">
+        <Button variant="outline" size="sm" aria-label="Previous day" onClick={() => shiftDay(-1)}><ChevronLeft className="h-4 w-4" /></Button>
+        <span className="font-medium text-foreground">{dateLabel}</span>
+        <Button variant="outline" size="sm" aria-label="Next day" onClick={() => shiftDay(1)}><ChevronRight className="h-4 w-4" /></Button>
+        <Button variant="ghost" size="sm" onClick={() => void navigate(toKey(new Date()))}>{selectedDate === today ? 'Today' : 'Back to Today'}</Button>
       </div>
-
+      {selectedDate !== today && <div className="mb-4 flex flex-wrap items-center gap-3 border-l-2 border-primary pl-3 text-xs text-muted-foreground">
+        <span>{exists ? 'Viewing historical plan' : 'Historical date'} — {dateLabel}</span>
+        {exists && <Button size="sm" variant="outline" onClick={async () => {
+          if (!viewOnly) {
+            clearTimeout(autoSaveTimer.current);
+            if (dirtyRef.current) {
+              dirtyRef.current = false;
+              const data = planRef.current; const date = loadedDate.current;
+              inFlight.current = inFlight.current.then(() => saveRef.current(data, date));
+            }
+            await inFlight.current;
+            if (saveFailed.current) return;
+          }
+          setViewOnly(v => !v);
+        }}>{viewOnly ? 'Edit Plan' : 'View Plan'}</Button>}
+      </div>}
+      {!exists && selectedDate !== today && !creating && <div className="mb-4 flex items-center justify-between gap-3 border border-border p-3 text-sm text-muted-foreground">
+        <span>No Trade Plan saved for this day.</span>
+        <Button size="sm" onClick={() => { setCreating(true); setViewOnly(false); }}>Create Plan</Button>
+      </div>}
+      {!exists && selectedDate === today && <Button size="sm" variant="outline" className="mb-4" onClick={() => void copyPrevious()}><Copy className="h-4 w-4 mr-2" />Copy Previous Plan</Button>}
+      {(exists || selectedDate === today || creating) && <>
       {/* ── MAIN CARD ── */}
       <div className="rounded-3xl border border-white/[0.08] bg-white/[0.02] overflow-hidden shadow-2xl shadow-black/30">
 
-        {/* AI PANEL */}
-        <AnimatePresence>
-          {mode === 'ai' && ai?.verdict && (
-            <motion.div initial={{height:0,opacity:0}} animate={{height:'auto',opacity:1}} exit={{height:0,opacity:0}}
-              className="overflow-hidden border-b border-violet-500/20 bg-gradient-to-r from-violet-600/8 via-violet-500/4 to-transparent">
-              <div className="px-6 py-4">
-                <div className="flex items-start gap-4">
-                  <div className="flex items-center gap-4">
-                    <ScoreCircle value={ai.readiness_score??65} label="Readiness" color="#7c3aed"/>
-                    <ScoreCircle value={ai.discipline_score??70} label="Discipline" color="#10b981"/>
-                    <ScoreCircle value={ai.risk_score??60}       label="Risk Mgmt"  color="#f59e0b"/>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className={`inline-flex items-center gap-1.5 text-xs font-black px-3 py-1.5 rounded-full mb-2 ${
-                      ai.verdict==='Ready to trade' ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
-                      : ai.verdict==='Do not trade today' ? 'bg-red-500/15 text-red-400 border border-red-500/20'
-                      : 'bg-amber-500/15 text-amber-400 border border-amber-500/20'
-                    }`}>
-                      <Sparkles className="h-3 w-3"/>
-                      AI: {ai.verdict}
-                    </div>
-                    {(ai.warnings??[]).length > 0 && (
-                      <div className="space-y-1 mb-2">
-                        {(ai.warnings??[]).map((w:string,i:number) => (
-                          <p key={i} className="text-[11px] text-amber-400/70 flex items-center gap-1.5">
-                            <AlertTriangle className="h-3 w-3 flex-shrink-0"/> {w}
-                          </p>
-                        ))}
-                      </div>
-                    )}
-                    {(ai.suggestions??[]).length > 0 && (
-                      <div className="space-y-1">
-                        {(ai.suggestions??[]).slice(0,2).map((s:string,i:number) => (
-                          <p key={i} className="text-[11px] text-violet-300/70 flex items-center gap-1.5">
-                            <Zap className="h-3 w-3 flex-shrink-0"/> {s}
-                          </p>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <PlanFrameworkSections value={framework} onChange={setFramework} selectedDate={selectedDate} readOnly={viewOnly || (selectedDate !== today && !exists && !creating)} />
+        <fieldset disabled={viewOnly} className="min-w-0">
 
         {/* SECTION 1: MARKET OVERVIEW */}
         <Section title="Market Overview" icon={Activity} color="text-violet-400">
@@ -668,11 +545,16 @@ export default function TradePlanWorkspace() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <p className="text-[10px] font-bold text-white/25 uppercase tracking-wider mb-2">Session</p>
-              <select value={plan.session} onChange={e => set('session',e.target.value)}
-                className="w-full text-sm text-white/70 bg-white/[0.03] border border-white/[0.07] rounded-xl px-3 py-2.5 focus:outline-none focus:border-violet-500/40 transition-colors cursor-pointer">
-                <option value="">Select...</option>
-                {SESSIONS.map(s=><option key={s} value={s}>{s}</option>)}
-              </select>
+              <Select value={plan.session || undefined} onValueChange={v => set('session', v)}>
+                <SelectTrigger className="w-full h-10 text-sm text-white/70 bg-white/[0.03] border border-white/[0.07] rounded-xl px-3 focus:outline-none focus:border-violet-500/40 transition-colors cursor-pointer [&>svg]:text-white/30">
+                  <SelectValue placeholder="Select..." />
+                </SelectTrigger>
+                <SelectContent position="popper" className="border-white/[0.1]">
+                  {SESSIONS.map(s => (
+                    <SelectItem key={s} value={s} className="text-white/80 focus:bg-white/[0.08] focus:text-white cursor-pointer">{s}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <p className="text-[10px] font-bold text-white/25 uppercase tracking-wider mb-2">Confidence — {plan.confidence}%</p>
@@ -932,25 +814,25 @@ export default function TradePlanWorkspace() {
           </div>
         </Section>
 
+        </fieldset>
       </div>
-
       <div className="flex items-center justify-center gap-2 pt-2 pb-4">
         <div className={`w-1.5 h-1.5 rounded-full ${saveError ? 'bg-red-500' : saving?'bg-violet-500 animate-pulse':'bg-emerald-500/50'}`}/>
         <span className={`text-[10px] ${saveError ? 'text-red-400/70' : 'text-white/25'}`}>
           {saveError
             ? `Not saved — ${saveError}`
             : saving
-              ? 'Saving to your account...'
+              ? 'Saving...'
+              : dirty
+                ? 'Unsaved changes'
               : lastSaved
                 ? `Saved ${lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
                 : 'All changes save automatically'}
         </span>
       </div>
+      </>}
       </div>
 
-      {mode === 'ai' && (
-        <AiTradePlanAssistant plan={plan as any} analyzing={analyzing} onAnalyze={runAI} />
-      )}
 
     </div>
   );

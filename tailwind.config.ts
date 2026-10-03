@@ -14,10 +14,70 @@ export default {
     },
     extend: {
       fontFamily: {
-        heading: ["Space Grotesk", "system-ui", "sans-serif"],
-        body: ["DM Sans", "system-ui", "sans-serif"],
+        heading: ["Sora", "system-ui", "sans-serif"],
+        body: ["Manrope", "system-ui", "sans-serif"],
       },
       colors: {
+        emerald: {
+          50: "hsl(var(--ice-blue))", 100: "hsl(var(--ice-blue))", 200: "hsl(var(--blue-glow))",
+          300: "hsl(var(--blue-glow))", 400: "hsl(var(--primary))", 500: "hsl(var(--primary))",
+          600: "hsl(var(--electric-blue))", 700: "hsl(var(--electric-blue))", 800: "hsl(var(--accent))", 900: "hsl(var(--accent))",
+        },
+        green: {
+          50: "hsl(var(--ice-blue))", 100: "hsl(var(--ice-blue))", 200: "hsl(var(--blue-glow))",
+          300: "hsl(var(--blue-glow))", 400: "hsl(var(--primary))", 500: "hsl(var(--primary))",
+          600: "hsl(var(--electric-blue))", 700: "hsl(var(--electric-blue))", 800: "hsl(var(--accent))", 900: "hsl(var(--accent))",
+        },
+        red: {
+          50: "hsl(var(--ice-blue))", 100: "hsl(var(--ice-blue))", 200: "hsl(var(--blue-glow))",
+          300: "hsl(var(--blue-glow))", 400: "hsl(var(--primary))", 500: "hsl(var(--primary))",
+          600: "hsl(var(--electric-blue))", 700: "hsl(var(--electric-blue))", 800: "hsl(var(--accent))", 900: "hsl(var(--accent))",
+        },
+        orange: {
+          50: "hsl(var(--ice-blue))", 100: "hsl(var(--ice-blue))", 200: "hsl(var(--blue-glow))",
+          300: "hsl(var(--blue-glow))", 400: "hsl(var(--primary))", 500: "hsl(var(--primary))",
+          600: "hsl(var(--electric-blue))", 700: "hsl(var(--electric-blue))", 800: "hsl(var(--accent))", 900: "hsl(var(--accent))",
+        },
+        amber: {
+          50: "hsl(var(--ice-blue))", 100: "hsl(var(--ice-blue))", 200: "hsl(var(--blue-glow))",
+          300: "hsl(var(--blue-glow))", 400: "hsl(var(--primary))", 500: "hsl(var(--primary))",
+          600: "hsl(var(--electric-blue))", 700: "hsl(var(--electric-blue))", 800: "hsl(var(--accent))", 900: "hsl(var(--accent))",
+        },
+        yellow: {
+          50: "hsl(var(--ice-blue))", 100: "hsl(var(--ice-blue))", 200: "hsl(var(--blue-glow))",
+          300: "hsl(var(--blue-glow))", 400: "hsl(var(--primary))", 500: "hsl(var(--primary))",
+          600: "hsl(var(--electric-blue))", 700: "hsl(var(--electric-blue))", 800: "hsl(var(--accent))", 900: "hsl(var(--accent))",
+        },
+        violet: {
+          50: "hsl(var(--ice-blue))", 100: "hsl(var(--ice-blue))", 200: "hsl(var(--blue-glow))",
+          300: "hsl(var(--blue-glow))", 400: "hsl(var(--primary))", 500: "hsl(var(--primary))",
+          600: "hsl(var(--electric-blue))", 700: "hsl(var(--electric-blue))", 800: "hsl(var(--accent))", 900: "hsl(var(--accent))",
+        },
+        purple: {
+          50: "hsl(var(--ice-blue))", 100: "hsl(var(--ice-blue))", 200: "hsl(var(--blue-glow))",
+          300: "hsl(var(--blue-glow))", 400: "hsl(var(--primary))", 500: "hsl(var(--primary))",
+          600: "hsl(var(--electric-blue))", 700: "hsl(var(--electric-blue))", 800: "hsl(var(--accent))", 900: "hsl(var(--accent))",
+        },
+        pink: {
+          50: "hsl(var(--ice-blue))", 100: "hsl(var(--ice-blue))", 200: "hsl(var(--blue-glow))",
+          300: "hsl(var(--blue-glow))", 400: "hsl(var(--primary))", 500: "hsl(var(--primary))",
+          600: "hsl(var(--electric-blue))", 700: "hsl(var(--electric-blue))", 800: "hsl(var(--accent))", 900: "hsl(var(--accent))",
+        },
+        cyan: {
+          50: "hsl(var(--ice-blue))", 100: "hsl(var(--ice-blue))", 200: "hsl(var(--blue-glow))",
+          300: "hsl(var(--blue-glow))", 400: "hsl(var(--primary))", 500: "hsl(var(--primary))",
+          600: "hsl(var(--electric-blue))", 700: "hsl(var(--electric-blue))", 800: "hsl(var(--accent))", 900: "hsl(var(--accent))",
+        },
+        teal: {
+          50: "hsl(var(--ice-blue))", 100: "hsl(var(--ice-blue))", 200: "hsl(var(--blue-glow))",
+          300: "hsl(var(--blue-glow))", 400: "hsl(var(--primary))", 500: "hsl(var(--primary))",
+          600: "hsl(var(--electric-blue))", 700: "hsl(var(--electric-blue))", 800: "hsl(var(--accent))", 900: "hsl(var(--accent))",
+        },
+        indigo: {
+          50: "hsl(var(--ice-blue))", 100: "hsl(var(--ice-blue))", 200: "hsl(var(--blue-glow))",
+          300: "hsl(var(--blue-glow))", 400: "hsl(var(--primary))", 500: "hsl(var(--primary))",
+          600: "hsl(var(--electric-blue))", 700: "hsl(var(--electric-blue))", 800: "hsl(var(--accent))", 900: "hsl(var(--accent))",
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -102,5 +162,5 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
 } satisfies Config;

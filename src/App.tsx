@@ -11,11 +11,12 @@ import { ActiveAccountProvider } from "@/contexts/ActiveAccountContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
 import Index from "./pages/Index.tsx";
+import Onboarding from "./pages/Onboarding.tsx";
+import RequireAccess from "@/components/RequireAccess";
 import Login from "./pages/Login.tsx";
 import Signup from "./pages/Signup.tsx";
 import LandingPage from "./pages/LandingPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
-import AIChatWidget from "@/components/AIChatWidget";
 import SupportedBrokersPage from "./pages/SupportedBrokersPage.tsx";
 import Pricing from "./pages/Pricing.tsx";
 import MarketingPlaceholder from "./pages/marketing/MarketingPlaceholder.tsx";
@@ -24,7 +25,6 @@ import FairValueGapsGuide from "./pages/blog/FairValueGapsGuide.tsx";
 import BillingSuccess from "./pages/BillingSuccess.tsx";
 import BillingCancel from "./pages/BillingCancel.tsx";
 import Billing from "./pages/Billing.tsx";
-import Checkout from "./pages/Checkout.tsx";
 
 const queryClient = new QueryClient();
 
@@ -72,17 +72,18 @@ const App = () => (
                   <Route
                     path="/app"
                     element={
-                      <ProtectedApp>
+                      <RequireAccess>
                         <Index />
-                      </ProtectedApp>
+                      </RequireAccess>
                     }
                   />
+                  <Route path="/onboarding" element={<ProtectedApp><Onboarding /></ProtectedApp>} />
                   <Route path="/dashboard" element={<Navigate to="/app" replace />} />
 
                   <Route path="/billing" element={<ProtectedApp><Billing /></ProtectedApp>} />
                   <Route path="/billing/success" element={<ProtectedApp><BillingSuccess /></ProtectedApp>} />
                   <Route path="/billing/cancel" element={<ProtectedApp><BillingCancel /></ProtectedApp>} />
-                  <Route path="/checkout" element={<ProtectedApp><Checkout /></ProtectedApp>} />
+                  <Route path="/checkout" element={<Navigate to="/onboarding?step=plan" replace />} />
 
 
                   {/* Public marketing routes */}
@@ -106,7 +107,6 @@ const App = () => (
 
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-                <AIChatWidget />
               </LearningNavProvider>
               </ActiveAccountProvider>
             </PlanProvider>

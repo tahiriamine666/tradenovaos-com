@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { fmpProvider } from "./providers/fmp";
 import type { EconomicEvent, EventFilters } from "./types";
+import { resolveRange } from "./range";
 
 export function useEvents(filters: EventFilters) {
   const [events, setEvents] = useState<EconomicEvent[]>([]);
@@ -12,8 +13,9 @@ export function useEvents(filters: EventFilters) {
   const [error, setError] = useState<string | null>(null);
   const syncingRef = useRef(false);
 
-  const fromISO = filters.from.toISOString();
-  const toISO = filters.to.toISOString();
+  const { from, to } = useMemo(() => resolveRange(filters.range), [filters.range]);
+  const fromISO = from.toISOString();
+  const toISO = to.toISOString();
 
   const loadFromDb = useCallback(async () => {
     const { data, error } = await supabase
@@ -31,7 +33,7 @@ export function useEvents(filters: EventFilters) {
     syncingRef.current = true;
     setSyncing(true);
     try {
-      await fmpProvider.fetchEvents({ from: filters.from, to: filters.to });
+      await fmpProvider.fetchEvents({ from: new Date(fromISO), to: new Date(toISO) });
     } catch (e) {
       // Non-fatal: fall through to DB read
       console.warn("Economic calendar sync failed", e);
@@ -39,7 +41,7 @@ export function useEvents(filters: EventFilters) {
       syncingRef.current = false;
       setSyncing(false);
     }
-  }, [filters.from, filters.to]);
+  }, [fromISO, toISO]);
 
   const refetch = useCallback(async () => {
     setLoading(true);
@@ -77,14 +79,14 @@ export function useEvents(filters: EventFilters) {
   const filtered = useMemo(() => {
     const q = filters.search.trim().toLowerCase();
     return events.filter((e) => {
-      if (filters.country !== "all" && e.country !== filters.country) return false;
-      if (filters.currency !== "all" && e.currency !== filters.currency) return false;
-      if (filters.impact !== "all" && e.impact !== filters.impact) return false;
-      if (filters.category !== "all" && (e.category ?? "") !== filters.category) return false;
+      if (filters.countries.length && !filters.countries.includes(e.country)) return false;
+      if (filters.currencies.length && !filters.currencies.includes(e.currency)) return false;
+      if (filters.impacts.length && !filters.impacts.includes(e.impact)) return false;
+      if (filters.categories.length && !filters.categories.includes(e.category ?? "Other")) return false;
       if (q && !(e.title.toLowerCase().includes(q) || e.currency.toLowerCase().includes(q) || e.country.toLowerCase().includes(q))) return false;
       return true;
     });
   }, [events, filters]);
 
-  return { events: filtered, allEvents: events, loading, syncing, error, refetch };
+  return { events: filtered, allEvents: events, from, to, loading, syncing, error, refetch };
 }

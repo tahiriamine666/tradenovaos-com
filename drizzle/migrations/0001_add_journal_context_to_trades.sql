@@ -1,0 +1,4 @@
+ALTER TABLE public.trades
+  ADD COLUMN IF NOT EXISTS weekly_context TEXT,
+  ADD COLUMN IF NOT EXISTS daily_bias TEXT,
+  ADD COLUMN IF NOT EXISTS timeframe TEXT;

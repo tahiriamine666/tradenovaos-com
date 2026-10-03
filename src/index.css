@@ -1,296 +1,207 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500;600&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-    --primary: 263 70% 58%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 263 70% 95%;
-    --accent-foreground: 263 70% 30%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 263 70% 58%;
-    --radius: 1rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5% 26%;
-    --sidebar-primary: 263 70% 58%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 263 70% 95%;
-    --sidebar-accent-foreground: 263 70% 30%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 263 70% 58%;
-
-    --surface: 240 5% 96%;
-    --surface-foreground: 222 47% 11%;
-    --surface-1: 0 0% 100%;
-    --surface-2: 220 14% 98%;
-    --surface-3: 220 13% 95%;
-    --success: 142 71% 45%;
-    --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-    --danger: 0 84% 60%;
-    --danger-foreground: 0 0% 100%;
-
-    font-family: 'DM Sans', system-ui, sans-serif;
-  }
-
+  :root,
   .dark {
-    --background: 240 15% 6%;
-    --foreground: 210 40% 98%;
-    --card: 240 12% 10%;
-    --card-foreground: 210 40% 98%;
-    --popover: 240 12% 10%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 263 70% 58%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 240 10% 16%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 240 10% 16%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 263 50% 20%;
-    --accent-foreground: 263 70% 80%;
-    --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 240 10% 18%;
-    --input: 240 10% 18%;
-    --ring: 263 70% 58%;
-    --sidebar-background: 240 15% 8%;
-    --sidebar-foreground: 240 5% 96%;
-    --sidebar-primary: 263 70% 58%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 263 50% 18%;
-    --sidebar-accent-foreground: 263 70% 80%;
-    --sidebar-border: 240 10% 16%;
-    --sidebar-ring: 263 70% 58%;
+    --background: 225 50% 2%;
+    --foreground: 210 100% 98%;
+    --card: 222 45% 4%;
+    --card-foreground: 210 100% 98%;
+    --popover: 222 42% 5%;
+    --popover-foreground: 210 100% 98%;
+    --primary: 203 100% 65%;
+    --primary-foreground: 225 50% 2%;
+    --secondary: 218 45% 9%;
+    --secondary-foreground: 207 100% 94%;
+    --muted: 220 38% 8%;
+    --muted-foreground: 211 35% 68%;
+    --accent: 213 64% 14%;
+    --accent-foreground: 204 100% 88%;
+    --destructive: 203 100% 65%;
+    --destructive-foreground: 225 50% 2%;
+    --border: 215 50% 16%;
+    --input: 215 47% 18%;
+    --ring: 203 100% 65%;
+    --radius: 0.5rem;
 
-    --surface: 240 12% 12%;
-    --surface-foreground: 210 40% 98%;
-    --surface-1: 240 12% 10%;
-    --surface-2: 240 12% 13%;
-    --surface-3: 240 11% 16%;
-    --success: 142 71% 45%;
-    --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 100%;
-    --danger: 0 72% 51%;
-    --danger-foreground: 0 0% 100%;
+    --sidebar-background: 225 50% 2%;
+    --sidebar-foreground: 210 100% 96%;
+    --sidebar-primary: 203 100% 65%;
+    --sidebar-primary-foreground: 225 50% 2%;
+    --sidebar-accent: 214 58% 13%;
+    --sidebar-accent-foreground: 204 100% 90%;
+    --sidebar-border: 215 50% 14%;
+    --sidebar-ring: 203 100% 65%;
+
+    --surface: 221 42% 6%;
+    --surface-foreground: 210 100% 98%;
+    --surface-1: 222 45% 4%;
+    --surface-2: 220 42% 6%;
+    --surface-3: 218 40% 9%;
+    --success: 196 100% 68%;
+    --success-foreground: 225 50% 2%;
+    --warning: 210 100% 78%;
+    --warning-foreground: 225 50% 2%;
+    --danger: 215 100% 70%;
+    --danger-foreground: 225 50% 2%;
+
+    --blue-glow: 196 100% 70%;
+    --electric-blue: 203 100% 65%;
+    --ice-blue: 207 100% 94%;
+    --terminal-grid: 211 68% 20%;
+    font-family: 'Manrope', system-ui, sans-serif;
   }
-}
 
-@layer base {
   * {
     @apply border-border;
   }
+
+  html {
+    background: hsl(var(--background));
+    color-scheme: dark;
+  }
+
+  select {
+    color-scheme: dark;
+  }
+
+  select option,
+  select optgroup {
+    background-color: hsl(var(--surface-2));
+    color: hsl(var(--foreground));
+  }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    min-width: 320px;
+    min-height: 100vh;
   }
+
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Space Grotesk', system-ui, sans-serif;
+    font-family: 'Sora', system-ui, sans-serif;
+    letter-spacing: 0;
+  }
+
+  ::selection {
+    background: hsl(var(--primary) / 0.35);
+    color: hsl(var(--foreground));
   }
 }
 
-/* ─────────────────────────────────────────────────────────────
-   Light Mode polish for in-app dashboard (.app-shell)
-   The dashboard was originally designed dark-first using
-   white-opacity glass utilities and a few literal hex backgrounds.
-   These rules remap those patterns so light mode looks premium
-   without rewriting every component. Marketing pages live outside
-   .app-shell and stay intentionally dark.
-   ───────────────────────────────────────────────────────────── */
-html:not(.dark) :is(.app-shell, .app-chrome) {
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
-}
-.app-chrome { background-color: transparent; }
+@layer components {
+  .app-shell {
+    background-image:
+      linear-gradient(hsl(var(--terminal-grid) / 0.08) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--terminal-grid) / 0.08) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
 
-/* White-opacity surfaces → soft slate-tinted surfaces */
-html:not(.dark) :is(.app-shell, .app-chrome) [class*="bg-white/"] {
-  background-color: hsl(222 47% 11% / 0.04) !important;
-}
-html:not(.dark) :is(.app-shell, .app-chrome) [class*="hover\:bg-white/"]:hover {
-  background-color: hsl(222 47% 11% / 0.07) !important;
-}
-html:not(.dark) :is(.app-shell, .app-chrome) [class*="border-white/"] {
-  border-color: hsl(214 32% 91%) !important;
-}
-html:not(.dark) :is(.app-shell, .app-chrome) [class*="hover\:border-white/"]:hover {
-  border-color: hsl(214 32% 80%) !important;
-}
+  .app-shell main {
+    background: hsl(var(--background) / 0.97);
+  }
 
-/* White-opacity text → muted slate; pure text-white → foreground */
-html:not(.dark) :is(.app-shell, .app-chrome) [class*="text-white/"] {
-  color: hsl(215 16% 47%) !important;
-}
-html:not(.dark) :is(.app-shell, .app-chrome) .text-white {
-  color: hsl(var(--foreground));
-}
-html:not(.dark) :is(.app-shell, .app-chrome) [class~="hover:text-white"]:hover {
-  color: hsl(var(--foreground)) !important;
-}
-html:not(.dark) :is(.app-shell, .app-chrome) [class*="placeholder\:text-white/"]::placeholder {
-  color: hsl(215 16% 60%) !important;
-}
+  .app-shell :is(.bg-card, [class*="bg-card"]) {
+    box-shadow: inset 0 1px 0 hsl(var(--ice-blue) / 0.025);
+  }
 
-/* Keep text-white legible on solid colored buttons/badges */
-html:not(.dark) :is(.app-shell, .app-chrome)
-  :is(
-    [class*="bg-violet-"], [class*="bg-purple-"], [class*="bg-indigo-"],
-    [class*="bg-fuchsia-"], [class*="bg-pink-"], [class*="bg-rose-"],
-    [class*="bg-red-"],     [class*="bg-orange-"], [class*="bg-amber-"],
-    [class*="bg-yellow-"],  [class*="bg-lime-"],   [class*="bg-green-"],
-    [class*="bg-emerald-"], [class*="bg-teal-"],   [class*="bg-cyan-"],
-    [class*="bg-sky-"],     [class*="bg-blue-"],   [class*="bg-primary"],
-    [class*="bg-destructive"], [class*="bg-gradient"]
-  ) .text-white,
-html:not(.dark) :is(.app-shell, .app-chrome)
-  :is(
-    [class*="bg-violet-"], [class*="bg-purple-"], [class*="bg-indigo-"],
-    [class*="bg-fuchsia-"], [class*="bg-pink-"], [class*="bg-rose-"],
-    [class*="bg-red-"],     [class*="bg-orange-"], [class*="bg-amber-"],
-    [class*="bg-yellow-"],  [class*="bg-lime-"],   [class*="bg-green-"],
-    [class*="bg-emerald-"], [class*="bg-teal-"],   [class*="bg-cyan-"],
-    [class*="bg-sky-"],     [class*="bg-blue-"],   [class*="bg-primary"],
-    [class*="bg-destructive"], [class*="bg-gradient"]
-  ).text-white {
-  color: #fff !important;
-}
+  .app-shell :is(button, a, input, select, textarea):focus-visible {
+    outline: 1px solid hsl(var(--blue-glow) / 0.75);
+    outline-offset: 2px;
+  }
 
-/* Literal dark hex backgrounds used by chat widgets / popovers (scoped) */
-html:not(.dark) :is(.app-shell, .app-chrome) [class*="bg-[#0c0c16]"],
-html:not(.dark) :is(.app-shell, .app-chrome) [class*="bg-[#0d0d18]"],
-html:not(.dark) :is(.app-shell, .app-chrome) [class*="bg-[#0d0d1a]"],
-html:not(.dark) :is(.app-shell, .app-chrome) [class*="bg-[#0a0a14]"] {
-  background-color: hsl(var(--card)) !important;
-  color: hsl(var(--card-foreground));
-}
-html:not(.dark) :is(.app-shell, .app-chrome) [class*="border-[#0c0c16]"],
-html:not(.dark) :is(.app-shell, .app-chrome) [class*="border-[#0d0d18]"],
-html:not(.dark) :is(.app-shell, .app-chrome) [class*="border-[#0d0d1a]"] {
-  border-color: hsl(var(--border)) !important;
+  .blue-panel-glow {
+    box-shadow:
+      inset 0 1px 0 hsl(var(--ice-blue) / 0.05),
+      0 0 0 1px hsl(var(--primary) / 0.04),
+      0 18px 70px hsl(var(--primary) / 0.09);
+  }
+
+  .blue-text-glow {
+    text-shadow: 0 0 24px hsl(var(--blue-glow) / 0.45);
+  }
+
+  .feature-reveal {
+    animation: feature-reveal 600ms var(--ease-premium) both;
+  }
+
+  .journal-rows > tr {
+    animation: feature-fade 550ms var(--ease-premium) both;
+  }
+
+  .trade-gallery > * {
+    animation: feature-reveal 600ms var(--ease-premium) both;
+  }
+
+  .journal-rows > :nth-child(2), .trade-gallery > :nth-child(2) { animation-delay: 70ms; }
+  .journal-rows > :nth-child(3), .trade-gallery > :nth-child(3) { animation-delay: 140ms; }
+  .journal-rows > :nth-child(4), .trade-gallery > :nth-child(4) { animation-delay: 210ms; }
+  .journal-rows > :nth-child(5), .trade-gallery > :nth-child(5) { animation-delay: 280ms; }
+  .journal-rows > :nth-child(6), .trade-gallery > :nth-child(6) { animation-delay: 350ms; }
+  .journal-rows > :nth-child(n+7), .trade-gallery > :nth-child(n+7) { animation-delay: 420ms; }
+
+  /* Slow, intentional crossfade for swapped content (checklists, settings sections) */
+  .content-crossfade {
+    animation: content-crossfade 520ms var(--ease-premium) both;
+  }
+
+  /* Horizontal drift for calendar month changes */
+  .month-slide-next {
+    animation: month-slide 560ms var(--ease-premium) both;
+  }
+  .month-slide-prev {
+    animation: month-slide 560ms var(--ease-premium) both reverse;
+  }
+
+  /* Extremely subtle card elevation on hover */
+  .tn-lift {
+    transition: transform 420ms var(--ease-premium), box-shadow 420ms var(--ease-premium), border-color 420ms var(--ease-premium);
+  }
+  .tn-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 34px -14px hsl(var(--primary) / 0.22);
+    border-color: hsl(var(--primary) / 0.28);
+  }
 }
 
-/* Recharts: lighter grid + readable tooltips in light mode */
-html:not(.dark) .app-shell .recharts-cartesian-grid line {
-  stroke: hsl(214 32% 91%) !important;
-}
-html:not(.dark) .app-shell .recharts-default-tooltip {
-  background-color: #fff !important;
-  border: 1px solid hsl(214 32% 91%) !important;
-  color: hsl(222 47% 11%) !important;
-  border-radius: 0.75rem !important;
-  box-shadow: 0 8px 24px -8px rgba(15, 23, 42, 0.15) !important;
-}
-html:not(.dark) .app-shell .recharts-tooltip-label,
-html:not(.dark) .app-shell .recharts-tooltip-item {
-  color: hsl(222 47% 11%) !important;
+:root {
+  --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-/* ─────────────────────────────────────────────────────────────
-   Landing page light theme (.landing-light)
-   The marketing landing was originally dark. This block flips
-   the dark-first glass utilities + literal hex backgrounds to a
-   premium light SaaS palette. Scoped so dashboards/marketing
-   shells elsewhere are unaffected.
-   ───────────────────────────────────────────────────────────── */
-.landing-light { background-color: #f8fafc; color: #0f172a; }
-
-/* Literal dark hex backgrounds → light surfaces */
-.landing-light [class*="bg-[#06060f]"],
-.landing-light [class*="bg-[#08080f]"],
-.landing-light [class*="bg-[#0a0a14]"],
-.landing-light [class*="bg-[#0c0c16]"],
-.landing-light [class*="bg-[#0d0d18]"],
-.landing-light [class*="bg-[#0d0d1a]"] {
-  background-color: #ffffff !important;
-  color: #0f172a;
+@keyframes tn-float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-6px) } }
+@keyframes tn-step { from { opacity: 0; transform: translateY(10px) } to { opacity: 1; transform: none } }
+@keyframes content-crossfade {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* White-opacity surfaces → soft slate-tinted surfaces */
-.landing-light [class*="bg-white/"] {
-  background-color: rgba(15, 23, 42, 0.035) !important;
-}
-.landing-light [class*="hover\:bg-white/"]:hover {
-  background-color: rgba(15, 23, 42, 0.06) !important;
+@keyframes month-slide {
+  from { opacity: 0; transform: translateX(26px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
-/* White-opacity borders → light slate borders */
-.landing-light [class*="border-white/"] {
-  border-color: #e5e7eb !important;
-}
-.landing-light [class*="hover\:border-white/"]:hover {
-  border-color: #cbd5e1 !important;
+@keyframes feature-reveal {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-/* White-opacity text → muted slate */
-.landing-light [class*="text-white/"] {
-  color: #64748b !important;
-}
-/* Pure text-white → foreground (icons/labels not on colored bg) */
-.landing-light .text-white { color: #0f172a; }
-.landing-light [class~="hover:text-white"]:hover { color: #0f172a !important; }
-
-/* Keep text-white legible on solid colored buttons/badges */
-.landing-light
-  :is(
-    [class*="bg-violet-"], [class*="bg-purple-"], [class*="bg-indigo-"],
-    [class*="bg-fuchsia-"], [class*="bg-pink-"], [class*="bg-rose-"],
-    [class*="bg-red-"],     [class*="bg-orange-"], [class*="bg-amber-"],
-    [class*="bg-yellow-"],  [class*="bg-lime-"],   [class*="bg-green-"],
-    [class*="bg-emerald-"], [class*="bg-teal-"],   [class*="bg-cyan-"],
-    [class*="bg-sky-"],     [class*="bg-blue-"],   [class*="bg-gradient"]
-  ) .text-white,
-.landing-light
-  :is(
-    [class*="bg-violet-"], [class*="bg-purple-"], [class*="bg-indigo-"],
-    [class*="bg-fuchsia-"], [class*="bg-pink-"], [class*="bg-rose-"],
-    [class*="bg-red-"],     [class*="bg-orange-"], [class*="bg-amber-"],
-    [class*="bg-yellow-"],  [class*="bg-lime-"],   [class*="bg-green-"],
-    [class*="bg-emerald-"], [class*="bg-teal-"],   [class*="bg-cyan-"],
-    [class*="bg-sky-"],     [class*="bg-blue-"],   [class*="bg-gradient"]
-  ).text-white {
-  color: #ffffff !important;
+@keyframes feature-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-/* Recharts in light mode */
-.landing-light .recharts-cartesian-grid line { stroke: #e5e7eb !important; }
-.landing-light .recharts-cartesian-axis-tick text { fill: #64748b !important; }
-.landing-light .recharts-default-tooltip,
-.landing-light .recharts-tooltip-wrapper > div {
-  background-color: #ffffff !important;
-  border: 1px solid #e5e7eb !important;
-  color: #0f172a !important;
-  border-radius: 12px !important;
-  box-shadow: 0 8px 24px -8px rgba(15, 23, 42, 0.15) !important;
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
-.landing-light .recharts-tooltip-label { color: #64748b !important; }
-
-/* Soften some neon-on-dark accents that look harsh on white */
-.landing-light .bg-violet-500\/10 { background-color: rgba(139, 92, 246, 0.08) !important; }
-.landing-light .bg-violet-500\/20 { border-color: rgba(139, 92, 246, 0.25) !important; }
-.landing-light .text-violet-300,
-.landing-light .text-violet-400 { color: #7c3aed !important; }
-.landing-light .text-emerald-400 { color: #059669 !important; }
-.landing-light .text-red-400 { color: #dc2626 !important; }
-.landing-light .text-blue-400 { color: #2563eb !important; }
-.landing-light .text-amber-400 { color: #d97706 !important; }
-.landing-light .text-pink-400 { color: #db2777 !important; }
-.landing-light .text-purple-400 { color: #9333ea !important; }
-.landing-light .text-cyan-400 { color: #0891b2 !important; }
-.landing-light .text-green-400 { color: #16a34a !important; }
-
+/* NOVA page */
+@keyframes nova-float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-3px) } }
+.nova-float { animation: nova-float 6s ease-in-out infinite; }
+@keyframes nova-msg { from { opacity: 0; transform: translateY(4px) } to { opacity: 1; transform: none } }
+.nova-msg { animation: nova-msg 260ms var(--ease-premium, ease-out) both; }
+@media (prefers-reduced-motion: reduce) { .nova-float, .nova-msg { animation: none; } }
