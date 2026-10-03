@@ -10,7 +10,7 @@ import TradeJournal from '@/pages/TradeJournal';
 import StudioSettings from '@/pages/StudioSettings';
 import ReplayStudio from '@/pages/ReplayStudio';
 import CommunitySpace from '@/pages/CommunitySpace';
-import TradePlanWorkspace from '@/components/TradePlanWorkspace';
+import TradePlanWorkspace from '@/components/tradeplan/TradePlanV2';
 import AIInsights from '@/pages/AIInsights';
 import PricingPage from '@/pages/Pricing';
 import { TradeDialogProvider, useTradeDialog, useTradesChanged, useNavigationEvent } from '@/contexts/TradeDialogContext';
