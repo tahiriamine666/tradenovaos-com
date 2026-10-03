@@ -310,12 +310,14 @@ function TradingCalendar({ dark }: { dark: boolean }) {
       if (activeAccountId) query = query.eq('trading_account_id', activeAccountId);
       const { data } = await query;
 
-      const grouped: Record<number, { pnl: number; trades: number; discipline: number }> = {};
+      const grouped: Record<number, { pnl: number; trades: number; discipline: number; wins: number }> = {};
       (data ?? []).forEach((t) => {
         const day = getTradeDateDay(t.trade_date);
-        if (!grouped[day]) grouped[day] = { pnl: 0, trades: 0, discipline: 0 };
-        grouped[day].pnl += (t as any).result ?? (t as any).pnl ?? 0;
+        if (!grouped[day]) grouped[day] = { pnl: 0, trades: 0, discipline: 0, wins: 0 };
+        const r = (t as any).result ?? (t as any).pnl ?? 0;
+        grouped[day].pnl += r;
         grouped[day].trades += 1;
+        if (r > 0) grouped[day].wins += 1;
         grouped[day].discipline += Number((t as any).discipline_score ?? 0);
       });
       setDayMap(grouped);
