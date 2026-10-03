@@ -102,7 +102,7 @@ function Navbar({ onLogin, onSignup }: { onLogin: () => void; onSignup: () => vo
         </div>
         <div className="hidden md:flex items-center gap-3">
           <button onClick={onLogin} className="text-sm text-foreground/80 hover:text-foreground px-4 py-2 transition-colors">Log in</button>
-          <button onClick={onSignup} className="text-sm bg-primary hover:bg-primary text-white px-5 py-2.5 rounded-md font-bold transition-all hover:shadow-lg hover:shadow-primary/25 hover:-translate-y-px">Start Free</button>
+          <button onClick={onSignup} className="text-sm bg-primary hover:bg-primary text-white px-5 py-2.5 rounded-md font-bold transition-all hover:shadow-lg hover:shadow-primary/25 hover:-translate-y-px">Start 14-Day Trial</button>
         </div>
         <button className="md:hidden text-muted-foreground hover:text-foreground p-2" onClick={() => setOpen(v => !v)}
           aria-label={open ? 'Close navigation menu' : 'Open navigation menu'} aria-expanded={open}>
@@ -118,7 +118,7 @@ function Navbar({ onLogin, onSignup }: { onLogin: () => void; onSignup: () => vo
             ))}
             <div className="flex gap-3 pt-2 border-t border-border">
               <button onClick={onLogin} className="flex-1 text-sm border border-border text-foreground/80 py-2.5 rounded-md hover:bg-muted">Log in</button>
-              <button onClick={onSignup} className="flex-1 text-sm bg-primary text-white py-2.5 rounded-md font-bold hover:bg-primary">Start Free</button>
+              <button onClick={onSignup} className="flex-1 text-sm bg-primary text-white py-2.5 rounded-md font-bold hover:bg-primary">Start 14-Day Trial</button>
             </div>
           </motion.div>
         )}
@@ -248,14 +248,14 @@ function Hero({ onSignup }: { onSignup: () => void }) {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.22 }}
           className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-7">
           <button onClick={onSignup} className="group flex items-center gap-2.5 bg-primary hover:bg-primary text-white px-8 py-4 rounded-md font-black text-sm transition-all hover:shadow-2xl hover:shadow-primary/30 hover:-translate-y-0.5 w-full sm:w-auto justify-center">
-            Start Free — No credit card <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            Start 14-Day Trial <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </button>
           
         </motion.div>
 
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }}
           className="flex flex-wrap justify-center gap-4 sm:gap-6 text-xs text-foreground/80 mb-16">
-          {['Free forever plan', 'No credit card required', 'Setup in 2 minutes', '143 traders trust TradeNova'].map(t => (
+          {['14-day trial', 'Payment method required', 'Setup in 2 minutes', '143 traders trust TradeNova'].map(t => (
             <span key={t} className="flex items-center gap-1.5"><Check className="h-3 w-3 text-emerald-500" />{t}</span>
           ))}
         </motion.div>
@@ -409,7 +409,7 @@ function Hero({ onSignup }: { onSignup: () => void }) {
                   <div className="w-6 h-6 rounded-full bg-primary text-white text-[9px] font-bold flex items-center justify-center">U</div>
                   <div className="leading-tight">
                     <p className="text-[10px] font-bold text-foreground">Trader</p>
-                    <span className="text-[7px] font-semibold text-primary bg-primary/15 px-1.5 rounded">Free</span>
+                    <span className="text-[7px] font-semibold text-primary bg-primary/15 px-1.5 rounded">Pro</span>
                   </div>
                 </div>
               </div>
@@ -778,7 +778,7 @@ function DashboardShowcase({ onSignup }: { onSignup: () => void }) {
             <span className="text-xs font-semibold text-primary">Live dashboard preview</span>
           </div>
           <h2 className="text-4xl sm:text-5xl font-black text-foreground mb-4 tracking-tight">Your edge, visualized</h2>
-          <p className="text-muted-foreground text-lg max-w-xl mx-auto">Real-time metrics, charts, and insights — all in one command center.</p>
+          <p className="text-muted-foreground text-lg max-w-xl mx-auto">Real-time metrics, charts, and insights — all in one trading workspace.</p>
         </motion.div>
 
         <motion.div initial={{opacity:0,y:40}} animate={inView?{opacity:1,y:0}:{}} transition={{duration:0.8,ease}}
@@ -874,9 +874,9 @@ function DashboardShowcase({ onSignup }: { onSignup: () => void }) {
 
         <motion.div initial={{opacity:0,y:16}} animate={inView?{opacity:1,y:0}:{}} transition={{delay:0.5}} className="text-center mt-10">
           <button onClick={onSignup} className="group inline-flex items-center gap-2.5 bg-primary hover:bg-primary text-white px-8 py-4 rounded-md font-black text-sm transition-all hover:shadow-2xl hover:shadow-primary/25 hover:-translate-y-0.5">
-            Get this dashboard for free <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform"/>
+            Start your 14-day trial <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform"/>
           </button>
-          <p className="text-xs text-muted-foreground/70 mt-3">No credit card · Free forever plan available</p>
+          <p className="text-xs text-muted-foreground/70 mt-3">No credit card · 14-day trial available</p>
         </motion.div>
       </div>
     </section>
@@ -928,7 +928,7 @@ function Pricing({ onSignup }: { onSignup: () => void }) {
       <div className="max-w-5xl mx-auto px-5 sm:px-8">
         <motion.div initial={{opacity:0,y:24}} animate={inView?{opacity:1,y:0}:{}} transition={{duration:0.5}} className="text-center mb-14">
           <h2 className="text-4xl sm:text-5xl font-black text-foreground mb-4 tracking-tight">Simple, honest pricing</h2>
-          <p className="text-muted-foreground">Start free. Upgrade when you're ready.</p>
+          <p className="text-muted-foreground">Choose Pro or Elite. Start with 14 days.</p>
         </motion.div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl mx-auto">
           {plans.map((p,i) => (
@@ -964,11 +964,11 @@ function FinalCTA({ onSignup }: { onSignup: () => void }) {
             <h2 className="text-4xl sm:text-5xl font-black text-foreground mb-5 tracking-tight leading-tight">
               Start building your<br/><span className="bg-gradient-to-r from-primary to-cyan-300 bg-clip-text text-transparent">trading edge today</span>
             </h2>
-            <p className="text-muted-foreground text-lg mb-10 max-w-lg mx-auto">Stop trading on gut feeling. Start trading on data. Free forever — upgrade when you're ready.</p>
+            <p className="text-muted-foreground text-lg mb-10 max-w-lg mx-auto">Stop trading on gut feeling. Start trading on data. Start with a 14-day trial, then continue on Pro or Elite.</p>
             <button onClick={onSignup} className="group inline-flex items-center gap-3 bg-primary hover:bg-primary text-white px-10 py-4 rounded-md font-black text-sm transition-all hover:shadow-2xl hover:shadow-primary/25 hover:-translate-y-0.5">
-              Start Free Now <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform"/>
+              Start 14-Day Trial <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform"/>
             </button>
-            <p className="text-[11px] text-muted-foreground/70 mt-5">No credit card required · Free forever plan available</p>
+            <p className="text-[11px] text-muted-foreground/70 mt-5">Payment method required · 14-day trial available</p>
           </div>
         </motion.div>
       </div>
