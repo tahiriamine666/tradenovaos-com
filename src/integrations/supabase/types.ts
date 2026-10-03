@@ -610,6 +610,57 @@ export type Database = {
         }
         Relationships: []
       }
+      economic_calendar_preferences: {
+        Row: {
+          created_at: string
+          default_filters: Json
+          preferred_view: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          default_filters?: Json
+          preferred_view?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          default_filters?: Json
+          preferred_view?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      economic_calendar_presets: {
+        Row: {
+          created_at: string
+          filters: Json
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          filters?: Json
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          filters?: Json
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       economic_events: {
         Row: {
           actual: string | null
