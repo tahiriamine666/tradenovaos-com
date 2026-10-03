@@ -89,7 +89,13 @@ export default function WelcomeSplash() {
             initial={{ opacity: 0, y: reduceMotion ? 0 : 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: reduceMotion ? 0.3 : 1.5, delay: reduceMotion ? 0 : 0.75, ease: EASE }}
-            className="mt-2 font-heading text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight bg-gradient-to-b from-amber-200 via-amber-400 to-amber-600 bg-clip-text text-transparent"
+            className="mt-2 font-heading text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight"
+            style={{
+              backgroundImage: 'linear-gradient(to bottom, #fde68a, #f59e0b 55%, #b45309)',
+              WebkitBackgroundClip: 'text',
+              backgroundClip: 'text',
+              color: 'transparent',
+            }}
           >
             {name}
           </motion.h1>
