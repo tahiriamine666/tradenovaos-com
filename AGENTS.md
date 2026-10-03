@@ -3,3 +3,4 @@ Use one keyed motion boundary for signed-in feature navigation, with shared CSS 
 Weekly/Daily Outlook checklists live in `trade_plan_checklists` (one row per user+account_key+type+period_date, upserted), never in the trade plan row — keeps history per date/week/account.
 Trade Plan history reads and edits the existing user-owned daily `trade_plans` rows by date; leave dated outlooks separate and show legacy embedded outlooks read-only when no dated row exists, so historical records remain intact.
 Use the shared BrandLogo component for in-app brand placements and derive the favicon from the same uploaded image, so brand changes remain consistent across screens.
+- NOVA chat streams from the `nova-chat` edge function, which reads the caller's own data via their JWT (RLS-scoped); conversations/messages/preferences persist in `nova_*` tables, so answers stay grounded and history survives sessions.
