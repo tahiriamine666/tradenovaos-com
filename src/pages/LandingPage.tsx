@@ -504,36 +504,73 @@ function Hero({ onSignup }: { onSignup: () => void }) {
                       <div className="flex items-center justify-between mb-2">
                         <div>
                           <p className="text-[12px] font-bold text-foreground">Trading Calendar</p>
-                          <p className="text-[9px] text-muted-foreground/70">Monthly P&L heatmap</p>
+                          <p className="text-[9px] text-muted-foreground/70">Track your daily performance and psychology</p>
                         </div>
-                        <div className="flex items-center gap-1.5 text-[9px] text-muted-foreground font-semibold">
-                          <span className="px-1">‹</span>May 2026<span className="px-1">›</span>
+                        <div className="flex items-center gap-1.5 text-[8px]">
+                          <span className="px-1 text-[10px] text-muted-foreground">‹</span>
+                          <span className="text-muted-foreground font-semibold">October 2026</span>
+                          <span className="px-1 text-[10px] text-muted-foreground">›</span>
+                          <span className="ml-1 rounded border border-border bg-muted px-1.5 py-0.5 text-muted-foreground font-semibold">Daily</span>
+                          <span className="rounded border border-border bg-muted px-1.5 py-0.5 text-muted-foreground font-semibold">Weekly</span>
+                          <span className="rounded border border-border bg-muted px-1.5 py-0.5 text-muted-foreground font-semibold">Monthly</span>
+                          <span className="rounded bg-primary px-1.5 py-0.5 text-primary-foreground font-semibold">$ P&L</span>
+                          <span className="rounded bg-muted px-1.5 py-0.5 text-muted-foreground font-semibold">Psych</span>
                         </div>
                       </div>
-                      <div className="grid grid-cols-7 gap-1 mb-1">
-                        {['S','M','T','W','T','F','S'].map((d,i) => (
+                      <div className="grid grid-cols-[repeat(7,minmax(0,1fr))_72px] gap-1 mb-1">
+                        {['S','M','T','W','T','F','S','Week'].map((d,i) => (
                           <div key={i} className="text-[8px] text-muted-foreground/70 text-center font-semibold">{d}</div>
                         ))}
                       </div>
-                      <div className="grid grid-cols-7 gap-1">
-                        {Array.from({length: 35}).map((_, i) => {
-                          const day = i - 4;
-                          const r = Math.sin((day+1) * 1.7);
-                          const has = day >= 1 && day <= 31 && (day % 4 !== 0);
-                          const win = r > -0.2;
-                          return (
-                            <div key={i} className={`aspect-square rounded-md flex items-center justify-center text-[8px] font-bold ${
-                              day < 1 || day > 31 ? 'bg-transparent' :
-                              !has ? 'bg-muted text-muted-foreground/50' :
-                              win ? 'bg-emerald-100 border border-emerald-200 text-emerald-700' :
-                                    'bg-red-100 border border-red-200 text-red-700'
-                            }`}>{day >=1 && day <= 31 ? day : ''}</div>
-                          );
-                        })}
+                      <div className="space-y-1">
+                        {[
+                          { days: [null,null,null,null, {d:1,t:'1t',v:'-$50',neg:true}, {d:2,t:'2t',v:'+$100',neg:false}, {d:3}], summary:{label:'Oct 1-3', pnl:'+$50', wr:'33%', tr:'3'} },
+                          { days: [4,5,6,7,8,9,10], summary:{label:'Oct 4-10', empty:true} },
+                          { days: [11,12,13,14,15,16,17], summary:{label:'Oct 11-17', empty:true} },
+                          { days: [18,19,20,21,22,23,24], summary:{label:'Oct 18-24', empty:true} },
+                          { days: [25,26,27,28,29,30,31], summary:{label:'Oct 25-31', empty:true} },
+                        ].map((week, wi) => (
+                          <div key={wi} className="grid grid-cols-[repeat(7,minmax(0,1fr))_72px] gap-1">
+                            {week.days.map((c, di) => (
+                              <div key={di} className={`aspect-square rounded-md border p-1 flex flex-col text-[8px] font-bold ${
+                                c == null ? 'border-transparent bg-transparent' :
+                                typeof c === 'number' ? 'border-border bg-muted/10 text-muted-foreground/60' :
+                                c.neg ? 'border-danger/25 bg-danger/10 text-danger' :
+                                'border-primary/30 bg-primary/15 text-primary'
+                              }`}>
+                                {typeof c === 'object' && c ? (
+                                  <>
+                                    <span>{c.d}</span>
+                                    <span className="mt-auto flex items-end justify-between gap-0.5">
+                                      <span className="text-[7px] font-medium text-muted-foreground">{c.t}</span>
+                                      <span>{c.v}</span>
+                                    </span>
+                                  </>
+                                ) : c}
+                              </div>
+                            ))}
+                            <div className={`rounded-md border p-1.5 text-[8px] flex flex-col justify-center gap-0.5 ${
+                              week.summary.empty ? 'border-border bg-muted/10' : 'border-primary/30 bg-primary/10'
+                            }`}>
+                              <p className="text-[8px] font-semibold text-foreground">{week.summary.label}</p>
+                              {week.summary.empty ? (
+                                <p className="text-[7px] text-muted-foreground/60">No trades</p>
+                              ) : (
+                                <>
+                                  <p className="text-muted-foreground">P&L <span className="float-right font-bold font-mono text-primary">{week.summary.pnl}</span></p>
+                                  <p className="text-muted-foreground">Win Rate <span className="float-right font-semibold text-foreground">{week.summary.wr}</span></p>
+                                  <p className="text-muted-foreground">Trades <span className="float-right font-semibold text-foreground">{week.summary.tr}</span></p>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        ))}
                       </div>
                       <div className="flex items-center gap-3 mt-2 text-[8px] text-muted-foreground">
-                        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />Profit</span>
-                        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-red-500" />Loss</span>
+                        <span className="font-semibold text-foreground">Day Results</span>
+                        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-sm bg-primary/30 border border-primary/40" />Profit</span>
+                        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-sm bg-danger/30 border border-danger/40" />Loss</span>
+                        <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-sm bg-muted/40 border border-border" />No activity</span>
                       </div>
                     </motion.div>
 
