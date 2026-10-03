@@ -876,7 +876,7 @@ function DashboardShowcase({ onSignup }: { onSignup: () => void }) {
           <button onClick={onSignup} className="group inline-flex items-center gap-2.5 bg-primary hover:bg-primary text-white px-8 py-4 rounded-md font-black text-sm transition-all hover:shadow-2xl hover:shadow-primary/25 hover:-translate-y-0.5">
             Start your 14-day trial <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform"/>
           </button>
-          <p className="text-xs text-muted-foreground/70 mt-3">No credit card · 14-day trial available</p>
+          <p className="text-xs text-muted-foreground/70 mt-3">Payment method required · 14-day trial available</p>
         </motion.div>
       </div>
     </section>
