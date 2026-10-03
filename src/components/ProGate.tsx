@@ -17,7 +17,7 @@ interface ProGateProps {
 }
 
 /**
- * Wraps any Pro-only feature. On free plans: visible but interaction
+ * Wraps any Pro-only feature. Without an active eligible plan: visible but interaction
  * intercepted; click anywhere inside opens the upgrade modal. On Pro/
  * Elite: passes through with `locked=false`.
  *
