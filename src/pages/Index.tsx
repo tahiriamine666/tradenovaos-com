@@ -281,7 +281,7 @@ function TradingCalendar({ dark }: { dark: boolean }) {
   const { activeAccountId, version } = useActiveAccount();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [mode, setMode] = useState<'pnl' | 'psychology'>('pnl');
-  const [dayMap, setDayMap] = useState<Record<number, { pnl: number; trades: number; discipline: number }>>({});
+  const [dayMap, setDayMap] = useState<Record<number, { pnl: number; trades: number; discipline: number; wins: number }>>({});
   const [loading, setLoading] = useState(true);
   const [reportPeriod, setReportPeriod] = useState<ReportPeriod | null>(null);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
@@ -310,12 +310,14 @@ function TradingCalendar({ dark }: { dark: boolean }) {
       if (activeAccountId) query = query.eq('trading_account_id', activeAccountId);
       const { data } = await query;
 
-      const grouped: Record<number, { pnl: number; trades: number; discipline: number }> = {};
+      const grouped: Record<number, { pnl: number; trades: number; discipline: number; wins: number }> = {};
       (data ?? []).forEach((t) => {
         const day = getTradeDateDay(t.trade_date);
-        if (!grouped[day]) grouped[day] = { pnl: 0, trades: 0, discipline: 0 };
-        grouped[day].pnl += (t as any).result ?? (t as any).pnl ?? 0;
+        if (!grouped[day]) grouped[day] = { pnl: 0, trades: 0, discipline: 0, wins: 0 };
+        const r = (t as any).result ?? (t as any).pnl ?? 0;
+        grouped[day].pnl += r;
         grouped[day].trades += 1;
+        if (r > 0) grouped[day].wins += 1;
         grouped[day].discipline += Number((t as any).discipline_score ?? 0);
       });
       setDayMap(grouped);
@@ -333,84 +335,128 @@ function TradingCalendar({ dark }: { dark: boolean }) {
     activeDays: summary.activeDays + 1,
   }), { pnl: 0, trades: 0, wins: 0, losses: 0, activeDays: 0 });
 
+  const compactMoney = (v: number) => `${v > 0 ? '+' : v < 0 ? '-' : ''}$${Math.abs(Math.round(v)).toLocaleString()}`;
+  const monthShort = new Date(year, month).toLocaleString('default', { month: 'short' });
+
+  const weeks: { days: (number | null)[]; start: number; end: number; pnl: number; trades: number; wins: number }[] = [];
+  for (let w = 0; w < totalCells / 7; w++) {
+    const days: (number | null)[] = [];
+    let pnl = 0, trades = 0, wins = 0, start = 0, end = 0;
+    for (let d = 0; d < 7; d++) {
+      const dayNumber = w * 7 + d - firstDayOfWeek + 1;
+      const inMonth = dayNumber >= 1 && dayNumber <= daysInMonth;
+      days.push(inMonth ? dayNumber : null);
+      if (inMonth) {
+        if (!start) start = dayNumber;
+        end = dayNumber;
+        const e = dayMap[dayNumber];
+        if (e) { pnl += e.pnl; trades += e.trades; wins += e.wins; }
+      }
+    }
+    weeks.push({ days, start, end, pnl, trades, wins });
+  }
+
   return (
     <div className="space-y-5">
       <SectionTitle title="Trading Calendar" subtitle="Track your daily performance and psychology" />
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_260px]">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1fr)_240px]">
       <Card className="border-border bg-card shadow-none">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" onClick={prevMonth}><ChevronLeft className="h-4 w-4" /></Button>
             <span className="min-w-32 text-center text-sm font-semibold text-foreground">{monthLabel}</span>
             <Button variant="ghost" size="icon" onClick={nextMonth}><ChevronRight className="h-4 w-4" /></Button>
+            <Button size="sm" variant="outline" onClick={() => setCurrentDate(new Date())}>Today</Button>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Button size="sm" variant="outline" onClick={() => { setSelectedDay(new Date().getDate()); setReportPeriod('daily'); }}>Daily Report</Button>
-            <Button size="sm" variant="outline" onClick={() => setReportPeriod('weekly')}>Weekly Report</Button>
-            <Button size="sm" variant="outline" onClick={() => setReportPeriod('monthly')}>Monthly Report</Button>
-            <Tabs value={mode} onValueChange={(value) => setMode(value as 'pnl' | 'psychology')}><TabsList><TabsTrigger value="pnl">P&L</TabsTrigger><TabsTrigger value="psychology">Psychology</TabsTrigger></TabsList></Tabs>
+            <Button size="sm" variant="outline" onClick={() => { setSelectedDay(new Date().getDate()); setReportPeriod('daily'); }}>Daily</Button>
+            <Button size="sm" variant="outline" onClick={() => setReportPeriod('weekly')}>Weekly</Button>
+            <Button size="sm" variant="outline" onClick={() => setReportPeriod('monthly')}>Monthly</Button>
+            <Tabs value={mode} onValueChange={(value) => setMode(value as 'pnl' | 'psychology')}><TabsList><TabsTrigger value="pnl">$ P&L</TabsTrigger><TabsTrigger value="psychology">Psych</TabsTrigger></TabsList></Tabs>
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-7 gap-1 mb-2">
-          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-            <div key={day} className="text-center text-xs font-medium text-muted-foreground py-2">{day}</div>
+        <div className="grid grid-cols-[repeat(7,minmax(0,1fr))_130px] gap-1.5 mb-1.5">
+          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Week'].map((day) => (
+            <div key={day} className="text-center text-[11px] font-medium text-muted-foreground py-1.5">{day}</div>
           ))}
         </div>
         {loading ? (
-          <div className="grid grid-cols-7 gap-1">
-            {Array.from({ length: 35 }).map((_, i) => <Skeleton key={i} className="h-[70px] rounded-lg" />)}
+          <div className="grid grid-cols-[repeat(7,minmax(0,1fr))_130px] gap-1.5">
+            {Array.from({ length: 40 }).map((_, i) => <Skeleton key={i} className="h-[86px] rounded-lg" />)}
           </div>
         ) : (
-          <div className="grid grid-cols-7 gap-1">
-            {Array.from({ length: totalCells }, (_, i) => {
-              const dayNumber = i - firstDayOfWeek + 1;
-              const inMonth = dayNumber >= 1 && dayNumber <= daysInMonth;
-              const entry = inMonth ? dayMap[dayNumber] : undefined;
-              const positive = (entry?.pnl ?? 0) > 0;
-              const negative = (entry?.pnl ?? 0) < 0;
+          <div className="space-y-1.5">
+            {weeks.map((week, wi) => {
+              const winRate = week.trades ? Math.round((week.wins / week.trades) * 100) : 0;
               return (
-                <div key={i}
-                  onClick={() => { if (inMonth) { setSelectedDay(dayNumber); setReportPeriod('daily'); } }}
-                  className={cx(
-                   'rounded-md border border-border p-2 min-h-[92px] text-xs transition-colors',
-                  inMonth && 'cursor-pointer hover:border-primary/40',
-                  !inMonth && 'opacity-0',
-                  entry && positive && 'bg-success/10 border-success/25',
-                  entry && negative && 'bg-danger/10 border-danger/25',
-                   inMonth && !entry && 'bg-muted/20',
-                )}>
-                  {inMonth && (
-                    <>
-                      <p className="font-medium text-muted-foreground">{dayNumber}</p>
-                      {entry && (
-                        <div className="mt-1">
-                           <p className={cx('font-semibold text-[11px]', mode === 'psychology' ? 'text-primary' : positive ? 'text-success' : 'text-danger')}>
-                             {mode === 'pnl' ? `${entry.pnl > 0 ? '+' : ''}$${entry.pnl.toFixed(2)}` : `${entry.discipline ? Math.round(entry.discipline / entry.trades) : '—'}/10`}
-                          </p>
-                          <p className="text-muted-foreground text-[10px]">{entry.trades} trades</p>
-                        </div>
-                      )}
-                    </>
-                  )}
+                <div key={wi} className="grid grid-cols-[repeat(7,minmax(0,1fr))_130px] gap-1.5">
+                  {week.days.map((dayNumber, di) => {
+                    const entry = dayNumber != null ? dayMap[dayNumber] : undefined;
+                    const positive = (entry?.pnl ?? 0) > 0;
+                    const negative = (entry?.pnl ?? 0) < 0;
+                    return (
+                      <div key={di}
+                        onClick={() => { if (dayNumber != null) { setSelectedDay(dayNumber); setReportPeriod('daily'); } }}
+                        className={cx(
+                          'rounded-lg border border-border p-2 min-h-[86px] text-xs transition-colors flex flex-col',
+                          dayNumber != null && 'cursor-pointer hover:border-primary/40',
+                          dayNumber == null && 'opacity-0',
+                          entry && positive && 'bg-primary/15 border-primary/30',
+                          entry && negative && 'bg-danger/10 border-danger/25',
+                          dayNumber != null && !entry && 'bg-muted/10',
+                        )}>
+                        {dayNumber != null && (
+                          <>
+                            <p className="font-medium text-muted-foreground">{dayNumber}</p>
+                            {entry && (
+                              <div className="mt-auto space-y-0.5">
+                                <p className="text-[10px] text-muted-foreground">{entry.trades}t</p>
+                                <p className={cx('font-bold text-[11px] font-mono', mode === 'psychology' ? 'text-primary' : positive ? 'text-primary' : 'text-danger')}>
+                                  {mode === 'pnl' ? compactMoney(entry.pnl) : `${entry.discipline ? Math.round(entry.discipline / entry.trades) : '—'}/10`}
+                                </p>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
+                  <div className={cx(
+                    'rounded-lg border p-2 min-h-[86px] text-[10px] flex flex-col justify-center gap-0.5',
+                    week.trades ? 'border-primary/30 bg-primary/10' : 'border-border bg-muted/10',
+                  )}>
+                    <p className="font-semibold text-foreground text-[11px]">{monthShort} {week.start}-{week.end}</p>
+                    {week.trades ? (
+                      <>
+                        <p className="text-muted-foreground">P&L <span className={cx('float-right font-mono font-bold', week.pnl >= 0 ? 'text-primary' : 'text-danger')}>{compactMoney(week.pnl)}</span></p>
+                        <p className="text-muted-foreground">Win Rate <span className="float-right font-semibold text-foreground">{winRate}%</span></p>
+                        <p className="text-muted-foreground">Trades <span className="float-right font-semibold text-foreground">{week.trades}</span></p>
+                      </>
+                    ) : (
+                      <p className="text-muted-foreground/60">No trades</p>
+                    )}
+                  </div>
                 </div>
               );
             })}
           </div>
         )}
-        <div className="flex items-center gap-4 mt-4 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-success/20 border border-success/30" /> Profit Day</span>
-          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-danger/20 border border-danger/30" /> Loss Day</span>
+        <div className="flex items-center gap-4 mt-4 text-[11px] text-muted-foreground">
+          <span className="font-semibold text-foreground">Day Results</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-primary/20 border border-primary/30" /> Profit</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-danger/20 border border-danger/30" /> Loss</span>
+          <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-muted/20 border border-border" /> No activity</span>
         </div>
       </CardContent>
     </Card>
       <div className="space-y-3">
-        <Card className="border-primary/30 bg-card shadow-[0_0_24px_hsl(var(--primary)/0.08)]"><CardContent className="p-5"><p className="text-xs text-muted-foreground">Monthly P&L</p><p className={cx('mt-2 text-2xl font-bold font-mono', monthSummary.pnl >= 0 ? 'text-success' : 'text-danger')}>{formatMoney(monthSummary.pnl)}</p></CardContent></Card>
-        <Card className="border-border bg-card shadow-none"><CardContent className="space-y-4 p-5">{[
-          ['Total Trades', monthSummary.trades],
-          ['Win / Loss Days', `${monthSummary.wins} / ${monthSummary.losses}`],
+        <Card className="border-primary/30 bg-card shadow-[0_0_24px_hsl(var(--primary)/0.08)]"><CardContent className="p-5"><p className="text-xs text-muted-foreground">Monthly P&L</p><p className={cx('mt-2 text-2xl font-bold font-mono', monthSummary.pnl >= 0 ? 'text-primary' : 'text-danger')}>{formatMoney(monthSummary.pnl)}</p></CardContent></Card>
+        <Card className="border-border bg-card shadow-none"><CardContent className="p-5"><p className="text-xs text-muted-foreground">Total Trades</p><p className="mt-2 text-2xl font-bold text-foreground">{monthSummary.trades}</p></CardContent></Card>
+        <Card className="border-border bg-card shadow-none"><CardContent className="p-5"><p className="text-xs text-muted-foreground">Win/Loss Days</p><p className="mt-2 text-2xl font-bold text-foreground"><span className="text-primary">{monthSummary.wins}</span><span className="text-muted-foreground text-base"> / </span><span className="text-danger">{monthSummary.losses}</span></p><p className="mt-1 text-[10px] text-muted-foreground">Wins&nbsp;&nbsp;&nbsp;Loss</p></CardContent></Card>
+        <Card className="border-border bg-card shadow-none"><CardContent className="space-y-3 p-5">{[
           ['Active Days', monthSummary.activeDays],
           ['Average Daily', monthSummary.activeDays ? formatMoney(monthSummary.pnl / monthSummary.activeDays) : '$0.00'],
         ].map(([label, value]) => <div key={label} className="flex items-center justify-between border-b border-border pb-3 last:border-0 last:pb-0"><span className="text-xs text-muted-foreground">{label}</span><span className="text-sm font-semibold text-foreground">{value}</span></div>)}</CardContent></Card>
