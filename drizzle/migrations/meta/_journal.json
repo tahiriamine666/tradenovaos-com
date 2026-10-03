@@ -22,6 +22,13 @@
       "when": 1790813662753,
       "tag": "0002_add_trade_before_screenshot",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790998449794,
+      "tag": "0003_create_trade_plan_checklists",
+      "breakpoints": true
     }
   ]
 }

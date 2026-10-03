@@ -1655,6 +1655,53 @@ export type Database = {
         }
         Relationships: []
       }
+      trade_plan_checklists: {
+        Row: {
+          account_id: string | null
+          account_key: string
+          checklist_type: string
+          created_at: string
+          data: Json
+          id: string
+          period_date: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_id?: string | null
+          account_key?: string
+          checklist_type: string
+          created_at?: string
+          data?: Json
+          id?: string
+          period_date: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string | null
+          account_key?: string
+          checklist_type?: string
+          created_at?: string
+          data?: Json
+          id?: string
+          period_date?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trade_plan_checklists_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "trading_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trade_plans: {
         Row: {
           account_protection: boolean
