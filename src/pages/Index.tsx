@@ -21,7 +21,7 @@ const sidebarItems = [...BASE_ITEMS, ADMIN_ITEM];
 import TopBar from '@/components/TopBar';
 import { GlobalFiltersProvider } from '@/contexts/GlobalFiltersContext';
 import AnalyticsMetrics from '@/components/AnalyticsMetrics';
-import CommandCenter from '@/components/CommandCenter';
+import DashboardOverview from '@/components/DashboardOverview';
 import { getTradeDateDay } from '@/lib/dateUtils';
 import DayDetailsDialog from '@/components/calendar/DayDetailsDialog';
 import TradingReportDialog, { type ReportPeriod } from '@/components/calendar/TradingReportDialog';
@@ -601,7 +601,7 @@ function TradingDashboardInner() {
       >
           {active === 'dashboard' && (
             <>
-              <CommandCenter onNavigate={setActive} onAddTrade={openNewTrade} />
+              <DashboardOverview onNavigate={setActive} onAddTrade={openNewTrade} />
               <TradingCalendar dark={dark} />
             </>
           )}
