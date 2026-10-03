@@ -11,7 +11,6 @@ import TradePlanWorkspace from '@/components/tradeplan/TradePlanV2';
 import NovaAI from '@/pages/NovaAI';
 import { TradeDialogProvider, useTradeDialog, useTradesChanged, useNavigationEvent } from '@/contexts/TradeDialogContext';
 import EconomicCalendar from '@/pages/EconomicCalendar';
-import Certificates from '@/pages/Certificates';
 import TraderScore from '@/components/TraderScore';
 
 import AppLayout, { BASE_ITEMS, ADMIN_ITEM } from '@/components/AppLayout';
@@ -588,7 +587,6 @@ function TradingDashboardInner() {
 
           {active === 'economic' && <EconomicCalendar />}
 
-          {active === 'certificates' && <Certificates />}
 
           {active === 'settings' && <StudioSettings />}
 
