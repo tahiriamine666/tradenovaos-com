@@ -7,6 +7,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { History, SlidersHorizontal, Plus, Send, User, ChevronDown, Lightbulb, Activity } from 'lucide-react';
 import robotAsset from '@/assets/nova-robot-wave.png.asset.json';
+import { openCustomerPortal } from '@/lib/dodo';
 
 // Local Vite preview doesn't proxy CDN asset paths; the hosted preview does.
 const ROBOT = import.meta.env.DEV ? `https://id-preview--0ee4a120-abbf-401b-9623-1114b47e7fda.lovable.app${robotAsset.url}` : robotAsset.url;
@@ -111,6 +112,13 @@ export default function NovaAI() {
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
+  const [usage, setUsage] = useState<{ plan: string; limit: number; used: number; resets_at: string } | null>(null);
+  const [outOfCredits, setOutOfCredits] = useState(false);
+  const loadUsage = useCallback(async () => {
+    const { data } = await (supabase.rpc as any)('get_nova_usage');
+    if (data) { setUsage(data); setOutOfCredits(data.limit > 0 && data.used >= data.limit); }
+  }, []);
+  useEffect(() => { loadUsage(); }, [loadUsage]);
   const [histOpen, setHistOpen] = useState(false);
   const [convs, setConvs] = useState<Conv[]>([]);
   const [prefOpen, setPrefOpen] = useState(false);
