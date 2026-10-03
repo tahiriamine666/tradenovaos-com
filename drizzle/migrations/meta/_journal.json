@@ -50,6 +50,13 @@
       "when": 1791018023088,
       "tag": "0006_create_nova_chat",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791018317599,
+      "tag": "0007_economic_calendar_prefs",
+      "breakpoints": true
     }
   ]
 }

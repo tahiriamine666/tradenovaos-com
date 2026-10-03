@@ -35,13 +35,25 @@ export interface EconomicEvent {
   source_provider: string | null;
 }
 
+export type RangePreset = "today" | "tomorrow" | "this_week" | "next_week" | "this_month" | "next_month";
+export type RangeMode = "day" | "week" | "month" | "custom";
+
+/** Serializable date range. `preset` stays relative to "now" (so a saved "This Week" always means the current week). */
+export interface DateRangeSpec {
+  mode: RangeMode;
+  preset?: RangePreset;
+  anchor?: string; // YYYY-MM-DD for day/week/month navigation
+  from?: string;   // YYYY-MM-DD for custom
+  to?: string;
+}
+
+/** Empty array = "All". */
 export interface EventFilters {
-  from: Date;
-  to: Date;
-  country: string | "all";
-  currency: string | "all";
-  impact: ImpactLevel | "all";
-  category: string | "all";
+  range: DateRangeSpec;
+  currencies: string[];
+  impacts: ImpactLevel[];
+  categories: string[];
+  countries: string[];
   search: string;
 }
 
