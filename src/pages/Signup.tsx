@@ -4,7 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Zap } from 'lucide-react';
+import BrandLogo from '@/components/BrandLogo';
 import { toast } from 'sonner';
 import PasswordStrength, { checkPasswordStrength } from '@/components/PasswordStrength';
 import { lovable } from '@/integrations/lovable/index';
@@ -44,9 +44,7 @@ export default function Signup() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md border-0 shadow-xl">
         <CardHeader className="text-center space-y-4">
-          <div className="mx-auto w-12 h-12 rounded-xl bg-primary flex items-center justify-center">
-            <Zap className="h-6 w-6 text-primary-foreground" />
-          </div>
+          <BrandLogo className="mx-auto w-12 h-12 rounded-md object-cover" />
           <div>
             <CardTitle className="text-2xl font-heading">Create your account</CardTitle>
             <CardDescription>Start your TradeNova journey</CardDescription>

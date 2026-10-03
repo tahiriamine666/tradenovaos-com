@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Twitter, Instagram, ArrowRight } from 'lucide-react';
+import BrandLogo from '@/components/BrandLogo';
 
 const COLS: { title: string; links: { label: string; to: string; external?: boolean }[] }[] = [
   {
@@ -72,7 +73,7 @@ export default function MarketingFooter() {
       <div className="relative max-w-7xl mx-auto px-5 sm:px-8 py-16 grid grid-cols-1 md:grid-cols-12 gap-10">
         <div className="md:col-span-4 space-y-5">
           <Link to="/" className="flex items-center gap-2.5">
-            <img src="/tradenova-logo.png" alt="TradeNova" className="h-9 w-9 rounded-md object-cover ring-1 ring-primary/25 shadow-[0_0_24px_hsl(var(--primary)/0.22)]" />
+            <BrandLogo className="h-9 w-9 rounded-md object-cover ring-1 ring-primary/25 shadow-[0_0_24px_hsl(var(--primary)/0.22)]" />
             <span className="font-black text-foreground text-xl tracking-tight">TradeNova</span>
           </Link>
           <p className="text-sm text-muted-foreground leading-relaxed max-w-sm">

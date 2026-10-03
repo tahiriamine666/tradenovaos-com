@@ -19,6 +19,7 @@ import MarketingNavbar from '@/components/MarketingNavbar';
 import MarketingFooter from '@/components/marketing/MarketingFooter';
 import BrokersStrip from '@/components/marketing/BrokersStrip';
 import SeoHead from '@/components/SeoHead';
+import BrandLogo from '@/components/BrandLogo';
 
 const EQUITY_DATA = [
   { day: 'Jan', value: 0 }, { day: 'Feb', value: 1240 }, { day: 'Mar', value: 890 },
@@ -91,7 +92,7 @@ function Navbar({ onLogin, onSignup }: { onLogin: () => void; onSignup: () => vo
     <nav className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${scrolled ? 'bg-card/95 backdrop-blur-xl border-b border-border' : ''}`}>
       <div className="max-w-7xl mx-auto px-5 sm:px-8 flex items-center justify-between h-16">
         <div className="flex items-center gap-2.5">
-          <img src="/tradenova-logo.png" alt="TradeNova" className="w-8 h-8 rounded-lg object-contain" />
+          <BrandLogo className="w-8 h-8 rounded-md object-cover" />
           <span className="font-black text-foreground text-lg tracking-tight">TradeNova</span>
         </div>
         <div className="hidden md:flex items-center gap-8 text-sm text-muted-foreground">
@@ -374,7 +375,7 @@ function Hero({ onSignup }: { onSignup: () => void }) {
               {/* Sidebar */}
               <div className="hidden sm:flex w-44 lg:w-[210px] flex-col border-r border-border bg-sidebar p-3 flex-shrink-0">
                 <div className="flex items-center gap-2 mb-4 px-1">
-                  <img src="/tradenova-logo.png" alt="TradeNova" className="w-9 h-9 rounded-md object-contain shadow-sm shadow-primary/30" />
+                  <BrandLogo className="w-9 h-9 rounded-md object-cover shadow-sm shadow-primary/30" />
                   <div className="leading-tight">
                     <p className="text-[12px] font-black text-foreground tracking-tight">TradeNova</p>
                     <p className="text-[8px] font-semibold text-muted-foreground/70 tracking-[0.12em]">TRADING OS</p>
@@ -980,7 +981,7 @@ function Footer() {
     <footer className="border-t border-border py-10">
       <div className="max-w-7xl mx-auto px-5 sm:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="flex items-center gap-2.5">
-          <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center"><BarChart3 className="h-3.5 w-3.5 text-white"/></div>
+          <BrandLogo className="w-6 h-6 rounded-md object-cover" />
           <span className="text-sm font-black text-muted-foreground">TradeNova</span>
           <span className="text-muted-foreground/70 text-xs">· The Trading Operating System</span>
         </div>

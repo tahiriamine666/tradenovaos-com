@@ -5,6 +5,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import BrandLogo from '@/components/BrandLogo';
 import {
   BookOpen, BarChart3, PlayCircle, Sparkles, Brain, Target,
   TrendingUp, Users, Building2, Globe, HelpCircle, FileText,
@@ -158,7 +159,7 @@ export default function MarketingNavbar({ onLogin, onSignup }: MarketingNavbarPr
 
           {/* Logo */}
           <button onClick={() => handleNavigate('/')} className="flex items-center gap-2.5 flex-shrink-0">
-            <img src="/tradenova-logo.png" alt="TradeNova" className="w-8 h-8 rounded-md object-contain" />
+            <BrandLogo className="w-8 h-8 rounded-md object-cover" />
             <span className="font-black text-foreground text-lg tracking-tight">TradeNova</span>
           </button>
 

@@ -1,4 +1,5 @@
 # Redesign roadmap
+- [x] Replace TradeNova branding throughout the site with the supplied robot logo and matching favicon
 - [x] Install the new TradeNova N logo and favicon
 - [x] Apply the black and ice-blue global design system and typography
 - [x] Restyle the public homepage, navigation, broker strip, and footer
