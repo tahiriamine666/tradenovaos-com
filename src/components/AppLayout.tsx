@@ -24,7 +24,6 @@ export const BASE_ITEMS = [
   { id: 'journal',   label: 'Journal',    icon: BookOpen },
   { id: 'trades',    label: 'Trade Logs', icon: List },
   { id: 'analytics', label: 'Analytics',  icon: BarChart3 },
-  { id: 'calendar',  label: 'Calendar',   icon: CalendarDays },
   { id: 'ai',        label: 'Nova AI',    icon: Brain },
   { id: 'plan',      label: 'Checklist',  icon: ClipboardCheck },
   { id: 'economic',  label: 'Economic',   icon: CalendarClock },
