@@ -929,7 +929,7 @@ function Pricing({ onSignup }: { onSignup: () => void }) {
           <h2 className="text-4xl sm:text-5xl font-black text-foreground mb-4 tracking-tight">Simple, honest pricing</h2>
           <p className="text-muted-foreground">Start free. Upgrade when you're ready.</p>
         </motion.div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl mx-auto">
           {plans.map((p,i) => (
             <motion.div key={p.name} initial={{opacity:0,y:20}} animate={inView?{opacity:1,y:0}:{}} transition={{delay:i*0.09,duration:0.5}}
               className={`relative rounded-md p-6 border ${p.hi?'border-primary/40 bg-primary/5 shadow-xl shadow-primary/10':'border-border bg-card'}`}>
