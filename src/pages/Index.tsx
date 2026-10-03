@@ -594,7 +594,10 @@ function TradingDashboardInner() {
         className="space-y-8"
       >
           {active === 'dashboard' && (
-            <CommandCenter onNavigate={setActive} onAddTrade={openNewTrade} />
+            <>
+              <CommandCenter onNavigate={setActive} onAddTrade={openNewTrade} />
+              <TradingCalendar dark={dark} />
+            </>
           )}
 
           {active === 'plan' && <TradePlanWorkspace />}
