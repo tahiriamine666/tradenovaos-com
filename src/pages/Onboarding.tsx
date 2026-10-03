@@ -18,8 +18,8 @@ const PROBLEMS = [
   "No idea — that's the problem",
 ];
 const PLAN_FEATURES: Record<"pro" | "elite", string[]> = {
-  pro: ["Unlimited trades & journal", "Trade Plan & checklists", "NOVA AI assistant", "Up to 3 trading accounts"],
-  elite: ["Everything in Pro", "Unlimited trading accounts", "Priority NOVA AI", "Advanced analytics"],
+  pro: ["Journal, Trade Plan, checklists & analytics", "1 connected trading account", "NOVA AI — 500 credits / month"],
+  elite: ["Everything in Pro", "Unlimited connected trading accounts", "NOVA AI — 1,000 credits / month", "Priority support"],
 };
 
 type Price = { amount: number | null; currency: string };
