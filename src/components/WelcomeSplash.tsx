@@ -3,31 +3,32 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useProfile } from '@/hooks/useProfile';
 
 const EASE = [0.22, 1, 0.36, 1] as const;
-const SESSION_KEY = 'tradenova-welcome-shown';
+// Set by a successful login (password or Google); consumed once here.
+const PENDING_KEY = 'tradenova-welcome-pending';
 
 /**
- * One-per-session full-screen "Welcome Back, {name}" splash.
- * Shown when the user enters the app, then gently fades away.
+ * Full-screen "Welcome Back, {name}" splash, shown after every successful login.
+ * Refreshes and in-app navigation don't replay it.
  */
 export default function WelcomeSplash() {
-  const { profile, displayName, loading } = useProfile();
+  const { profile, loading } = useProfile();
   const reduceMotion =
     typeof window !== 'undefined' &&
     window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
   const [show, setShow] = useState(() => {
     try {
-      return sessionStorage.getItem(SESSION_KEY) !== '1';
+      return sessionStorage.getItem(PENDING_KEY) === '1';
     } catch {
-      return true;
+      return false;
     }
   });
   const [name, setName] = useState<string | null>(null);
 
-  // Mark as shown for this browser session on first mount.
+  // Consume the login trigger so a refresh doesn't replay it.
   useEffect(() => {
     if (!show) return;
-    try { sessionStorage.setItem(SESSION_KEY, '1'); } catch { /* storage unavailable */ }
+    try { sessionStorage.removeItem(PENDING_KEY); } catch { /* storage unavailable */ }
   }, [show]);
 
   // Wait for the profile so the greeting carries the real name.
