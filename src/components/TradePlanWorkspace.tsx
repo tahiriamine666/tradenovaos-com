@@ -454,11 +454,11 @@ export default function TradePlanWorkspace() {
           </div>
 
 
-          <button onClick={() => save(plan)} disabled={saving}
+          <Button onClick={() => { clearTimeout(autoSaveTimer.current); dirtyRef.current = false; const data = planRef.current; const date = loadedDate.current; inFlight.current = inFlight.current.then(() => save(data, date)); }} disabled={saving || viewOnly || (selectedDate !== today && !exists && !creating) || !!saveError}
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-black transition-all shadow-lg shadow-violet-500/20 disabled:opacity-50">
             <Save className="h-3.5 w-3.5"/>
             {saving ? 'Saving...' : 'Save Plan'}
-          </button>
+          </Button>
         </div>
       </div>
 
