@@ -36,7 +36,7 @@ type Status = TradingAccountRecord['status'];
 
 function planLimit(isElite: boolean, isPro: boolean): number {
   if (isElite) return Infinity;
-  if (isPro) return 3;
+  if (isPro) return 1;
   return 1;
 }
 
@@ -70,6 +70,7 @@ export default function TradingAccountsSection() {
   const { isPro, isElite, plan } = usePlan();
   const { refresh: refreshActive, setActiveAccountId } = useActiveAccount();
   const limit = planLimit(isElite, isPro);
+  const [limitOpen, setLimitOpen] = useState(false);
 
   const [accounts, setAccounts] = useState<TradingAccountRecord[]>([]);
   const [loading, setLoading] = useState(true);
@@ -134,11 +135,7 @@ export default function TradingAccountsSection() {
 
   const openAdd = () => {
     if (accounts.length >= limit) {
-      toast({
-        title: 'Account limit reached',
-        description: `Your ${plan} plan allows ${limit} trading account${limit === 1 ? '' : 's'}. Upgrade to add more.`,
-        variant: 'destructive',
-      });
+      setLimitOpen(true);
       return;
     }
     resetWizard();
