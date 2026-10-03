@@ -20,6 +20,8 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { toast } from '@/hooks/use-toast';
+import { openCustomerPortal } from '@/lib/dodo';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import {
   Wallet, Plus, Pencil, Trash2, Star, StarOff, Loader2, Building2, Trophy,
   CheckCircle2, XCircle, CircleDashed, ArrowLeft, RefreshCw, Search, ShieldCheck,
@@ -310,6 +312,18 @@ export default function TradingAccountsSection() {
 
   return (
     <>
+      <AlertDialog open={limitOpen} onOpenChange={setLimitOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Your Pro plan includes 1 connected trading account.</AlertDialogTitle>
+            <AlertDialogDescription>Upgrade to Elite to connect additional accounts.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => { openCustomerPortal().catch(() => { window.location.href = '/pricing'; }); }}>Upgrade to Elite</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between gap-3">
