@@ -8,7 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import robot from '@/assets/tradenova-robot.png.asset.json';
+import BrandLogo from '@/components/BrandLogo';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Impact = 'low' | 'medium' | 'high';
@@ -303,7 +303,7 @@ function Checklist({ daily, set, models, onModelsChange, readOnly }: { daily: Da
         </div>
         <div className="relative mx-auto w-28 sm:w-40">
           <div className={`absolute inset-0 rounded-full bg-primary blur-3xl transition-opacity duration-700 ${complete ? 'opacity-30' : 'opacity-[0.08]'}`} />
-          <img src={robot.url} alt="TradeNova checklist companion" className="relative w-full select-none rounded-3xl" draggable={false} />
+          <BrandLogo className="relative w-full select-none rounded-3xl" />
         </div>
       </div>
     </div>
