@@ -1319,16 +1319,6 @@ export type Database = {
         Args: { p_account_id?: string; p_user_id?: string }
         Returns: Json
       }
-      get_leaderboard: {
-        Args: { limit_count?: number }
-        Returns: {
-          display_name: string
-          level: number
-          streak_days: number
-          user_id: string
-          xp_total: number
-        }[]
-      }
       get_my_analytics: {
         Args: never
         Returns: {
