@@ -296,10 +296,10 @@ export default function TradePlanWorkspace() {
       if (!Object.keys(changes).length && persisted.current) { setDirty(false); return; }
       const payload = persisted.current ? changes : { ...planData, user_id: user.id, plan_date: date, name: planData.market_bias };
       delete (payload as any).id; delete (payload as any).updated_at;
-      const query = persisted.current
-        ? supabase.from('trade_plans').update(payload).eq('user_id', user.id).eq('plan_date', date)
-        : supabase.from('trade_plans').upsert(payload, { onConflict: 'user_id,plan_date' });
-      const { data, error } = await query.select('id').single();
+      const result = persisted.current
+        ? await supabase.from('trade_plans').update(payload as any).eq('user_id', user.id).eq('plan_date', date).select('id').single()
+        : await supabase.from('trade_plans').upsert(payload as any, { onConflict: 'user_id,plan_date' }).select('id').single();
+      const { data, error } = result;
 
       if (error) {
         setSaveError(error.message);
@@ -373,7 +373,7 @@ export default function TradePlanWorkspace() {
     const { data, error } = await supabase.from('trade_plans').select('*').eq('user_id', user.id).eq('plan_date', previous).maybeSingle();
     if (error || !data) { toast({ title: 'No previous plan to copy' }); return; }
     const { id, user_id, plan_date, created_at, updated_at, ...fields } = data;
-    const next = { ...EMPTY_PLAN, ...fields } as TradePlan;
+    const next = { ...EMPTY_PLAN, ...fields } as unknown as TradePlan;
     planRef.current = next;
     setPlan(next);
     dirtyRef.current = true; setDirty(true); setRevision(r => r + 1);
