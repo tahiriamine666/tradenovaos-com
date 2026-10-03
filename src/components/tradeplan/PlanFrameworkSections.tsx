@@ -53,10 +53,18 @@ function Field({ label, value, options, onChange }: { label: string; value: stri
   return (
     <div>
       <p className="text-[10px] font-bold text-white/30 uppercase tracking-wider mb-2">{label}</p>
-      <select value={value} onChange={e => onChange(e.target.value)} className={`${inputCls} cursor-pointer text-white/70`}>
-        <option value="">Select...</option>
-        {options.map(o => <option key={o} value={o}>{o}</option>)}
-      </select>
+      <Select value={value || undefined} onValueChange={onChange}>
+        <SelectTrigger className="w-full h-10 text-sm text-white/70 bg-white/[0.03] border border-white/[0.07] rounded-xl px-3 focus:outline-none focus:border-primary/40 transition-colors cursor-pointer [&>svg]:text-white/30">
+          <SelectValue placeholder="Select..." />
+        </SelectTrigger>
+        <SelectContent position="popper" className="border-white/[0.1]">
+          {options.map(o => (
+            <SelectItem key={o} value={o} className="text-white/80 focus:bg-white/[0.08] focus:text-white cursor-pointer">
+              {o}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }
@@ -88,7 +96,7 @@ function OptionalCard({ title, icon: Icon, enabled, onEnable, onSkip, enableLabe
   title: string; icon: React.ElementType; enabled: boolean; onEnable: () => void; onSkip: () => void;
   enableLabel: string; children: React.ReactNode;
 }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   return (
     <div className="border-b border-white/[0.06]">
       <div className="flex items-center justify-between w-full px-6 py-4 gap-3">
