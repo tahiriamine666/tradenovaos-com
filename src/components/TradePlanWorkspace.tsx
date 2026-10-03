@@ -10,6 +10,7 @@ import {
   Moon, Sun, Coffee, Battery, Activity, X,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import PlanFrameworkSections, { normalizeFramework, type PlanFramework } from '@/components/tradeplan/PlanFrameworkSections';
 
 
@@ -105,7 +106,7 @@ const EMPTY_PLAN: TradePlan = {
 };
 
 // ── Section wrapper ───────────────────────────────────────────────────────────
-function Section({ title, icon: Icon, color='text-violet-400', children, defaultOpen=true }: {
+function Section({ title, icon: Icon, color='text-violet-400', children, defaultOpen=false }: {
   title: string; icon: React.ElementType; color?: string;
   children: React.ReactNode; defaultOpen?: boolean;
 }) {
@@ -113,7 +114,7 @@ function Section({ title, icon: Icon, color='text-violet-400', children, default
   return (
     <div className="border-b border-white/[0.06] last:border-0">
       <button onClick={() => setOpen(v => !v)}
-        className="flex items-center justify-between w-full px-6 py-4 hover:bg-white/[0.02] transition-colors group">
+        className="flex items-center justify-between w-full px-5 py-3 hover:bg-white/[0.02] transition-colors group">
         <div className="flex items-center gap-2.5">
           <div className="w-6 h-6 rounded-lg bg-white/[0.04] flex items-center justify-center">
             <Icon className={`h-3.5 w-3.5 ${color}`} />
@@ -128,7 +129,7 @@ function Section({ title, icon: Icon, color='text-violet-400', children, default
           <motion.div initial={{ height:0, opacity:0 }} animate={{ height:'auto', opacity:1 }}
             exit={{ height:0, opacity:0 }} transition={{ duration:0.22, ease:[0.22,1,0.36,1] }}
             className="overflow-hidden">
-            <div className="px-6 pb-5">{children}</div>
+            <div className="px-5 pb-4">{children}</div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -357,13 +358,13 @@ export default function TradePlanWorkspace() {
   );
 
   return (
-    <div className="max-w-[1400px] mx-auto">
+    <div className="max-w-[1150px] mx-auto">
       <div className="min-w-0 space-y-0">
 
 
 
       {/* ── TOP HEADER ── */}
-      <div className="flex items-center justify-between gap-3 mb-5 flex-wrap">
+      <div className="flex items-center justify-between gap-3 mb-4 flex-wrap">
         <div>
           <h2 className="text-xl font-black text-white">Trade Plan</h2>
           <div className="flex items-center gap-3 mt-1">
@@ -476,11 +477,16 @@ export default function TradePlanWorkspace() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <p className="text-[10px] font-bold text-white/25 uppercase tracking-wider mb-2">Session</p>
-              <select value={plan.session} onChange={e => set('session',e.target.value)}
-                className="w-full text-sm text-white/70 bg-white/[0.03] border border-white/[0.07] rounded-xl px-3 py-2.5 focus:outline-none focus:border-violet-500/40 transition-colors cursor-pointer">
-                <option value="">Select...</option>
-                {SESSIONS.map(s=><option key={s} value={s}>{s}</option>)}
-              </select>
+              <Select value={plan.session || undefined} onValueChange={v => set('session', v)}>
+                <SelectTrigger className="w-full h-10 text-sm text-white/70 bg-white/[0.03] border border-white/[0.07] rounded-xl px-3 focus:outline-none focus:border-violet-500/40 transition-colors cursor-pointer [&>svg]:text-white/30">
+                  <SelectValue placeholder="Select..." />
+                </SelectTrigger>
+                <SelectContent position="popper" className="border-white/[0.1]">
+                  {SESSIONS.map(s => (
+                    <SelectItem key={s} value={s} className="text-white/80 focus:bg-white/[0.08] focus:text-white cursor-pointer">{s}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <p className="text-[10px] font-bold text-white/25 uppercase tracking-wider mb-2">Confidence — {plan.confidence}%</p>

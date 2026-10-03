@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CalendarDays, Target, ChevronDown, Plus, X } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export interface PlanFramework {
   weekly: {
@@ -52,10 +53,18 @@ function Field({ label, value, options, onChange }: { label: string; value: stri
   return (
     <div>
       <p className="text-[10px] font-bold text-white/30 uppercase tracking-wider mb-2">{label}</p>
-      <select value={value} onChange={e => onChange(e.target.value)} className={`${inputCls} cursor-pointer text-white/70`}>
-        <option value="">Select...</option>
-        {options.map(o => <option key={o} value={o}>{o}</option>)}
-      </select>
+      <Select value={value || undefined} onValueChange={onChange}>
+        <SelectTrigger className="w-full h-10 text-sm text-white/70 bg-white/[0.03] border border-white/[0.07] rounded-xl px-3 focus:outline-none focus:border-primary/40 transition-colors cursor-pointer [&>svg]:text-white/30">
+          <SelectValue placeholder="Select..." />
+        </SelectTrigger>
+        <SelectContent position="popper" className="border-white/[0.1]">
+          {options.map(o => (
+            <SelectItem key={o} value={o} className="text-white/80 focus:bg-white/[0.08] focus:text-white cursor-pointer">
+              {o}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }
@@ -87,10 +96,10 @@ function OptionalCard({ title, icon: Icon, enabled, onEnable, onSkip, enableLabe
   title: string; icon: React.ElementType; enabled: boolean; onEnable: () => void; onSkip: () => void;
   enableLabel: string; children: React.ReactNode;
 }) {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   return (
     <div className="border-b border-white/[0.06]">
-      <div className="flex items-center justify-between w-full px-6 py-4 gap-3">
+      <div className="flex items-center justify-between w-full px-5 py-3 gap-3">
         <button type="button" onClick={() => setOpen(v => !v)} className="flex items-center gap-2.5 flex-1 text-left group">
           <div className="w-6 h-6 rounded-lg bg-white/[0.04] flex items-center justify-center">
             <Icon className="h-3.5 w-3.5 text-primary" />
@@ -112,7 +121,7 @@ function OptionalCard({ title, icon: Icon, enabled, onEnable, onSkip, enableLabe
         {open && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }} className="overflow-hidden">
-            <div className="px-6 pb-5">
+            <div className="px-5 pb-4">
               {enabled ? children : (
                 <div className="flex items-center justify-between gap-3 rounded-xl border border-dashed border-white/[0.08] px-4 py-3">
                   <p className="text-xs text-white/35">{title.charAt(0) + title.slice(1).toLowerCase()} is optional</p>
@@ -135,13 +144,13 @@ export default function PlanFrameworkSections({ value, onChange }: { value: Plan
   const setW = (patch: Partial<PlanFramework['weekly']>) => onChange({ ...value, weekly: { ...w, ...patch } });
   const setS = (patch: Partial<PlanFramework['scenario']>) => onChange({ ...value, scenario: { ...s, ...patch } });
   const setD = (patch: Partial<PlanFramework['daily']>) => onChange({ ...value, daily: { ...d, ...patch } });
-  const grid = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4';
+  const grid = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3';
 
   return (
     <>
       <OptionalCard title="Weekly Outlook" icon={CalendarDays} enabled={w.enabled} enableLabel="Add Weekly Outlook"
         onEnable={() => setW({ enabled: true })} onSkip={() => setW({ enabled: false })}>
-        <div className="space-y-5">
+        <div className="space-y-4">
           <div className={grid}>
             <Field label="01 — Weekly Structure" value={w.structure} options={['Bullish', 'Bearish', 'Range']} onChange={v => setW({ structure: v })} />
             <Field label="02 — Major Liquidity" value={w.major_liquidity} options={['Major High', 'Major Low', 'Both']} onChange={v => setW({ major_liquidity: v })} />
@@ -186,7 +195,7 @@ export default function PlanFrameworkSections({ value, onChange }: { value: Plan
 
       <OptionalCard title="Daily Outlook" icon={CalendarDays} enabled={d.enabled} enableLabel="Enable Daily Outlook"
         onEnable={() => setD({ enabled: true })} onSkip={() => setD({ enabled: false })}>
-        <div className="space-y-5">
+        <div className="space-y-4">
           <div className={grid}>
             <Field label="01 — Weekly Context" value={d.weekly_context} options={['Bullish', 'Bearish', 'Range']} onChange={v => setD({ weekly_context: v })} />
             <Field label="02 — Daily Structure" value={d.structure} options={['Bullish', 'Bearish', 'Range', 'Transition']} onChange={v => setD({ structure: v })} />
