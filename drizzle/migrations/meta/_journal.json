@@ -29,6 +29,13 @@
       "when": 1790998449794,
       "tag": "0003_create_trade_plan_checklists",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791003898981,
+      "tag": "0004_create_certificates",
+      "breakpoints": true
     }
   ]
 }

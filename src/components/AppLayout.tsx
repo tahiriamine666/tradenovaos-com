@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowLeft, BarChart3, BookOpen, Brain, CalendarClock, CalendarDays,
+  ArrowLeft, Award, BarChart3, BookOpen, Brain, CalendarClock, CalendarDays,
   CheckCircle2, ChevronRight, Circle, CircleDollarSign, ClipboardCheck,
   LayoutDashboard, List, Lock, Menu, PanelLeftClose, PanelLeftOpen, Search, Settings, Shield, Users, X,
 } from 'lucide-react';
@@ -27,6 +27,7 @@ export const BASE_ITEMS = [
   { id: 'ai',        label: 'Nova AI',    icon: Brain },
   { id: 'plan',      label: 'Checklist',  icon: ClipboardCheck },
   { id: 'economic',  label: 'Economic',   icon: CalendarClock },
+  { id: 'certificates', label: 'Certificates', icon: Award },
   { id: 'settings',  label: 'Settings',   icon: Settings },
 ];
 
