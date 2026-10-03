@@ -462,11 +462,28 @@ export default function TradePlanWorkspace() {
         </div>
       </div>
 
+      {user && <PlanHistoryCalendar userId={user.id} selectedDate={selectedDate} onSelect={date => void navigate(date)} refresh={historyRefresh} />}
+      <div className="flex flex-wrap items-center gap-2 mb-4 text-xs text-muted-foreground">
+        <Button variant="outline" size="sm" aria-label="Previous day" onClick={() => shiftDay(-1)}><ChevronLeft className="h-4 w-4" /></Button>
+        <span className="font-medium text-foreground">{dateLabel}</span>
+        <Button variant="outline" size="sm" aria-label="Next day" onClick={() => shiftDay(1)}><ChevronRight className="h-4 w-4" /></Button>
+        <Button variant="ghost" size="sm" onClick={() => void navigate(toKey(new Date()))}>{selectedDate === today ? 'Today' : 'Back to Today'}</Button>
+      </div>
+      {selectedDate !== today && <div className="mb-4 flex flex-wrap items-center gap-3 border-l-2 border-primary pl-3 text-xs text-muted-foreground">
+        <span>{exists ? 'Viewing historical plan' : 'Historical date'} — {dateLabel}</span>
+        {exists && <Button size="sm" variant="outline" onClick={() => setViewOnly(v => !v)}>{viewOnly ? 'Edit Plan' : 'View Plan'}</Button>}
+      </div>}
+      {!exists && selectedDate !== today && !creating && <div className="mb-4 flex items-center justify-between gap-3 border border-border p-3 text-sm text-muted-foreground">
+        <span>No Trade Plan saved for this day.</span>
+        <Button size="sm" onClick={() => { setCreating(true); setViewOnly(false); }}>Create Plan</Button>
+      </div>}
+      {!exists && selectedDate === today && <Button size="sm" variant="outline" className="mb-4" onClick={() => void copyPrevious()}><Copy className="h-4 w-4 mr-2" />Copy Previous Plan</Button>}
+      <fieldset disabled={viewOnly || (selectedDate !== today && !exists && !creating)} className="min-w-0">
 
       {/* ── MAIN CARD ── */}
       <div className="rounded-3xl border border-white/[0.08] bg-white/[0.02] overflow-hidden shadow-2xl shadow-black/30">
 
-        <PlanFrameworkSections value={framework} onChange={setFramework} />
+        <PlanFrameworkSections value={framework} onChange={setFramework} selectedDate={selectedDate} readOnly={viewOnly || (selectedDate !== today && !exists && !creating)} />
 
         {/* SECTION 1: MARKET OVERVIEW */}
         <Section title="Market Overview" icon={Activity} color="text-violet-400">
@@ -776,7 +793,7 @@ export default function TradePlanWorkspace() {
         </Section>
 
       </div>
-
+      </fieldset>
       <div className="flex items-center justify-center gap-2 pt-2 pb-4">
         <div className={`w-1.5 h-1.5 rounded-full ${saveError ? 'bg-red-500' : saving?'bg-violet-500 animate-pulse':'bg-emerald-500/50'}`}/>
         <span className={`text-[10px] ${saveError ? 'text-red-400/70' : 'text-white/25'}`}>
