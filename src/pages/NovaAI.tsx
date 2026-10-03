@@ -7,6 +7,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { History, SlidersHorizontal, Plus, Send, User, ChevronDown, Lightbulb, Activity } from 'lucide-react';
 import robotAsset from '@/assets/nova-robot-wave.png.asset.json';
+import { openCustomerPortal } from '@/lib/dodo';
 
 // Local Vite preview doesn't proxy CDN asset paths; the hosted preview does.
 const ROBOT = import.meta.env.DEV ? `https://id-preview--0ee4a120-abbf-401b-9623-1114b47e7fda.lovable.app${robotAsset.url}` : robotAsset.url;
@@ -111,6 +112,13 @@ export default function NovaAI() {
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
+  const [usage, setUsage] = useState<{ plan: string; limit: number; used: number; resets_at: string } | null>(null);
+  const [outOfCredits, setOutOfCredits] = useState(false);
+  const loadUsage = useCallback(async () => {
+    const { data } = await (supabase.rpc as any)('get_nova_usage');
+    if (data) { setUsage(data); setOutOfCredits(data.limit > 0 && data.used >= data.limit); }
+  }, []);
+  useEffect(() => { loadUsage(); }, [loadUsage]);
   const [histOpen, setHistOpen] = useState(false);
   const [convs, setConvs] = useState<Conv[]>([]);
   const [prefOpen, setPrefOpen] = useState(false);
@@ -154,7 +162,11 @@ export default function NovaAI() {
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${s.session?.access_token}`, apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
         body: JSON.stringify({ messages: next.map(({ role, content }) => ({ role, content })) }),
       });
-      if (!res.ok || !res.body) { const j = await res.json().catch(() => ({})); throw new Error(j.error || `NOVA error (${res.status})`); }
+      if (!res.ok || !res.body) {
+        const j = await res.json().catch(() => ({}));
+        if (j.code === 'nova_credits_exhausted') { setUsage(j.usage ?? usage); setMsgs(m => m.filter(x => x.id !== userMsg.id)); setOutOfCredits(true); return; }
+        throw new Error(j.error || `NOVA error (${res.status})`);
+      }
       const aid = uid(); let acc = '';
       setMsgs(m => [...m, { id: aid, role: 'assistant', content: '' }]);
       const reader = res.body.getReader(); const dec = new TextDecoder();
@@ -166,6 +178,7 @@ export default function NovaAI() {
       if (!acc.trim()) throw new Error('NOVA returned an empty answer.');
       const { error: e2 } = await supabase.from('nova_messages').insert({ conversation_id: cid, user_id: user.id, role: 'assistant', content: acc });
       if (e2) throw e2;
+      loadUsage();
       await supabase.from('nova_conversations').update({ preview: acc.replace(/[#*_`>]/g, '').slice(0, 120) }).eq('id', cid);
     } catch (e: any) {
       toast({ title: 'NOVA could not answer', description: e?.message, variant: 'destructive' });
@@ -216,6 +229,18 @@ export default function NovaAI() {
 
   return (
     <div className="mx-auto max-w-7xl space-y-5">
+      {usage && usage.limit > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-card px-4 py-2 text-xs">
+          <span className="text-muted-foreground"><span className="font-semibold uppercase text-primary">{usage.plan}</span> · {usage.used.toLocaleString()} / {usage.limit.toLocaleString()} NOVA credits used · resets {new Date(usage.resets_at + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+          <span className="text-muted-foreground">{Math.max(0, usage.limit - usage.used).toLocaleString()} remaining</span>
+        </div>
+      )}
+      {outOfCredits && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm">
+          <span>You've used your NOVA credits for this billing period.</span>
+          {usage?.plan === 'pro' && <button onClick={() => { openCustomerPortal().catch(() => { window.location.href = '/pricing'; }); }} className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">Upgrade to Elite</button>}
+        </div>
+      )}
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <Robot className="h-20 w-14 shrink-0 sm:h-24 sm:w-16" thinking={busy} />

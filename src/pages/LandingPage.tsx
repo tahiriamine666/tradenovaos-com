@@ -918,9 +918,8 @@ function Testimonials() {
 function Pricing({ onSignup }: { onSignup: () => void }) {
   const { ref, inView } = useReveal();
   const plans = [
-    {name:'Free',  price:'$0',  desc:'Start tracking',          features:['50 trades/month','Trade journal','Basic analytics','Dark/light mode'],cta:'Start Free',hi:false},
-    {name:'Pro',   price:'$14', per:'/mo',desc:'Serious traders',badge:'Most Popular',features:['Unlimited trades','Trade Vault','Trade Plan','Community access','Advanced analytics','1 trading account','500 AI credits/mo'],cta:'Start 7-day Free Trial',hi:true},
-    {name:'Elite', price:'$28', per:'/mo',desc:'Funded traders', features:['Everything in Pro','Unlimited trading accounts','1,000 AI credits/mo','Learning Hub','Economic Calendar','AI Trading Assistant','Elite Community','Priority Support','Layout customization'],cta:'Upgrade to Elite',hi:false},
+    {name:'Pro',   price:'$14', per:'/mo',desc:'For serious traders building consistency',features:['Trade Journal & Trade Logs','Trading Calendar & core analytics','Trade Plan, outlooks & checklists','Psychology Score','Economic Calendar','1 connected trading account','NOVA AI — 500 credits/mo'],cta:'Start 14-Day Free Trial',hi:false},
+    {name:'Elite', price:'$28', per:'/mo',desc:'For traders managing more accounts',badge:'MOST POWERFUL',features:['Everything in Pro','Unlimited connected trading accounts','NOVA AI — 1,000 credits/mo','Priority support'],cta:'Start 14-Day Free Trial',hi:true},
   ];
   return (
     <section id="pricing" className="py-24 sm:py-32 relative" ref={ref}>
@@ -930,7 +929,7 @@ function Pricing({ onSignup }: { onSignup: () => void }) {
           <h2 className="text-4xl sm:text-5xl font-black text-foreground mb-4 tracking-tight">Simple, honest pricing</h2>
           <p className="text-muted-foreground">Start free. Upgrade when you're ready.</p>
         </motion.div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-4xl mx-auto">
           {plans.map((p,i) => (
             <motion.div key={p.name} initial={{opacity:0,y:20}} animate={inView?{opacity:1,y:0}:{}} transition={{delay:i*0.09,duration:0.5}}
               className={`relative rounded-md p-6 border ${p.hi?'border-primary/40 bg-primary/5 shadow-xl shadow-primary/10':'border-border bg-card'}`}>

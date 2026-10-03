@@ -64,6 +64,13 @@
       "when": 1791019792389,
       "tag": "0008_onboarding_access_gate",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791020023168,
+      "tag": "0009_plan_entitlements_nova_credits",
+      "breakpoints": true
     }
   ]
 }
