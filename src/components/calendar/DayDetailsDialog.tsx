@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, CalendarDays, Pencil, BookOpen, Target, Sun, CalendarRange, Crosshair, Image as ImageIcon, Loader2 } from 'lucide-react';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { ChevronLeft, ChevronRight, CalendarDays, Pencil, BookOpen, Target, Sun, CalendarRange, Loader2, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -40,9 +40,9 @@ function Rows({ items }: { items: [string, unknown][] }) {
 
 function Section({ icon: Icon, title, children, action }: { icon: any; title: string; children: React.ReactNode; action?: React.ReactNode }) {
   return (
-    <section className="rounded-xl border border-border bg-surface-1/60 p-4 space-y-3">
+    <section className="border-b border-border pb-6 space-y-4">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground"><Icon className="h-4 w-4 text-primary" />{title}</h3>
+        <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground"><span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10"><Icon className="h-4 w-4 text-primary" /></span>{title}</h3>
         {action}
       </div>
       {children}
@@ -64,8 +64,9 @@ export default function DayDetailsDialog({ date, onClose, onDateChange }: { date
   const load = useCallback(async (force = false) => {
     if (!user || !date) return;
     const ck = `${accountKey}|${key}`;
-    if (!force && cache.current.has(ck)) { setData(cache.current.get(ck)!); return; }
     const id = ++reqId.current;
+    const cached = cache.current.get(ck);
+    if (!force && cached) { setData(cached); setLoading(false); return; }
     setData(null); setLoading(true);
     let tq = supabase.from('trades').select('*').eq('user_id', user.id).eq('trade_date', key).order('created_at');
     if (activeAccountId) tq = tq.eq('trading_account_id', activeAccountId);
@@ -104,26 +105,25 @@ export default function DayDetailsDialog({ date, onClose, onDateChange }: { date
   const scenario = plan?.ai_analysis?.framework?.scenario;
   const hasScenario = scenario && (scenario.enabled || ['market', 'setup', 'confirmation', 'trigger', 'invalidation'].some(k => has(scenario[k])));
   const checklist: any[] = Array.isArray(plan?.checklist) ? plan.checklist : [];
-  const anyShots = trades.some(t => data?.shots[t.id]?.before || data?.shots[t.id]?.after);
   const empty = data && !trades.length && !j && !plan && !daily && !weekly;
 
   return (
-    <Dialog open onOpenChange={o => !o && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0 gap-0">
-        <div className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur px-5 py-4 space-y-3">
-          <div className="flex items-center justify-between gap-2 pr-6">
-            <DialogTitle className="flex items-center gap-2 text-lg"><CalendarDays className="h-5 w-5 text-primary" />
-              {date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
-            </DialogTitle>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Button size="sm" variant="outline" onClick={() => shift(-1)}><ChevronLeft className="h-4 w-4" />Previous Day</Button>
+    <Sheet open onOpenChange={o => !o && onClose()}>
+      <SheetContent side="right" className="w-full sm:w-[min(90vw,760px)] sm:max-w-none p-0 flex flex-col gap-0">
+        <div className="shrink-0 border-b border-border bg-background px-5 sm:px-7 py-5 pr-12">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-primary mb-1">Trading Calendar / Day Details</p>
+          <SheetTitle className="flex items-center gap-2 text-xl sm:text-2xl font-heading">
+            <CalendarDays className="h-5 w-5 shrink-0 text-primary" />
+            {date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+          </SheetTitle>
+          <div className="flex items-center gap-2 mt-4">
+            <Button size="icon" variant="outline" title="Previous day" aria-label="Previous day" onClick={() => shift(-1)}><ChevronLeft className="h-4 w-4" /></Button>
             <Button size="sm" variant="outline" onClick={() => onDateChange(new Date())}>Today</Button>
-            <Button size="sm" variant="outline" onClick={() => shift(1)}>Next Day<ChevronRight className="h-4 w-4" /></Button>
+            <Button size="icon" variant="outline" title="Next day" aria-label="Next day" onClick={() => shift(1)}><ChevronRight className="h-4 w-4" /></Button>
           </div>
         </div>
 
-        <div className="p-5 space-y-4">
+        <div key={`${accountKey}-${key}`} className="flex-1 overflow-y-auto overscroll-contain p-5 sm:p-7 space-y-6 content-crossfade">
           {(loading || !data) && <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />Loading day details...</div>}
 
           {data && empty && (
@@ -135,9 +135,9 @@ export default function DayDetailsDialog({ date, onClose, onDateChange }: { date
 
           {data && !empty && (<>
             {trades.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-6 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {([['P&L', money(pnl)], ['Trades', trades.length], ['Wins', wins], ['Losses', losses], ['Win Rate', `${Math.round((wins / trades.length) * 100)}%`], ['Direction', mainDir]] as [string, any][]).map(([k, v]) => (
-                  <div key={k} className="rounded-lg border border-border bg-surface-1/60 px-3 py-2">
+                  <div key={k} className="rounded-md border border-border bg-surface-1/60 px-4 py-3">
                     <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{k}</div>
                     <div className={`text-sm font-semibold ${k === 'P&L' ? (pnl >= 0 ? 'text-success' : 'text-danger') : 'text-foreground'}`}>{v}</div>
                   </div>
@@ -151,20 +151,47 @@ export default function DayDetailsDialog({ date, onClose, onDateChange }: { date
 
             {trades.map((t, i) => {
               const r = Number(t.result ?? 0);
-              const res = t.outcome ?? (r > 0 ? 'Win' : r < 0 ? 'Loss' : 'Breakeven');
+              const res = t.outcome ?? (t.result != null ? (r > 0 ? 'Win' : r < 0 ? 'Loss' : 'Breakeven') : null);
               return (
-                <Section key={t.id} icon={Crosshair} title={`Trade #${i + 1} — ${t.pair}`}
-                  action={<Button size="sm" variant="ghost" onClick={() => openEdit(t)}><Pencil className="h-3.5 w-3.5" />Edit</Button>}>
-                  <Rows items={[
+                <article key={t.id} className="rounded-md border border-border bg-surface-1/60 overflow-hidden">
+                  <div className="flex items-start justify-between gap-3 border-b border-border bg-primary/5 p-4 sm:p-5">
+                    <div className="min-w-0">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Trade {i + 1} of {trades.length}</p>
+                      <div className="mt-1 flex items-center gap-2 flex-wrap">
+                        <span className="text-lg font-semibold font-heading text-foreground break-words">{t.pair}</span>
+                        {t.side && <span className="flex items-center gap-0.5 text-xs font-semibold uppercase text-primary">{/long|buy/i.test(t.side) ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}{t.side}</span>}
+                      </div>
+                      {t.setup && <p className="mt-1 text-xs text-muted-foreground break-words">{t.setup}</p>}
+                    </div>
+                    <div className="shrink-0 text-right">
+                      {t.result != null && <p className={`text-lg font-mono font-bold ${r >= 0 ? 'text-success' : 'text-danger'}`}>{money(r)}</p>}
+                      <Button size="sm" variant="ghost" onClick={() => openEdit(t)}><Pencil className="h-3.5 w-3.5" />Edit</Button>
+                    </div>
+                  </div>
+                  <div className="p-4 sm:p-5 space-y-5">
+                    <Rows items={[
                     ['Direction', t.side], ['Entry', t.entry_price], ['Exit', t.exit_price], ['Size', t.quantity],
                     ['Stop Loss', t.stop_loss], ['Take Profit', t.take_profit],
                     ['P&L', t.result != null ? money(r) : null], ['R Multiple', t.rr != null ? `${Number(t.rr) >= 0 ? '+' : ''}${Number(t.rr).toFixed(2)}R` : null],
-                    ['Result', res], ['Session', t.session], ['Timeframe', t.timeframe], ['Setup', t.setup],
+                    ['Result', res], ['Session', t.session], ['Timeframe', t.timeframe],
                     ['Weekly Context', t.weekly_context], ['Daily Bias', t.daily_bias], ['Emotion', t.emotion],
                     ['Mistakes', t.mistakes], ['Tags', t.tags], ['Discipline', t.discipline_score != null ? `${t.discipline_score}/10` : null],
                     ['Notes', t.notes],
-                  ]} />
-                </Section>
+                    ]} />
+                    {(data.shots[t.id]?.before || data.shots[t.id]?.after) && <div className="grid gap-3 sm:grid-cols-2 border-t border-border pt-4">
+                      {(['before', 'after'] as const).map(kind => {
+                        const url = data.shots[t.id]?.[kind];
+                        if (!url) return null;
+                        return <div key={kind} className="min-w-0 space-y-2">
+                          <p className="text-[11px] font-semibold text-muted-foreground">{kind === 'before' ? 'Before trade' : 'After trade'}</p>
+                          <a href={url} target="_blank" rel="noreferrer" aria-label={`Open ${t.pair} ${kind} screenshot`} className="block rounded-md border border-border overflow-hidden bg-background">
+                            <img src={url} alt={`${t.pair} ${kind} trade`} className="aspect-video w-full object-contain" loading="lazy" />
+                          </a>
+                        </div>;
+                      })}
+                    </div>}
+                  </div>
+                </article>
               );
             })}
 
@@ -175,6 +202,7 @@ export default function DayDetailsDialog({ date, onClose, onDateChange }: { date
                   ['What Went Well', j.what_went_well], ['Mistakes', has(j.mistakes_list) ? j.mistakes_list : j.mistakes],
                   ['Bias', j.bias], ['Lessons Learned', j.lesson], ['Notes', j.notes],
                   ['Confidence', j.confidence_level], ['Rule Adherence', j.rule_adherence],
+                  ['Energy', j.energy_level], ['Stress', j.stress_label ?? j.stress_score], ['Session Time', j.session_time],
                 ]} />
               </Section>
             )}
@@ -228,29 +256,9 @@ export default function DayDetailsDialog({ date, onClose, onDateChange }: { date
               </Section>
             )}
 
-            {anyShots && (
-              <Section icon={ImageIcon} title="Chart Review">
-                {(['before', 'after'] as const).map(kind => {
-                  const imgs = trades.map(t => ({ t, url: data.shots[t.id]?.[kind] })).filter(x => x.url);
-                  if (!imgs.length) return null;
-                  return (
-                    <div key={kind} className="space-y-2">
-                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{kind === 'before' ? 'Before Trade' : 'After Trade'}</div>
-                      <div className="grid sm:grid-cols-2 gap-2">
-                        {imgs.map(({ t, url }) => (
-                          <a key={t.id} href={url!} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-lg border border-border">
-                            <img src={url!} alt={`${t.pair} ${kind} trade`} className="w-full h-44 object-cover" loading="lazy" />
-                          </a>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                })}
-              </Section>
-            )}
           </>)}
         </div>
-      </DialogContent>
-    </Dialog>
+      </SheetContent>
+    </Sheet>
   );
 }
