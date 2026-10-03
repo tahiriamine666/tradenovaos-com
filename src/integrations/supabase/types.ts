@@ -314,6 +314,45 @@ export type Database = {
         }
         Relationships: []
       }
+      certificates: {
+        Row: {
+          account_size: number | null
+          amount: number | null
+          cert_date: string
+          created_at: string
+          id: string
+          image_url: string | null
+          notes: string | null
+          prop_firm: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          account_size?: number | null
+          amount?: number | null
+          cert_date?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          notes?: string | null
+          prop_firm: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          account_size?: number | null
+          amount?: number | null
+          cert_date?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          notes?: string | null
+          prop_firm?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       community_bookmarks: {
         Row: {
           created_at: string
