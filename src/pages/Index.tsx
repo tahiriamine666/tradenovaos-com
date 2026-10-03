@@ -634,6 +634,7 @@ function TradingDashboardInner() {
 
       </motion.div>
     </AppLayout>
+    </>
   );
 }
 
