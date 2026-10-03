@@ -418,7 +418,7 @@ function Hero({ onSignup }: { onSignup: () => void }) {
               <div className="flex-1 min-w-0 flex flex-col">
                 {/* Top bar */}
                 <div className="flex items-center justify-between px-4 py-2.5 border-b border-border bg-card">
-                  <p className="text-[11px] font-semibold text-foreground/80">Command Center</p>
+                  <p className="text-[11px] font-semibold text-foreground/80">Dashboard</p>
                   <div className="flex items-center gap-1.5">
                     {['All Time','Filters','All Accounts'].map(t => (
                       <div key={t} className="text-[9px] font-medium text-muted-foreground border border-border rounded-lg px-2.5 py-1 bg-card">{t} ▾</div>
@@ -430,7 +430,7 @@ function Hero({ onSignup }: { onSignup: () => void }) {
                 <div className="p-4 sm:p-5 space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-[18px] font-black text-foreground leading-tight">Command Center</p>
+                      <p className="text-[18px] font-black text-foreground leading-tight">Dashboard</p>
                       <p className="text-[10px] text-muted-foreground mt-0.5">Wednesday, May 13</p>
                     </div>
                     <div className="inline-flex items-center gap-1.5 bg-primary text-white text-[10px] font-bold px-3 py-1.5 rounded-lg shadow-sm shadow-primary/30">+ New Trade</div>
