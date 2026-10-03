@@ -58,7 +58,7 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md border-0 shadow-xl">
         <CardHeader className="text-center space-y-4">
-          <BrandLogo className="mx-auto w-12 h-12 rounded-md object-cover" />
+          <BrandLogo className="mx-auto w-14 h-14 object-contain mix-blend-screen" />
           <div>
             <CardTitle className="text-2xl font-heading">Welcome back</CardTitle>
             <CardDescription>Sign in to your TradeNova account</CardDescription>

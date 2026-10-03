@@ -46,6 +46,27 @@ Deno.serve(async (req) => {
     } = {};
     try { body = await req.json(); } catch { /* ignore */ }
 
+    if ((body as any).action === "prices") {
+      const out: Record<string, unknown> = {};
+      for (const pl of ["pro", "elite"] as Plan[]) for (const bi of ["monthly", "yearly"] as Billing[]) {
+        const id = productIdForPlan(pl, bi);
+        if (!id) continue;
+        try {
+          const r = await fetch(`${dodoApiBase()}/products/${id}`, { headers: dodoAuthHeaders() });
+          const j = await r.json().catch(() => null);
+          const pr = j?.price ?? {};
+          if (r.ok) out[`${pl}_${bi}`] = {
+            amount: typeof pr.price === "number" ? pr.price / 100 : null,
+            currency: pr.currency ?? "USD",
+            trial_days: pr.trial_period_days ?? null,
+          };
+        } catch { /* skip */ }
+      }
+      return new Response(JSON.stringify({ prices: out }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const plan = body.plan;
     if (plan !== "pro" && plan !== "elite") {
       return new Response(JSON.stringify({ error: "invalid_plan" }), {
@@ -67,7 +88,8 @@ Deno.serve(async (req) => {
     }
 
     const origin = req.headers.get("origin") ?? "";
-    const returnUrl = origin ? `${origin}/billing/success` : undefined;
+    const fromOnboarding = (body as any).onboarding === true;
+    const returnUrl = origin ? `${origin}${fromOnboarding ? "/onboarding?checkout=done" : "/billing/success"}` : undefined;
     const email = (body.email && body.email.trim()) || claimEmail || undefined;
 
     const payload: Record<string, unknown> = {
@@ -82,6 +104,7 @@ Deno.serve(async (req) => {
       } : undefined,
       return_url: returnUrl,
       metadata: { user_id: userId, plan, billing },
+      ...(fromOnboarding ? { subscription_data: { trial_period_days: 14 } } : {}),
     };
 
     const res = await fetch(`${dodoApiBase()}/checkouts`, {

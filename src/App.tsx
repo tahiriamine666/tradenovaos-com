@@ -11,6 +11,8 @@ import { ActiveAccountProvider } from "@/contexts/ActiveAccountContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
 import Index from "./pages/Index.tsx";
+import Onboarding from "./pages/Onboarding.tsx";
+import RequireAccess from "@/components/RequireAccess";
 import Login from "./pages/Login.tsx";
 import Signup from "./pages/Signup.tsx";
 import LandingPage from "./pages/LandingPage.tsx";
@@ -71,11 +73,12 @@ const App = () => (
                   <Route
                     path="/app"
                     element={
-                      <ProtectedApp>
+                      <RequireAccess>
                         <Index />
-                      </ProtectedApp>
+                      </RequireAccess>
                     }
                   />
+                  <Route path="/onboarding" element={<ProtectedApp><Onboarding /></ProtectedApp>} />
                   <Route path="/dashboard" element={<Navigate to="/app" replace />} />
 
                   <Route path="/billing" element={<ProtectedApp><Billing /></ProtectedApp>} />
