@@ -7,13 +7,11 @@ import BrandLogo from '@/components/BrandLogo';
 type Item = { label: string; to: string; desc?: string };
 
 const PRODUCTS: Item[] = [
-  { label: 'Trade Journal', to: '/products/trade-journal', desc: 'Log every trade with rich context' },
-  { label: 'Edge Analytics', to: '/products/edge-analytics', desc: 'Find what makes you profitable' },
-  { label: 'Mind Journal', to: '/products/mind-journal', desc: 'Track psychology & emotions' },
-  { label: 'Playbook Lab', to: '/products/playbook-lab', desc: 'Build & refine your setups' },
-  { label: 'Replay Studio', to: '/products/replay-studio', desc: 'Replay trades bar-by-bar' },
-  { label: 'AI Insights', to: '/products/ai-insights', desc: 'AI coach for your trading' },
-  { label: 'CSV Import', to: '/products/csv-import', desc: 'Import from any broker' },
+  { label: 'Trade Journal', to: '/products/trade-journal', desc: 'Log trades with context and charts' },
+  { label: 'Analytics', to: '/products/edge-analytics', desc: 'Find what makes you profitable' },
+  { label: 'Trade Plan', to: '/products/playbook-lab', desc: 'Outlooks, rules & checklists' },
+  { label: 'Psychology', to: '/products/mind-journal', desc: 'Discipline & Psychology Score' },
+  { label: 'NOVA AI', to: '/products/ai-insights', desc: 'AI answers from your own data' },
 ];
 
 const SOLUTIONS: Item[] = [

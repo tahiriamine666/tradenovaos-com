@@ -384,13 +384,14 @@ function Hero({ onSignup }: { onSignup: () => void }) {
 
                 <div className="flex-1 flex flex-col gap-0.5">
                   {[
-                    {l:'Command Center', a:true},
+                    {l:'Dashboard', a:true},
+                    {l:'Journal'},
+                    {l:'Trade Logs'},
+                    {l:'Analytics'},
+                    {l:'NOVA AI'},
                     {l:'Trade Plan'},
-                    {l:'Trade Vault'},
-                    {l:'Community'},
-                    {l:'Learning Hub'},
                     {l:'Economic Calendar'},
-                    {l:'Studio Settings'},
+                    {l:'Settings'},
                   ].map(item => (
                     <div key={item.l} className={`text-[11px] px-3 py-1.5 rounded-lg font-medium flex items-center gap-2 ${item.a ? 'bg-primary text-white shadow-sm shadow-primary/30' : 'text-muted-foreground'}`}>
                       <span className="w-1 h-1 rounded-full bg-current opacity-60" />

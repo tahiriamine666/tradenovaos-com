@@ -10,7 +10,7 @@ export default function PublicPricingPage() {
       <SeoHead
         path="/pricing"
         title="Pricing — TradeNova OS plans for every trader"
-        description="Compare Free, Pro, and Elite plans. Start a 7-day free trial — journal trades, build playbooks, and unlock AI insights at the tier that fits."
+        description="Compare TradeNova Pro ($14/mo) and Elite ($28/mo). Start a 14-day free trial — journal, trade plans, analytics, psychology score and NOVA AI."
       />
       <MarketingNav />
       <main className="flex-1 bg-background text-foreground">
