@@ -375,7 +375,7 @@ function Hero({ onSignup }: { onSignup: () => void }) {
               {/* Sidebar */}
               <div className="hidden sm:flex w-44 lg:w-[210px] flex-col border-r border-border bg-sidebar p-3 flex-shrink-0">
                 <div className="flex items-center gap-2 mb-4 px-1">
-                  <BrandLogo className="w-9 h-9 rounded-md object-cover shadow-sm shadow-primary/30" />
+                  <BrandLogo className="w-9 h-9 object-contain shadow-[0_0_18px_hsl(var(--primary)/0.22)]" />
                   <div className="leading-tight">
                     <p className="text-[12px] font-black text-foreground tracking-tight">TradeNova</p>
                     <p className="text-[8px] font-semibold text-muted-foreground/70 tracking-[0.12em]">TRADING OS</p>
