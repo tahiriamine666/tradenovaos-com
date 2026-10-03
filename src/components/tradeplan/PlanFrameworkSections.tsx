@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CalendarDays, Target, ChevronDown, Plus, X } from 'lucide-react';
+import DatedChecklist from './DatedChecklist';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export interface PlanFramework {
@@ -46,6 +47,11 @@ export function normalizeFramework(raw: any): PlanFramework {
     daily: { ...EMPTY_FRAMEWORK.daily, ...(r.daily ?? {}) },
   };
 }
+
+const { enabled: _we, ...WEEKLY_TEMPLATE } = EMPTY_FRAMEWORK.weekly;
+const { enabled: _de, ...DAILY_TEMPLATE } = EMPTY_FRAMEWORK.daily;
+const WEEKLY_FIELDS = ['structure', 'major_liquidity', 'external_liquidity', 'price_location', 'narrative', 'bullish_scenario', 'bearish_scenario', 'news', 'bias', 'main_idea'] as (keyof typeof WEEKLY_TEMPLATE)[];
+const DAILY_FIELDS = ['weekly_context', 'structure', 'bias', 'current_price', 'key_level', 'scenario', 'news', 'direction'] as (keyof typeof DAILY_TEMPLATE)[];
 
 const inputCls = 'w-full text-sm text-white/80 placeholder:text-white/20 bg-white/[0.03] border border-white/[0.07] rounded-xl px-3 py-2.5 focus:outline-none focus:border-primary/40 transition-colors';
 
@@ -140,16 +146,14 @@ function OptionalCard({ title, icon: Icon, enabled, onEnable, onSkip, enableLabe
 }
 
 export default function PlanFrameworkSections({ value, onChange }: { value: PlanFramework; onChange: (f: PlanFramework) => void }) {
-  const w = value.weekly, s = value.scenario, d = value.daily;
-  const setW = (patch: Partial<PlanFramework['weekly']>) => onChange({ ...value, weekly: { ...w, ...patch } });
+  const s = value.scenario;
   const setS = (patch: Partial<PlanFramework['scenario']>) => onChange({ ...value, scenario: { ...s, ...patch } });
-  const setD = (patch: Partial<PlanFramework['daily']>) => onChange({ ...value, daily: { ...d, ...patch } });
   const grid = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3';
 
   return (
     <>
-      <OptionalCard title="Weekly Outlook" icon={CalendarDays} enabled={w.enabled} enableLabel="Add Weekly Outlook"
-        onEnable={() => setW({ enabled: true })} onSkip={() => setW({ enabled: false })}>
+      <DatedChecklist type="weekly" title="Weekly Outlook" icon={CalendarDays} template={WEEKLY_TEMPLATE} statusFields={WEEKLY_FIELDS}>
+        {(w, setW) => (
         <div className="space-y-4">
           <div className={grid}>
             <Field label="01 — Weekly Structure" value={w.structure} options={['Bullish', 'Bearish', 'Range']} onChange={v => setW({ structure: v })} />
@@ -170,7 +174,8 @@ export default function PlanFrameworkSections({ value, onChange }: { value: Plan
           </div>
           <RulesEditor title="Weekly Rules" rules={w.rules} onChange={r => setW({ rules: r })} placeholder="e.g. Wait for liquidity sweep" />
         </div>
-      </OptionalCard>
+      )}
+      </DatedChecklist>
 
       <OptionalCard title="Scenario Before Trade" icon={Target} enabled={s.enabled} enableLabel="Enable Scenario"
         onEnable={() => setS({ enabled: true })} onSkip={() => setS({ enabled: false })}>
@@ -193,8 +198,8 @@ export default function PlanFrameworkSections({ value, onChange }: { value: Plan
         </div>
       </OptionalCard>
 
-      <OptionalCard title="Daily Outlook" icon={CalendarDays} enabled={d.enabled} enableLabel="Enable Daily Outlook"
-        onEnable={() => setD({ enabled: true })} onSkip={() => setD({ enabled: false })}>
+      <DatedChecklist type="daily" title="Daily Outlook" icon={CalendarDays} template={DAILY_TEMPLATE} statusFields={DAILY_FIELDS}>
+        {(d, setD) => (
         <div className="space-y-4">
           <div className={grid}>
             <Field label="01 — Weekly Context" value={d.weekly_context} options={['Bullish', 'Bearish', 'Range']} onChange={v => setD({ weekly_context: v })} />
@@ -219,7 +224,8 @@ export default function PlanFrameworkSections({ value, onChange }: { value: Plan
             <RulesEditor title="Rules" rules={d.rules} onChange={r => setD({ rules: r })} placeholder="Add a rule..." />
           </div>
         </div>
-      </OptionalCard>
+      )}
+      </DatedChecklist>
     </>
   );
 }
