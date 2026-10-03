@@ -26,6 +26,7 @@ import { GlobalFiltersProvider } from '@/contexts/GlobalFiltersContext';
 import AnalyticsMetrics from '@/components/AnalyticsMetrics';
 import CommandCenter from '@/components/CommandCenter';
 import { getTradeDateDay } from '@/lib/dateUtils';
+import DayDetailsDialog from '@/components/calendar/DayDetailsDialog';
 import TradingReportDialog, { type ReportPeriod } from '@/components/calendar/TradingReportDialog';
 import {
   BarChart3, BookOpen, Brain, CalendarDays, CheckCircle2,
@@ -285,6 +286,8 @@ function TradingCalendar({ dark }: { dark: boolean }) {
   const [loading, setLoading] = useState(true);
   const [reportPeriod, setReportPeriod] = useState<ReportPeriod | null>(null);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  const [detailDate, setDetailDate] = useState<Date | null>(null);
+  const [journalDays, setJournalDays] = useState<Set<number>>(new Set());
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -308,7 +311,8 @@ function TradingCalendar({ dark }: { dark: boolean }) {
         .gte('trade_date', monthStart)
         .lte('trade_date', monthEnd);
       if (activeAccountId) query = query.eq('trading_account_id', activeAccountId);
-      const { data } = await query;
+      const [{ data }, { data: jd }] = await Promise.all([query, supabase.from('journal_entries').select('entry_date').eq('user_id', user.id).gte('entry_date', monthStart).lte('entry_date', monthEnd)]);
+      setJournalDays(new Set((jd ?? []).map((r: any) => Number(String(r.entry_date).slice(8, 10)))));
 
       const grouped: Record<number, { pnl: number; trades: number; discipline: number; wins: number }> = {};
       (data ?? []).forEach((t) => {
@@ -399,7 +403,7 @@ function TradingCalendar({ dark }: { dark: boolean }) {
                     const negative = (entry?.pnl ?? 0) < 0;
                     return (
                       <div key={di}
-                        onClick={() => { if (dayNumber != null) { setSelectedDay(dayNumber); setReportPeriod('daily'); } }}
+                        onClick={() => { if (dayNumber != null) { setSelectedDay(dayNumber); setDetailDate(new Date(year, month, dayNumber)); } }}
                         className={cx(
                           'rounded-lg border border-border p-2 min-h-[86px] text-xs transition-colors flex flex-col',
                           dayNumber != null && 'cursor-pointer hover:border-primary/40',
@@ -410,7 +414,7 @@ function TradingCalendar({ dark }: { dark: boolean }) {
                         )}>
                         {dayNumber != null && (
                           <>
-                            <p className="font-medium text-muted-foreground">{dayNumber}</p>
+                            <p className="font-medium text-muted-foreground flex items-center justify-between">{dayNumber}{journalDays.has(dayNumber) && <span title="Journal entry" className="text-[10px]">📝</span>}</p>
                             {entry && (
                               <div className="mt-auto space-y-0.5">
                                 <p className="text-[10px] text-muted-foreground">{entry.trades}t</p>
@@ -462,6 +466,7 @@ function TradingCalendar({ dark }: { dark: boolean }) {
         ].map(([label, value]) => <div key={label} className="flex items-center justify-between border-b border-border pb-3 last:border-0 last:pb-0"><span className="text-xs text-muted-foreground">{label}</span><span className="text-sm font-semibold text-foreground">{value}</span></div>)}</CardContent></Card>
       </div>
       </div>
+      <DayDetailsDialog date={detailDate} onClose={() => setDetailDate(null)} onDateChange={d => { setDetailDate(d); if (d.getMonth() !== month || d.getFullYear() !== year) setCurrentDate(new Date(d.getFullYear(), d.getMonth(), 1)); }} />
       <TradingReportDialog
         period={reportPeriod}
         anchor={reportPeriod === 'daily' ? new Date(year, month, selectedDay ?? 1) : new Date(year, month, Math.min(new Date().getDate(), daysInMonth))}
