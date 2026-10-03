@@ -281,7 +281,7 @@ function TradingCalendar({ dark }: { dark: boolean }) {
   const { activeAccountId, version } = useActiveAccount();
   const [currentDate, setCurrentDate] = useState(new Date());
   const [mode, setMode] = useState<'pnl' | 'psychology'>('pnl');
-  const [dayMap, setDayMap] = useState<Record<number, { pnl: number; trades: number; discipline: number }>>({});
+  const [dayMap, setDayMap] = useState<Record<number, { pnl: number; trades: number; discipline: number; wins: number }>>({});
   const [loading, setLoading] = useState(true);
   const [reportPeriod, setReportPeriod] = useState<ReportPeriod | null>(null);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
