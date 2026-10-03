@@ -10,6 +10,7 @@ import ForgotPassword from '@/components/ForgotPassword';
 import { lovable } from '@/integrations/lovable/index';
 
 async function handleGoogle() {
+  try { sessionStorage.setItem('tradenova-welcome-pending', '1'); } catch { /* ignore */ }
   const result = await lovable.auth.signInWithOAuth('google', {
     redirect_uri: window.location.origin + '/app',
   });
