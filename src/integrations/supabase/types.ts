@@ -836,6 +836,21 @@ export type Database = {
         }
         Relationships: []
       }
+      internal_access: {
+        Row: {
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       internal_config: {
         Row: {
           key: string
@@ -1315,15 +1330,22 @@ export type Database = {
           full_name: string | null
           id: string
           last_seen_at: string | null
+          main_trading_problem: string | null
+          market_types: string[]
+          onboarding_completed: boolean
+          onboarding_step: number
           paddle_customer_id: string | null
           paddle_price_id: string | null
           paddle_subscription_id: string | null
           plan_type: string
           preferred_market: string | null
           risk_per_trade: number | null
+          selected_billing: string | null
+          selected_plan: string | null
           subscription_plan: string
           subscription_status: string
           timezone: string
+          trading_experience: string | null
           trading_style: string
           trial_ends_at: string | null
           updated_at: string
@@ -1341,15 +1363,22 @@ export type Database = {
           full_name?: string | null
           id: string
           last_seen_at?: string | null
+          main_trading_problem?: string | null
+          market_types?: string[]
+          onboarding_completed?: boolean
+          onboarding_step?: number
           paddle_customer_id?: string | null
           paddle_price_id?: string | null
           paddle_subscription_id?: string | null
           plan_type?: string
           preferred_market?: string | null
           risk_per_trade?: number | null
+          selected_billing?: string | null
+          selected_plan?: string | null
           subscription_plan?: string
           subscription_status?: string
           timezone?: string
+          trading_experience?: string | null
           trading_style?: string
           trial_ends_at?: string | null
           updated_at?: string
@@ -1367,15 +1396,22 @@ export type Database = {
           full_name?: string | null
           id?: string
           last_seen_at?: string | null
+          main_trading_problem?: string | null
+          market_types?: string[]
+          onboarding_completed?: boolean
+          onboarding_step?: number
           paddle_customer_id?: string | null
           paddle_price_id?: string | null
           paddle_subscription_id?: string | null
           plan_type?: string
           preferred_market?: string | null
           risk_per_trade?: number | null
+          selected_billing?: string | null
+          selected_plan?: string | null
           subscription_plan?: string
           subscription_status?: string
           timezone?: string
+          trading_experience?: string | null
           trading_style?: string
           trial_ends_at?: string | null
           updated_at?: string
@@ -2438,6 +2474,7 @@ export type Database = {
         Returns: number
       }
       community_user_tier: { Args: never; Returns: string }
+      get_access_state: { Args: never; Returns: Json }
       get_active_users_now: { Args: never; Returns: Json }
       get_admin_analytics: { Args: { days_back?: number }; Returns: Json }
       get_admin_stats: { Args: never; Returns: Json }
@@ -2454,12 +2491,25 @@ export type Database = {
       }
       get_my_profile: { Args: never; Returns: Json }
       get_user_plan_info: { Args: never; Returns: Json }
+      has_internal_access: { Args: { _uid: string }; Returns: boolean }
       is_admin:
         | { Args: never; Returns: boolean }
         | { Args: { _uid: string }; Returns: boolean }
       request_upgrade: {
         Args: { p_message: string; p_payoneer_ref: string; p_plan: string }
         Returns: string
+      }
+      save_onboarding: {
+        Args: {
+          p_billing: string
+          p_completed: boolean
+          p_experience: string
+          p_market_types: string[]
+          p_plan: string
+          p_problem: string
+          p_step: number
+        }
+        Returns: undefined
       }
       update_last_seen: { Args: never; Returns: undefined }
       update_learning_streak: {

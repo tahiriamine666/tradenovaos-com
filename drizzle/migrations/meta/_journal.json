@@ -57,6 +57,13 @@
       "when": 1791018317599,
       "tag": "0007_economic_calendar_prefs",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791019792389,
+      "tag": "0008_onboarding_access_gate",
+      "breakpoints": true
     }
   ]
 }
