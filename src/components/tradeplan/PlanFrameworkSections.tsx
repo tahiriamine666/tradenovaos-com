@@ -145,14 +145,14 @@ function OptionalCard({ title, icon: Icon, enabled, onEnable, onSkip, enableLabe
   );
 }
 
-export default function PlanFrameworkSections({ value, onChange }: { value: PlanFramework; onChange: (f: PlanFramework) => void }) {
+export default function PlanFrameworkSections({ value, onChange, selectedDate, readOnly = false }: { value: PlanFramework; onChange: (f: PlanFramework) => void; selectedDate?: string; readOnly?: boolean }) {
   const s = value.scenario;
   const setS = (patch: Partial<PlanFramework['scenario']>) => onChange({ ...value, scenario: { ...s, ...patch } });
   const grid = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3';
 
   return (
     <>
-      <DatedChecklist type="weekly" title="Weekly Outlook" icon={CalendarDays} template={WEEKLY_TEMPLATE} statusFields={WEEKLY_FIELDS}>
+      <DatedChecklist type="weekly" selectedDate={selectedDate} readOnly={readOnly} legacyData={value.weekly} title="Weekly Outlook" icon={CalendarDays} template={WEEKLY_TEMPLATE} statusFields={WEEKLY_FIELDS}>
         {(w, setW) => (
         <div className="space-y-4">
           <div className={grid}>
@@ -177,7 +177,7 @@ export default function PlanFrameworkSections({ value, onChange }: { value: Plan
       )}
       </DatedChecklist>
 
-      <OptionalCard title="Scenario Before Trade" icon={Target} enabled={s.enabled} enableLabel="Enable Scenario"
+      <fieldset disabled={readOnly}><OptionalCard title="Scenario Before Trade" icon={Target} enabled={s.enabled} enableLabel="Enable Scenario"
         onEnable={() => setS({ enabled: true })} onSkip={() => setS({ enabled: false })}>
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -196,9 +196,9 @@ export default function PlanFrameworkSections({ value, onChange }: { value: Plan
             </div>
           </div>
         </div>
-      </OptionalCard>
+      </OptionalCard></fieldset>
 
-      <DatedChecklist type="daily" title="Daily Outlook" icon={CalendarDays} template={DAILY_TEMPLATE} statusFields={DAILY_FIELDS}>
+      <DatedChecklist type="daily" selectedDate={selectedDate} readOnly={readOnly} legacyData={value.daily} title="Daily Outlook" icon={CalendarDays} template={DAILY_TEMPLATE} statusFields={DAILY_FIELDS}>
         {(d, setD) => (
         <div className="space-y-4">
           <div className={grid}>

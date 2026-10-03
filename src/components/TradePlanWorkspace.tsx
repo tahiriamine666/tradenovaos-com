@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,6 +12,10 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import PlanFrameworkSections, { normalizeFramework, type PlanFramework } from '@/components/tradeplan/PlanFrameworkSections';
+import PlanHistoryCalendar from '@/components/tradeplan/PlanHistoryCalendar';
+import { toKey } from '@/components/tradeplan/DatedChecklist';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft, ChevronRight, Copy } from 'lucide-react';
 
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -191,7 +195,18 @@ function ScoreCircle({ value, label, color }: { value:number; label:string; colo
 // ── Main component ────────────────────────────────────────────────────────────
 export default function TradePlanWorkspace() {
   const { user } = useAuth();
-  const today = new Date().toISOString().split('T')[0];
+  const today = toKey(new Date());
+  const [selectedDate, setSelectedDate] = useState(today);
+  const [viewOnly, setViewOnly] = useState(false);
+  const [exists, setExists] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [historyRefresh, setHistoryRefresh] = useState(0);
+  const [revision, setRevision] = useState(0);
+  const baseline = useRef<TradePlan>(EMPTY_PLAN);
+  const persisted = useRef(false);
+  const saveFailed = useRef(false);
+  const loadedDate = useRef(selectedDate);
+  const inFlight = useRef<Promise<void>>(Promise.resolve());
 
   const [plan,      setPlan]      = useState<TradePlan>(EMPTY_PLAN);
   const [planId,    setPlanId]    = useState<string|null>(null);
@@ -204,6 +219,7 @@ export default function TradePlanWorkspace() {
   const [newsFilter,setNewsFilter]= useState<'high'|'medium'|'low'|'all'>('all');
   const [lastSaved, setLastSaved] = useState<Date|null>(null);
   const [saveError, setSaveError] = useState<string|null>(null);
+  const [loadError, setLoadError] = useState(false);
   const [dirty,     setDirty]     = useState(false);
   const autoSaveTimer = useRef<any>(null);
 
@@ -218,7 +234,7 @@ export default function TradePlanWorkspace() {
     return { label:'Market Closed', dot:'bg-white/20', active:false };
   })();
 
-  const dateLabel = new Date().toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric' });
+  const dateLabel = new Date(`${selectedDate}T12:00:00`).toLocaleDateString(undefined, { weekday:'long', month:'long', day:'numeric', year:'numeric' });
 
   // ── Load ──────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -226,64 +242,88 @@ export default function TradePlanWorkspace() {
     let cancelled = false;
     const load = async () => {
       setLoading(true);
+      setSaveError(null); setLoadError(false); saveFailed.current = false;
       const { data, error } = await supabase
         .from('trade_plans').select('*')
-        .eq('user_id', user.id).eq('plan_date', today).maybeSingle();
+        .eq('user_id', user.id).eq('plan_date', selectedDate).maybeSingle();
       if (cancelled) return;
-      if (error) toast({ title: 'Could not load your plan', description: error.message, variant: 'destructive' });
+      if (error) { setSaveError(error.message); setLoadError(true); setLoading(false); return; }
+      loadedDate.current = selectedDate;
+      setExists(!!data);
+      persisted.current = !!data;
+      setCreating(false);
+      setViewOnly(selectedDate !== toKey(new Date()));
+      setLastSaved(null);
+      setDirty(false);
+      dirtyRef.current = false;
+      let next = { ...EMPTY_PLAN, checklist: DEFAULT_CHECKLIST.map(i => ({ ...i })), setups_to_trade: ['', ''] };
       if (data) {
         setPlanId(data.id);
         const row: any = { ...data };
         delete row.id; delete row.user_id; delete row.plan_date; delete row.created_at;
         const cl = row.checklist as ChecklistItem[] | null;
         const setups = row.setups_to_trade as string[] | null;
-        setPlan({
+        next = {
           ...EMPTY_PLAN, ...row,
           checklist: cl && cl.length ? cl : DEFAULT_CHECKLIST,
           setups_to_trade: setups && setups.length >= 2 ? setups : [setups?.[0] ?? '', setups?.[1] ?? ''],
-        });
-      }
+        };
+      } else setPlanId(null);
+      baseline.current = next;
+      planRef.current = next;
+      setPlan(next);
       setLoading(false);
     };
     load();
     return () => { cancelled = true; };
-  }, [user, today]);
+  }, [user, selectedDate]);
 
   // ── Auto-save ─────────────────────────────────────────────────────────────
   const set = useCallback(<K extends keyof TradePlan>(key: K, value: TradePlan[K]) => {
-    setPlan(p => ({ ...p, [key]: value }));
-  }, []);
+    if (viewOnly || (selectedDate !== today && !exists && !creating)) return;
+    setPlan(p => { const next = { ...p, [key]: value }; planRef.current = next; return next; });
+    dirtyRef.current = true; setDirty(true); setRevision(r => r + 1);
+  }, [viewOnly, selectedDate, today, exists, creating]);
 
-  const save = useCallback(async (planData: TradePlan = plan) => {
-    if (!user) return;
+  const save = useCallback(async (planData: TradePlan, date = loadedDate.current) => {
+    if (!user || loadError || viewOnly || (date !== today && !exists && !creating)) return;
     setSaving(true);
     try {
-      const payload: any = {
-        ...planData, user_id: user.id, plan_date: today,
-        name: planData.market_bias,
-        updated_at: new Date().toISOString(),
-      };
-      // Strip server-managed / non-column fields
-      delete payload.id; delete payload.created_at;
-
-      const { data, error } = await supabase
-        .from('trade_plans')
-        .upsert(payload, { onConflict: 'user_id,plan_date' })
-        .select('id')
-        .single();
+      const changes: Record<string, any> = {};
+      for (const key of Object.keys(planData) as (keyof TradePlan)[]) {
+        if (key === 'id' || key === 'updated_at') continue;
+        if (JSON.stringify(planData[key]) !== JSON.stringify(baseline.current[key])) changes[key] = planData[key];
+      }
+      if (!Object.keys(changes).length && persisted.current) { setDirty(false); setSaveError(null); saveFailed.current = false; return; }
+      const payload = persisted.current ? changes : { ...planData, user_id: user.id, plan_date: date, name: planData.market_bias };
+      delete (payload as any).id; delete (payload as any).updated_at;
+      const result = persisted.current
+        ? await supabase.from('trade_plans').update(payload as any).eq('user_id', user.id).eq('plan_date', date).select('id').single()
+        : await supabase.from('trade_plans').upsert(payload as any, { onConflict: 'user_id,plan_date' }).select('id').single();
+      const { data, error } = result;
 
       if (error) {
         setSaveError(error.message);
+        saveFailed.current = true;
         toast({ title: 'Plan not saved', description: error.message, variant: 'destructive' });
         return;
       }
+      saveFailed.current = false;
       setSaveError(null);
-      if (data?.id) setPlanId(data.id);
-      setLastSaved(new Date()); setDirty(false);
+      if (loadedDate.current === date) {
+        persisted.current = true;
+        if (data?.id) setPlanId(data.id);
+        baseline.current = { ...baseline.current, ...changes };
+        setExists(true);
+        setCreating(false);
+        setHistoryRefresh(v => v + 1);
+        setLastSaved(new Date());
+        if (JSON.stringify(planRef.current) === JSON.stringify(planData)) setDirty(false);
+      }
     } finally {
       setSaving(false);
     }
-  }, [user, today, plan]);
+  }, [user, today, exists, creating, viewOnly, loadError]);
 
   // Keep a ref of the latest plan so we can flush on unmount / tab close
   const planRef = useRef(plan);
@@ -291,17 +331,18 @@ export default function TradePlanWorkspace() {
   const dirtyRef = useRef(false);
 
   useEffect(() => {
-    if (loading) return;
-    dirtyRef.current = true; setDirty(true);
+    if (!revision || loading || !dirtyRef.current) return;
     clearTimeout(autoSaveTimer.current);
-    autoSaveTimer.current = setTimeout(() => { dirtyRef.current = false; save(plan); }, 1200);
+    autoSaveTimer.current = setTimeout(() => { dirtyRef.current = false; const data = planRef.current; const date = loadedDate.current; inFlight.current = inFlight.current.then(() => save(data, date)); }, 1200);
     return () => clearTimeout(autoSaveTimer.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [plan, loading]);
+  }, [revision]);
 
   // Flush pending edits when leaving the page or hiding the tab
+  const saveRef = useRef(save);
+  useEffect(() => { saveRef.current = save; }, [save]);
   useEffect(() => {
-    const flush = () => { if (dirtyRef.current) { dirtyRef.current = false; save(planRef.current); } };
+    const flush = () => { if (dirtyRef.current) { clearTimeout(autoSaveTimer.current); dirtyRef.current = false; const data = planRef.current; const date = loadedDate.current; inFlight.current = inFlight.current.then(() => saveRef.current(data, date)); } };
     const onHide = () => { if (document.visibilityState === 'hidden') flush(); };
     window.addEventListener('pagehide', flush);
     document.addEventListener('visibilitychange', onHide);
@@ -310,7 +351,37 @@ export default function TradePlanWorkspace() {
       document.removeEventListener('visibilitychange', onHide);
       flush();
     };
-  }, [save]);
+  }, []);
+
+  const navigate = async (date: string) => {
+    if (date === selectedDate || loading) return;
+    clearTimeout(autoSaveTimer.current);
+    if (dirtyRef.current) {
+      dirtyRef.current = false;
+      const data = planRef.current; const oldDate = loadedDate.current;
+      inFlight.current = inFlight.current.then(() => save(data, oldDate));
+    }
+    await inFlight.current;
+    if (saveFailed.current || loadError) return;
+    setLoading(true);
+    setSelectedDate(date);
+  };
+  const shiftDay = (amount: number) => {
+    const [y, m, d] = selectedDate.split('-').map(Number);
+    void navigate(toKey(new Date(y, m - 1, d + amount)));
+  };
+  const copyPrevious = async () => {
+    if (!user || exists || viewOnly) return;
+    const [y, m, d] = selectedDate.split('-').map(Number);
+    const previous = toKey(new Date(y, m - 1, d - 1));
+    const { data, error } = await supabase.from('trade_plans').select('*').eq('user_id', user.id).eq('plan_date', previous).maybeSingle();
+    if (error || !data) { toast({ title: 'No previous plan to copy' }); return; }
+    const { id, user_id, plan_date, created_at, updated_at, ...fields } = data;
+    const next = { ...EMPTY_PLAN, ...fields } as unknown as TradePlan;
+    planRef.current = next;
+    setPlan(next);
+    dirtyRef.current = true; setDirty(true); setRevision(r => r + 1);
+  };
 
 
   // ── Checklist ─────────────────────────────────────────────────────────────
@@ -331,7 +402,7 @@ export default function TradePlanWorkspace() {
   const totalCount = plan.checklist.length;
   const progress   = totalCount > 0 ? Math.round((doneCount/totalCount)*100) : 0;
 
-  const framework = normalizeFramework((plan.ai_analysis as any)?.framework);
+  const framework = useMemo(() => normalizeFramework((plan.ai_analysis as any)?.framework), [plan.ai_analysis]);
   const setFramework = (f: PlanFramework) => {
     set('ai_analysis', { ...(plan.ai_analysis ?? {}), plan_mode: 'manual', framework: f });
   };
@@ -393,19 +464,48 @@ export default function TradePlanWorkspace() {
           </div>
 
 
-          <button onClick={() => save(plan)} disabled={saving}
+          <Button onClick={() => { clearTimeout(autoSaveTimer.current); dirtyRef.current = false; const data = planRef.current; const date = loadedDate.current; inFlight.current = inFlight.current.then(() => save(data, date)); }} disabled={saving || viewOnly || (selectedDate !== today && !exists && !creating) || loadError}
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-black transition-all shadow-lg shadow-violet-500/20 disabled:opacity-50">
             <Save className="h-3.5 w-3.5"/>
             {saving ? 'Saving...' : 'Save Plan'}
-          </button>
+          </Button>
         </div>
       </div>
 
-
+      {user && <PlanHistoryCalendar userId={user.id} selectedDate={selectedDate} onSelect={date => void navigate(date)} refresh={historyRefresh} />}
+      <div className="flex flex-wrap items-center gap-2 mb-4 text-xs text-muted-foreground">
+        <Button variant="outline" size="sm" aria-label="Previous day" onClick={() => shiftDay(-1)}><ChevronLeft className="h-4 w-4" /></Button>
+        <span className="font-medium text-foreground">{dateLabel}</span>
+        <Button variant="outline" size="sm" aria-label="Next day" onClick={() => shiftDay(1)}><ChevronRight className="h-4 w-4" /></Button>
+        <Button variant="ghost" size="sm" onClick={() => void navigate(toKey(new Date()))}>{selectedDate === today ? 'Today' : 'Back to Today'}</Button>
+      </div>
+      {selectedDate !== today && <div className="mb-4 flex flex-wrap items-center gap-3 border-l-2 border-primary pl-3 text-xs text-muted-foreground">
+        <span>{exists ? 'Viewing historical plan' : 'Historical date'} — {dateLabel}</span>
+        {exists && <Button size="sm" variant="outline" onClick={async () => {
+          if (!viewOnly) {
+            clearTimeout(autoSaveTimer.current);
+            if (dirtyRef.current) {
+              dirtyRef.current = false;
+              const data = planRef.current; const date = loadedDate.current;
+              inFlight.current = inFlight.current.then(() => saveRef.current(data, date));
+            }
+            await inFlight.current;
+            if (saveFailed.current) return;
+          }
+          setViewOnly(v => !v);
+        }}>{viewOnly ? 'Edit Plan' : 'View Plan'}</Button>}
+      </div>}
+      {!exists && selectedDate !== today && !creating && <div className="mb-4 flex items-center justify-between gap-3 border border-border p-3 text-sm text-muted-foreground">
+        <span>No Trade Plan saved for this day.</span>
+        <Button size="sm" onClick={() => { setCreating(true); setViewOnly(false); }}>Create Plan</Button>
+      </div>}
+      {!exists && selectedDate === today && <Button size="sm" variant="outline" className="mb-4" onClick={() => void copyPrevious()}><Copy className="h-4 w-4 mr-2" />Copy Previous Plan</Button>}
+      {(exists || selectedDate === today || creating) && <>
       {/* ── MAIN CARD ── */}
       <div className="rounded-3xl border border-white/[0.08] bg-white/[0.02] overflow-hidden shadow-2xl shadow-black/30">
 
-        <PlanFrameworkSections value={framework} onChange={setFramework} />
+        <PlanFrameworkSections value={framework} onChange={setFramework} selectedDate={selectedDate} readOnly={viewOnly || (selectedDate !== today && !exists && !creating)} />
+        <fieldset disabled={viewOnly} className="min-w-0">
 
         {/* SECTION 1: MARKET OVERVIEW */}
         <Section title="Market Overview" icon={Activity} color="text-violet-400">
@@ -714,8 +814,8 @@ export default function TradePlanWorkspace() {
           </div>
         </Section>
 
+        </fieldset>
       </div>
-
       <div className="flex items-center justify-center gap-2 pt-2 pb-4">
         <div className={`w-1.5 h-1.5 rounded-full ${saveError ? 'bg-red-500' : saving?'bg-violet-500 animate-pulse':'bg-emerald-500/50'}`}/>
         <span className={`text-[10px] ${saveError ? 'text-red-400/70' : 'text-white/25'}`}>
@@ -730,6 +830,7 @@ export default function TradePlanWorkspace() {
                 : 'All changes save automatically'}
         </span>
       </div>
+      </>}
       </div>
 
 
