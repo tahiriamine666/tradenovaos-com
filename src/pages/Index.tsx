@@ -571,7 +571,9 @@ function TradingDashboardInner() {
   const chartSuccess = 'hsl(var(--success))';
 
   return (
-    <AppLayout
+    <>
+      <WelcomeSplash />
+      <AppLayout
       active={active}
       onNavigate={setActive}
       dark={dark}
