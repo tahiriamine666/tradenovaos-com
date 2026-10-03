@@ -43,6 +43,13 @@
       "when": 1791017319677,
       "tag": "0005_trade_plan_v2_models_and_weekly_outlook",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791018023088,
+      "tag": "0006_create_nova_chat",
+      "breakpoints": true
     }
   ]
 }
