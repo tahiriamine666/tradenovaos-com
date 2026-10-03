@@ -477,8 +477,7 @@ export default function CommandCenter({ onNavigate, onAddTrade }: Props) {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Command Center"
-        description={new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
+        title={new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
         actions={
           onAddTrade && (
             <Button onClick={onAddTrade} size="sm">
