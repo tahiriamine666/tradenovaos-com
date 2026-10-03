@@ -7,13 +7,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import BrandLogo from '@/components/BrandLogo';
 import { toast } from 'sonner';
 import PasswordStrength, { checkPasswordStrength } from '@/components/PasswordStrength';
-import { lovable } from '@/integrations/lovable/index';
+import { supabase } from '@/integrations/supabase/client';
 
 async function handleGoogle() {
   try { sessionStorage.setItem('tradenova-welcome-pending', '1'); } catch { /* ignore */ }
   const result = await lovable.auth.signInWithOAuth('google', {
     redirect_uri: window.location.origin + '/app',
   });
+  const result = { error };
   if (result.error) toast.error(result.error.message ?? 'Google sign-in failed');
 }
 
