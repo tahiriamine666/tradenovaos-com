@@ -240,7 +240,6 @@ export default function TradePlanWorkspace() {
           ...EMPTY_PLAN, ...row,
           checklist: cl && cl.length ? cl : DEFAULT_CHECKLIST,
           setups_to_trade: setups && setups.length >= 2 ? setups : [setups?.[0] ?? '', setups?.[1] ?? ''],
-        if (savedMode === 'manual' || savedMode === 'ai') setMode(savedMode);
       }
       setLoading(false);
     };
