@@ -13,7 +13,7 @@ async function handleGoogle() {
   try { sessionStorage.setItem('tradenova-welcome-pending', '1'); } catch { /* ignore */ }
   const { error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
-    options: { redirectTo: window.location.origin + '/app' },
+    options: { redirectTo: 'https://tradenovaos.com/app' },
   });
   if (error) toast.error(error.message ?? 'Google sign-in failed');
 }
