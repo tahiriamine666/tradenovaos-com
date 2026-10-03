@@ -6,7 +6,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useActiveAccount } from "@/contexts/ActiveAccountContext";
-import { ChevronLeft, ChevronRight, Plus, Upload, AlertCircle, Wallet } from "lucide-react";
+import { Plus, Upload, AlertCircle, Wallet } from "lucide-react";
 import {
   AreaChart, Area, CartesianGrid, ResponsiveContainer,
   XAxis, YAxis, Tooltip,
@@ -259,101 +259,6 @@ function TraderScoreCard({ trades }: { trades: Trade[] }) {
   );
 }
 
-// ─── Calendar Heatmap ────────────────────────────────────────────────────────
-function CalendarHeatmap({ map }: { map: Record<string, { pnl: number; trades: number }> }) {
-  const [cur, setCur] = useState(new Date());
-  const year = cur.getFullYear();
-  const month = cur.getMonth();
-  const days = new Date(year, month + 1, 0).getDate();
-  const firstDow = new Date(year, month, 1).getDay();
-  const label = new Date(year, month).toLocaleString("default", { month: "long", year: "numeric" });
-  const totalCells = Math.ceil((firstDow + days) / 7) * 7;
-  const today = new Date().toISOString().split("T")[0];
-
-  return (
-    <div className="rounded-xl border border-border bg-card p-5">
-      <div className="flex items-center justify-between mb-4">
-        <div>
-          <h3 className="font-heading text-base font-semibold text-foreground">Trading Calendar</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">Daily P&L heatmap</p>
-        </div>
-        <div className="flex items-center gap-1">
-          <button onClick={() => setCur(new Date(year, month - 1, 1))}
-            className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
-            <ChevronLeft className="h-3.5 w-3.5" />
-          </button>
-          <span className="text-xs font-medium text-foreground min-w-[100px] text-center">{label}</span>
-          <button onClick={() => setCur(new Date(year, month + 1, 1))}
-            className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
-            <ChevronRight className="h-3.5 w-3.5" />
-          </button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-7 gap-1 mb-1">
-        {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
-          <div key={i} className="text-center text-[10px] text-muted-foreground py-1">{d}</div>
-        ))}
-      </div>
-
-      <div className="grid grid-cols-7 gap-1">
-        {Array.from({ length: totalCells }, (_, i) => {
-          const day = i - firstDow + 1;
-          const inMonth = day >= 1 && day <= days;
-          const dateStr = inMonth
-            ? `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`
-            : "";
-          const entry = dateStr ? map[dateStr] : undefined;
-          const isToday = dateStr === today;
-          const pos = (entry?.pnl ?? 0) > 0;
-          const neg = (entry?.pnl ?? 0) < 0;
-
-          return (
-            <div
-              key={i}
-              title={entry ? `${dateStr} · ${entry.trades} trade${entry.trades > 1 ? "s" : ""} · ${fmtMoney(entry.pnl)}` : dateStr}
-              className={`rounded-md aspect-square flex flex-col items-center justify-center text-[10px] transition-colors ${
-                !inMonth
-                  ? "opacity-0 pointer-events-none"
-                  : entry && pos
-                  ? "bg-success/15 border border-success/30 text-success"
-                  : entry && neg
-                  ? "bg-danger/15 border border-danger/30 text-danger"
-                  : isToday
-                  ? "border border-primary/40 text-primary"
-                  : "bg-background border border-border text-muted-foreground"
-              }`}
-            >
-              {inMonth && (
-                <>
-                  <span className="font-medium leading-none">{day}</span>
-                  {entry && (
-                    <span className="text-[9px] font-semibold leading-none mt-0.5 tabular-nums">
-                      {pos ? "+" : ""}{Math.round(entry.pnl)}
-                    </span>
-                  )}
-                </>
-              )}
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="flex items-center gap-4 mt-3 text-[10px] text-muted-foreground">
-        <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-sm bg-success/30 border border-success/40" /> Profit
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-sm bg-danger/30 border border-danger/40" /> Loss
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-sm bg-background border border-border" /> No trades
-        </span>
-      </div>
-    </div>
-  );
-}
-
 // ─── Recent Trades Table ─────────────────────────────────────────────────────
 function RecentTrades({ trades, onNavigate }: { trades: Trade[]; onNavigate: (id: string) => void }) {
   const rows = trades.slice(0, 6);
@@ -538,15 +443,6 @@ export default function CommandCenter({ onNavigate, onAddTrade }: Props) {
     let cum = 0;
     const pnlSpark = recent.map(t => { cum += t.result ?? 0; return cum; });
 
-    // Calendar map
-    const calMap: Record<string, { pnl: number; trades: number }> = {};
-    trades.forEach(t => {
-      const d = t.trade_date;
-      if (!calMap[d]) calMap[d] = { pnl: 0, trades: 0 };
-      calMap[d].pnl += t.result ?? 0;
-      calMap[d].trades += 1;
-    });
-
     // Previous period comparison (30d before last 30d).
     const prevCutoff = new Date(); prevCutoff.setDate(prevCutoff.getDate() - 60);
     const prev = trades.filter(t => {
@@ -561,7 +457,7 @@ export default function CommandCenter({ onNavigate, onAddTrade }: Props) {
       totalPnl, winRate, avgRR,
       tradesCount: trades.length,
       wins: wins.length, losses: losses.length,
-      pnlSpark, calMap, pnlDelta, recentPnlCount: recent.length, prevCount: prev.length,
+      pnlSpark, pnlDelta, recentPnlCount: recent.length, prevCount: prev.length,
     };
   }, [trades]);
 
@@ -737,13 +633,8 @@ export default function CommandCenter({ onNavigate, onAddTrade }: Props) {
             <TodayFocus plan={plan} onNavigate={onNavigate} />
           </div>
 
-          {/* Calendar + Trader Score */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="lg:col-span-2">
-              <CalendarHeatmap map={m.calMap} />
-            </div>
-            <TraderScoreCard trades={trades} />
-          </div>
+          {/* Trader Score */}
+          <TraderScoreCard trades={trades} />
 
           {/* Recent Trades + Best Setups */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
