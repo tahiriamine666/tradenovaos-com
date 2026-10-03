@@ -197,3 +197,9 @@
     transition-duration: 0.01ms !important;
   }
 }
+/* NOVA page */
+@keyframes nova-float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-3px) } }
+.nova-float { animation: nova-float 6s ease-in-out infinite; }
+@keyframes nova-msg { from { opacity: 0; transform: translateY(4px) } to { opacity: 1; transform: none } }
+.nova-msg { animation: nova-msg 260ms var(--ease-premium, ease-out) both; }
+@media (prefers-reduced-motion: reduce) { .nova-float, .nova-msg { animation: none; } }
