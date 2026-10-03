@@ -152,7 +152,7 @@ export default function PlanFrameworkSections({ value, onChange, selectedDate, r
 
   return (
     <>
-      <DatedChecklist type="weekly" selectedDate={selectedDate} readOnly={readOnly} title="Weekly Outlook" icon={CalendarDays} template={WEEKLY_TEMPLATE} statusFields={WEEKLY_FIELDS}>
+      <DatedChecklist type="weekly" selectedDate={selectedDate} readOnly={readOnly} legacyData={readOnly ? value.weekly : null} title="Weekly Outlook" icon={CalendarDays} template={WEEKLY_TEMPLATE} statusFields={WEEKLY_FIELDS}>
         {(w, setW) => (
         <div className="space-y-4">
           <div className={grid}>
@@ -198,7 +198,7 @@ export default function PlanFrameworkSections({ value, onChange, selectedDate, r
         </div>
       </OptionalCard></fieldset>
 
-      <DatedChecklist type="daily" selectedDate={selectedDate} readOnly={readOnly} title="Daily Outlook" icon={CalendarDays} template={DAILY_TEMPLATE} statusFields={DAILY_FIELDS}>
+      <DatedChecklist type="daily" selectedDate={selectedDate} readOnly={readOnly} legacyData={readOnly ? value.daily : null} title="Daily Outlook" icon={CalendarDays} template={DAILY_TEMPLATE} statusFields={DAILY_FIELDS}>
         {(d, setD) => (
         <div className="space-y-4">
           <div className={grid}>

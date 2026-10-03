@@ -204,6 +204,7 @@ export default function TradePlanWorkspace() {
   const [revision, setRevision] = useState(0);
   const baseline = useRef<TradePlan>(EMPTY_PLAN);
   const persisted = useRef(false);
+  const saveFailed = useRef(false);
   const loadedDate = useRef(selectedDate);
   const inFlight = useRef<Promise<void>>(Promise.resolve());
 
@@ -241,7 +242,7 @@ export default function TradePlanWorkspace() {
     let cancelled = false;
     const load = async () => {
       setLoading(true);
-      setSaveError(null); setLoadError(false);
+      setSaveError(null); setLoadError(false); saveFailed.current = false;
       const { data, error } = await supabase
         .from('trade_plans').select('*')
         .eq('user_id', user.id).eq('plan_date', selectedDate).maybeSingle();
@@ -303,9 +304,11 @@ export default function TradePlanWorkspace() {
 
       if (error) {
         setSaveError(error.message);
+        saveFailed.current = true;
         toast({ title: 'Plan not saved', description: error.message, variant: 'destructive' });
         return;
       }
+      saveFailed.current = false;
       setSaveError(null);
       if (loadedDate.current === date) {
         persisted.current = true;
@@ -359,7 +362,7 @@ export default function TradePlanWorkspace() {
       inFlight.current = inFlight.current.then(() => save(data, oldDate));
     }
     await inFlight.current;
-    if (saveError || loadError) return;
+    if (saveFailed.current || loadError) return;
     setSelectedDate(date);
   };
   const shiftDay = (amount: number) => {

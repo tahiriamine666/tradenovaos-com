@@ -48,6 +48,7 @@ interface Props<T extends Record<string, any>> {
   type: ChecklistType;
   selectedDate?: string;
   readOnly?: boolean;
+  legacyData?: T | null;
   title: string;
   icon: React.ElementType;
   template: T;
@@ -55,7 +56,7 @@ interface Props<T extends Record<string, any>> {
   children: (data: T, set: (patch: Partial<T>) => void) => React.ReactNode;
 }
 
-export default function DatedChecklist<T extends Record<string, any>>({ type, selectedDate, readOnly = false, title, icon: Icon, template, statusFields, children }: Props<T>) {
+export default function DatedChecklist<T extends Record<string, any>>({ type, selectedDate, readOnly = false, legacyData, title, icon: Icon, template, statusFields, children }: Props<T>) {
   const { user } = useAuth();
   const { activeAccountId } = useActiveAccount();
   const accountKey = activeAccountId ?? 'all';
@@ -71,6 +72,7 @@ export default function DatedChecklist<T extends Record<string, any>>({ type, se
   }, [selectedDate, type]);
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<T | null>(null);
+  const [fromLegacy, setFromLegacy] = useState(false);
   const [save, setSave] = useState<'idle' | 'dirty' | 'saving' | 'saved'>('idle');
   const [historyOpen, setHistoryOpen] = useState(false);
   const [history, setHistory] = useState<{ period_date: string; status: Status }[]>([]);
@@ -112,12 +114,14 @@ export default function DatedChecklist<T extends Record<string, any>>({ type, se
         .eq('user_id', user.id).eq('account_key', accountKey).eq('checklist_type', type)
         .eq('period_date', toKey(period)).maybeSingle();
       if (id !== reqId.current) return;
-      setData(row ? ({ ...template, ...(row.data as any) }) : null);
+      const fallback = readOnly && legacyData && statusFields.some(field => !!legacyData[field]);
+      setFromLegacy(!row && !!fallback);
+      setData(row ? ({ ...template, ...(row.data as any) }) : fallback ? ({ ...template, ...legacyData }) : null);
       setSave(row ? 'saved' : 'idle');
       setLoading(false);
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, accountKey, type, period]);
+  }, [user, accountKey, type, period, readOnly, legacyData]);
 
   // Warn / flush on leave
   useEffect(() => {
@@ -223,6 +227,7 @@ export default function DatedChecklist<T extends Record<string, any>>({ type, se
                 <div className="flex items-center gap-2 text-xs text-white/40 py-6 justify-center"><Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading checklist...</div>
               ) : data ? (
                 <>
+                  {fromLegacy && <p className="mb-2 text-[10px] text-muted-foreground">From saved plan</p>}
                   <fieldset disabled={readOnly}>{children(data, set)}</fieldset>
                   <p className="text-[10px] text-white/35 text-right flex items-center justify-end gap-1">
                     {save === 'saving' ? 'Saving...' : save === 'dirty' ? 'Unsaved changes' : save === 'saved' ? <><Check className="h-3 w-3 text-primary" /> Saved</> : ''}
