@@ -55,6 +55,13 @@ Deno.serve(async (req) => {
     .slice(-20).map((m: any) => ({ role: m.role, content: m.content.slice(0, 6000) }));
   if (!history.length) return json({ error: "No message" }, 400);
 
+  // Server-side NOVA credit metering (1 credit per message, per billing period).
+  const { data: credit, error: crErr } = await sb.rpc("consume_nova_credit");
+  if (crErr) return json({ error: "Could not verify NOVA credits." }, 500);
+  if (!(credit as any)?.allowed) {
+    return json({ error: "You've used your NOVA credits for this billing period.", code: "nova_credits_exhausted", usage: credit }, 402);
+  }
+
   // All reads go through the caller's JWT, so RLS scopes them to this user.
   const [tr, jr, pl, wk, cm, pf, ac, pr] = await Promise.all([
     sb.from("trades").select("trade_date,pair,side,result,rr,outcome,setup,session,timeframe,emotion,mistakes,discipline_score,execution_score,weekly_context,daily_bias,notes,tags,account_type").eq("user_id", uid).order("trade_date", { ascending: false }).limit(150),
