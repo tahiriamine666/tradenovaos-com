@@ -6,7 +6,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { PlanProvider } from "@/hooks/usePlan";
 import { ProfileProvider } from "@/hooks/useProfile";
-import { LearningNavProvider } from "@/contexts/LearningNavContext";
 import { ActiveAccountProvider } from "@/contexts/ActiveAccountContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
@@ -64,7 +63,6 @@ const App = () => (
           <ProfileProvider>
             <PlanProvider>
               <ActiveAccountProvider>
-              <LearningNavProvider>
                 <Routes>
                   <Route path="/" element={<PublicOnly><LandingPage /></PublicOnly>} />
                   <Route path="/login" element={<PublicOnly><Login /></PublicOnly>} />
@@ -107,7 +105,6 @@ const App = () => (
 
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-              </LearningNavProvider>
               </ActiveAccountProvider>
             </PlanProvider>
           </ProfileProvider>
