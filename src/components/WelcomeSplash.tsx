@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProfile } from '@/hooks/useProfile';
+import BrandLogo from '@/components/BrandLogo';
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 const SESSION_KEY = 'tradenova-welcome-shown';
@@ -106,12 +107,7 @@ export default function WelcomeSplash() {
             transition={{ duration: reduceMotion ? 0.3 : 1.4, delay: reduceMotion ? 0 : 1.5, ease: EASE }}
             className="mt-10 flex flex-col items-center gap-2.5"
           >
-            <img
-              src="/tradenova-logo.png"
-              alt=""
-              aria-hidden="true"
-              className="h-10 w-10 rounded-lg object-cover ring-1 ring-amber-400/20 shadow-[0_0_28px_rgba(251,191,36,0.14)]"
-            />
+            <BrandLogo decorative className="h-10 w-10 rounded-lg object-cover ring-1 ring-amber-400/20 shadow-[0_0_28px_rgba(251,191,36,0.14)]" />
             <p className="text-[10px] uppercase tracking-[0.28em] text-white/30">TradeNova</p>
           </motion.div>
         </div>
