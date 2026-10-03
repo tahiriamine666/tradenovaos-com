@@ -295,8 +295,9 @@ function TradingCalendar({ dark }: { dark: boolean }) {
   const firstDayOfWeek = new Date(year, month, 1).getDay();
   const monthLabel = new Date(year, month).toLocaleString('default', { month: 'long', year: 'numeric' });
 
-  const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
-  const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
+  const [monthDir, setMonthDir] = useState<'next' | 'prev'>('next');
+  const prevMonth = () => { setMonthDir('prev'); setCurrentDate(new Date(year, month - 1, 1)); };
+  const nextMonth = () => { setMonthDir('next'); setCurrentDate(new Date(year, month + 1, 1)); };
 
   useEffect(() => {
     if (!user) return;
@@ -392,7 +393,7 @@ function TradingCalendar({ dark }: { dark: boolean }) {
             {Array.from({ length: 40 }).map((_, i) => <Skeleton key={i} className="h-[86px] rounded-lg" />)}
           </div>
         ) : (
-          <div className="space-y-1.5">
+          <div key={`${year}-${month}`} className={cx('space-y-1.5', monthDir === 'next' ? 'month-slide-next' : 'month-slide-prev')}>
             {weeks.map((week, wi) => {
               const winRate = week.trades ? Math.round((week.wins / week.trades) * 100) : 0;
               return (
@@ -406,7 +407,7 @@ function TradingCalendar({ dark }: { dark: boolean }) {
                         onClick={() => { if (dayNumber != null) { setSelectedDay(dayNumber); setDetailDate(new Date(year, month, dayNumber)); } }}
                         className={cx(
                           'rounded-lg border border-border p-2 min-h-[86px] text-xs transition-colors flex flex-col',
-                          dayNumber != null && 'cursor-pointer hover:border-primary/40',
+                          dayNumber != null && 'cursor-pointer tn-lift',
                           dayNumber == null && 'opacity-0',
                           entry && positive && 'bg-primary/15 border-primary/30',
                           entry && negative && 'bg-danger/10 border-danger/25',
@@ -588,9 +589,9 @@ function TradingDashboardInner() {
     >
       <motion.div
         key={active}
-        initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: reduceMotion ? 0 : 0.24, ease: 'easeOut' }}
+        initial={reduceMotion ? false : { opacity: 0, y: 10, scale: 0.995 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: reduceMotion ? 0 : 0.55, ease: [0.22, 1, 0.36, 1] }}
         className="space-y-8"
       >
           {active === 'dashboard' && (

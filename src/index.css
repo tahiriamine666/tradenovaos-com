@@ -123,23 +123,60 @@
   }
 
   .feature-reveal {
-    animation: feature-reveal 320ms ease-out both;
+    animation: feature-reveal 600ms var(--ease-premium) both;
   }
 
   .journal-rows > tr {
-    animation: feature-fade 280ms ease-out both;
+    animation: feature-fade 550ms var(--ease-premium) both;
   }
 
   .trade-gallery > * {
-    animation: feature-reveal 320ms ease-out both;
+    animation: feature-reveal 600ms var(--ease-premium) both;
   }
 
-  .journal-rows > :nth-child(2), .trade-gallery > :nth-child(2) { animation-delay: 45ms; }
-  .journal-rows > :nth-child(3), .trade-gallery > :nth-child(3) { animation-delay: 90ms; }
-  .journal-rows > :nth-child(4), .trade-gallery > :nth-child(4) { animation-delay: 135ms; }
-  .journal-rows > :nth-child(5), .trade-gallery > :nth-child(5) { animation-delay: 180ms; }
-  .journal-rows > :nth-child(6), .trade-gallery > :nth-child(6) { animation-delay: 225ms; }
-  .journal-rows > :nth-child(n+7), .trade-gallery > :nth-child(n+7) { animation-delay: 260ms; }
+  .journal-rows > :nth-child(2), .trade-gallery > :nth-child(2) { animation-delay: 70ms; }
+  .journal-rows > :nth-child(3), .trade-gallery > :nth-child(3) { animation-delay: 140ms; }
+  .journal-rows > :nth-child(4), .trade-gallery > :nth-child(4) { animation-delay: 210ms; }
+  .journal-rows > :nth-child(5), .trade-gallery > :nth-child(5) { animation-delay: 280ms; }
+  .journal-rows > :nth-child(6), .trade-gallery > :nth-child(6) { animation-delay: 350ms; }
+  .journal-rows > :nth-child(n+7), .trade-gallery > :nth-child(n+7) { animation-delay: 420ms; }
+
+  /* Slow, intentional crossfade for swapped content (checklists, settings sections) */
+  .content-crossfade {
+    animation: content-crossfade 520ms var(--ease-premium) both;
+  }
+
+  /* Horizontal drift for calendar month changes */
+  .month-slide-next {
+    animation: month-slide 560ms var(--ease-premium) both;
+  }
+  .month-slide-prev {
+    animation: month-slide 560ms var(--ease-premium) both reverse;
+  }
+
+  /* Extremely subtle card elevation on hover */
+  .tn-lift {
+    transition: transform 420ms var(--ease-premium), box-shadow 420ms var(--ease-premium), border-color 420ms var(--ease-premium);
+  }
+  .tn-lift:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 34px -14px hsl(var(--primary) / 0.22);
+    border-color: hsl(var(--primary) / 0.28);
+  }
+}
+
+:root {
+  --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes content-crossfade {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes month-slide {
+  from { opacity: 0; transform: translateX(26px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 @keyframes feature-reveal {
