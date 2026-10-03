@@ -76,7 +76,7 @@ export function UpgradeModal({
           <Button
             onClick={() => {
               onOpenChange(false);
-              navigate("/app?view=pricing");
+              navigate("/pricing");
             }}
           >
             Upgrade to {PLAN_LABEL[requiredPlan]}
