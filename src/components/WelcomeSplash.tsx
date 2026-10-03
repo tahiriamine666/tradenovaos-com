@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useProfile } from '@/hooks/useProfile';
-import BrandLogo from '@/components/BrandLogo';
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 const SESSION_KEY = 'tradenova-welcome-shown';
@@ -41,77 +40,66 @@ export default function WelcomeSplash() {
 
   useEffect(() => {
     if (!show) return;
-    const total = reduceMotion ? 900 : 4200;
+    const total = reduceMotion ? 700 : 2200;
     const t = setTimeout(() => setShow(false), total);
     return () => clearTimeout(t);
   }, [show, reduceMotion]);
 
-  if (!show || name === null) return null;
+  const first = name ? name.split(' ')[0] : '';
+  const pretty = first ? first.charAt(0).toUpperCase() + first.slice(1).toLowerCase() : '';
 
   return (
     <AnimatePresence>
-      <motion.div
-        key="welcome-splash"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0, transition: { duration: reduceMotion ? 0.2 : 0.9, ease: EASE } }}
-        transition={{ duration: reduceMotion ? 0.2 : 0.9, ease: EASE }}
-        className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-[#050505]"
-        aria-live="polite"
-        aria-label="Welcome back"
-      >
-        {/* Warm light glow from the top, like the reference */}
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background:
-              'radial-gradient(60% 42% at 50% -6%, rgba(234,179,8,0.16) 0%, rgba(180,120,20,0.07) 34%, rgba(5,5,5,0) 72%)',
-          }}
-        />
-        <div
-          className="pointer-events-none absolute inset-0"
-          style={{
-            background:
-              'radial-gradient(38% 26% at 50% 4%, rgba(251,191,36,0.12) 0%, rgba(5,5,5,0) 70%)',
-          }}
-        />
-
-        <div className="relative flex flex-col items-center px-6 text-center">
-          <motion.p
-            initial={{ opacity: 0, y: reduceMotion ? 0 : 14 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: reduceMotion ? 0.3 : 1.3, delay: reduceMotion ? 0 : 0.45, ease: EASE }}
-            className="text-lg sm:text-xl font-medium text-white/45 tracking-wide"
-          >
-            Welcome Back,
-          </motion.p>
+      {show && name !== null && (
+        <motion.div
+          key="welcome-splash"
+          initial={{ opacity: 1 }}
+          exit={{ opacity: 0, transition: { duration: reduceMotion ? 0.25 : 0.8, ease: EASE } }}
+          className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden"
+          style={{ background: '#000000' }}
+          aria-live="polite"
+          aria-label="Welcome back"
+        >
+          {!reduceMotion && (
+            <>
+              <motion.div
+                className="pointer-events-none absolute"
+                style={{
+                  width: '70vmax', height: '70vmax', left: '50%', top: '50%',
+                  background: 'radial-gradient(circle, rgba(0,102,255,0.22) 0%, rgba(0,71,255,0.08) 40%, rgba(0,0,0,0) 70%)',
+                  filter: 'blur(60px)',
+                }}
+                initial={{ opacity: 0, x: '-75%', y: '-30%' }}
+                animate={{ opacity: 1, x: ['-75%', '-50%', '-42%'], y: ['-30%', '-50%', '-55%'] }}
+                transition={{ opacity: { duration: 1.4, delay: 0.3, ease: EASE }, x: { duration: 3.2, ease: 'easeInOut' }, y: { duration: 3.2, ease: 'easeInOut' } }}
+              />
+              <motion.div
+                className="pointer-events-none absolute"
+                style={{
+                  width: '40vmax', height: '40vmax', left: '50%', top: '50%',
+                  background: 'radial-gradient(circle, rgba(0,140,255,0.12) 0%, rgba(0,0,0,0) 70%)',
+                  filter: 'blur(70px)',
+                }}
+                initial={{ opacity: 0, x: '-50%', y: '-50%', scale: 0.9 }}
+                animate={{ opacity: [0, 1, 0.7], scale: [0.9, 1.08, 1] }}
+                transition={{ duration: 3, delay: 0.5, ease: 'easeInOut' }}
+              />
+            </>
+          )}
 
           <motion.h1
-            initial={{ opacity: 0, y: reduceMotion ? 0 : 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: reduceMotion ? 0.3 : 1.5, delay: reduceMotion ? 0 : 0.75, ease: EASE }}
-            className="mt-2 font-heading text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight"
-            style={{
-              backgroundImage: 'linear-gradient(to bottom, #fde68a, #f59e0b 55%, #b45309)',
-              WebkitBackgroundClip: 'text',
-              backgroundClip: 'text',
-              color: 'transparent',
-            }}
+            initial={{ opacity: 0, y: reduceMotion ? 0 : 8, filter: reduceMotion ? 'blur(0px)' : 'blur(6px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            exit={{ opacity: 0, y: reduceMotion ? 0 : -8, filter: reduceMotion ? 'blur(0px)' : 'blur(2px)' }}
+            transition={{ duration: reduceMotion ? 0.3 : 1.0, delay: reduceMotion ? 0 : 0.6, ease: EASE }}
+            className="relative px-6 text-center font-heading text-3xl sm:text-4xl tracking-tight whitespace-nowrap"
+            style={{ color: '#FFFFFF', textShadow: '0 0 40px rgba(0,102,255,0.25)' }}
           >
-            {name}
+            <span className="font-medium">Welcome Back, </span>
+            <span className="font-semibold">{pretty}</span>
           </motion.h1>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: reduceMotion ? 0.3 : 1.4, delay: reduceMotion ? 0 : 1.5, ease: EASE }}
-            className="mt-10 flex flex-col items-center gap-2.5"
-          >
-            <BrandLogo decorative className="h-10 w-10 rounded-lg object-cover ring-1 ring-amber-400/20 shadow-[0_0_28px_rgba(251,191,36,0.14)]" />
-            <p className="text-[10px] uppercase tracking-[0.28em] text-white/30">TradeNova</p>
-          </motion.div>
-        </div>
-      </motion.div>
+        </motion.div>
+      )}
     </AnimatePresence>
   );
 }
