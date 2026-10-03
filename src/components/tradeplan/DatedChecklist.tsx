@@ -46,6 +46,8 @@ const btn = 'flex items-center gap-1 px-2 py-1 rounded-lg border border-white/[0
 
 interface Props<T extends Record<string, any>> {
   type: ChecklistType;
+  selectedDate?: string;
+  readOnly?: boolean;
   title: string;
   icon: React.ElementType;
   template: T;
@@ -53,7 +55,7 @@ interface Props<T extends Record<string, any>> {
   children: (data: T, set: (patch: Partial<T>) => void) => React.ReactNode;
 }
 
-export default function DatedChecklist<T extends Record<string, any>>({ type, title, icon: Icon, template, statusFields, children }: Props<T>) {
+export default function DatedChecklist<T extends Record<string, any>>({ type, selectedDate, readOnly = false, title, icon: Icon, template, statusFields, children }: Props<T>) {
   const { user } = useAuth();
   const { activeAccountId } = useActiveAccount();
   const accountKey = activeAccountId ?? 'all';
@@ -61,6 +63,12 @@ export default function DatedChecklist<T extends Record<string, any>>({ type, ti
 
   const [open, setOpen] = useState(false);
   const [period, setPeriod] = useState(() => periodOf(type, new Date()));
+  useEffect(() => {
+    if (selectedDate) {
+      const [y, m, d] = selectedDate.split('-').map(Number);
+      setPeriod(periodOf(type, new Date(y, m - 1, d)));
+    }
+  }, [selectedDate, type]);
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<T | null>(null);
   const [save, setSave] = useState<'idle' | 'dirty' | 'saving' | 'saved'>('idle');
@@ -119,6 +127,7 @@ export default function DatedChecklist<T extends Record<string, any>>({ type, ti
   }, [persist]);
 
   const write = (next: T) => {
+    if (readOnly) return;
     setData(next);
     pending.current = { key: toKey(period), account: accountKey, data: next };
     setSave('dirty');
@@ -203,7 +212,7 @@ export default function DatedChecklist<T extends Record<string, any>>({ type, ti
                 </div>
                 <div className="flex items-center gap-1.5">
                   <button type="button" className={btn} onClick={viewPrevious}>View Previous {unit}</button>
-                  <button type="button" className={btn} onClick={() => setCopyOpen(true)}><Copy className="h-3 w-3" /> Copy Previous</button>
+                  <button type="button" className={btn} disabled={readOnly} onClick={() => setCopyOpen(true)}><Copy className="h-3 w-3" /> Copy Previous</button>
                 </div>
               </div>
 
@@ -214,7 +223,7 @@ export default function DatedChecklist<T extends Record<string, any>>({ type, ti
                 <div className="flex items-center gap-2 text-xs text-white/40 py-6 justify-center"><Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading checklist...</div>
               ) : data ? (
                 <>
-                  {children(data, set)}
+                  <fieldset disabled={readOnly}>{children(data, set)}</fieldset>
                   <p className="text-[10px] text-white/35 text-right flex items-center justify-end gap-1">
                     {save === 'saving' ? 'Saving...' : save === 'dirty' ? 'Unsaved changes' : save === 'saved' ? <><Check className="h-3 w-3 text-primary" /> Saved</> : ''}
                   </p>
@@ -222,7 +231,7 @@ export default function DatedChecklist<T extends Record<string, any>>({ type, ti
               ) : (
                 <div className="flex items-center justify-between gap-3 rounded-xl border border-dashed border-white/[0.08] px-4 py-3">
                   <p className="text-xs text-white/40">No checklist saved for this {type === 'weekly' ? 'week' : 'date'}.</p>
-                  <button type="button" onClick={() => write({ ...template })}
+                  <button type="button" disabled={readOnly} onClick={() => write({ ...template })}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-primary/25 bg-primary/10 text-primary text-[11px] font-bold hover:bg-primary/15 transition-colors">
                     <Plus className="h-3 w-3" /> Create Checklist
                   </button>
