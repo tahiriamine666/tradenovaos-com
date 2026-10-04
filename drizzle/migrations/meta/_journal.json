@@ -71,6 +71,13 @@
       "when": 1791020023168,
       "tag": "0009_plan_entitlements_nova_credits",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791072364146,
+      "tag": "0010_tighten_retired_community_and_avatar_policies",
+      "breakpoints": true
     }
   ]
 }
