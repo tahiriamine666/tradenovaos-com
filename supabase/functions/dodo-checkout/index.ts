@@ -87,7 +87,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    const origin = req.headers.get("origin") ?? "";
+    const ALLOWED_ORIGINS = new Set([
+      "https://tradenovaos.com",
+      "https://www.tradenovaos.com",
+      "https://tradenovaos-com.lovable.app",
+      "https://id-preview--0ee4a120-abbf-401b-9623-1114b47e7fda.lovable.app",
+      "http://localhost:8080",
+    ]);
+    const rawOrigin = req.headers.get("origin") ?? "";
+    const origin = ALLOWED_ORIGINS.has(rawOrigin) ? rawOrigin : "https://www.tradenovaos.com";
     const fromOnboarding = (body as any).onboarding === true;
     const returnUrl = origin ? `${origin}${fromOnboarding ? "/onboarding?checkout=done" : "/billing/success"}` : undefined;
     const email = (body.email && body.email.trim()) || claimEmail || undefined;
