@@ -51,11 +51,14 @@ export default function Billing() {
     if (!user) return;
     (async () => {
       const { data } = await supabase
-        .from('subscriptions')
-        .select('plan,status,trial_end,renews_at,ends_at,dodo_subscription_id')
+        .from('billing_subscriptions')
+        .select('plan,status,trial_ends_at,renews_at,ends_at,subscription_id')
         .eq('user_id', user.id)
         .maybeSingle();
-      setRow(data as BillingRow | null);
+      setRow(data ? {
+        plan: data.plan, status: data.status, trial_end: data.trial_ends_at,
+        renews_at: data.renews_at, ends_at: data.ends_at, dodo_subscription_id: data.subscription_id,
+      } as BillingRow : null);
       setLoading(false);
     })();
   }, [user]);

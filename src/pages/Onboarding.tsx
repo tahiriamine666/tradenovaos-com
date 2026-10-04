@@ -100,7 +100,7 @@ export default function Onboarding() {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("onboarding_profiles").select("market_types, experience_level, main_trading_problem").eq("user_id", user.id).maybeSingle()
+    supabase.from("profiles").select("market_types, experience_level:trading_experience, main_trading_problem").eq("id", user.id).maybeSingle()
       .then(({ data }) => {
         if (!data) return;
         setMarkets((data as any).market_types ?? []);
