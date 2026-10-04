@@ -7,16 +7,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import BrandLogo from '@/components/BrandLogo';
 import { toast } from 'sonner';
 import ForgotPassword from '@/components/ForgotPassword';
-import { supabase } from '@/integrations/supabase/client';
+import { signInWithGoogle } from '@/lib/googleAuth';
 
-async function handleGoogle() {
-  try { sessionStorage.setItem('tradenova-welcome-pending', '1'); } catch { /* ignore */ }
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo: window.location.origin + '/app' },
-  });
-  if (error) toast.error(error.message ?? 'Google sign-in failed');
-}
+const handleGoogle = signInWithGoogle;
 
 function GoogleButton({ label }: { label: string }) {
   return (
