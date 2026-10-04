@@ -4,7 +4,7 @@ project_id = "lyohknejsvhhtmglljae"
 verify_jwt = false
 
 [functions.sync-economic-events]
-verify_jwt = false
+verify_jwt = true
 
 
 # Local Auth configuration. Run `npx supabase config push` to apply non-secret

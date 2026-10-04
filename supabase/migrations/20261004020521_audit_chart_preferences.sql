@@ -39,6 +39,3 @@ CREATE POLICY "Users manage own chart prefs"
 CREATE TRIGGER trg_user_chart_prefs_updated_at
   BEFORE UPDATE ON public.user_chart_preferences
   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
-
-
-

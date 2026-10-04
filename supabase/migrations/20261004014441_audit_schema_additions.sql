@@ -42,6 +42,3 @@ BEGIN
   RETURN NEW;
 END $$;
 CREATE TRIGGER check_trade_account_owner BEFORE INSERT OR UPDATE OF trading_account_id,user_id ON public.trades FOR EACH ROW EXECUTE FUNCTION public.check_trade_account_owner();
-
-
-

@@ -155,5 +155,3 @@ begin
     'trial_end', v_sub.trial_end
   );
 end $function$;
-
-

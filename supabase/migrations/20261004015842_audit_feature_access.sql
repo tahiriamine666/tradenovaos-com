@@ -51,6 +51,3 @@ BEGIN
  RETURN NEW;
 END $$;
 CREATE TRIGGER protect_trading_account BEFORE INSERT OR UPDATE ON public.trading_accounts FOR EACH ROW EXECUTE FUNCTION public.protect_trading_account();
-
-
-

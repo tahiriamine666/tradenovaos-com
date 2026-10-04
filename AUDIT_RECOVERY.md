@@ -47,8 +47,8 @@ Annual product configuration was preserved.
 
 ## Validation and remaining release gates
 
-Passed: TypeScript app check, `node scripts/audit-regression.mjs`, rolled-back database security checks, unauthenticated endpoint checks.
-The local Vite build is blocked by an OS process restriction (`spawn EPERM` in esbuild); the pull-request workflow runs the production build.
+Passed: TypeScript app check, `node scripts/audit-regression.mjs`, rolled-back database security checks, billing duplicate/stale/plan-change checks in `scripts/audit-billing-regression.sql`, and unauthenticated endpoint checks.
+The local Vite build is blocked by an OS process restriction (`spawn EPERM` in esbuild). GitHub Actions successfully ran npm ci, the TypeScript check, regression checks and the production build for commit `49a23b1` in PR #4.
 
 The original project still requires:
 

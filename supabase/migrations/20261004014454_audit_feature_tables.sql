@@ -125,6 +125,3 @@ DROP POLICY "Own checklists insert" ON public.trade_plan_checklists;
 DROP POLICY "Own checklists update" ON public.trade_plan_checklists;
 CREATE POLICY "Own checklists insert" ON public.trade_plan_checklists FOR INSERT TO authenticated WITH CHECK ((select auth.uid())=user_id AND (account_id IS NULL OR EXISTS(SELECT 1 FROM public.trading_accounts a WHERE a.id=account_id AND a.user_id=(select auth.uid()))));
 CREATE POLICY "Own checklists update" ON public.trade_plan_checklists FOR UPDATE TO authenticated USING ((select auth.uid())=user_id) WITH CHECK ((select auth.uid())=user_id AND (account_id IS NULL OR EXISTS(SELECT 1 FROM public.trading_accounts a WHERE a.id=account_id AND a.user_id=(select auth.uid()))));
-
-
-

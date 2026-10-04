@@ -96,4 +96,3 @@ Deno.serve(async (req) => {
     return json({ error: message, steps: log.steps }, 502);
   }
 });
-

@@ -23,6 +23,3 @@ BEGIN
 END $$;
 REVOKE ALL ON FUNCTION public.apply_dodo_snapshot(uuid,jsonb,timestamptz,text,uuid) FROM PUBLIC,anon,authenticated;
 GRANT EXECUTE ON FUNCTION public.apply_dodo_snapshot(uuid,jsonb,timestamptz,text,uuid) TO service_role;
-
-
-
