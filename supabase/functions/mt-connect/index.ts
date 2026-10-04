@@ -12,6 +12,8 @@ Deno.serve(async (req) => {
     });
 
   let log = createStepLog('unknown');
+  let ownedAccountId: string | null = null;
+  let ownerId: string | null = null;
 
   try {
     const authHeader = req.headers.get('Authorization') ?? '';
@@ -43,6 +45,7 @@ Deno.serve(async (req) => {
       log.push('db_saved', 'Account saved to database', 'error', { error: error?.message ?? 'Account not found' });
       return json({ error: 'Account not found', steps: log.steps }, 404);
     }
+    ownedAccountId = row.id; ownerId = user.id;
     log.push('db_saved', 'Account saved to database', 'ok', { detail: row.account_name });
 
     await db.from('trading_accounts')
@@ -74,11 +77,10 @@ Deno.serve(async (req) => {
     const message = e instanceof Error ? e.message : 'Connection failed';
     console.error('mt-connect error', message);
     try {
-      const body = await req.clone().json().catch(() => ({}));
-      if (body?.account_id) {
+      if (ownedAccountId && ownerId) {
         await admin().from('trading_accounts')
           .update({ status: 'error', sync_error: message })
-          .eq('id', body.account_id);
+          .eq('id', ownedAccountId).eq('user_id', ownerId);
       }
     } catch { /* ignore */ }
     return json({ error: message, steps: log.steps }, 502);
