@@ -19,15 +19,24 @@ export function useAccessState() {
   const { user, loading: authLoading } = useAuth();
   const [state, setState] = useState<AccessState | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    if (!user) { setState(null); setLoading(false); return null; }
+    if (!user) { setState(null); setError(null); setLoading(false); return null; }
+    setLoading(true);
+    setError(null);
+    try {
     const { data, error } = await (supabase.rpc as any)("get_access_state");
-    if (error) console.warn("get_access_state failed", error);
+    if (error || !data) throw new Error('Access check failed');
     const s = (data ?? null) as AccessState | null;
     setState(s);
     setLoading(false);
     return s;
+    } catch {
+      setState(null);
+      setError('We could not check your access. Please try again.');
+      return null;
+    } finally { setLoading(false); }
   }, [user]);
 
   useEffect(() => {
@@ -36,5 +45,5 @@ export function useAccessState() {
     refresh();
   }, [authLoading, refresh]);
 
-  return { state, loading: loading || authLoading, refresh };
+  return { state, error, loading: loading || authLoading, refresh };
 }

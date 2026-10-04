@@ -65,8 +65,8 @@ Deno.serve(async (req) => {
     );
     const json = await res.json().catch(() => ({}));
     if (!res.ok) {
-      console.error("dodo-portal error", res.status, json);
-      return new Response(JSON.stringify({ error: "portal_failed", detail: json }), {
+      console.error("dodo-portal error", res.status);
+      return new Response(JSON.stringify({ error: "portal_failed" }), {
         status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
-    console.error("dodo-portal error", e);
+    console.error("dodo-portal request failed");
     return new Response(JSON.stringify({ error: "portal_internal_error" }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

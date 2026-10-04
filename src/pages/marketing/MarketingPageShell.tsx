@@ -37,7 +37,7 @@ export default function MarketingPageShell({ eyebrow = 'Coming soon', title, des
 
             <div className="mt-10 flex flex-col sm:flex-row gap-3 items-center justify-center">
               <Link to="/signup" className="group inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-7 py-3.5 rounded-2xl font-bold text-sm transition-all hover:shadow-xl hover:shadow-violet-500/30 hover:-translate-y-0.5">
-                Start Free <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                Start 14-day trial <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link to="/" className="text-sm font-semibold text-slate-700 hover:text-violet-600 px-5 py-3.5 transition-colors">
                 Back to home →

@@ -13,6 +13,7 @@ export function token(): string {
 async function req(url: string, init: RequestInit = {}) {
   const res = await fetch(url, {
     ...init,
+    signal: AbortSignal.timeout(20000),
     headers: {
       'auth-token': token(),
       'Content-Type': 'application/json',
@@ -23,14 +24,14 @@ async function req(url: string, init: RequestInit = {}) {
   let body: unknown = null;
   try { body = text ? JSON.parse(text) : null; } catch { body = text; }
   if (!res.ok) {
-    const msg = (body as { message?: string })?.message ?? (typeof body === 'string' ? body : res.statusText);
-    throw new Error(`MetaApi ${res.status}: ${msg}`);
+    throw new Error(`MetaApi request failed (${res.status})`);
   }
   return body as any;
 }
 
 export interface ProvisionInput {
   name: string;
+  transactionId: string;
   login: string;
   password: string;
   server: string;
@@ -41,6 +42,7 @@ export interface ProvisionInput {
 export async function createAccount(input: ProvisionInput): Promise<{ id: string }> {
   return await req(`${PROVISIONING}/users/current/accounts`, {
     method: 'POST',
+    headers: {'transaction-id':input.transactionId},
     body: JSON.stringify({
       name: input.name,
       type: 'cloud',
@@ -80,4 +82,11 @@ export async function positions(id: string, region: string) {
 export async function historyDeals(id: string, region: string, fromISO: string, toISO: string) {
   const url = `${clientApi(region)}/users/current/accounts/${id}/history-deals/time/${encodeURIComponent(fromISO)}/${encodeURIComponent(toISO)}`;
   return await req(url);
+}
+
+export async function updateAccount(id: string, input: {name:string;server:string;password:string}) {
+ return await req(PROVISIONING+'/users/current/accounts/'+encodeURIComponent(id),{method:'PUT',body:JSON.stringify(input)});
+}
+export async function redeployAccount(id:string) {
+ return await req(PROVISIONING+'/users/current/accounts/'+encodeURIComponent(id)+'/redeploy',{method:'POST'});
 }

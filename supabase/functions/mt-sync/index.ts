@@ -9,6 +9,7 @@ Deno.serve(async (req) => {
     new Response(JSON.stringify(body), {
       status, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
+  if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
 
   try {
     const authHeader = req.headers.get('Authorization') ?? '';
@@ -35,6 +36,8 @@ Deno.serve(async (req) => {
       const { data: auth } = await anon.auth.getUser();
       userId = auth?.user?.id ?? null;
       if (!userId) return json({ error: 'Unauthorized' }, 401);
+      const {data:access,error:accessError}=await anon.rpc('get_user_plan_info');
+      if(accessError||!access?.is_active) return json({error:'An active subscription is required'},403);
     } else {
       console.log('[mt-sync] cron invocation: syncing all connected accounts');
     }
@@ -56,7 +59,7 @@ Deno.serve(async (req) => {
         const r = await syncAccount(row as never, log);
         results.push({ account_id: row.id, ...r });
       } catch (e) {
-        const message = e instanceof Error ? e.message : 'Sync failed';
+        const message = 'Trading account sync failed. Please reconnect or try again.';
         console.error(`[mt-sync][${row.id}] failed:`, message);
         await db.from('trading_accounts')
           .update({ status: 'error', sync_error: message }).eq('id', row.id);
@@ -66,7 +69,7 @@ Deno.serve(async (req) => {
 
     return json({ ok: true, synced: results.length, results });
   } catch (e) {
-    const message = e instanceof Error ? e.message : 'Sync failed';
+    const message = 'Trading account sync could not be completed.';
     console.error('mt-sync error', message);
     return json({ error: message }, 500);
   }

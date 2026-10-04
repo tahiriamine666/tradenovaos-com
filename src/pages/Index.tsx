@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveAccount } from '@/contexts/ActiveAccountContext';
@@ -45,10 +45,9 @@ import {
   XAxis, YAxis, Tooltip, BarChart, Bar,
 } from 'recharts';
 
-function formatMoney(val: number): string {
-  const prefix = val >= 0 ? '+' : '';
-  return `${prefix}$${Math.abs(val).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
+import { formatMoney } from '@/lib/formatMoney';
+import { loadTrades } from '@/lib/tradeData';
+import { toast } from 'sonner';
 
 function AnalyticsView({ dark, user }: { dark: boolean; user: any }) {
   const { activeAccountId, version } = useActiveAccount();
@@ -59,14 +58,9 @@ function AnalyticsView({ dark, user }: { dark: boolean; user: any }) {
     if (!user) return;
     const fetch = async () => {
       setLoading(true);
-      let query = supabase
-        .from('trades')
-        .select('*')
-        .eq('user_id', user.id);
-      if (activeAccountId) query = query.eq('trading_account_id', activeAccountId);
-      const { data } = await query.order('trade_date', { ascending: true });
-      setTrades(data ?? []);
-      setLoading(false);
+      try { setTrades(await loadTrades(user.id, { accountId: activeAccountId, ascending: true })); }
+      catch { setTrades([]); toast.error('Could not load all trades. Please reload to try again.'); }
+      finally { setLoading(false); }
     };
     fetch();
   }, [user, activeAccountId, version]);
@@ -278,14 +272,8 @@ function TradingCalendar({ dark }: { dark: boolean }) {
       setLoading(true);
       const monthStart = `${year}-${String(month + 1).padStart(2, '0')}-01`;
       const monthEnd = `${year}-${String(month + 1).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
-      let query = supabase
-        .from('trades')
-        .select('trade_date, result, discipline_score')
-        .eq('user_id', user.id)
-        .gte('trade_date', monthStart)
-        .lte('trade_date', monthEnd);
-      if (activeAccountId) query = query.eq('trading_account_id', activeAccountId);
-      const [{ data }, { data: jd }] = await Promise.all([query, supabase.from('journal_entries').select('entry_date').eq('user_id', user.id).gte('entry_date', monthStart).lte('entry_date', monthEnd)]);
+      try {
+      const [data, { data: jd }] = await Promise.all([loadTrades(user.id, { accountId: activeAccountId, from: monthStart, to: monthEnd }), supabase.from('journal_entries').select('entry_date').eq('user_id', user.id).gte('entry_date', monthStart).lte('entry_date', monthEnd)]);
       setJournalDays(new Set((jd ?? []).map((r: any) => Number(String(r.entry_date).slice(8, 10)))));
 
       const grouped: Record<number, { pnl: number; trades: number; discipline: number; wins: number }> = {};
@@ -299,7 +287,8 @@ function TradingCalendar({ dark }: { dark: boolean }) {
         grouped[day].discipline += Number((t as any).discipline_score ?? 0);
       });
       setDayMap(grouped);
-      setLoading(false);
+      } catch { setDayMap({}); toast.error('Could not load the trading calendar. Please reload to try again.'); }
+      finally { setLoading(false); }
     };
     fetchCalendarData();
   }, [user, year, month, daysInMonth, activeAccountId, version]);
@@ -452,7 +441,9 @@ function TradingCalendar({ dark }: { dark: boolean }) {
 
 function TradingDashboardInner() {
   const reduceMotion = useReducedMotion();
-  const [activeRaw, setActiveRaw] = useState('dashboard');
+  const [searchParams] = useSearchParams();
+  const [activeRaw, setActiveRaw] = useState(() => searchParams.get('tab') === 'settings' ? 'settings' : 'dashboard');
+  useEffect(() => { if (searchParams.get('tab') === 'settings') setActiveRaw('settings'); }, [searchParams]);
   const setActive = useCallback((v: string) => {
     if (v === 'pricing') { window.location.assign('/pricing'); return; }
     setActiveRaw(v);
@@ -469,14 +460,9 @@ function TradingDashboardInner() {
   const fetchDashboardData = useCallback(async () => {
     if (!user) return;
     setDashLoading(true);
-    const { data, error } = await supabase
-      .from('trades')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('trade_date', { ascending: false });
-
-    if (!error && data) setAllTrades(data);
-    setDashLoading(false);
+    try { setAllTrades(await loadTrades(user.id)); }
+    catch { setAllTrades([]); toast.error('Could not load all dashboard trades. Please reload to try again.'); }
+    finally { setDashLoading(false); }
   }, [user]);
 
   const { totalPnl, tradesCount, winRate, recentTrades, equityData, setupData } = useMemo(() => {

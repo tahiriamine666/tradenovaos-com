@@ -192,14 +192,8 @@ export default function TradingAccountsSection() {
       is_default: isDefault,
       status: 'pending' as Status,
     };
-    if (password.trim()) {
-      payload.password = password.trim();
-      payload.credentials = { password: password.trim() };
-      payload.metaapi_account_id = null; // re-provision when credentials change
-    }
 
-    console.log('Creating account:', { ...payload, password: payload.password ? '***' : undefined, credentials: undefined });
-    console.log('Status being inserted:', payload.status);
+
 
     const { data: saved, error } = editing
       ? await supabase.from('trading_accounts').update(payload as never).eq('id', editing.id).select().single()
@@ -212,6 +206,7 @@ export default function TradingAccountsSection() {
       return;
     }
 
+    const investorPassword = password;
     setDialogOpen(false);
     resetWizard();
     await load();
@@ -231,7 +226,7 @@ export default function TradingAccountsSection() {
 
     setSyncingId(saved.id);
     const { data: res, error: fnErr } = await supabase.functions.invoke('mt-connect', {
-      body: { account_id: saved.id },
+      body: { account_id: saved.id, investor_password: investorPassword || undefined },
     });
     setSyncingId(null);
 
@@ -458,7 +453,7 @@ export default function TradingAccountsSection() {
 
           {!isElite && accounts.length >= limit && (
             <p className="text-xs text-muted-foreground text-center pt-1">
-              You've reached your plan limit. Upgrade to {isPro ? 'Elite for unlimited accounts' : 'Pro for up to 3 accounts'}.
+              You've reached your plan limit. Upgrade to {isPro ? 'Elite for unlimited accounts' : 'Pro for 1 connected account'}.
             </p>
           )}
         </CardContent>
@@ -575,6 +570,7 @@ export default function TradingAccountsSection() {
                     <button
                       key={p.id}
                       onClick={() => setPlatform(p.id)}
+                      disabled={Boolean(editing?.metaapi_account_id)}
                       className={`flex-1 rounded-lg border px-3 py-2 text-xs font-medium transition-all ${
                         platform === p.id ? 'border-primary bg-primary/10 text-primary' : 'border-border text-muted-foreground hover:border-primary/50'
                       }`}
@@ -592,6 +588,7 @@ export default function TradingAccountsSection() {
                   <Input
                     className="pl-8"
                     value={server}
+                    disabled={Boolean(editing?.metaapi_account_id)}
                     onChange={e => { setServer(e.target.value); setServerOpen(true); }}
                     onFocus={() => setServerOpen(true)}
                     placeholder="Search server…"
@@ -614,7 +611,8 @@ export default function TradingAccountsSection() {
 
               <div className="space-y-1.5">
                 <Label className="text-xs">Account Number (Login) *</Label>
-                <Input value={login} onChange={e => setLogin(e.target.value)} placeholder="12345678" inputMode="numeric" />
+                <Input value={login} onChange={e => setLogin(e.target.value)} disabled={Boolean(editing?.metaapi_account_id)} placeholder="12345678" inputMode="numeric" />
+                {editing?.metaapi_account_id && <p className="text-xs text-muted-foreground">Create a separate connection to use a different account number or platform.</p>}
               </div>
 
               <div className="space-y-1.5">
@@ -659,7 +657,7 @@ export default function TradingAccountsSection() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete this account?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently remove <strong>{deleteTarget?.account_name}</strong> and its stored credentials.
+              This will permanently remove <strong>{deleteTarget?.account_name}</strong> from TradeNova.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

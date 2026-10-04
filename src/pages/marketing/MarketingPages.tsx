@@ -227,7 +227,7 @@ export function SolutionPage() {
           </div>
           <button onClick={() => navigate('/signup')}
             className="group flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-8 py-4 rounded-2xl font-black text-sm transition-all hover:shadow-xl hover:shadow-violet-500/25 hover:-translate-y-0.5">
-            Start Free — No credit card <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            Start 14-day trial · Payment method required <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </button>
         </motion.div>
       </div>

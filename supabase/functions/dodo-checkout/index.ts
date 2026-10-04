@@ -1,139 +1,67 @@
-// Create a Dodo Payments hosted checkout session for the signed-in user.
-import "jsr:@supabase/functions-js/edge-runtime.d.ts";
-import { createClient } from "npm:@supabase/supabase-js@2";
-import { dodoApiBase, dodoAuthHeaders, productIdForPlan, type Billing, type Plan } from "../_shared/dodo.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-};
-
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "method_not_allowed" }), {
-      status: 405, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-
+import { admin,authenticate,cors,json,provider,ProviderError } from '../_shared/dodoServer.ts';
+import { productIdForPlan } from '../_shared/dodo.ts';
+const origins=new Set(['https://tradenovaos.com','https://www.tradenovaos.com','https://tradenovaos-com.lovable.app','https://id-preview--0ee4a120-abbf-401b-9623-1114b47e7fda.lovable.app','http://localhost:8080']);
+Deno.serve(async req=>{
+  if(req.method==='OPTIONS') return new Response('ok',{headers:cors});
+  if(req.method!=='POST') return json({error:'method_not_allowed'},405);
+  let createdAttempt:string|null=null;
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const user=await authenticate(req);
+    if(!user?.email) return json({error:'Unauthorized'},401);
+    const body=await req.json().catch(()=>({})),db=admin();
+    if(body.action==='status') {
+      if(typeof body.attempt_id!=='string') return json({error:'invalid_attempt'},400);
+      const {data,error}=await db.from('billing_checkout_attempts').select('status,plan,subscription_id').eq('id',body.attempt_id).eq('user_id',user.id).maybeSingle();
+      if(error) throw error;
+      if(!data) return json({error:'not_found'},404);
+      const {data:sub,error:subError}=await db.from('subscriptions').select('status,trial_end,current_period_end').eq('user_id',user.id).eq('dodo_subscription_id',data.subscription_id??'').maybeSingle();
+      if(subError) throw subError;
+      const active=sub && ((sub.status==='active'&&Date.parse(sub.current_period_end)>Date.now())||(sub.status==='trialing'&&Date.parse(sub.trial_end)>Date.now()));
+      return json({confirmed:data.status==='confirmed'&&Boolean(active),plan:data.plan});
     }
-    const userClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } },
-    );
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claimsData, error: claimsErr } = await userClient.auth.getClaims(token);
-    if (claimsErr || !claimsData?.claims?.sub) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if(body.action==='prices') {
+      const prices:Record<string,unknown>={};
+      await Promise.all((['pro','elite'] as const).flatMap(pl=>(['monthly','yearly'] as const).map(async bi=>{
+        const id=productIdForPlan(pl,bi);
+        if(!id) return;
+        const product=await provider(`/products/${encodeURIComponent(id)}`);
+        const price=product.price;
+        if(typeof price?.price==='number') prices[`${pl}_${bi}`]={amount:price.price/100,currency:price.currency,trial_days:price.trial_period_days};
+      })));
+      return json({prices});
     }
-    const userId = claimsData.claims.sub as string;
-    const claimEmail = (claimsData.claims as any).email as string | undefined;
-
-    let body: {
-      plan?: Plan; billing?: Billing;
-      email?: string; name?: string;
-      country?: string; zip?: string;
-    } = {};
-    try { body = await req.json(); } catch { /* ignore */ }
-
-    if ((body as any).action === "prices") {
-      const out: Record<string, unknown> = {};
-      for (const pl of ["pro", "elite"] as Plan[]) for (const bi of ["monthly", "yearly"] as Billing[]) {
-        const id = productIdForPlan(pl, bi);
-        if (!id) continue;
-        try {
-          const r = await fetch(`${dodoApiBase()}/products/${id}`, { headers: dodoAuthHeaders() });
-          const j = await r.json().catch(() => null);
-          const pr = j?.price ?? {};
-          if (r.ok) out[`${pl}_${bi}`] = {
-            amount: typeof pr.price === "number" ? pr.price / 100 : null,
-            currency: pr.currency ?? "USD",
-            trial_days: pr.trial_period_days ?? null,
-          };
-        } catch { /* skip */ }
-      }
-      return new Response(JSON.stringify({ prices: out }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if(!['pro','elite'].includes(body.plan)) return json({error:'invalid_plan'},400);
+    const plan=body.plan,billing=body.billing==='yearly'?'yearly':'monthly';
+    const product=productIdForPlan(plan,billing);
+    if(!product||!Deno.env.get('DODO_API_KEY')) return json({error:'Billing is not configured'},503);
+    const {data:sub,error:subError}=await db.from('subscriptions').select('status,dodo_customer_id,dodo_subscription_id,trial_end,current_period_end').eq('user_id',user.id).maybeSingle();
+    if(subError) throw subError;
+    if(sub?.dodo_subscription_id&&['active','trialing','past_due','unpaid'].includes(sub.status)) return json({error:'Use Manage billing to change your existing subscription.'},409);
+    const {data:pending,error:pendingError}=await db.from('billing_checkout_attempts').select('id,checkout_url,plan,billing').eq('user_id',user.id).eq('status','pending').maybeSingle();
+    if(pendingError) throw pendingError;
+    if(pending && (pending.plan!==plan||pending.billing!==billing)) return json({error:`A ${pending.plan} ${pending.billing} checkout is already pending. Resume that plan or contact support.`},409);
+    if(pending) return pending.checkout_url?json({url:pending.checkout_url,attempt_id:pending.id}):json({error:'Your previous checkout is awaiting provider confirmation. Contact support before creating another.'},409);
+    const {data:attempt,error:insertError}=await db.from('billing_checkout_attempts').insert({user_id:user.id,plan,billing}).select('id').single();
+    if(insertError) return json({error:'A checkout is already being prepared. Please try again.'},409);
+    createdAttempt=attempt.id;
+    const origin=origins.has(req.headers.get('origin')??'')?req.headers.get('origin')!:'https://www.tradenovaos.com';
+    const response=await provider('/checkouts',{method:'POST',body:JSON.stringify({
+      product_cart:[{product_id:product,quantity:1}],
+      customer:sub?.dodo_customer_id?{customer_id:sub.dodo_customer_id}:{email:user.email,name:typeof body.name==='string'?body.name.slice(0,100):user.email},
+      feature_flags:{allow_customer_editing_email:false},
+      subscription_data:{trial_period_days:sub?.dodo_subscription_id?0:14},
+      return_url:`${origin}/billing/success?attempt=${attempt.id}`,cancel_url:`${origin}/billing/cancel`,
+      metadata:{user_id:user.id,checkout_attempt_id:attempt.id,plan,billing}
+    })});
+    if(!response.checkout_url||!response.session_id) throw new Error('Missing checkout');
+    const {error:saveError}=await db.from('billing_checkout_attempts').update({session_id:response.session_id,checkout_url:response.checkout_url}).eq('id',attempt.id);
+    if(saveError) throw saveError;
+    return json({url:response.checkout_url,attempt_id:attempt.id});
+  } catch(error) {
+    // Definitive rejections can retry. Ambiguous timeouts stay pending to avoid duplicate subscriptions.
+    if(createdAttempt && error instanceof ProviderError && [400,401,403,404,422].includes(error.status)) {
+      await admin().from('billing_checkout_attempts').update({status:'failed',updated_at:new Date().toISOString()}).eq('id',createdAttempt);
     }
-
-    const plan = body.plan;
-    if (plan !== "pro" && plan !== "elite") {
-      return new Response(JSON.stringify({ error: "invalid_plan" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    const billing: Billing = body.billing === "yearly" ? "yearly" : "monthly";
-
-    if (!Deno.env.get("DODO_API_KEY")) {
-      return new Response(JSON.stringify({ error: "dodo_not_configured" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    const productId = productIdForPlan(plan, billing);
-    if (!productId) {
-      return new Response(JSON.stringify({ error: "product_id_missing", detail: `${plan}_${billing}` }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const origin = req.headers.get("origin") ?? "";
-    const fromOnboarding = (body as any).onboarding === true;
-    const returnUrl = origin ? `${origin}${fromOnboarding ? "/onboarding?checkout=done" : "/billing/success"}` : undefined;
-    const email = (body.email && body.email.trim()) || claimEmail || undefined;
-
-    const payload: Record<string, unknown> = {
-      product_cart: [{ product_id: productId, quantity: 1 }],
-      customer: email ? {
-        email,
-        name: body.name?.trim() || undefined,
-      } : undefined,
-      billing_address: (body.country || body.zip) ? {
-        country: body.country?.trim() || undefined,
-        zipcode: body.zip?.trim() || undefined,
-      } : undefined,
-      return_url: returnUrl,
-      metadata: { user_id: userId, plan, billing },
-      ...(fromOnboarding ? { subscription_data: { trial_period_days: 14 } } : {}),
-    };
-
-    const res = await fetch(`${dodoApiBase()}/checkouts`, {
-      method: "POST",
-      headers: dodoAuthHeaders(),
-      body: JSON.stringify(payload),
-    });
-    const json = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      console.error("dodo-checkout: dodo error", res.status, json);
-      return new Response(JSON.stringify({ error: "checkout_failed", detail: json }), {
-        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const url = (json?.checkout_url ?? json?.payment_link ?? json?.url) as string | undefined;
-    if (!url) {
-      return new Response(JSON.stringify({ error: "no_checkout_url", detail: json }), {
-        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    return new Response(JSON.stringify({ url, session_id: json?.session_id ?? null }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  } catch (e) {
-    console.error("dodo-checkout error", e);
-    return new Response(JSON.stringify({ error: String(e) }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return json({error:'Checkout could not be prepared safely. Please contact support if this persists.'},502);
   }
 });

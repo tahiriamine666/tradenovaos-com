@@ -72,7 +72,7 @@ const fmt = (p?: Price) => p?.amount != null
 
 export default function Onboarding() {
   const { user, loading: authLoading } = useAuth();
-  const { state, loading, refresh } = useAccessState();
+  const { state, loading, error: accessError, refresh } = useAccessState();
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const [stage, setStage] = useState<Stage | null>(null);
@@ -95,7 +95,7 @@ export default function Onboarding() {
     if (state.selected_plan) setPlan(state.selected_plan);
     if (state.selected_billing) setBilling(state.selected_billing);
     if (state.onboarding_completed || params.get("step") === "plan") { setStage("plan"); return; }
-    setStage((["q1", "q2", "q3"] as Stage[])[Math.min(state.onboarding_step, 2)]);
+    setStage((["q1", "q2", "q3"] as Stage[])[Math.max(0, Math.min((state.onboarding_step || 1) - 1, 2))]);
   }, [state, stage, params]);
 
   useEffect(() => {
@@ -165,6 +165,7 @@ export default function Onboarding() {
   const period = billing === "monthly" ? "month" : "year";
 
   if (authLoading || loading) return <div className="min-h-screen bg-background" />;
+  if (accessError) return <main className="min-h-screen flex flex-col items-center justify-center gap-4"><p role="alert">{accessError}</p><Button onClick={() => void refresh()}>Try again</Button></main>;
   if (!user) return <Navigate to="/login" replace />;
   if (state?.internal) return <Navigate to="/app" replace />;
 
@@ -188,7 +189,7 @@ export default function Onboarding() {
           onClick={() => setMarkets((s) => s.includes(m) ? s.filter((x) => x !== m) : [...s, m])} />)}
       </div>
       <Button className="w-full" disabled={!markets.length || busy}
-        onClick={() => next(async () => { await save({ step: 1, markets }); setStage("q2"); })}>Continue</Button>
+        onClick={() => next(async () => { await save({ step: 2, markets }); setStage("q2"); })}>Continue</Button>
     </>);
     case "q2": return wrap(<>
       <Robot size={90} />
@@ -200,7 +201,7 @@ export default function Onboarding() {
       <div className="flex w-full gap-2">
         <Button variant="ghost" onClick={() => setStage("q1")}>Back</Button>
         <Button className="flex-1" disabled={!experience || busy}
-          onClick={() => next(async () => { await save({ step: 2, experience: experience! }); setStage("q3"); })}>Continue</Button>
+          onClick={() => next(async () => { await save({ step: 3, experience: experience! }); setStage("q3"); })}>Continue</Button>
       </div>
     </>);
     case "q3": {

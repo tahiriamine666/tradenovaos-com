@@ -19,8 +19,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (_event === "PASSWORD_RECOVERY") navigate("/reset-password", { replace: true });
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -33,7 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate]);
 
   const signUp = async (email: string, password: string) => {
     const { error } = await supabase.auth.signUp({ email, password });

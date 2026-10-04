@@ -12,7 +12,7 @@ const COLS: { title: string; links: { label: string; to: string; external?: bool
       { label: 'Solutions', to: '/solutions/forex' },
       { label: 'Pricing', to: '/pricing' },
       { label: 'Supported Brokers', to: '/supported-brokers' },
-      { label: 'Start Free', to: '/signup' },
+      { label: 'Start Free Trial', to: '/signup' },
     ],
   },
   {
@@ -58,13 +58,13 @@ export default function MarketingFooter() {
             <h3 className="text-2xl sm:text-3xl font-black tracking-tight">
               Start building your <span className="bg-gradient-to-r from-primary to-cyan-300 bg-clip-text text-transparent">trading edge today.</span>
             </h3>
-            <p className="text-muted-foreground text-sm mt-2">Free forever plan · No credit card required</p>
+            <p className="text-muted-foreground text-sm mt-2">14-day free trial · Payment method required</p>
           </div>
           <button
             onClick={() => nav('/signup')}
             className="group inline-flex items-center gap-2.5 bg-primary hover:bg-primary text-white px-7 py-3.5 rounded-md font-black text-sm transition-all hover:shadow-2xl hover:shadow-primary/30 hover:-translate-y-0.5 whitespace-nowrap"
           >
-            Start Free <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            Start Free Trial <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
       </div>

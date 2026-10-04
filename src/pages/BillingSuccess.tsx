@@ -1,119 +1,33 @@
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { CheckCircle2, RefreshCw, AlertCircle } from "lucide-react";
-import { usePlan } from "@/hooks/usePlan";
-import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
-
+import { useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { usePlan } from '@/hooks/usePlan';
+import { Button } from '@/components/ui/button';
 export default function BillingSuccess() {
-  const { refresh, isPro, isElite, loading } = usePlan();
-  const [phase, setPhase] = useState<"waiting" | "confirmed" | "timeout">("waiting");
-
-  useEffect(() => {
-    let cancelled = false;
-    let syncCalled = false;
-    let attempts = 0;
-
-    const tick = async () => {
-      if (cancelled) return;
-      attempts++;
-      await refresh();
-
-      // After ~6s, if the webhook hasn't landed, ask the server to query
-      // Lemon Squeezy directly and sync. Idempotent.
-      if (attempts === 3 && !syncCalled) {
-        syncCalled = true;
-        try {
-          await supabase.functions.invoke("dodo-sync-subscription", { method: "POST" });
-          await refresh();
-        } catch (e) {
-          console.warn("dodo-sync-subscription failed", e);
-        }
-      }
+  const [params]=useSearchParams();
+  const attempt=params.get('attempt');
+  const {refresh}=usePlan();
+  const [phase,setPhase]=useState<'waiting'|'confirmed'|'timeout'>('waiting');
+  const [plan,setPlan]=useState('');
+  const [retry,setRetry]=useState(0);
+  useEffect(()=>{
+    let stopped=false,timer:ReturnType<typeof setTimeout>,count=0;
+    setPhase('waiting');
+    const tick=async()=>{
+      if(!attempt) { setPhase('timeout'); return; }
+      const {data,error}=await supabase.functions.invoke('dodo-checkout',{body:{action:'status',attempt_id:attempt}});
+      if(stopped) return;
+      if(!error&&data?.confirmed) { setPlan(data.plan); setPhase('confirmed'); await refresh(); return; }
+      if(++count>=15) { setPhase('timeout'); return; }
+      timer=setTimeout(tick,2000);
     };
-
-    tick();
-    const interval = setInterval(async () => {
-      if (cancelled) return;
-      await tick();
-      if (attempts >= 15) {
-        clearInterval(interval);
-        setPhase((p) => (p === "confirmed" ? p : "timeout"));
-      }
-    }, 2000);
-
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, [refresh]);
-
-  useEffect(() => {
-    if (!loading && (isPro || isElite)) setPhase("confirmed");
-  }, [isPro, isElite, loading]);
-
-  return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-6">
-      <div className="max-w-md w-full text-center space-y-6">
-        {phase === "waiting" && (
-          <>
-            <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-              <RefreshCw className="w-8 h-8 text-primary animate-spin" />
-            </div>
-            <div className="space-y-2">
-              <h1 className="text-2xl font-bold font-heading text-foreground">Confirming your subscription…</h1>
-              <p className="text-sm text-muted-foreground">
-                Payment received. We're unlocking your premium features now.
-              </p>
-            </div>
-          </>
-        )}
-
-        {phase === "confirmed" && (
-          <>
-            <div className="mx-auto w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center">
-              <CheckCircle2 className="w-8 h-8 text-emerald-500" />
-            </div>
-            <div className="space-y-2">
-              <h1 className="text-2xl font-bold font-heading text-foreground">You're all set 🎉</h1>
-              <p className="text-sm text-muted-foreground">
-                Your {isElite ? "Elite" : "Pro"} plan is active.
-              </p>
-            </div>
-            <div className="flex flex-col gap-2">
-              <Button asChild className="rounded-xl">
-                <Link to="/app">Continue to dashboard</Link>
-              </Button>
-              <Button asChild variant="ghost" className="rounded-xl">
-                <Link to="/app?tab=settings">Manage billing</Link>
-              </Button>
-            </div>
-          </>
-        )}
-
-        {phase === "timeout" && (
-          <>
-            <div className="mx-auto w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center">
-              <AlertCircle className="w-8 h-8 text-amber-500" />
-            </div>
-            <div className="space-y-2">
-              <h1 className="text-2xl font-bold font-heading text-foreground">Payment received</h1>
-              <p className="text-sm text-muted-foreground">
-                Your subscription is still finalizing. This can take up to a minute.
-                Refresh in a bit, or contact support if your plan hasn't updated within 5 minutes.
-              </p>
-            </div>
-            <div className="flex flex-col gap-2">
-              <Button onClick={() => window.location.reload()} className="rounded-xl">
-                Refresh now
-              </Button>
-              <Button asChild variant="ghost" className="rounded-xl">
-                <Link to="/app">Go to dashboard</Link>
-              </Button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
+    void tick();
+    return ()=>{stopped=true;clearTimeout(timer);};
+  },[attempt,refresh,retry]);
+  return <main className="min-h-screen flex items-center justify-center bg-background p-6"><section className="max-w-md text-center space-y-5" aria-live="polite">
+    <h1 className="text-2xl font-bold">{phase==='confirmed'?'Your subscription is confirmed':phase==='waiting'?'Confirming your subscription…':'Confirmation is still pending'}</h1>
+    <p>{phase==='confirmed'?`Your ${plan==='elite'?'Elite':'Pro'} subscription is ready. View billing for your trial or renewal date.`:phase==='waiting'?'We are waiting for secure confirmation from Dodo Payments.':'We could not confirm this checkout yet. This does not mean you were charged. Check your billing status before trying another checkout.'}</p>
+    {phase==='timeout'&&<Button onClick={()=>setRetry(n=>n+1)}>Check again</Button>}
+    <div className="flex flex-col gap-3"><Link to={phase==='confirmed'?'/app':'/billing'}>{phase==='confirmed'?'Continue to TradeNova':'View billing status'}</Link><Link to="/billing">Manage billing</Link></div>
+  </section></main>;
 }

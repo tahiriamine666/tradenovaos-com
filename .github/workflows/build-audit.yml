@@ -1,6 +1,7 @@
 name: Build Audit
 
 on:
+  pull_request:
   push:
     branches: [main]
   workflow_dispatch:
@@ -15,4 +16,6 @@ jobs:
           node-version: 20
           cache: npm
       - run: npm ci
+      - run: npx tsc -p tsconfig.app.json --noEmit
+      - run: node scripts/audit-regression.mjs
       - run: npm run build

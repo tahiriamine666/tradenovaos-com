@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
   if (cErr || !uid) return json({ error: "Unauthorized" }, 401);
 
   const apiKey = Deno.env.get("LOVABLE_API_KEY");
-  if (!apiKey) return json({ error: "AI is not configured." }, 500);
+  if (!apiKey) return json({ error: "NOVA is not configured yet. Your credits have not been used." }, 503);
 
   const body = await req.json().catch(() => ({}));
   const history = (Array.isArray(body?.messages) ? body.messages : [])
@@ -73,6 +73,7 @@ Deno.serve(async (req) => {
     sb.from("trading_accounts").select("account_name,platform,broker,firm,account_type,currency,balance,equity,status,last_synced_at").eq("user_id", uid).limit(10),
     sb.from("profiles").select("display_name,full_name").eq("id", uid).maybeSingle(),
   ]);
+  if ([tr,jr,pl,wk,cm,pf,ac,pr].some(result=>result.error)) return json({error:"Your trading data could not be loaded. Please try again later."},503);
   const trades = tr.data || [];
   const plans = (pl.data || []).map((p: any) => ({ ...p, ai_analysis: p.ai_analysis?.daily_v2 ?? p.ai_analysis?.framework ?? null }));
   const data = {
@@ -101,11 +102,10 @@ Deno.serve(async (req) => {
 
   if (!upstream.ok || !upstream.body) {
     const raw = await upstream.text().catch(() => "");
-    console.error("[nova-chat] gateway", upstream.status, raw.slice(0, 400));
+    console.error("[nova-chat] gateway", upstream.status);
     let msg = "NOVA is unavailable right now.";
     if (upstream.status === 429) msg = "NOVA is busy. Please try again in a moment.";
     if (upstream.status === 402) msg = "AI credits are exhausted for this workspace.";
-    try { const j = JSON.parse(raw); if (j?.message || j?.error?.message) msg = j.message || j.error.message; } catch { /* keep */ }
     return json({ error: msg }, upstream.status);
   }
 

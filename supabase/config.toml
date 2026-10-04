@@ -14,6 +14,8 @@ verify_jwt = false
 site_url = "https://www.tradenovaos.com"
 additional_redirect_urls = [
   "https://www.tradenovaos.com/app",
+  "https://www.tradenovaos.com/reset-password",
+  "https://tradenovaos.com/reset-password",
   "http://localhost:8080/app",
 ]
 
