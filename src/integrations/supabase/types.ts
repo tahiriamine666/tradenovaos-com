@@ -2081,21 +2081,28 @@ export type Database = {
           account_type: string
           ai_review: Json
           before_screenshot_url: string | null
+          confidence_score: number | null
           created_at: string
           daily_bias: string | null
           discipline_score: number | null
           emotion: string | null
+          emotion_after: string | null
+          emotion_before: string | null
           entry_price: number | null
           execution_score: number | null
           exit_price: number | null
           external_id: string | null
+          followed_plan: boolean | null
           id: string
+          impulsive_entry: boolean | null
           is_starred: boolean
           mistakes: string[]
           notes: string | null
           outcome: string | null
           pair: string
           playbook_id: string | null
+          psych_discipline_score: number | null
+          psychology_note: string | null
           quantity: number | null
           result: number | null
           rr: number | null
@@ -2104,6 +2111,7 @@ export type Database = {
           setup: string | null
           side: string | null
           stop_loss: number | null
+          stress_score: number | null
           tags: string[]
           take_profit: number | null
           timeframe: string | null
@@ -2117,21 +2125,28 @@ export type Database = {
           account_type?: string
           ai_review?: Json
           before_screenshot_url?: string | null
+          confidence_score?: number | null
           created_at?: string
           daily_bias?: string | null
           discipline_score?: number | null
           emotion?: string | null
+          emotion_after?: string | null
+          emotion_before?: string | null
           entry_price?: number | null
           execution_score?: number | null
           exit_price?: number | null
           external_id?: string | null
+          followed_plan?: boolean | null
           id?: string
+          impulsive_entry?: boolean | null
           is_starred?: boolean
           mistakes?: string[]
           notes?: string | null
           outcome?: string | null
           pair: string
           playbook_id?: string | null
+          psych_discipline_score?: number | null
+          psychology_note?: string | null
           quantity?: number | null
           result?: number | null
           rr?: number | null
@@ -2140,6 +2155,7 @@ export type Database = {
           setup?: string | null
           side?: string | null
           stop_loss?: number | null
+          stress_score?: number | null
           tags?: string[]
           take_profit?: number | null
           timeframe?: string | null
@@ -2153,21 +2169,28 @@ export type Database = {
           account_type?: string
           ai_review?: Json
           before_screenshot_url?: string | null
+          confidence_score?: number | null
           created_at?: string
           daily_bias?: string | null
           discipline_score?: number | null
           emotion?: string | null
+          emotion_after?: string | null
+          emotion_before?: string | null
           entry_price?: number | null
           execution_score?: number | null
           exit_price?: number | null
           external_id?: string | null
+          followed_plan?: boolean | null
           id?: string
+          impulsive_entry?: boolean | null
           is_starred?: boolean
           mistakes?: string[]
           notes?: string | null
           outcome?: string | null
           pair?: string
           playbook_id?: string | null
+          psych_discipline_score?: number | null
+          psychology_note?: string | null
           quantity?: number | null
           result?: number | null
           rr?: number | null
@@ -2176,6 +2199,7 @@ export type Database = {
           setup?: string | null
           side?: string | null
           stop_loss?: number | null
+          stress_score?: number | null
           tags?: string[]
           take_profit?: number | null
           timeframe?: string | null
@@ -2294,6 +2318,104 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      trading_reviews: {
+        Row: {
+          account_id: string | null
+          account_key: string
+          best_decision: string | null
+          biggest_mistake: string | null
+          created_at: string
+          execution_rating: number | null
+          id: string
+          keep_doing: string | null
+          next_period_focus: string | null
+          overall_notes: string | null
+          period_end: string
+          period_start: string
+          period_type: string
+          process_rating: number | null
+          psychology_rating: number | null
+          recurring_patterns: string | null
+          risk_rating: number | null
+          rules_broken: string | null
+          rules_followed: string | null
+          start_doing: string | null
+          stop_doing: string | null
+          updated_at: string
+          user_id: string
+          what_didnt_work: string | null
+          what_to_fix: string | null
+          what_to_modify: string | null
+          what_worked: string | null
+        }
+        Insert: {
+          account_id?: string | null
+          account_key?: string
+          best_decision?: string | null
+          biggest_mistake?: string | null
+          created_at?: string
+          execution_rating?: number | null
+          id?: string
+          keep_doing?: string | null
+          next_period_focus?: string | null
+          overall_notes?: string | null
+          period_end: string
+          period_start: string
+          period_type: string
+          process_rating?: number | null
+          psychology_rating?: number | null
+          recurring_patterns?: string | null
+          risk_rating?: number | null
+          rules_broken?: string | null
+          rules_followed?: string | null
+          start_doing?: string | null
+          stop_doing?: string | null
+          updated_at?: string
+          user_id?: string
+          what_didnt_work?: string | null
+          what_to_fix?: string | null
+          what_to_modify?: string | null
+          what_worked?: string | null
+        }
+        Update: {
+          account_id?: string | null
+          account_key?: string
+          best_decision?: string | null
+          biggest_mistake?: string | null
+          created_at?: string
+          execution_rating?: number | null
+          id?: string
+          keep_doing?: string | null
+          next_period_focus?: string | null
+          overall_notes?: string | null
+          period_end?: string
+          period_start?: string
+          period_type?: string
+          process_rating?: number | null
+          psychology_rating?: number | null
+          recurring_patterns?: string | null
+          risk_rating?: number | null
+          rules_broken?: string | null
+          rules_followed?: string | null
+          start_doing?: string | null
+          stop_doing?: string | null
+          updated_at?: string
+          user_id?: string
+          what_didnt_work?: string | null
+          what_to_fix?: string | null
+          what_to_modify?: string | null
+          what_worked?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trading_reviews_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "trading_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       upgrade_requests: {
         Row: {
