@@ -10,6 +10,9 @@ import { useTradeDialog, useTradesChanged } from '@/contexts/TradeDialogContext'
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { TradeDetailDialog, type DetailTrade } from '@/components/journal/TradeDetailDialog';
+import type { Psychology } from '@/components/journal/PsychologyFields';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TradingReview } from '@/components/journal/TradingReview';
 
 type JournalTrade = {
   id: string;
@@ -29,7 +32,7 @@ type JournalTrade = {
   daily_bias: string | null;
   timeframe: string | null;
   playbook_id: string | null;
-};
+} & Partial<Psychology>;
 
 async function signedScreenshot(path: string) {
   const storagePath = path.match(/trade-screenshots\/(.+)/)?.[1] ?? path;
@@ -107,6 +110,10 @@ export default function TradeJournal() {
           </Button>
         }
       />
+      <Tabs defaultValue="trades" className="space-y-5">
+      <TabsList><TabsTrigger value="trades">Trades</TabsTrigger><TabsTrigger value="review">Review</TabsTrigger></TabsList>
+      <TabsContent value="review"><TradingReview /></TabsContent>
+      <TabsContent value="trades">
       {loading ? <Skeleton className="h-72 w-full" /> : rows.length === 0 ? (
         <div className="feature-reveal flex min-h-[300px] flex-col items-center justify-center rounded-md border border-dashed border-border bg-card/40 px-6 text-center">
           <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-md border border-border bg-background">
@@ -175,6 +182,8 @@ export default function TradeJournal() {
           </div>
         </div>
       )}
+      </TabsContent>
+      </Tabs>
       <TradeDetailDialog trade={selected} open={Boolean(selected)} onOpenChange={(open) => { if (!open) setSelected(null); }} />
     </div>
   );
