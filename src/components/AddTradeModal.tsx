@@ -19,6 +19,7 @@ import {
   Target, BookOpen, ArrowRight, Save,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { PsychologyFields, EMPTY_PSYCHOLOGY, psychologyFrom, type Psychology } from '@/components/journal/PsychologyFields';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Outcome = 'win' | 'loss' | 'breakeven';
@@ -221,6 +222,7 @@ export default function AddTradeModal({
   const [playbooks, setPlaybooks] = useState<Playbook[]>([]);
   const [chartFile, setChartFile] = useState<File | null>(null);
   const [beforeFile, setBeforeFile] = useState<File | null>(null);
+  const [psy, setPsy] = useState<Psychology>(EMPTY_PSYCHOLOGY);
 
   // Load playbooks
   useEffect(() => {
@@ -255,6 +257,7 @@ export default function AddTradeModal({
     } else {
       setForm(EMPTY_FORM);
     }
+    setPsy(psychologyFrom(editTrade));
     setChartFile(null);
     setBeforeFile(null);
     setErrors({});
@@ -319,7 +322,10 @@ export default function AddTradeModal({
       daily_bias: form.daily_bias || null,
       timeframe: form.timeframe || null,
       trading_account_id: activeAccountId || null,
+      ...psy,
+      psychology_note: psy.psychology_note?.trim() || null,
     };
+    if (editTrade) delete payload.trading_account_id;
 
     for (const [file, field, label] of [
       [beforeFile, 'before_screenshot_url', 'Before screenshot'],
@@ -600,6 +606,8 @@ export default function AddTradeModal({
                 className="rounded-lg"
               />
             </div>
+
+            <PsychologyFields key={`${editTrade?.id ?? 'new'}-${open}`} value={psy} onChange={setPsy} />
 
             {/* Playbook */}
             <PlaybookSelector
