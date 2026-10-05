@@ -325,7 +325,6 @@ export default function AddTradeModal({
       ...psy,
       psychology_note: psy.psychology_note?.trim() || null,
     };
-    if (editTrade) delete payload.trading_account_id;
 
     for (const [file, field, label] of [
       [beforeFile, 'before_screenshot_url', 'Before screenshot'],
