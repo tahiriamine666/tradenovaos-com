@@ -78,6 +78,13 @@
       "when": 1791072364146,
       "tag": "0010_tighten_retired_community_and_avatar_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791159997813,
+      "tag": "0011_trade_psychology_and_reviews",
+      "breakpoints": true
     }
   ]
 }

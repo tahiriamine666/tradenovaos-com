@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { ArrowDownRight, ArrowUpRight, CalendarDays, Clock, Crosshair, Gauge, ImageIcon, Layers, LineChart, StickyNote, Tags } from 'lucide-react';
+import { ArrowDownRight, ArrowUpRight, Brain, CalendarDays, Clock, Crosshair, Gauge, ImageIcon, Layers, LineChart, StickyNote, Tags } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { hasPsychology } from '@/components/journal/PsychologyFields';
 
 export type DetailTrade = {
   id: string;
@@ -141,6 +142,21 @@ export function TradeDetailDialog({ trade, open, onOpenChange }: { trade: Detail
               <Bullet><span className="font-medium text-foreground">Result:</span> {pnl > 0 ? '+' : ''}{pnl.toLocaleString()}</Bullet>
             </ul>
           </Section>
+
+          {hasPsychology(trade as any) && (() => { const p = trade as any; return (
+            <Section icon={Brain} title="Psychology">
+              <ul className="space-y-1.5">
+                {p.emotion_before && <Bullet><span className="font-medium text-foreground">Emotion before:</span> {p.emotion_before}</Bullet>}
+                {p.emotion_after && <Bullet><span className="font-medium text-foreground">Emotion after:</span> {p.emotion_after}</Bullet>}
+                {p.confidence_score != null && <Bullet><span className="font-medium text-foreground">Confidence:</span> {p.confidence_score}/5</Bullet>}
+                {p.psych_discipline_score != null && <Bullet><span className="font-medium text-foreground">Discipline:</span> {p.psych_discipline_score}/5</Bullet>}
+                {p.stress_score != null && <Bullet><span className="font-medium text-foreground">Stress:</span> {p.stress_score}/5</Bullet>}
+                {p.followed_plan != null && <Bullet><span className="font-medium text-foreground">Followed plan:</span> {p.followed_plan ? 'Yes' : 'No'}</Bullet>}
+                {p.impulsive_entry != null && <Bullet><span className="font-medium text-foreground">Impulsive entry:</span> {p.impulsive_entry ? 'Yes' : 'No'}</Bullet>}
+                {p.psychology_note && <Bullet>{p.psychology_note}</Bullet>}
+              </ul>
+            </Section>
+          ); })()}
 
           {/* Notes */}
           <Section icon={StickyNote} title="Journal Notes">
