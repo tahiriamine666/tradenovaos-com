@@ -1932,6 +1932,7 @@ export type Database = {
           created_at: string
           data: Json
           id: string
+          pair: string
           period_date: string
           status: string
           updated_at: string
@@ -1944,6 +1945,7 @@ export type Database = {
           created_at?: string
           data?: Json
           id?: string
+          pair?: string
           period_date: string
           status?: string
           updated_at?: string
@@ -1956,6 +1958,7 @@ export type Database = {
           created_at?: string
           data?: Json
           id?: string
+          pair?: string
           period_date?: string
           status?: string
           updated_at?: string
