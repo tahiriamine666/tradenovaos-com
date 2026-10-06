@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveAccount } from '@/contexts/ActiveAccountContext';
@@ -452,12 +452,17 @@ function TradingCalendar({ dark }: { dark: boolean }) {
 
 function TradingDashboardInner() {
   const reduceMotion = useReducedMotion();
-  const [activeRaw, setActiveRaw] = useState('dashboard');
+  // The open view lives in the URL (?view=) so tab switches, session refreshes and reloads keep it.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const active = searchParams.get('view') || 'dashboard';
   const setActive = useCallback((v: string) => {
     if (v === 'pricing') { window.location.assign('/pricing'); return; }
-    setActiveRaw(v);
-  }, []);
-  const active = activeRaw;
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (v === 'dashboard') next.delete('view'); else next.set('view', v);
+      return next;
+    });
+  }, [setSearchParams]);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const dark = theme === 'dark';
   const { signOut, user } = useAuth();

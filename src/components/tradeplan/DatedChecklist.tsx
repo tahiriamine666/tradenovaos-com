@@ -96,7 +96,7 @@ export default function DatedChecklist<T extends Record<string, any>>({ type, se
       period_date: p.key,
       data: p.data as any,
       status: computeStatus(p.data, statusFields),
-    }, { onConflict: 'user_id,account_key,checklist_type,period_date' });
+    }, { onConflict: 'user_id,account_key,checklist_type,period_date,pair' });
     setSave(error ? 'dirty' : pending.current ? 'dirty' : 'saved');
     if (error) pending.current = p;
   }, [user, type, statusFields]);

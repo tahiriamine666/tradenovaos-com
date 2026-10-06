@@ -85,6 +85,13 @@
       "when": 1791159997813,
       "tag": "0011_trade_psychology_and_reviews",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791245510233,
+      "tag": "0012_pair_specific_checklists",
+      "breakpoints": true
     }
   ]
 }
