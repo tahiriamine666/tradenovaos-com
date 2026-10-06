@@ -352,6 +352,75 @@ function Block({ title, children }: { title: string; children: React.ReactNode }
   return <div className="space-y-2 border-t border-border pt-5 first:border-0 first:pt-0"><p className={label}>{title}</p>{children}</div>;
 }
 const Text = ({ v }: { v: string }) => v?.trim() ? <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">{v}</p> : <p className="text-sm text-muted-foreground">—</p>;
+
+// ── Pair-specific checklist state (trade_plan_checklists, type pair_checklist) ─
+export const DEFAULT_PAIRS = ['EURUSD', 'GBPUSD', 'USDJPY', 'XAUUSD', 'NAS100', 'US30', 'BTCUSD'];
+type PairCk = Pick<Daily, 'checklist' | 'checked' | 'modelId'>;
+function PairChecklist({ date, pair, legacy, readOnly, models, onModelsChange }: { date: string; pair: string; legacy: Daily | null; readOnly?: boolean; models: Model[]; onModelsChange: () => void }) {
+  const { user } = useAuth();
+  const { activeAccountId } = useActiveAccount();
+  const accountKey = activeAccountId ?? 'all';
+  const [ck, setCk] = useState<PairCk | null>(null);
+  const pending = useRef<{ key: string; data: PairCk } | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout>>();
+  const flush = useCallback(async () => {
+    clearTimeout(timer.current);
+    const p = pending.current; pending.current = null;
+    if (!p || !user) return;
+    const [d, pr, acc] = p.key.split('|');
+    const done = p.data.checklist.filter(i => p.data.checked[i.id]).length;
+    const { error } = await supabase.from('trade_plan_checklists').upsert({
+      user_id: user.id, account_key: acc, account_id: acc === 'all' ? null : acc, checklist_type: 'pair_checklist',
+      period_date: d, pair: pr, data: p.data as any,
+      status: done === 0 ? 'empty' : done === p.data.checklist.length ? 'complete' : 'partial',
+    }, { onConflict: 'user_id,account_key,checklist_type,period_date,pair' });
+    if (error) toast({ title: 'Checklist not saved', description: error.message, variant: 'destructive' });
+  }, [user]);
+  useEffect(() => () => { void flush(); }, [flush]);
+  useEffect(() => {
+    if (!user) return;
+    let alive = true; setCk(null);
+    (async () => {
+      await flush();
+      const { data } = await supabase.from('trade_plan_checklists').select('data').eq('user_id', user.id).eq('account_key', accountKey)
+        .eq('checklist_type', 'pair_checklist').eq('period_date', date).eq('pair', pair).maybeSingle();
+      if (!alive) return;
+      const row = (data as any)?.data as PairCk | undefined;
+      // Older checklists were not pair-tagged and were used for EURUSD: show them only there until edited.
+      const base = legacy && pair === 'EURUSD' ? legacy : emptyDaily();
+      setCk(row ? { checklist: row.checklist ?? [], checked: row.checked ?? {}, modelId: row.modelId ?? '' } : { checklist: base.checklist, checked: base.checked, modelId: base.modelId });
+    })();
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, accountKey, date, pair]);
+  if (!ck) return <div className={`${card} h-64 animate-pulse`} />;
+  const set = (patch: Partial<Daily>) => {
+    if (readOnly) return;
+    setCk(prev => {
+      const n = { ...(prev as PairCk), ...patch } as PairCk;
+      pending.current = { key: `${date}|${pair}|${accountKey}`, data: { checklist: n.checklist, checked: n.checked, modelId: n.modelId } };
+      clearTimeout(timer.current); timer.current = setTimeout(() => void flush(), 800);
+      return n;
+    });
+  };
+  return <Checklist readOnly={readOnly} daily={{ ...emptyDaily(), ...ck }} set={set} models={models} onModelsChange={onModelsChange} />;
+}
+
+function PairPicker({ pair, onChange, pairs, onAdd }: { pair: string; onChange: (p: string) => void; pairs: string[]; onAdd: (p: string) => void }) {
+  const [custom, setCustom] = useState('');
+  const add = () => { const v = custom.trim().toUpperCase().replace(/[^A-Z0-9.]/g, ''); if (v) { onAdd(v); onChange(v); setCustom(''); } };
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {pairs.map(p => (
+        <button key={p} type="button" onClick={() => onChange(p)} aria-pressed={pair === p}
+          className={`rounded-lg border px-2.5 py-1 font-mono text-xs font-semibold transition-colors ${pair === p ? 'border-primary bg-primary/15 text-primary' : 'border-border text-muted-foreground hover:text-foreground'}`}>{p}</button>
+      ))}
+      <input value={custom} onChange={e => setCustom(e.target.value)} onKeyDown={e => e.key === 'Enter' && add()} placeholder="+ Custom pair" aria-label="Custom pair"
+        className="h-7 w-28 rounded-lg border border-border bg-background px-2 font-mono text-xs uppercase text-foreground outline-none focus:border-primary/50" />
+    </div>
+  );
+}
+
 const Tag = ({ v }: { v: string }) => v ? <span className="inline-block rounded-lg border border-primary/40 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">{v}</span> : <span className="text-sm text-muted-foreground">—</span>;
 
 // ── Main ──────────────────────────────────────────────────────────────────────
@@ -362,6 +431,12 @@ export default function TradePlanV2() {
   const { user } = useAuth();
   const today = toKey(new Date());
   const [date, setDate] = useState(today);
+  const pairKey = `tn-checklist-pair:${user?.id ?? ''}`;
+  const pairsKey = `tn-checklist-pairs:${user?.id ?? ''}`;
+  const [pair, setPairRaw] = useState(() => { try { return localStorage.getItem(pairKey) || 'EURUSD'; } catch { return 'EURUSD'; } });
+  const [pairs, setPairs] = useState<string[]>(() => { try { return Array.from(new Set([...DEFAULT_PAIRS, ...JSON.parse(localStorage.getItem(pairsKey) || '[]')])); } catch { return DEFAULT_PAIRS; } });
+  const setPair = (p: string) => { setPairRaw(p); try { localStorage.setItem(pairKey, p); } catch { /* ignore */ } };
+  const addPair = (p: string) => setPairs(prev => { const n = prev.includes(p) ? prev : [...prev, p]; try { localStorage.setItem(pairsKey, JSON.stringify(n.filter(x => !DEFAULT_PAIRS.includes(x)))); } catch { /* ignore */ } return n; });
   const [tab, setTab] = useState<Tab>('daily');
   const [calOpen, setCalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -483,7 +558,8 @@ export default function TradePlanV2() {
     <div className="mx-auto max-w-7xl space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-heading text-2xl font-semibold text-foreground">Trade Plan</h1>
+          <h1 className="font-heading text-2xl font-semibold text-foreground">Checklist — {pair}</h1>
+          <div className="mt-2"><PairPicker pair={pair} onChange={setPair} pairs={pairs} onAdd={addPair} /></div>
           <p className="mt-1 text-sm text-muted-foreground">{longDate(date)}</p>
         </div>
         <div className="flex items-center gap-3">
@@ -563,7 +639,7 @@ export default function TradePlanV2() {
                     <Field title="Rules"><RulesEditor rules={daily.rules} onChange={r => setD({ rules: r })} /></Field>
                     <Field title="Main Idea"><Area value={daily.mainIdea} onChange={v => setD({ mainIdea: v })} placeholder="What is today's main trading idea?" /></Field>
                   </div>
-                  <Checklist daily={daily} set={setD} models={models} onModelsChange={loadModels} />
+                  <PairChecklist date={date} pair={pair} legacy={dailyExists ? daily : null} models={models} onModelsChange={loadModels} />
                 </>
               ))}
 
@@ -598,7 +674,7 @@ export default function TradePlanV2() {
                       {daily.rules.length ? daily.rules.map(r => <div key={r.id} className="flex items-center gap-2 text-sm text-foreground"><Box disabled checked={r.done} />{r.text}</div>) : <p className="text-sm text-muted-foreground">—</p>}
                     </Block>
                     <Block title="Main Idea"><Text v={daily.mainIdea} /></Block>
-                    <Checklist readOnly daily={daily} set={() => {}} models={models} onModelsChange={() => {}} />
+                    <PairChecklist readOnly date={date} pair={pair} legacy={dailyExists ? daily : null} models={models} onModelsChange={() => {}} />
                   </>}
                 </div>
               )}
