@@ -30,11 +30,14 @@ export function useAccessState() {
     return s;
   }, [user]);
 
+  // Only show the blocking loader for the first check per user; background re-checks keep the page mounted.
+  const userId = user?.id;
   useEffect(() => {
     if (authLoading) return;
-    setLoading(true);
+    setState((prev) => { if (!prev) setLoading(true); return prev; });
     refresh();
-  }, [authLoading, refresh]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, userId]);
 
   return { state, loading: loading || authLoading, refresh };
 }

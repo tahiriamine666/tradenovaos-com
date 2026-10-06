@@ -20,15 +20,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Keep the same user object across token refreshes (tab focus) so guards and data hooks don't reset.
+    const keepUser = (next: User | null) => setUser((prev) => (prev && next && prev.id === next.id ? prev : next));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      setUser(session?.user ?? null);
+      keepUser(session?.user ?? null);
       setLoading(false);
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      setUser(session?.user ?? null);
+      keepUser(session?.user ?? null);
       setLoading(false);
     });
 

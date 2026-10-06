@@ -420,7 +420,7 @@ export default function TradePlanV2() {
         const { error } = await supabase.from('trade_plan_checklists').upsert({
           user_id: user.id, account_key: 'all', checklist_type: 'weekly_outlook', period_date: p.weekly.week,
           data: w as any, status: filled === 0 ? 'empty' : filled === 5 ? 'complete' : 'partial',
-        }, { onConflict: 'user_id,account_key,checklist_type,period_date' });
+        }, { onConflict: 'user_id,account_key,checklist_type,period_date,pair' });
         if (error) throw error;
       }
       setState('saved');
