@@ -95,7 +95,7 @@ Deno.serve(async (req) => {
       "http://localhost:8080",
     ]);
     const rawOrigin = req.headers.get("origin") ?? "";
-    const origin = ALLOWED_ORIGINS.has(rawOrigin) ? rawOrigin : "https://www.tradenovaos.com";
+    const origin = ALLOWED_ORIGINS.has(rawOrigin) ? rawOrigin : "https://tradenovaos.com";
     const fromOnboarding = (body as any).onboarding === true;
     const returnUrl = origin ? `${origin}${fromOnboarding ? "/onboarding?checkout=done" : "/billing/success"}` : undefined;
     const email = (body.email && body.email.trim()) || claimEmail || undefined;
