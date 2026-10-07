@@ -6,6 +6,7 @@ import { useActiveAccount } from '@/contexts/ActiveAccountContext';
 import { supabase } from '@/integrations/supabase/client';
 import TradeVault from '@/pages/TradeVault';
 import TradeJournal from '@/pages/TradeJournal';
+import Certificates from './Certificates';
 import StudioSettings from '@/pages/StudioSettings';
 import TradePlanWorkspace from '@/components/tradeplan/TradePlanV2';
 import NovaAI from '@/pages/NovaAI';
@@ -585,6 +586,7 @@ function TradingDashboardInner() {
           {active === 'trades' && <TradeVault />}
 
           {active === 'journal' && <TradeJournal />}
+          {active === 'certificates' && <Certificates />}
 
           {active === 'analytics' && <AnalyticsView dark={dark} user={user} />}
 
