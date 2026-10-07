@@ -8,16 +8,17 @@ export type Psychology = {
   emotion_before: string | null;
   emotion_after: string | null;
   confidence_score: number | null;
-  psych_discipline_score: number | null;
+  discipline_score: number | null;
   stress_score: number | null;
+  execution_score: number | null;
   followed_plan: boolean | null;
   impulsive_entry: boolean | null;
   psychology_note: string | null;
 };
 
 export const EMPTY_PSYCHOLOGY: Psychology = {
-  emotion_before: null, emotion_after: null, confidence_score: null, psych_discipline_score: null,
-  stress_score: null, followed_plan: null, impulsive_entry: null, psychology_note: null,
+  emotion_before: null, emotion_after: null, confidence_score: null, discipline_score: null,
+  stress_score: null, execution_score: null, followed_plan: null, impulsive_entry: null, psychology_note: null,
 };
 
 export function psychologyFrom(row: any): Psychology {
@@ -36,9 +37,9 @@ function Scale({ label, value, onChange }: { label: string; value: number | null
     <div>
       <p className="mb-1.5 text-xs font-medium text-muted-foreground">{label}</p>
       <div className="flex gap-1">
-        {[1, 2, 3, 4, 5].map((n) => (
+        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
           <button key={n} type="button" aria-pressed={value === n} onClick={() => onChange(value === n ? null : n)}
-            className={cn('h-8 flex-1 rounded-md border text-xs font-semibold transition-colors',
+            className={cn('h-7 flex-1 rounded border text-[11px] font-semibold transition-colors',
               value === n ? 'border-primary bg-primary/20 text-primary' : 'border-border text-muted-foreground hover:bg-muted')}>{n}</button>
         ))}
       </div>
@@ -53,7 +54,7 @@ function Toggle({ label, value, onChange }: { label: string; value: boolean | nu
       <div className="flex gap-1">
         {([true, false] as const).map((b) => (
           <button key={String(b)} type="button" aria-pressed={value === b} onClick={() => onChange(value === b ? null : b)}
-            className={cn('h-8 flex-1 rounded-md border text-xs font-semibold transition-colors',
+            className={cn('h-7 flex-1 rounded border text-[11px] font-semibold transition-colors',
               value === b ? 'border-primary bg-primary/20 text-primary' : 'border-border text-muted-foreground hover:bg-muted')}>{b ? 'Yes' : 'No'}</button>
         ))}
       </div>
@@ -84,9 +85,10 @@ export function PsychologyFields({ value, onChange }: { value: Psychology; onCha
               </div>
             ))}
           </div>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Scale label="Discipline" value={value.discipline_score} onChange={(v) => set('discipline_score', v)} />
+            <Scale label="Execution" value={value.execution_score} onChange={(v) => set('execution_score', v)} />
             <Scale label="Confidence" value={value.confidence_score} onChange={(v) => set('confidence_score', v)} />
-            <Scale label="Discipline" value={value.psych_discipline_score} onChange={(v) => set('psych_discipline_score', v)} />
             <Scale label="Stress" value={value.stress_score} onChange={(v) => set('stress_score', v)} />
           </div>
           <div className="grid grid-cols-2 gap-3">

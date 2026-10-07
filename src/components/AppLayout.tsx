@@ -1,6 +1,6 @@
 // src/components/AppLayout.tsx
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Award, motion, AnimatePresence } from 'framer-motion';
 import {
   BarChart3, BookOpen, Brain, CalendarClock, CalendarDays,
   ChevronRight, CircleDollarSign, ClipboardCheck, LayoutDashboard, List,
@@ -26,6 +26,7 @@ export const BASE_ITEMS = [
   { id: 'ai',        label: 'NOVA AI',    icon: Brain },
   { id: 'plan',      label: 'Checklist',  icon: ClipboardCheck },
   { id: 'economic',  label: 'Economic',   icon: CalendarClock },
+  { id: 'certificates', label: 'Certificates', icon: Award },
   { id: 'settings',  label: 'Settings',   icon: Settings },
 ];
 
