@@ -148,9 +148,10 @@ export function TradeDetailDialog({ trade, open, onOpenChange }: { trade: Detail
               <ul className="space-y-1.5">
                 {p.emotion_before && <Bullet><span className="font-medium text-foreground">Emotion before:</span> {p.emotion_before}</Bullet>}
                 {p.emotion_after && <Bullet><span className="font-medium text-foreground">Emotion after:</span> {p.emotion_after}</Bullet>}
-                {p.confidence_score != null && <Bullet><span className="font-medium text-foreground">Confidence:</span> {p.confidence_score}/5</Bullet>}
-                {p.psych_discipline_score != null && <Bullet><span className="font-medium text-foreground">Discipline:</span> {p.psych_discipline_score}/5</Bullet>}
-                {p.stress_score != null && <Bullet><span className="font-medium text-foreground">Stress:</span> {p.stress_score}/5</Bullet>}
+                {p.confidence_score != null && <Bullet><span className="font-medium text-foreground">Confidence:</span> {p.confidence_score}/10</Bullet>}
+                {p.discipline_score != null && <Bullet><span className="font-medium text-foreground">Discipline:</span> {p.discipline_score}/10</Bullet>}
+                {p.execution_score != null && <Bullet><span className="font-medium text-foreground">Execution:</span> {p.execution_score}/10</Bullet>}
+                {p.stress_score != null && <Bullet><span className="font-medium text-foreground">Stress:</span> {p.stress_score}/10</Bullet>}
                 {p.followed_plan != null && <Bullet><span className="font-medium text-foreground">Followed plan:</span> {p.followed_plan ? 'Yes' : 'No'}</Bullet>}
                 {p.impulsive_entry != null && <Bullet><span className="font-medium text-foreground">Impulsive entry:</span> {p.impulsive_entry ? 'Yes' : 'No'}</Bullet>}
                 {p.psychology_note && <Bullet>{p.psychology_note}</Bullet>}

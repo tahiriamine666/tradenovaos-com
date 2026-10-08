@@ -1,5 +1,5 @@
 // Dashboard Psychology Score — reuses the same source as the Trading Calendar "Psych" view:
-// trades.discipline_score (1–10) averaged per day ×10 → 0–100. Avg Mood from journal_entries.confidence_level.
+// real per-trade 1–10 ratings (discipline, execution, confidence, inverse stress) averaged per day → 0–100.
 import { useEffect, useMemo, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -28,6 +28,17 @@ function rangeFor(p: Period, offset = 0): [string, string] | null {
   return [key(s), key(e)];
 }
 
+type PsyTrade = { trade_date: string; discipline_score: number | null; execution_score: number | null; confidence_score: number | null; stress_score: number | null;
+  followed_plan: boolean | null; impulsive_entry: boolean | null; emotion_before: string | null; emotion_after: string | null };
+// Per-trade score (0–100) from the real 1–10 ratings only; stress counts inversely. Null when nothing was rated.
+function tradeScore(t: PsyTrade) {
+  const v = [t.discipline_score, t.execution_score, t.confidence_score, t.stress_score == null ? null : 11 - t.stress_score].filter((x): x is number => x != null);
+  return v.length ? (v.reduce((a, b) => a + Number(b), 0) / v.length) * 10 : null;
+}
+const avgOf = (xs: (number | null)[]) => { const v = xs.filter((x): x is number => x != null); return v.length ? (v.reduce((a, b) => a + Number(b), 0) / v.length).toFixed(1) : null; };
+const pctOf = (xs: (boolean | null)[]) => { const v = xs.filter((x) => x != null); return v.length ? Math.round(v.filter(Boolean).length / v.length * 100) : null; };
+function topEmotions(ts: PsyTrade[]) { const m: Record<string, number> = {}; ts.forEach((t) => [t.emotion_before, t.emotion_after].forEach((e) => { if (e) m[e] = (m[e] ?? 0) + 1; })); return Object.entries(m).sort((a, b) => b[1] - a[1]).slice(0, 3); }
+
 const status = (s: number) => (s >= 80 ? "Excellent" : s >= 60 ? "Moderate" : "Challenging");
 
 interface Props { onNavigate: (id: string) => void }
@@ -36,13 +47,14 @@ export default function PsychologyScoreCard({ onNavigate }: Props) {
   const { user } = useAuth();
   const { activeAccountId, version } = useActiveAccount() as any;
   const [period, setPeriod] = useState<Period>("week");
-  const [trades, setTrades] = useState<{ trade_date: string; discipline_score: number }[]>([]);
+  const [trades, setTrades] = useState<PsyTrade[]>([]);
   const [journal, setJournal] = useState<{ entry_date: string; confidence_level: number | null }[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     if (!user) return;
-    let q = supabase.from("trades").select("trade_date, discipline_score").eq("user_id", user.id).not("discipline_score", "is", null);
+    let q = supabase.from("trades").select("trade_date, discipline_score, execution_score, confidence_score, stress_score, followed_plan, impulsive_entry, emotion_before, emotion_after")
+      .eq("user_id", user.id).or("discipline_score.not.is.null,execution_score.not.is.null,confidence_score.not.is.null,stress_score.not.is.null,followed_plan.not.is.null,impulsive_entry.not.is.null,emotion_before.not.is.null,emotion_after.not.is.null");
     if (activeAccountId) q = q.eq("trading_account_id", activeAccountId);
     const [{ data: t }, { data: j }] = await Promise.all([
       q,
@@ -57,14 +69,14 @@ export default function PsychologyScoreCard({ onNavigate }: Props) {
   useEffect(() => {
     const f = () => load();
     window.addEventListener("focus", f);
-    window.addEventListener("trades:changed", f);
-    return () => { window.removeEventListener("focus", f); window.removeEventListener("trades:changed", f); };
+    window.addEventListener("tradenova:trades-changed", f);
+    return () => { window.removeEventListener("focus", f); window.removeEventListener("tradenova:trades-changed", f); };
   }, [load]);
 
   const days = useMemo(() => {
     const m: Record<string, { sum: number; n: number }> = {};
-    trades.forEach((t) => { (m[t.trade_date] ??= { sum: 0, n: 0 }); m[t.trade_date].sum += Number(t.discipline_score); m[t.trade_date].n++; });
-    return Object.entries(m).map(([date, v]) => ({ date, score: Math.round((v.sum / v.n) * 10) }))
+    trades.forEach((t) => { const sc = tradeScore(t); if (sc == null) return; (m[t.trade_date] ??= { sum: 0, n: 0 }); m[t.trade_date].sum += sc; m[t.trade_date].n++; });
+    return Object.entries(m).map(([date, v]) => ({ date, score: Math.round(v.sum / v.n) }))
       .sort((a, b) => b.date.localeCompare(a.date));
   }, [trades]);
 
@@ -73,20 +85,24 @@ export default function PsychologyScoreCard({ onNavigate }: Props) {
   const stats = useMemo(() => {
     const r = rangeFor(period), prevR = period === "all" ? null : rangeFor(period, 1);
     const cur = days.filter((d) => inRange(d.date, r));
-    if (!cur.length) return null;
-    const avg = Math.round(cur.reduce((s, d) => s + d.score, 0) / cur.length);
+    const ct = trades.filter((t) => inRange(t.trade_date, r));
+    if (!cur.length && !ct.length) return null;
+    const avg = cur.length ? Math.round(cur.reduce((s, d) => s + d.score, 0) / cur.length) : 0;
     const prev = prevR ? days.filter((d) => inRange(d.date, prevR)) : [];
     const prevAvg = prev.length ? Math.round(prev.reduce((s, d) => s + d.score, 0) / prev.length) : null;
     const moods = journal.filter((j) => j.confidence_level != null && inRange(j.entry_date, r));
     const avgMood = moods.length ? Math.round(moods.reduce((s, j) => s + Number(j.confidence_level), 0) / moods.length) : null;
     return {
       avg, delta: prevAvg == null ? null : avg - prevAvg,
-      high: Math.max(...cur.map((d) => d.score)), low: Math.min(...cur.map((d) => d.score)),
+      high: cur.length ? Math.max(...cur.map((d) => d.score)) : "—", low: cur.length ? Math.min(...cur.map((d) => d.score)) : "—",
       entries: cur.length,
       excellent: cur.filter((d) => d.score >= 80).length,
       moderate: cur.filter((d) => d.score >= 60 && d.score < 80).length,
       challenging: cur.filter((d) => d.score < 60).length,
       avgMood, recent: cur.slice(0, 4),
+      disc: avgOf(ct.map((t) => t.discipline_score)), conf: avgOf(ct.map((t) => t.confidence_score)), stress: avgOf(ct.map((t) => t.stress_score)),
+      plan: pctOf(ct.map((t) => t.followed_plan)), impulsive: pctOf(ct.map((t) => t.impulsive_entry)),
+      emotions: topEmotions(ct),
     };
   }, [days, journal, period]);
 
@@ -112,7 +128,7 @@ export default function PsychologyScoreCard({ onNavigate }: Props) {
       ) : !stats ? (
         <div key={period} className="content-crossfade mt-6 flex flex-col items-center gap-2 py-6 text-center">
           <p className="text-sm font-medium text-foreground">No psychology data yet</p>
-          <p className="text-xs text-muted-foreground">Complete a journal entry to start tracking your psychology.</p>
+          <p className="text-xs text-muted-foreground">Rate discipline, confidence or stress in the Psychology section when you log a trade.</p>
           <Button size="sm" className="mt-2" onClick={() => onNavigate("journal")}>Add Journal Entry</Button>
         </div>
       ) : (
@@ -132,6 +148,11 @@ export default function PsychologyScoreCard({ onNavigate }: Props) {
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
               {[
                 ["Highest", stats.high], ["Lowest", stats.low], ["Entries", stats.entries],
+                ...(stats.disc != null ? [["Avg Discipline", `${stats.disc}/10`]] : []),
+                ...(stats.conf != null ? [["Avg Confidence", `${stats.conf}/10`]] : []),
+                ...(stats.stress != null ? [["Avg Stress", `${stats.stress}/10`]] : []),
+                ...(stats.plan != null ? [["Followed Plan", `${stats.plan}%`]] : []),
+                ...(stats.impulsive != null ? [["Impulsive", `${stats.impulsive}%`]] : []),
                 ...(stats.avgMood != null ? [["Avg Mood", `${stats.avgMood}/10`]] : []),
                 ["Excellent", stats.excellent], ["Moderate", stats.moderate], ["Challenging", stats.challenging],
               ].map(([l, v]) => (
@@ -153,6 +174,7 @@ export default function PsychologyScoreCard({ onNavigate }: Props) {
                 </div>
               ))}
             </div>
+            {stats.emotions.length > 0 && <p className="mt-3 text-xs text-muted-foreground">Common emotions: <span className="text-foreground">{stats.emotions.map(([e, n]) => `${e} (${n})`).join(", ")}</span></p>}
             <Button variant="outline" size="sm" className="mt-3" onClick={() => onNavigate("journal")}>View Journal Entries</Button>
           </div>
         </div>

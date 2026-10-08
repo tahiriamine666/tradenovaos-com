@@ -1,10 +1,11 @@
 // src/components/AppLayout.tsx
 import React, { useState, useEffect } from 'react';
-import { Award, motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   BarChart3, BookOpen, Brain, CalendarClock, CalendarDays,
   ChevronRight, CircleDollarSign, ClipboardCheck, LayoutDashboard, List,
   Menu, PanelLeftClose, PanelLeftOpen, Settings, Shield, X,
+  Award,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';

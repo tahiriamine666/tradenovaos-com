@@ -37,7 +37,7 @@ type Review = Record<string, string | number | null>;
 const emptyReview = (): Review => Object.fromEntries([...TEXT_FIELDS, ...RATINGS].map(([k]) => [k, null]));
 
 type T = { id: string; pair: string; side: string | null; result: number | null; rr: number | null; session: string | null; setup: string | null; playbook_id: string | null;
-  emotion_before: string | null; emotion_after: string | null; confidence_score: number | null; psych_discipline_score: number | null; stress_score: number | null; followed_plan: boolean | null; impulsive_entry: boolean | null };
+  emotion_before: string | null; emotion_after: string | null; confidence_score: number | null; discipline_score: number | null; stress_score: number | null; followed_plan: boolean | null; impulsive_entry: boolean | null };
 
 const avg = (xs: number[]) => xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null;
 const fmt = (n: number | null, d = 2) => n == null ? '—' : n.toLocaleString(undefined, { maximumFractionDigits: d });
@@ -62,7 +62,7 @@ export function TradingReview() {
   const load = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    let q = supabase.from('trades').select('id,pair,side,result,rr,session,setup,playbook_id,emotion_before,emotion_after,confidence_score,psych_discipline_score,stress_score,followed_plan,impulsive_entry')
+    let q = supabase.from('trades').select('id,pair,side,result,rr,session,setup,playbook_id,emotion_before,emotion_after,confidence_score,discipline_score,stress_score,followed_plan,impulsive_entry')
       .eq('user_id', user.id).gte('trade_date', iso(start)).lte('trade_date', iso(end));
     if (activeAccountId) q = q.eq('trading_account_id', activeAccountId);
     const [{ data: t }, { data: r }, { data: p }] = await Promise.all([
@@ -92,7 +92,7 @@ export function TradingReview() {
       pair: counts(trades.map((t) => t.pair))[0],
       sessions: counts(trades.map((t) => t.session)), sides: counts(trades.map((t) => t.side)),
       setups: counts(trades.map((t) => (t.playbook_id && playbooks[t.playbook_id]) || t.setup)),
-      conf: avg(nums('confidence_score')), disc: avg(nums('psych_discipline_score')), stress: avg(nums('stress_score')),
+      conf: avg(nums('confidence_score')), disc: avg(nums('discipline_score')), stress: avg(nums('stress_score')),
       plan: pct(trades.map((t) => t.followed_plan), true), impulsive: pct(trades.map((t) => t.impulsive_entry), true),
       emoBefore: counts(trades.map((t) => t.emotion_before))[0], emoAfter: counts(trades.map((t) => t.emotion_after))[0],
     };
@@ -151,9 +151,9 @@ export function TradingReview() {
               <Row l="Sessions" v={breakdown(stats.sessions)} /><Row l="Long vs short" v={breakdown(stats.sides)} /><Row l="Setups / playbooks" v={breakdown(stats.setups)} />
             </dl>
             <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
-              <Kpi l="Avg confidence" v={stats.conf == null ? '—' : `${fmt(stats.conf, 1)}/5`} />
-              <Kpi l="Avg discipline" v={stats.disc == null ? '—' : `${fmt(stats.disc, 1)}/5`} />
-              <Kpi l="Avg stress" v={stats.stress == null ? '—' : `${fmt(stats.stress, 1)}/5`} />
+              <Kpi l="Avg confidence" v={stats.conf == null ? '—' : `${fmt(stats.conf, 1)}/10`} />
+              <Kpi l="Avg discipline" v={stats.disc == null ? '—' : `${fmt(stats.disc, 1)}/10`} />
+              <Kpi l="Avg stress" v={stats.stress == null ? '—' : `${fmt(stats.stress, 1)}/10`} />
               <Kpi l="Followed plan" v={stats.plan} />
               <Kpi l="Impulsive" v={stats.impulsive} />
               <Kpi l="Top emotion before" v={stats.emoBefore ? stats.emoBefore[0] : '—'} />
