@@ -5,6 +5,7 @@ import {
   BarChart3, BookOpen, Brain, CalendarClock, CalendarDays,
   ChevronRight, CircleDollarSign, ClipboardCheck, LayoutDashboard, List,
   Menu, PanelLeftClose, PanelLeftOpen, Settings, Shield, X,
+  Award,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
