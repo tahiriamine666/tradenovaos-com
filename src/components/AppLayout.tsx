@@ -198,7 +198,7 @@ export default function AppLayout({ active, onNavigate, dark, children, topBar }
       </AnimatePresence>
 
       {/* Main */}
-      <main className="flex-1 flex flex-col overflow-hidden min-w-0">
+      <main className="tn-app-ambient flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Mobile header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border lg:hidden flex-shrink-0">
           <div className="flex items-center gap-3">

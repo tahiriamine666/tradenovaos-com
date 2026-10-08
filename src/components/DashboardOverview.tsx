@@ -106,7 +106,7 @@ function EquityCurve({ trades, loading }: { trades: Trade[]; loading: boolean })
   }, [data]);
 
   return (
-    <div className="rounded-lg border border-border bg-card p-5 transition-colors duration-200 hover:border-primary/30">
+    <div className="tn-card-light tn-chart-light rounded-lg border border-border bg-card p-5 transition-colors duration-200 hover:border-primary/30">
       <div className="flex items-start justify-between mb-4 gap-3">
         <div>
           <h3 className="font-heading text-base font-semibold text-foreground">Equity Curve</h3>
@@ -129,7 +129,7 @@ function EquityCurve({ trades, loading }: { trades: Trade[]; loading: boolean })
               onClick={() => setPeriod(p)}
               className={`px-2.5 py-1 text-[11px] font-medium rounded transition-colors ${
                 period === p
-                  ? "bg-primary/15 text-primary"
+                  ? "bg-primary/15 text-primary tn-active-light"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -187,7 +187,7 @@ function TodayFocus({ plan, onNavigate }: { plan: TradePlan | null; onNavigate: 
     },
   ];
   return (
-    <div className="rounded-lg border border-border bg-card p-5 transition-colors duration-200 hover:border-primary/30">
+    <div className="tn-card-light tn-edge-light rounded-lg border border-border bg-card p-5 transition-colors duration-200 hover:border-primary/30">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="font-heading text-base font-semibold text-foreground">Today Focus</h3>
@@ -240,7 +240,7 @@ function TraderScoreCard({ trades }: { trades: Trade[] }) {
   }, [trades]);
 
   return (
-    <div className="rounded-lg border border-border bg-card p-5 transition-colors duration-200 hover:border-primary/30">
+    <div className="tn-card-light rounded-lg border border-border bg-card p-5 transition-colors duration-200 hover:border-primary/30">
       <div className="flex items-baseline justify-between mb-5">
         <div>
           <h3 className="font-heading text-base font-semibold text-foreground">Trader Score</h3>
@@ -282,7 +282,7 @@ function TraderScoreCard({ trades }: { trades: Trade[] }) {
 function RecentTrades({ trades, onNavigate }: { trades: Trade[]; onNavigate: (id: string) => void }) {
   const rows = trades.slice(0, 6);
   return (
-    <div className="rounded-lg border border-border bg-card p-5 transition-colors duration-200 hover:border-primary/30">
+    <div className="tn-card-light rounded-lg border border-border bg-card p-5 transition-colors duration-200 hover:border-primary/30">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="font-heading text-base font-semibold text-foreground">Recent Trades</h3>
@@ -365,7 +365,7 @@ function BestSetups({ trades }: { trades: Trade[] }) {
   }, [trades]);
 
   return (
-    <div className="rounded-lg border border-border bg-card p-5 transition-colors duration-200 hover:border-primary/30">
+    <div className="tn-card-light rounded-lg border border-border bg-card p-5 transition-colors duration-200 hover:border-primary/30">
       <div className="mb-4">
         <h3 className="font-heading text-base font-semibold text-foreground">Best Setups</h3>
         <p className="text-xs text-muted-foreground mt-0.5">Ranked by total P&L</p>
@@ -495,13 +495,13 @@ export default function DashboardOverview({ onNavigate, onAddTrade }: Props) {
     : null;
 
   return (
-    <div className="space-y-5">
+    <div className="tn-page-light space-y-5">
       <PageHeader
         title={new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
         description="Trading overview for your selected account and period"
         actions={
           onAddTrade && (
-            <Button onClick={onAddTrade} size="sm">
+            <Button onClick={onAddTrade} size="sm" className="tn-btn-halo">
               <Plus className="mr-1.5 h-4 w-4" /> New Trade
             </Button>
           )
@@ -544,7 +544,7 @@ export default function DashboardOverview({ onNavigate, onAddTrade }: Props) {
             ['Free Margin', activeAccount.free_margin],
             ['Margin Used', activeAccount.margin],
           ] as [string, number | null | undefined][]).map(([label, val]) => (
-            <div key={label} className="rounded-xl border border-border bg-card px-4 py-3">
+            <div key={label} className="tn-kpi-light tn-card-light rounded-xl border border-border bg-card px-4 py-3">
               <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</p>
               <p className="text-base font-semibold text-foreground">
                 {val == null ? '—' : `$${Number(val).toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
