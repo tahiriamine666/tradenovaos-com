@@ -31,15 +31,15 @@ export default function SupportedBrokersPage() {
       <main className="flex-1">
         <section className="relative overflow-hidden">
           <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[400px] bg-violet-500/10 rounded-full blur-[140px]" />
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[400px] bg-primary/10 rounded-full blur-[140px]" />
           </div>
           <div className="relative max-w-5xl mx-auto px-5 sm:px-8 py-20 sm:py-28 text-center">
-            <div className="inline-flex items-center gap-2 bg-violet-50 border border-violet-100 rounded-full px-4 py-1.5 mb-6">
-              <span className="w-1.5 h-1.5 rounded-full bg-violet-500" />
-              <span className="text-xs font-semibold text-violet-700">Supported Brokers & Integrations</span>
+            <div className="inline-flex items-center gap-2 bg-primary border border-primary rounded-full px-4 py-1.5 mb-6">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+              <span className="text-xs font-semibold text-primary">Supported Brokers & Integrations</span>
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-[-0.02em] text-slate-900 mb-5 leading-tight">
-              Works with your <span className="bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">favorite broker</span>
+              Works with your <span className="bg-gradient-to-r from-primary to-primary bg-clip-text text-transparent">favorite broker</span>
             </h1>
             <p className="text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed">
               Import your trades from any platform. We support direct integrations and universal CSV import — so nothing is left behind.
@@ -53,7 +53,7 @@ export default function SupportedBrokersPage() {
           <div className="max-w-6xl mx-auto px-5 sm:px-8">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {BROKERS.map(b => (
-                <div key={b.name} className="rounded-2xl border border-slate-200 bg-white p-6 hover:border-violet-200 hover:shadow-lg transition-all">
+                <div key={b.name} className="rounded-2xl border border-slate-200 bg-white p-6 hover:border-primary hover:shadow-lg transition-all">
                   <div className="flex items-start justify-between gap-4 mb-2">
                     <h3 className="font-bold text-slate-900 text-base">{b.name}</h3>
                     <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-full px-2 py-0.5">
@@ -66,7 +66,7 @@ export default function SupportedBrokersPage() {
             </div>
 
             <div className="mt-12 text-center">
-              <Link to="/signup" className="group inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-7 py-3.5 rounded-2xl font-bold text-sm transition-all hover:shadow-xl hover:shadow-violet-500/30 hover:-translate-y-0.5">
+              <Link to="/signup" className="group inline-flex items-center gap-2 bg-primary hover:bg-primary text-white px-7 py-3.5 rounded-2xl font-bold text-sm transition-all hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5">
                 Connect your broker — Start Free <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </Link>
             </div>

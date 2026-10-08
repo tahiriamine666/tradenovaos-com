@@ -43,12 +43,12 @@ function PulseRing() {
   return (
     <>
       <motion.span
-        className="absolute inset-0 rounded-full bg-violet-500/30"
+        className="absolute inset-0 rounded-full bg-primary/30"
         animate={{ scale: [1, 1.6, 1.6], opacity: [0.6, 0, 0] }}
         transition={{ duration: 2.4, repeat: Infinity, repeatDelay: 1 }}
       />
       <motion.span
-        className="absolute inset-0 rounded-full bg-violet-500/20"
+        className="absolute inset-0 rounded-full bg-primary/20"
         animate={{ scale: [1, 1.9, 1.9], opacity: [0.4, 0, 0] }}
         transition={{ duration: 2.4, delay: 0.4, repeat: Infinity, repeatDelay: 1 }}
       />
@@ -146,7 +146,7 @@ export default function SupportChat() {
               whileHover={{ scale: 1.08 }}
               whileTap={{ scale: 0.94 }}
               onClick={handleOpen}
-              className="relative flex items-center justify-center w-14 h-14 rounded-full bg-violet-600 shadow-2xl shadow-violet-500/40 hover:bg-violet-500 transition-colors"
+              className="relative flex items-center justify-center w-14 h-14 rounded-full bg-primary shadow-2xl shadow-primary/40 hover:bg-primary transition-colors"
               aria-label="Open support chat"
             >
               <PulseRing />
@@ -249,9 +249,9 @@ export default function SupportChat() {
 
                       {/* Send a message CTA */}
                       <button onClick={() => setView('form')}
-                        className="flex items-center justify-between w-full p-3.5 rounded-xl bg-violet-600/10 border border-violet-500/20 hover:bg-violet-600/15 hover:border-violet-500/30 transition-all group">
-                        <span className="text-sm text-violet-300 font-medium">Send us a message</span>
-                        <ChevronRight className="h-4 w-4 text-violet-400/60 group-hover:text-violet-400 group-hover:translate-x-0.5 transition-all" />
+                        className="flex items-center justify-between w-full p-3.5 rounded-xl bg-primary/10 border border-primary/20 hover:bg-primary/15 hover:border-primary/30 transition-all group">
+                        <span className="text-sm text-primary font-medium">Send us a message</span>
+                        <ChevronRight className="h-4 w-4 text-primary/60 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
                       </button>
                     </motion.div>
                   )}
@@ -269,11 +269,11 @@ export default function SupportChat() {
                       </button>
 
                       {/* Subject display */}
-                      <div className="flex items-center gap-2 p-2.5 rounded-lg bg-violet-500/8 border border-violet-500/15">
-                        <span className="text-[11px] text-violet-400/70">Topic:</span>
-                        <span className="text-[11px] font-medium text-violet-300">{form.subject}</span>
+                      <div className="flex items-center gap-2 p-2.5 rounded-lg bg-primary/8 border border-primary/15">
+                        <span className="text-[11px] text-primary/70">Topic:</span>
+                        <span className="text-[11px] font-medium text-primary">{form.subject}</span>
                         <button onClick={() => setView('home')}
-                          className="ml-auto text-violet-400/40 hover:text-violet-400 transition-colors">
+                          className="ml-auto text-primary/40 hover:text-primary transition-colors">
                           <X className="h-3 w-3" />
                         </button>
                       </div>
@@ -285,7 +285,7 @@ export default function SupportChat() {
                           value={form.name}
                           onChange={e => { setForm(f => ({ ...f, name: e.target.value })); setErrors(er => ({ ...er, name: '' })); }}
                           placeholder="Your name"
-                          className={`w-full text-sm rounded-xl border bg-white/[0.03] px-3 py-2.5 text-white placeholder:text-white/20 focus:outline-none focus:ring-1 transition-all ${errors.name ? 'border-red-500/40 focus:ring-red-500/30' : 'border-white/[0.08] focus:border-violet-500/40 focus:ring-violet-500/20'}`}
+                          className={`w-full text-sm rounded-xl border bg-white/[0.03] px-3 py-2.5 text-white placeholder:text-white/20 focus:outline-none focus:ring-1 transition-all ${errors.name ? 'border-red-500/40 focus:ring-red-500/30' : 'border-white/[0.08] focus:border-primary/40 focus:ring-primary/20'}`}
                         />
                         {errors.name && <p className="text-[10px] text-red-400 mt-1 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{errors.name}</p>}
                       </div>
@@ -298,7 +298,7 @@ export default function SupportChat() {
                           value={form.email}
                           onChange={e => { setForm(f => ({ ...f, email: e.target.value })); setErrors(er => ({ ...er, email: '' })); }}
                           placeholder="you@example.com"
-                          className={`w-full text-sm rounded-xl border bg-white/[0.03] px-3 py-2.5 text-white placeholder:text-white/20 focus:outline-none focus:ring-1 transition-all ${errors.email ? 'border-red-500/40 focus:ring-red-500/30' : 'border-white/[0.08] focus:border-violet-500/40 focus:ring-violet-500/20'}`}
+                          className={`w-full text-sm rounded-xl border bg-white/[0.03] px-3 py-2.5 text-white placeholder:text-white/20 focus:outline-none focus:ring-1 transition-all ${errors.email ? 'border-red-500/40 focus:ring-red-500/30' : 'border-white/[0.08] focus:border-primary/40 focus:ring-primary/20'}`}
                         />
                         {errors.email && <p className="text-[10px] text-red-400 mt-1 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{errors.email}</p>}
                       </div>
@@ -311,7 +311,7 @@ export default function SupportChat() {
                           onChange={e => { setForm(f => ({ ...f, message: e.target.value })); setErrors(er => ({ ...er, message: '' })); }}
                           placeholder="Describe your issue or question..."
                           rows={4}
-                          className={`w-full text-sm rounded-xl border bg-white/[0.03] px-3 py-2.5 text-white placeholder:text-white/20 focus:outline-none focus:ring-1 transition-all resize-none ${errors.message ? 'border-red-500/40 focus:ring-red-500/30' : 'border-white/[0.08] focus:border-violet-500/40 focus:ring-violet-500/20'}`}
+                          className={`w-full text-sm rounded-xl border bg-white/[0.03] px-3 py-2.5 text-white placeholder:text-white/20 focus:outline-none focus:ring-1 transition-all resize-none ${errors.message ? 'border-red-500/40 focus:ring-red-500/30' : 'border-white/[0.08] focus:border-primary/40 focus:ring-primary/20'}`}
                         />
                         {errors.message && <p className="text-[10px] text-red-400 mt-1 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{errors.message}</p>}
                       </div>
@@ -323,7 +323,7 @@ export default function SupportChat() {
                           disabled={sending}
                           whileHover={{ scale: 1.01 }}
                           whileTap={{ scale: 0.98 }}
-                          className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition-all shadow-lg shadow-violet-500/20 disabled:opacity-60 disabled:cursor-not-allowed"
+                          className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-primary hover:bg-primary text-white text-sm font-semibold transition-all shadow-lg shadow-primary/20 disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                           {sending
                             ? <><Loader2 className="h-4 w-4 animate-spin" /> Sending...</>
@@ -380,7 +380,7 @@ export default function SupportChat() {
               {view !== 'success' && (
                 <div className="px-5 py-3 border-t border-white/[0.05] flex items-center justify-center">
                   <p className="text-[10px] text-white/15">
-                    Powered by <span className="text-violet-400/50 font-medium">TradeNova</span>
+                    Powered by <span className="text-primary/50 font-medium">TradeNova</span>
                   </p>
                 </div>
               )}

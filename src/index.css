@@ -5,52 +5,52 @@
 @layer base {
   :root,
   .dark {
-    --background: 225 50% 2%;
-    --foreground: 210 100% 98%;
-    --card: 222 45% 4%;
-    --card-foreground: 210 100% 98%;
-    --popover: 222 42% 5%;
-    --popover-foreground: 210 100% 98%;
-    --primary: 203 100% 65%;
-    --primary-foreground: 225 50% 2%;
-    --secondary: 218 45% 9%;
-    --secondary-foreground: 207 100% 94%;
-    --muted: 220 38% 8%;
-    --muted-foreground: 211 35% 68%;
-    --accent: 213 64% 14%;
-    --accent-foreground: 204 100% 88%;
-    --destructive: 203 100% 65%;
-    --destructive-foreground: 225 50% 2%;
-    --border: 215 50% 16%;
-    --input: 215 47% 18%;
-    --ring: 203 100% 65%;
+    --background: 210 33% 1%;
+    --foreground: 210 40% 98%;
+    --card: 220 30% 4%;
+    --card-foreground: 210 40% 98%;
+    --popover: 218 27% 6%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 199 93% 60%;
+    --primary-foreground: 210 33% 1%;
+    --secondary: 218 27% 6%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 220 27% 6%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 199 60% 10%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 221 38% 14%;
+    --input: 221 38% 14%;
+    --ring: 199 93% 60%;
     --radius: 0.5rem;
 
-    --sidebar-background: 225 50% 2%;
-    --sidebar-foreground: 210 100% 96%;
-    --sidebar-primary: 203 100% 65%;
-    --sidebar-primary-foreground: 225 50% 2%;
-    --sidebar-accent: 214 58% 13%;
-    --sidebar-accent-foreground: 204 100% 90%;
-    --sidebar-border: 215 50% 14%;
-    --sidebar-ring: 203 100% 65%;
+    --sidebar-background: 210 33% 1%;
+    --sidebar-foreground: 215 20% 65%;
+    --sidebar-primary: 199 93% 60%;
+    --sidebar-primary-foreground: 210 33% 1%;
+    --sidebar-accent: 199 60% 9%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 221 38% 12%;
+    --sidebar-ring: 199 93% 60%;
 
-    --surface: 221 42% 6%;
-    --surface-foreground: 210 100% 98%;
-    --surface-1: 222 45% 4%;
-    --surface-2: 220 42% 6%;
-    --surface-3: 218 40% 9%;
-    --success: 196 100% 68%;
-    --success-foreground: 225 50% 2%;
-    --warning: 210 100% 78%;
-    --warning-foreground: 225 50% 2%;
-    --danger: 215 100% 70%;
-    --danger-foreground: 225 50% 2%;
+    --surface: 218 27% 6%;
+    --surface-foreground: 210 40% 98%;
+    --surface-1: 220 30% 4%;
+    --surface-2: 220 27% 4%;
+    --surface-3: 218 27% 6%;
+    --success: 142 71% 45%;
+    --success-foreground: 210 33% 1%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 210 33% 1%;
+    --danger: 0 84% 60%;
+    --danger-foreground: 210 40% 98%;
 
-    --blue-glow: 196 100% 70%;
-    --electric-blue: 203 100% 65%;
-    --ice-blue: 207 100% 94%;
-    --terminal-grid: 211 68% 20%;
+    --blue-glow: 199 93% 60%;
+    --electric-blue: 199 93% 60%;
+    --ice-blue: 210 40% 98%;
+    --terminal-grid: 221 38% 14%;
     font-family: 'Manrope', system-ui, sans-serif;
   }
 
@@ -93,8 +93,8 @@
 @layer components {
   .app-shell {
     background-image:
-      linear-gradient(hsl(var(--terminal-grid) / 0.08) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(var(--terminal-grid) / 0.08) 1px, transparent 1px);
+      linear-gradient(hsl(var(--terminal-grid) / 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--terminal-grid) / 0.035) 1px, transparent 1px);
     background-size: 44px 44px;
   }
 
@@ -114,12 +114,11 @@
   .blue-panel-glow {
     box-shadow:
       inset 0 1px 0 hsl(var(--ice-blue) / 0.05),
-      0 0 0 1px hsl(var(--primary) / 0.04),
-      0 18px 70px hsl(var(--primary) / 0.09);
+      0 0 0 1px hsl(var(--primary) / 0.04);
   }
 
   .blue-text-glow {
-    text-shadow: 0 0 24px hsl(var(--blue-glow) / 0.45);
+    text-shadow: none;
   }
 
   .feature-reveal {
@@ -205,3 +204,7 @@
 @keyframes nova-msg { from { opacity: 0; transform: translateY(4px) } to { opacity: 1; transform: none } }
 .nova-msg { animation: nova-msg 260ms var(--ease-premium, ease-out) both; }
 @media (prefers-reduced-motion: reduce) { .nova-float, .nova-msg { animation: none; } }
+
+@layer base {
+  .app-shell input::placeholder, .app-shell textarea::placeholder { color: hsl(215 16% 47%); }
+}

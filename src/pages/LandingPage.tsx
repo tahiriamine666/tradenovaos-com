@@ -685,7 +685,7 @@ const FEATURES = [
 const CM: Record<string,any> = {
   violet: {bg:'bg-primary/10', b:'border-primary/20',  t:'text-primary',  bd:'bg-primary/15 text-primary'},
   blue:   {bg:'bg-blue-500/10',    b:'border-blue-500/20',    t:'text-blue-400',    bd:'bg-blue-500/15 text-blue-300'},
-  pink:   {bg:'bg-pink-500/10',    b:'border-pink-500/20',    t:'text-pink-400',    bd:'bg-pink-500/15 text-pink-300'},
+  pink:   {bg:'bg-primary/10',    b:'border-primary/20',    t:'text-primary',    bd:'bg-primary/15 text-primary'},
   emerald:{bg:'bg-emerald-500/10', b:'border-emerald-500/20', t:'text-emerald-400', bd:'bg-emerald-500/15 text-emerald-300'},
   amber:  {bg:'bg-amber-500/10',   b:'border-amber-500/20',   t:'text-amber-400',   bd:'bg-amber-500/15 text-amber-300'},
   purple: {bg:'bg-primary/10', b:'border-primary/20',  t:'text-primary',  bd:'bg-primary/15 text-primary'},

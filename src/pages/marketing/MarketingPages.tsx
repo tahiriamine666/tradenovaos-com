@@ -79,7 +79,7 @@ export function FeaturePage() {
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <p className="text-slate-600 text-lg mb-4">Feature not found</p>
-          <button onClick={() => navigate('/')} className="text-violet-600 hover:text-violet-700 flex items-center gap-2 mx-auto">
+          <button onClick={() => navigate('/')} className="text-primary hover:text-primary flex items-center gap-2 mx-auto">
             <ArrowLeft className="h-4 w-4" /> Back to home
           </button>
         </div>
@@ -123,7 +123,7 @@ export function FeaturePage() {
 
           <div className="flex gap-4">
             <button onClick={() => navigate('/signup')}
-              className="group flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-8 py-4 rounded-2xl font-black text-sm transition-all hover:shadow-xl hover:shadow-violet-500/25 hover:-translate-y-0.5">
+              className="group flex items-center gap-2 bg-primary hover:bg-primary text-white px-8 py-4 rounded-2xl font-black text-sm transition-all hover:shadow-xl hover:shadow-primary/25 hover:-translate-y-0.5">
               {data.cta} <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </button>
             <button onClick={() => navigate('/pricing')}
@@ -142,7 +142,7 @@ export function FeaturePage() {
 // ─────────────────────────────────────────────────────────────────────────────
 const SOLUTION_DATA: Record<string, { title: string; subtitle: string; description: string; benefits: string[]; icon: React.ElementType; color: string; bg: string }> = {
   'forex-traders': {
-    icon: BarChart3, color: 'text-violet-600', bg: 'bg-violet-500/10',
+    icon: BarChart3, color: 'text-primary', bg: 'bg-primary/10',
     title: 'TradeNova for Forex Traders',
     subtitle: 'Build a consistent forex edge with data-driven journaling.',
     description: 'Forex trading demands discipline and precision. TradeNova gives forex traders the tools to track every pip, identify their best currency pairs, and optimize session performance across London, New York, and Asia sessions.',
@@ -170,7 +170,7 @@ const SOLUTION_DATA: Record<string, { title: string; subtitle: string; descripti
     benefits: ['Multi-exchange trade tracking', 'Spot and futures support', 'Crypto-native pair formatting', 'USD and BTC denomination', 'After-hours performance tracking', 'Volatility session analysis'],
   },
   'trading-communities': {
-    icon: Users, color: 'text-pink-600', bg: 'bg-pink-500/10',
+    icon: Users, color: 'text-primary', bg: 'bg-primary/10',
     title: 'TradeNova for Trading Communities',
     subtitle: 'Empower your community with professional trading tools.',
     description: 'Trading educators and community leaders can use TradeNova to share their trading methodology, track member performance, and build accountability systems that help traders improve faster.',
@@ -188,7 +188,7 @@ export function SolutionPage() {
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <p className="text-slate-600 mb-4">Solution not found</p>
-          <button onClick={() => navigate('/')} className="text-violet-600 flex items-center gap-2 mx-auto">
+          <button onClick={() => navigate('/')} className="text-primary flex items-center gap-2 mx-auto">
             <ArrowLeft className="h-4 w-4" /> Back to home
           </button>
         </div>
@@ -226,7 +226,7 @@ export function SolutionPage() {
             ))}
           </div>
           <button onClick={() => navigate('/signup')}
-            className="group flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-8 py-4 rounded-2xl font-black text-sm transition-all hover:shadow-xl hover:shadow-violet-500/25 hover:-translate-y-0.5">
+            className="group flex items-center gap-2 bg-primary hover:bg-primary text-white px-8 py-4 rounded-2xl font-black text-sm transition-all hover:shadow-xl hover:shadow-primary/25 hover:-translate-y-0.5">
             Start Free — No credit card <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </button>
         </motion.div>
@@ -271,8 +271,8 @@ export function BlogPage() {
       <MarketingNavbar onLogin={() => navigate('/login')} onSignup={() => navigate('/signup')} />
       <div className="max-w-4xl mx-auto px-5 sm:px-8 pt-32 pb-24">
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          <div className="inline-flex items-center gap-2 bg-violet-500/10 border border-violet-500/20 rounded-full px-4 py-1.5 mb-6">
-            <span className="text-xs font-semibold text-violet-700">TradeNova Blog</span>
+          <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-1.5 mb-6">
+            <span className="text-xs font-semibold text-primary">TradeNova Blog</span>
           </div>
           <h1 className="text-4xl sm:text-6xl font-black mb-4 tracking-tight">Trading insights & strategies</h1>
           <p className="text-slate-600 text-lg mb-14 max-w-xl">Practical articles to help you improve your trading edge, psychology, and performance.</p>
@@ -283,13 +283,13 @@ export function BlogPage() {
                 className="group flex items-center justify-between p-5 rounded-2xl border border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 cursor-pointer transition-all">
                 <div>
                   <div className="flex items-center gap-3 mb-1.5">
-                    <span className="text-[10px] font-bold text-violet-600 bg-violet-500/10 px-2 py-0.5 rounded-full">{p.tag}</span>
+                    <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{p.tag}</span>
                     <span className="text-[11px] text-slate-700">{p.date}</span>
                     <span className="text-[11px] text-slate-700">{p.read} read</span>
                   </div>
-                  <p className="text-base font-bold text-slate-900 group-hover:text-violet-700 transition-colors">{p.title}</p>
+                  <p className="text-base font-bold text-slate-900 group-hover:text-primary transition-colors">{p.title}</p>
                 </div>
-                <ArrowRight className="h-4 w-4 text-slate-500 group-hover:text-violet-600 transition-colors flex-shrink-0 ml-4" />
+                <ArrowRight className="h-4 w-4 text-slate-500 group-hover:text-primary transition-colors flex-shrink-0 ml-4" />
               </motion.div>
             ))}
           </div>
@@ -327,19 +327,19 @@ export function HelpCenterPage() {
               return (
                 <motion.div key={t.title} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
                   className="group p-5 rounded-2xl border border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 cursor-pointer transition-all">
-                  <div className="w-9 h-9 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mb-3">
-                    <Icon className="h-4.5 w-4.5 text-violet-600 h-[18px] w-[18px]" />
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-3">
+                    <Icon className="h-4.5 w-4.5 text-primary h-[18px] w-[18px]" />
                   </div>
-                  <p className="text-sm font-bold text-slate-900 mb-1 group-hover:text-violet-700 transition-colors">{t.title}</p>
+                  <p className="text-sm font-bold text-slate-900 mb-1 group-hover:text-primary transition-colors">{t.title}</p>
                   <p className="text-xs text-slate-500 leading-relaxed">{t.desc}</p>
                 </motion.div>
               );
             })}
           </div>
-          <div className="mt-10 p-6 rounded-2xl border border-violet-500/20 bg-violet-500/5 text-center">
+          <div className="mt-10 p-6 rounded-2xl border border-primary/20 bg-primary/5 text-center">
             <p className="text-sm font-semibold text-slate-900 mb-1">Still need help?</p>
             <p className="text-xs text-slate-600 mb-4">Our support team replies within a few hours.</p>
-            <button onClick={() => navigate('/signup')} className="text-sm bg-violet-600 hover:bg-violet-500 text-white px-6 py-2.5 rounded-xl font-bold transition-colors">
+            <button onClick={() => navigate('/signup')} className="text-sm bg-primary hover:bg-primary text-white px-6 py-2.5 rounded-xl font-bold transition-colors">
               Contact Support
             </button>
           </div>
@@ -394,7 +394,7 @@ export function SupportedBrokersPage() {
               </div>
             </div>
           ))}
-          <div className="mt-6 p-5 rounded-2xl border border-violet-500/20 bg-violet-500/5">
+          <div className="mt-6 p-5 rounded-2xl border border-primary/20 bg-primary/5">
             <p className="text-sm font-semibold text-slate-900 mb-1">Don't see your broker?</p>
             <p className="text-xs text-slate-600">If your broker exports a CSV, TradeNova can import it. Our smart column mapper handles any format.</p>
           </div>
