@@ -99,6 +99,13 @@
       "when": 1791331627455,
       "tag": "0013_psychology_scores_ten_point",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1791471872313,
+      "tag": "0014_trade_plans_per_pair",
+      "breakpoints": true
     }
   ]
 }

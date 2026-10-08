@@ -1997,6 +1997,7 @@ export type Database = {
           news_events: Json
           news_impact: string
           notes: string | null
+          pair: string
           plan_date: string
           psych_notes: string | null
           secondary_setup: string | null
@@ -2031,6 +2032,7 @@ export type Database = {
           news_events?: Json
           news_impact?: string
           notes?: string | null
+          pair?: string
           plan_date?: string
           psych_notes?: string | null
           secondary_setup?: string | null
@@ -2065,6 +2067,7 @@ export type Database = {
           news_events?: Json
           news_impact?: string
           notes?: string | null
+          pair?: string
           plan_date?: string
           psych_notes?: string | null
           secondary_setup?: string | null
