@@ -2018,6 +2018,8 @@ export type Database = {
       }
       trade_plans: {
         Row: {
+          account_id: string | null
+          account_key: string
           account_protection: boolean
           ai_analysis: Json
           avoid_before_news: boolean
@@ -2053,6 +2055,8 @@ export type Database = {
           wait_after_news: number
         }
         Insert: {
+          account_id?: string | null
+          account_key?: string
           account_protection?: boolean
           ai_analysis?: Json
           avoid_before_news?: boolean
@@ -2088,6 +2092,8 @@ export type Database = {
           wait_after_news?: number
         }
         Update: {
+          account_id?: string | null
+          account_key?: string
           account_protection?: boolean
           ai_analysis?: Json
           avoid_before_news?: boolean
