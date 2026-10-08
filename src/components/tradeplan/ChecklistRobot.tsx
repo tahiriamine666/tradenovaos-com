@@ -11,8 +11,9 @@ export function ChecklistRobot({ src, complete, reaction }: { src: string; compl
   useEffect(() => {
     const element = ref.current;
     if (!element) return;
-    let intersecting = false;
+    let intersecting = typeof IntersectionObserver === 'undefined';
     const update = () => setVisible(intersecting && !document.hidden);
+    if (typeof IntersectionObserver === 'undefined') { update(); return; }
     const observer = new IntersectionObserver(([entry]) => {
       intersecting = entry?.isIntersecting ?? false;
       update();
