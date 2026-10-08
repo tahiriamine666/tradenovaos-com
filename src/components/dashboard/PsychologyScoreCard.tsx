@@ -87,13 +87,13 @@ export default function PsychologyScoreCard({ onNavigate }: Props) {
     const cur = days.filter((d) => inRange(d.date, r));
     const ct = trades.filter((t) => inRange(t.trade_date, r));
     if (!cur.length && !ct.length) return null;
-    const avg = cur.length ? Math.round(cur.reduce((s, d) => s + d.score, 0) / cur.length) : 0;
+    const avg = cur.length ? Math.round(cur.reduce((s, d) => s + d.score, 0) / cur.length) : null;
     const prev = prevR ? days.filter((d) => inRange(d.date, prevR)) : [];
     const prevAvg = prev.length ? Math.round(prev.reduce((s, d) => s + d.score, 0) / prev.length) : null;
-    const moods = journal.filter((j) => j.confidence_level != null && inRange(j.entry_date, r));
+    const moods = (activeAccountId ? [] : journal).filter((j) => j.confidence_level != null && inRange(j.entry_date, r));
     const avgMood = moods.length ? Math.round(moods.reduce((s, j) => s + Number(j.confidence_level), 0) / moods.length) : null;
     return {
-      avg, delta: prevAvg == null ? null : avg - prevAvg,
+      avg, delta: prevAvg == null || avg == null ? null : avg - prevAvg,
       high: cur.length ? Math.max(...cur.map((d) => d.score)) : "—", low: cur.length ? Math.min(...cur.map((d) => d.score)) : "—",
       entries: cur.length,
       excellent: cur.filter((d) => d.score >= 80).length,
@@ -104,7 +104,7 @@ export default function PsychologyScoreCard({ onNavigate }: Props) {
       plan: pctOf(ct.map((t) => t.followed_plan)), impulsive: pctOf(ct.map((t) => t.impulsive_entry)),
       emotions: topEmotions(ct),
     };
-  }, [days, journal, period]);
+  }, [days, journal, period, activeAccountId]);
 
   const fmt = (d: string) => new Date(d + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" });
 
@@ -137,7 +137,7 @@ export default function PsychologyScoreCard({ onNavigate }: Props) {
             <div className="flex items-end gap-4 rounded-lg border border-primary/30 bg-background/60 px-4 py-3">
               <div>
                 <p className="text-[11px] text-muted-foreground">Average Score</p>
-                <p className="font-mono text-4xl font-bold text-foreground">{stats.avg}</p>
+                <p className="font-mono text-4xl font-bold text-foreground">{stats.avg ?? "—"}</p>
               </div>
               {stats.delta != null && (
                 <p className={cn("pb-1.5 text-xs", stats.delta > 0 ? "text-primary" : "text-muted-foreground")}>
