@@ -14,7 +14,7 @@ import { toast } from '@/hooks/use-toast';
 import { openCustomerPortal } from '@/lib/dodo';
 import TradingAccountsSection from '@/components/settings/TradingAccountsSection';
 import ConnectionStatusSection from '@/components/settings/ConnectionStatusSection';
-import ProfileEditDialog, { PROFILE_UPDATED_EVENT } from '@/components/settings/ProfileEditDialog';
+import ProfileEditDialog, { PROFILE_UPDATED_EVENT, emitProfileUpdated } from '@/components/settings/ProfileEditDialog';
 import { Pencil } from 'lucide-react';
 
 
@@ -169,6 +169,7 @@ export default function StudioSettings() {
       console.error('Profile update error:', err);
     } else {
       setSaved(true); setDirty(false);
+      emitProfileUpdated({ display_name: profile.display_name, full_name: profile.full_name, bio: profile.bio, preferred_market: profile.preferred_market, trading_style: profile.trading_style });
       toast({ title: 'Settings saved', description: 'Your settings have been updated.' });
       setTimeout(() => setSaved(false), 3000);
     }
@@ -264,7 +265,7 @@ export default function StudioSettings() {
           <Pencil className="h-3 w-3" />Edit Profile
         </span>
       </section>
-      <ProfileEditDialog open={editOpen} onOpenChange={setEditOpen} profile={profile} markets={MARKETS} styles={STYLES} />
+      <ProfileEditDialog open={editOpen} onOpenChange={setEditOpen} profile={profile} markets={MARKETS} styles={TRADING_STYLES} />
 
       {/* Personal info */}
       <Section icon={User} title="Personal Info" description="Your trading identity across the app">
