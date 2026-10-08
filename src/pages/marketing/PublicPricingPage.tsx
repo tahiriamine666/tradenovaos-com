@@ -6,7 +6,7 @@ import SeoHead from '@/components/SeoHead';
 
 export default function PublicPricingPage() {
   return (
-    <div className="min-h-screen bg-white text-slate-900 flex flex-col">
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
       <SeoHead
         path="/pricing"
         title="Pricing — TradeNova OS plans for every trader"

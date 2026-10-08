@@ -47,7 +47,7 @@ function Dropdown({ label, items }: { label: string; items: Item[] }) {
             initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 8 }}
             transition={{ duration: 0.15 }}
             className="absolute top-full left-1/2 -translate-x-1/2 pt-3 w-[420px] z-50">
-            <div className="bg-background rounded-md border border-border shadow-2xl shadow-slate-900/10 p-3 grid grid-cols-1 gap-1">
+            <div className="bg-background rounded-md border border-border shadow-2xl shadow-background/10 p-3 grid grid-cols-1 gap-1">
               {items.map(it => (
                 <Link key={it.to} to={it.to} className="group rounded-md px-3 py-2.5 hover:bg-primary/10 transition-colors">
                   <p className="text-sm font-semibold text-foreground group-hover:text-primary">{it.label}</p>
@@ -74,7 +74,7 @@ export default function MarketingNav() {
   }, []);
 
   return (
-    <header className={`sticky top-0 inset-x-0 z-50 bg-background/95 backdrop-blur-xl transition-shadow ${scrolled ? 'shadow-[0_1px_0_0_rgba(15,23,42,0.06),0_8px_24px_-12px_rgba(15,23,42,0.12)]' : 'border-b border-border'}`}>
+    <header className={`sticky top-0 inset-x-0 z-50 bg-background/95 backdrop-blur-xl transition-shadow ${scrolled ? 'shadow-[0_1px_0_0_hsl(var(--border)),0_8px_24px_-12px_hsl(var(--background)/0.8)]' : 'border-b border-border'}`}>
       <div className="max-w-7xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5">
           <BrandLogo className="w-8 h-8 rounded-md object-cover" />
@@ -93,7 +93,7 @@ export default function MarketingNav() {
           <button onClick={() => nav('/login')} className="text-sm font-semibold text-muted-foreground hover:text-primary px-4 py-2 transition-colors">
             Log In
           </button>
-          <button onClick={() => nav('/signup')} className="text-sm font-bold bg-primary hover:bg-primary text-white px-5 py-2.5 rounded-md transition-all hover:shadow-lg hover:shadow-primary/30 hover:-translate-y-px">
+          <button onClick={() => nav('/signup')} className="text-sm font-bold bg-primary hover:bg-primary text-foreground px-5 py-2.5 rounded-md transition-all hover:shadow-lg hover:shadow-primary/30 hover:-translate-y-px">
             Start Free
           </button>
         </div>
@@ -131,7 +131,7 @@ export default function MarketingNav() {
               </div>
               <div className="flex gap-2 pt-3 border-t border-border">
                 <button onClick={() => { setOpen(false); nav('/login'); }} className="flex-1 text-sm font-semibold border border-border text-muted-foreground py-2.5 rounded-md hover:bg-muted/70">Log In</button>
-                <button onClick={() => { setOpen(false); nav('/signup'); }} className="flex-1 text-sm font-bold bg-primary text-white py-2.5 rounded-md hover:bg-primary">Start Free</button>
+                <button onClick={() => { setOpen(false); nav('/signup'); }} className="flex-1 text-sm font-bold bg-primary text-foreground py-2.5 rounded-md hover:bg-primary">Start Free</button>
               </div>
             </div>
           </motion.div>

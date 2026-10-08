@@ -23,7 +23,7 @@ const EMAIL    = 'support@tradenovaos.com';
 // ─── Quick help topics ────────────────────────────────────────────────────────
 const TOPICS = [
   { id: 'billing',  icon: CreditCard,  label: 'Billing Help',     color: 'text-muted-foreground',   bg: 'bg-muted/10',  subject: 'Billing question' },
-  { id: 'account',  icon: HelpCircle,  label: 'Account Issues',   color: 'text-blue-400',    bg: 'bg-blue-400/10',   subject: 'Account issue' },
+  { id: 'account',  icon: HelpCircle,  label: 'Account Issues',   color: 'text-primary',    bg: 'bg-primary/10',   subject: 'Account issue' },
   { id: 'feature',  icon: Lightbulb,   label: 'Feature Request',  color: 'text-primary', bg: 'bg-primary/10',subject: 'Feature request' },
   { id: 'bug',      icon: Bug,         label: 'Bug Report',       color: 'text-muted-foreground',     bg: 'bg-muted/10',    subject: 'Bug report' },
 ];
@@ -150,9 +150,9 @@ export default function SupportChat() {
               aria-label="Open support chat"
             >
               <PulseRing />
-              <MessageCircle className="h-6 w-6 text-white relative z-10" />
+              <MessageCircle className="h-6 w-6 text-foreground relative z-10" />
               {unread && (
-                <span className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-primary border-2 border-[#080812]" />
+                <span className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-primary border-2 border-background" />
               )}
             </motion.button>
           )}
@@ -167,25 +167,25 @@ export default function SupportChat() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.92, y: 16 }}
               transition={{ type: 'spring', damping: 26, stiffness: 280 }}
-              className="absolute bottom-0 right-0 w-[360px] max-w-[calc(100vw-1.5rem)] rounded-2xl overflow-hidden border border-white/[0.08] bg-[#0d0d18] shadow-2xl shadow-black/60"
+              className="absolute bottom-0 right-0 w-[360px] max-w-[calc(100vw-1.5rem)] rounded-2xl overflow-hidden border border-foreground/[0.08] bg-card shadow-2xl shadow-background/60"
               style={{ transformOrigin: 'bottom right' }}
             >
               {/* Header */}
-              <div className="relative px-5 pt-5 pb-4 bg-gradient-to-br from-primary/20 via-primary/5 to-transparent border-b border-white/[0.06]">
+              <div className="relative px-5 pt-5 pb-4 bg-gradient-to-br from-primary/20 via-primary/5 to-transparent border-b border-foreground/[0.06]">
                 <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
                     <BrandLogo className="w-10 h-10 object-contain mix-blend-screen" />
                     <div>
-                      <p className="font-bold text-white text-sm">TradeNova Support</p>
+                      <p className="font-bold text-foreground text-sm">TradeNova Support</p>
                       <div className="flex items-center gap-1.5 mt-0.5">
                         <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block" />
-                        <p className="text-[11px] text-white/40">We reply within a few hours</p>
+                        <p className="text-[11px] text-foreground/40">We reply within a few hours</p>
                       </div>
                     </div>
                   </div>
                   <button onClick={handleClose}
-                    className="p-1.5 rounded-lg hover:bg-white/5 text-white/30 hover:text-white transition-colors">
+                    className="p-1.5 rounded-lg hover:bg-foreground/5 text-foreground/30 hover:text-foreground transition-colors">
                     <X className="h-4 w-4" />
                   </button>
                 </div>
@@ -202,7 +202,7 @@ export default function SupportChat() {
                       exit={{ opacity: 0, x: 8 }} transition={{ duration: 0.18 }}
                       className="p-5 space-y-4"
                     >
-                      <p className="text-sm text-white/50">
+                      <p className="text-sm text-foreground/50">
                         Hi{form.name ? ` ${form.name.split(' ')[0]}` : ''} 👋 How can we help you today?
                       </p>
 
@@ -214,15 +214,15 @@ export default function SupportChat() {
                             <motion.button key={topic.id}
                               whileHover={{ x: 2 }}
                               onClick={() => setTopic(topic.subject)}
-                              className="flex items-center gap-3 w-full p-3 rounded-xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/[0.12] transition-all group"
+                              className="flex items-center gap-3 w-full p-3 rounded-xl border border-foreground/[0.06] bg-foreground/[0.02] hover:bg-foreground/[0.05] hover:border-foreground/[0.12] transition-all group"
                             >
                               <div className={`w-8 h-8 rounded-lg ${topic.bg} flex items-center justify-center flex-shrink-0`}>
                                 <Icon className={`h-4 w-4 ${topic.color}`} />
                               </div>
-                              <span className="text-sm text-white/70 group-hover:text-white transition-colors flex-1 text-left">
+                              <span className="text-sm text-foreground/70 group-hover:text-foreground transition-colors flex-1 text-left">
                                 {topic.label}
                               </span>
-                              <ChevronRight className="h-3.5 w-3.5 text-white/20 group-hover:text-white/40 transition-colors" />
+                              <ChevronRight className="h-3.5 w-3.5 text-foreground/20 group-hover:text-foreground/40 transition-colors" />
                             </motion.button>
                           );
                         })}
@@ -230,9 +230,9 @@ export default function SupportChat() {
 
                       {/* Divider */}
                       <div className="flex items-center gap-3">
-                        <div className="flex-1 h-px bg-white/[0.06]" />
-                        <span className="text-[10px] text-white/20 uppercase tracking-wider">or reach us directly</span>
-                        <div className="flex-1 h-px bg-white/[0.06]" />
+                        <div className="flex-1 h-px bg-foreground/[0.06]" />
+                        <span className="text-[10px] text-foreground/20 uppercase tracking-wider">or reach us directly</span>
+                        <div className="flex-1 h-px bg-foreground/[0.06]" />
                       </div>
 
                       {/* Direct contact */}
@@ -242,7 +242,7 @@ export default function SupportChat() {
                           <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
                         </a>
                         <a href={`mailto:${EMAIL}?subject=Support`}
-                          className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-white/[0.08] text-white/40 text-xs font-medium hover:bg-white/[0.04] hover:text-white/70 hover:border-white/[0.15] transition-all">
+                          className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-foreground/[0.08] text-foreground/40 text-xs font-medium hover:bg-foreground/[0.04] hover:text-foreground/70 hover:border-foreground/[0.15] transition-all">
                           <Mail className="h-3.5 w-3.5" /> Email
                         </a>
                       </div>
@@ -264,7 +264,7 @@ export default function SupportChat() {
                       className="p-5 space-y-3"
                     >
                       <button onClick={() => setView('home')}
-                        className="flex items-center gap-1.5 text-[11px] text-white/30 hover:text-white/60 transition-colors mb-1">
+                        className="flex items-center gap-1.5 text-[11px] text-foreground/30 hover:text-foreground/60 transition-colors mb-1">
                         <ArrowLeft className="h-3 w-3" /> Back
                       </button>
 
@@ -280,38 +280,38 @@ export default function SupportChat() {
 
                       {/* Name */}
                       <div>
-                        <label className="text-[11px] font-medium text-white/30 block mb-1.5">Name</label>
+                        <label className="text-[11px] font-medium text-foreground/30 block mb-1.5">Name</label>
                         <input
                           value={form.name}
                           onChange={e => { setForm(f => ({ ...f, name: e.target.value })); setErrors(er => ({ ...er, name: '' })); }}
                           placeholder="Your name"
-                          className={`w-full text-sm rounded-xl border bg-white/[0.03] px-3 py-2.5 text-white placeholder:text-white/20 focus:outline-none focus:ring-1 transition-all ${errors.name ? 'border-border/40 focus:ring-border/30' : 'border-white/[0.08] focus:border-primary/40 focus:ring-primary/20'}`}
+                          className={`w-full text-sm rounded-xl border bg-foreground/[0.03] px-3 py-2.5 text-foreground placeholder:text-foreground/20 focus:outline-none focus:ring-1 transition-all ${errors.name ? 'border-border/40 focus:ring-border/30' : 'border-foreground/[0.08] focus:border-primary/40 focus:ring-primary/20'}`}
                         />
                         {errors.name && <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{errors.name}</p>}
                       </div>
 
                       {/* Email */}
                       <div>
-                        <label className="text-[11px] font-medium text-white/30 block mb-1.5">Email</label>
+                        <label className="text-[11px] font-medium text-foreground/30 block mb-1.5">Email</label>
                         <input
                           type="email"
                           value={form.email}
                           onChange={e => { setForm(f => ({ ...f, email: e.target.value })); setErrors(er => ({ ...er, email: '' })); }}
                           placeholder="you@example.com"
-                          className={`w-full text-sm rounded-xl border bg-white/[0.03] px-3 py-2.5 text-white placeholder:text-white/20 focus:outline-none focus:ring-1 transition-all ${errors.email ? 'border-border/40 focus:ring-border/30' : 'border-white/[0.08] focus:border-primary/40 focus:ring-primary/20'}`}
+                          className={`w-full text-sm rounded-xl border bg-foreground/[0.03] px-3 py-2.5 text-foreground placeholder:text-foreground/20 focus:outline-none focus:ring-1 transition-all ${errors.email ? 'border-border/40 focus:ring-border/30' : 'border-foreground/[0.08] focus:border-primary/40 focus:ring-primary/20'}`}
                         />
                         {errors.email && <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{errors.email}</p>}
                       </div>
 
                       {/* Message */}
                       <div>
-                        <label className="text-[11px] font-medium text-white/30 block mb-1.5">Message</label>
+                        <label className="text-[11px] font-medium text-foreground/30 block mb-1.5">Message</label>
                         <textarea
                           value={form.message}
                           onChange={e => { setForm(f => ({ ...f, message: e.target.value })); setErrors(er => ({ ...er, message: '' })); }}
                           placeholder="Describe your issue or question..."
                           rows={4}
-                          className={`w-full text-sm rounded-xl border bg-white/[0.03] px-3 py-2.5 text-white placeholder:text-white/20 focus:outline-none focus:ring-1 transition-all resize-none ${errors.message ? 'border-border/40 focus:ring-border/30' : 'border-white/[0.08] focus:border-primary/40 focus:ring-primary/20'}`}
+                          className={`w-full text-sm rounded-xl border bg-foreground/[0.03] px-3 py-2.5 text-foreground placeholder:text-foreground/20 focus:outline-none focus:ring-1 transition-all resize-none ${errors.message ? 'border-border/40 focus:ring-border/30' : 'border-foreground/[0.08] focus:border-primary/40 focus:ring-primary/20'}`}
                         />
                         {errors.message && <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{errors.message}</p>}
                       </div>
@@ -323,7 +323,7 @@ export default function SupportChat() {
                           disabled={sending}
                           whileHover={{ scale: 1.01 }}
                           whileTap={{ scale: 0.98 }}
-                          className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-primary hover:bg-primary text-white text-sm font-semibold transition-all shadow-lg shadow-primary/20 disabled:opacity-60 disabled:cursor-not-allowed"
+                          className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-primary hover:bg-primary text-foreground text-sm font-semibold transition-all shadow-lg shadow-primary/20 disabled:opacity-60 disabled:cursor-not-allowed"
                         >
                           {sending
                             ? <><Loader2 className="h-4 w-4 animate-spin" /> Sending...</>
@@ -354,19 +354,19 @@ export default function SupportChat() {
                         <CheckCircle2 className="h-8 w-8 text-primary" />
                       </motion.div>
                       <div>
-                        <p className="font-bold text-white text-base">Message sent!</p>
-                        <p className="text-sm text-white/40 mt-1 leading-relaxed">
-                          We got your message and will reply to <strong className="text-white/60">{form.email}</strong> within a few hours.
+                        <p className="font-bold text-foreground text-base">Message sent!</p>
+                        <p className="text-sm text-foreground/40 mt-1 leading-relaxed">
+                          We got your message and will reply to <strong className="text-foreground/60">{form.email}</strong> within a few hours.
                         </p>
                       </div>
                       <div className="pt-2 space-y-2">
-                        <p className="text-xs text-white/25">Need faster help?</p>
+                        <p className="text-xs text-foreground/25">Need faster help?</p>
                         <a href={whatsappUrl} target="_blank" rel="noopener noreferrer"
                           className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-primary/20 bg-primary/5 text-primary text-sm font-medium hover:bg-primary/10 transition-all">
                           <MessageCircle className="h-4 w-4" /> WhatsApp Support
                         </a>
                         <button onClick={handleClose}
-                          className="w-full py-2.5 rounded-xl text-sm text-white/30 hover:text-white/50 transition-colors">
+                          className="w-full py-2.5 rounded-xl text-sm text-foreground/30 hover:text-foreground/50 transition-colors">
                           Close
                         </button>
                       </div>
@@ -378,8 +378,8 @@ export default function SupportChat() {
 
               {/* Footer */}
               {view !== 'success' && (
-                <div className="px-5 py-3 border-t border-white/[0.05] flex items-center justify-center">
-                  <p className="text-[10px] text-white/15">
+                <div className="px-5 py-3 border-t border-foreground/[0.05] flex items-center justify-center">
+                  <p className="text-[10px] text-foreground/15">
                     Powered by <span className="text-primary/50 font-medium">TradeNova</span>
                   </p>
                 </div>

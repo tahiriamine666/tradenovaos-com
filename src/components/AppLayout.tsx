@@ -229,7 +229,7 @@ export default function AppLayout({ active, onNavigate, dark, children, topBar }
               <button key={item.id} onClick={() => onNavigate(item.id)}
                 className={cx('flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-all',
                   sel ? 'text-primary' : 'text-muted-foreground')}>
-                <Icon className={cx('h-5 w-5', sel && 'drop-shadow-[0_0_6px_rgba(124,58,237,0.6)]')} />
+                <Icon className="h-5 w-5" />
                 <span className="text-[10px] font-medium">{item.label}</span>
               </button>
             );

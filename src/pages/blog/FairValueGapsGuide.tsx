@@ -12,7 +12,7 @@ export default function FairValueGapsGuide() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-white text-slate-900">
+    <div className="min-h-screen bg-background text-foreground">
       <SeoHead
         path="/blog/fair-value-gaps-guide"
         title="Fair Value Gaps (FVG): How to Identify and Trade Them"
@@ -48,7 +48,7 @@ export default function FairValueGapsGuide() {
         <motion.button
           onClick={() => navigate('/resources/blog')}
           whileHover={{ x: -2 }}
-          className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-primary mb-8"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-8"
         >
           <ArrowLeft className="h-4 w-4" /> Back to blog
         </motion.button>
@@ -62,14 +62,14 @@ export default function FairValueGapsGuide() {
             <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
               Price Action
             </span>
-            <span className="text-[11px] text-slate-700">June 20, 2026</span>
-            <span className="text-[11px] text-slate-700">9 min read</span>
+            <span className="text-[11px] text-foreground">June 20, 2026</span>
+            <span className="text-[11px] text-foreground">9 min read</span>
           </div>
 
           <h1 className="text-4xl sm:text-5xl font-black mb-6 tracking-tight leading-[1.05]">
             Fair Value Gaps (FVG): How to Identify and Trade Them
           </h1>
-          <p className="text-lg text-slate-700 mb-10 leading-relaxed">
+          <p className="text-lg text-foreground mb-10 leading-relaxed">
             Fair Value Gaps — the three-candle imbalance pattern popularised by
             ICT — are one of the most-searched price-action concepts in
             trading. This guide explains what an FVG actually is, how to spot
@@ -78,7 +78,7 @@ export default function FairValueGapsGuide() {
             <strong>Playbook Lab</strong>.
           </p>
 
-          <article className="prose prose-slate max-w-none prose-headings:font-black prose-headings:tracking-tight prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3 prose-p:text-slate-700 prose-p:leading-relaxed prose-li:text-slate-700 prose-strong:text-slate-900">
+          <article className="prose prose-invert max-w-none prose-headings:text-foreground prose-headings:font-black prose-headings:tracking-tight prose-h2:text-2xl prose-h2:mt-12 prose-h2:mb-4 prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3 prose-p:text-foreground prose-p:leading-relaxed prose-li:text-foreground prose-strong:text-foreground">
             <h2>What is a Fair Value Gap?</h2>
             <p>
               A Fair Value Gap (FVG) is a three-candle pattern that leaves a
@@ -224,23 +224,23 @@ export default function FairValueGapsGuide() {
             </ul>
           </article>
 
-          <div className="mt-14 rounded-2xl border border-primary bg-primary/60 p-6 sm:p-8">
+          <div className="mt-14 rounded-2xl border border-primary/25 bg-card p-6 sm:p-8">
             <div className="flex items-start gap-4">
-              <div className="hidden sm:flex w-12 h-12 rounded-xl bg-primary text-white items-center justify-center flex-shrink-0">
+              <div className="hidden sm:flex w-12 h-12 rounded-xl bg-primary text-foreground items-center justify-center flex-shrink-0">
                 <Target className="h-6 w-6" />
               </div>
               <div>
                 <h3 className="text-xl font-black mb-2">
                   Turn your FVG reads into a real edge
                 </h3>
-                <p className="text-slate-700 mb-5">
+                <p className="text-foreground mb-5">
                   Document the setup once in TradeNova's Playbook Lab, tag
                   every trade, and let the analytics tell you what actually
                   works.
                 </p>
                 <div className="flex flex-wrap gap-4 mb-5">
                   {['Free forever plan', 'No credit card', 'Setup in 2 minutes'].map((t) => (
-                    <span key={t} className="flex items-center gap-1.5 text-xs text-slate-700">
+                    <span key={t} className="flex items-center gap-1.5 text-xs text-foreground">
                       <Check className="h-3 w-3 text-primary" />
                       {t}
                     </span>
@@ -248,7 +248,7 @@ export default function FairValueGapsGuide() {
                 </div>
                 <button
                   onClick={() => navigate('/signup')}
-                  className="inline-flex items-center gap-2 bg-primary hover:bg-primary text-white px-6 py-3 rounded-xl font-bold text-sm transition-all hover:shadow-xl hover:shadow-primary/20"
+                  className="inline-flex items-center gap-2 bg-primary hover:bg-primary text-foreground px-6 py-3 rounded-xl font-bold text-sm transition-all hover:shadow-xl hover:shadow-primary/20"
                 >
                   Start free — build your FVG playbook
                   <ArrowRight className="h-4 w-4" />

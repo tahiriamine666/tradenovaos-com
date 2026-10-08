@@ -48,21 +48,21 @@ export default function MarketingFooter() {
     <footer className="relative bg-background text-foreground overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary/10 rounded-full blur-[120px]" />
-        <div className="absolute bottom-0 right-0 w-[400px] h-[300px] bg-cyan-500/5 rounded-full blur-[100px]" />
+        <div className="absolute bottom-0 right-0 w-[400px] h-[300px] bg-primary/5 rounded-full blur-[100px]" />
       </div>
 
       {/* CTA banner */}
       <div className="relative max-w-7xl mx-auto px-5 sm:px-8 pt-20">
-        <div className="rounded-lg border border-border bg-gradient-to-br from-primary/15 via-white/[0.02] to-cyan-500/10 p-10 sm:p-14 flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div className="rounded-lg border border-border bg-gradient-to-br from-primary/15 via-white/[0.02] to-primary/10 p-10 sm:p-14 flex flex-col sm:flex-row items-center justify-between gap-6">
           <div>
             <h3 className="text-2xl sm:text-3xl font-black tracking-tight">
-              Start building your <span className="bg-gradient-to-r from-primary to-cyan-300 bg-clip-text text-transparent">trading edge today.</span>
+              Start building your <span className="text-primary">trading edge today.</span>
             </h3>
             <p className="text-muted-foreground text-sm mt-2">Free forever plan · No credit card required</p>
           </div>
           <button
             onClick={() => nav('/signup')}
-            className="group inline-flex items-center gap-2.5 bg-primary hover:bg-primary text-white px-7 py-3.5 rounded-md font-black text-sm transition-all hover:shadow-2xl hover:shadow-primary/30 hover:-translate-y-0.5 whitespace-nowrap"
+            className="group inline-flex items-center gap-2.5 bg-primary hover:bg-primary text-foreground px-7 py-3.5 rounded-md font-black text-sm transition-all hover:shadow-2xl hover:shadow-primary/30 hover:-translate-y-0.5 whitespace-nowrap"
           >
             Start Free <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </button>
