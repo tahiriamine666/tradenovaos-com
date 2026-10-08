@@ -1,5 +1,5 @@
 # Redesign roadmap
-- [ ] Reconfirm exact #1D7FFF globally, minimize hover brightness change, scan competing accents and verify rendered shared colors
+- [x] Reconfirm exact #1D7FFF globally; minimized hover brightness, verified rendered public/app accents, active-source old-accent scan clean and automatic build OK; unused metadata and authentic media remain exceptions
 - [x] Hide platform-injected published Lovable badge; public domain has no badge; NOVA float/pulse, stable dimensions, reduced motion and mobile layout verified; automatic build OK
 - [x] Apply exact reference blue globally; rendered RGB 29/127/255 and lighter hover verified, automatic build/typecheck passed; old accents remain only in unused generated palette metadata
 - [x] Inspect production schema, authorization, session and billing paths (remaining checks: docs/production-readiness-audit.md)
