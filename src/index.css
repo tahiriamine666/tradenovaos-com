@@ -252,3 +252,29 @@
   .checklist-robot-glow { opacity: 0.3; }
   .checklist-robot-frame, .checklist-robot-frame:hover { transition: none; transform: none; }
 }
+
+/* ─── Premium lighting (shared primary token, low opacity, static) ─── */
+:root {
+  --light-ambient: radial-gradient(ellipse 60% 50% at 50% 40%, hsl(var(--primary) / 0.10), transparent 70%);
+  --light-edge: inset 0 1px 0 hsl(var(--primary) / 0.14), 0 0 0 1px hsl(var(--primary) / 0.10);
+  --light-halo: 0 0 18px -6px hsl(var(--primary) / 0.35);
+}
+.tn-ambient { position: relative; isolation: isolate; }
+.tn-ambient::before { content: ""; position: absolute; inset: -10% -15%; z-index: -1; pointer-events: none; background: var(--light-ambient); }
+.tn-edge-light { box-shadow: var(--light-edge); }
+/* Sidebar active item + selected tabs */
+[aria-current="page"] { box-shadow: inset 2px 0 0 hsl(var(--primary) / 0.55), var(--light-halo); }
+[role="tab"][data-state="active"], [role="tab"][aria-selected="true"] { box-shadow: 0 0 0 1px hsl(var(--primary) / 0.22), var(--light-halo); }
+/* Modals / lightboxes: subtle edge light */
+[role="dialog"], [role="alertdialog"] { box-shadow: 0 0 0 1px hsl(var(--primary) / 0.12), 0 24px 60px -24px hsl(var(--primary) / 0.22), 0 20px 50px -20px hsl(0 0% 0% / 0.7); }
+/* Interactive card hover illumination */
+@media (hover: hover) and (pointer: fine) {
+  .tn-lift { transition: box-shadow 250ms ease, border-color 250ms ease; }
+  .tn-lift:hover { border-color: hsl(var(--primary) / 0.3); box-shadow: var(--light-edge), 0 12px 32px -18px hsl(var(--primary) / 0.35); }
+}
+/* Robot floor halos */
+.robot-floor { position: absolute; left: 20%; right: 20%; bottom: 2%; height: 10%; border-radius: 9999px; pointer-events: none;
+  background: radial-gradient(ellipse at center, hsl(var(--primary) / 0.32), transparent 70%); opacity: 0.7; transition: opacity 400ms ease; }
+.checklist-robot-reaction[data-reaction='complete'] .robot-floor { animation: robot-floor-bright 1s ease-in-out; }
+@keyframes robot-floor-bright { 50% { opacity: 1; transform: scaleX(1.08); } }
+@media (prefers-reduced-motion: reduce) { .robot-floor { animation: none !important; } }

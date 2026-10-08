@@ -225,7 +225,7 @@ function Hero({ onSignup }: { onSignup: () => void }) {
   return (
     <section className="relative min-h-[92dvh] flex flex-col items-center justify-center pt-24 pb-10 overflow-hidden">
       <HeroBackground />
-      <div className="relative z-10 max-w-7xl mx-auto px-5 sm:px-8 w-full">
+      <div className="tn-ambient relative z-10 max-w-7xl mx-auto px-5 sm:px-8 w-full">
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="flex justify-center mb-8">
           <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-primary/80 animate-pulse" />

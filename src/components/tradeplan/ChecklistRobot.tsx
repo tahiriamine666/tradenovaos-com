@@ -42,6 +42,7 @@ export function ChecklistRobot({ src, complete, reaction }: { src: string; compl
           <div key={active?.id ?? 'idle'} data-reaction={active?.kind} className="checklist-robot-reaction relative h-full w-full"
             onAnimationEnd={event => { if (event.target === event.currentTarget) setActive(null); }}>
             <div className="checklist-robot-glow pointer-events-none absolute inset-x-[15%] inset-y-[20%] rounded-full bg-primary/15 blur-xl" aria-hidden="true" />
+            <div className="robot-floor" aria-hidden="true" />
             <img src={src} alt="TradeNova robot" draggable={false} className="relative h-full w-full select-none object-contain mix-blend-lighten" />
           </div>
         </div>

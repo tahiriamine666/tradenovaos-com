@@ -26,6 +26,7 @@ function Robot({ className = '', thinking = false, compact = false }: { classNam
   return (
     <div className={`nova-robot relative ${compact ? 'nova-robot-compact' : ''} ${thinking ? 'nova-robot-thinking' : ''} ${className}`}>
       <div className="nova-robot-light pointer-events-none absolute inset-[20%] rounded-full bg-primary/10 blur-xl" aria-hidden="true" />
+      <div className="nova-robot-light robot-floor" aria-hidden="true" />
       <img src={ROBOT} alt="NOVA" draggable={false} className="nova-float relative h-full w-full select-none object-contain mix-blend-lighten" />
     </div>
   );
