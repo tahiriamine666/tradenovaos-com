@@ -1,4 +1,5 @@
 # Redesign roadmap
+- [ ] Apply exact reference blue globally and verify old-accent scan, browser colors, and compilation
 - [x] Inspect production schema, authorization, session and billing paths (remaining checks: docs/production-readiness-audit.md)
 - [x] Repair confirmed plan/checklist/account integrity and frontend defects
 - [x] Verify scoped fixes with mocked regression tests, browser checks and automatic build/typecheck; live transactions remain untested
