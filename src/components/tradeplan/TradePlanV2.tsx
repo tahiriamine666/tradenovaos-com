@@ -410,9 +410,11 @@ function PairChecklist({ date, pair, legacy, readOnly, models, onModelsChange, s
       if (error) { setSaveState('error'); toast({ title: 'Could not load checklist', description: error.message, variant: 'destructive' }); return; }
       const row = (data as any)?.data as PairCk | undefined; hasStoredRow.current = !!row;
       // Older checklists were not pair-tagged and were used for EURUSD: show them only there until edited.
-      const base = legacy && pair === 'EURUSD' ? legacy : emptyDaily();
+      // The parent may still hold the previous scope while this request runs.
+      // Apply legacy content only after the parent has loaded this exact scope.
+      const base = emptyDaily();
       const next = row ? { checklist: row.checklist ?? [], checked: row.checked ?? {}, modelId: row.modelId ?? '' } : { checklist: base.checklist, checked: base.checked, modelId: base.modelId };
-      ckRef.current = next; setCk(next); setCkScope(`${date}|${pair}|${accountKey}`);
+      ckRef.current = next; setCk(next); setCkScope(`${date}|${pair}|${accountKey}`); setSaveState('idle');
     })();
     return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -422,7 +424,7 @@ function PairChecklist({ date, pair, legacy, readOnly, models, onModelsChange, s
       const next = { checklist: legacy.checklist, checked: legacy.checked, modelId: legacy.modelId };
       ckRef.current = next; setCk(next);
     }
-  }, [legacy, date, pair, accountKey, ckScope]);
+  }, [legacy, date, pair, accountKey, ckScope, saveState]);
   if (!ck) return <div className={`${card} p-5`} role="status">{saveState === 'error' ? 'Checklist unavailable. Retry by selecting this plan again.' : 'Loading checklist…'}</div>;
   const set = (patch: Partial<Daily>) => {
     if (readOnly || !ckRef.current || ckScope !== `${date}|${pair}|${accountKey}`) return;
@@ -738,7 +740,7 @@ export default function TradePlanV2() {
             </div>
           )}
           <div className={loading || loadError || tab === 'weekly' || !showDaily ? 'hidden' : ''}>
-            <PairChecklist date={date} pair={pair} legacy={!loading && dailyExists ? daily : null} readOnly={loading || loadError || tab !== 'daily'} models={models} onModelsChange={loadModels} saveRef={checklistSave} />
+            <PairChecklist date={date} pair={pair} legacy={!loading && dailyExists && loadedScope.current === `${accountKey}|${date}|${pair}` ? daily : null} readOnly={loading || loadError || tab !== 'daily'} models={models} onModelsChange={loadModels} saveRef={checklistSave} />
           </div>
         </main>
       </div>
