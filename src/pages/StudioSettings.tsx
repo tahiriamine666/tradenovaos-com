@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -10,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Save, User, TrendingUp, Globe, Shield, AlertCircle, CheckCircle2, CreditCard, ExternalLink, Loader2 } from 'lucide-react';
+import { Save, User, TrendingUp, Globe, Shield, AlertCircle, CheckCircle2, CreditCard, ExternalLink, Loader2, LogOut } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { openCustomerPortal } from '@/lib/dodo';
 import TradingAccountsSection from '@/components/settings/TradingAccountsSection';
@@ -34,16 +33,19 @@ interface Profile {
 }
 
 // ─── Option helpers ────────────────────────────────────────────────────────────
-const TIMEZONES = [
-  'UTC', 'UTC+1', 'UTC+2', 'UTC+3', 'UTC+4', 'UTC+5', 'UTC+5:30',
-  'UTC+6', 'UTC+7', 'UTC+8', 'UTC+9', 'UTC+10', 'UTC+11', 'UTC+12',
-  'UTC-1', 'UTC-2', 'UTC-3', 'UTC-4', 'UTC-5', 'UTC-6', 'UTC-7',
-  'UTC-8', 'UTC-9', 'UTC-10', 'UTC-11', 'UTC-12',
-];
+const TZ_LABELS: Record<string, string> = {
+  'UTC-12': 'Baker Island', 'UTC-11': 'Pago Pago', 'UTC-10': 'Honolulu', 'UTC-9': 'Anchorage', 'UTC-8': 'Los Angeles',
+  'UTC-7': 'Denver', 'UTC-6': 'Chicago', 'UTC-5': 'New York', 'UTC-4': 'Santiago / Halifax', 'UTC-3': 'São Paulo',
+  'UTC-2': 'South Georgia', 'UTC-1': 'Azores', 'UTC': 'London', 'UTC+1': 'Casablanca / Central Europe', 'UTC+2': 'Athens / Cairo',
+  'UTC+3': 'Moscow / Riyadh', 'UTC+4': 'Dubai', 'UTC+5': 'Karachi', 'UTC+5:30': 'Mumbai', 'UTC+6': 'Dhaka', 'UTC+7': 'Bangkok',
+  'UTC+8': 'Singapore / Hong Kong', 'UTC+9': 'Tokyo', 'UTC+10': 'Sydney', 'UTC+11': 'Nouméa', 'UTC+12': 'Auckland',
+};
+const TIMEZONES = Object.keys(TZ_LABELS);
+const tzLabel = (tz: string) => `${tz === 'UTC' ? 'UTC+0' : tz} — ${TZ_LABELS[tz] ?? tz}`;
 
 const MARKETS = [
-  'NASDAQ', 'S&P 500', 'XAUUSD', 'EURUSD', 'GBPUSD', 'USDJPY',
-  'Crypto', 'Oil (WTI)', 'DAX', 'Forex', 'Futures', 'Options',
+  'EURUSD', 'GBPUSD', 'USDJPY', 'XAUUSD', 'NAS100', 'US30', 'BTCUSD',
+  'NASDAQ', 'S&P 500', 'DAX', 'Oil (WTI)', 'Crypto', 'Forex', 'Futures', 'Options',
 ];
 
 const ACCOUNT_TYPES = [
@@ -59,345 +61,276 @@ const TRADING_STYLES = [
   { value: 'position', label: 'Position Trading' },
 ];
 
+const control = 'h-9 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:border-primary/50';
+
 // ─── Section wrapper ──────────────────────────────────────────────────────────
-function Section({ icon: Icon, title, description, children }: {
-  icon: React.ElementType; title: string; description: string; children: React.ReactNode;
+function Section({ icon: Icon, title, description, action, children, className = '' }: {
+  icon: React.ElementType; title: string; description?: string; action?: React.ReactNode; children: React.ReactNode; className?: string;
 }) {
   return (
-    <Card className="border-0 shadow-sm">
-      <CardHeader className="pb-3">
-        <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-primary/10 p-2.5">
-            <Icon className="h-4 w-4 text-primary" />
-          </div>
-          <div>
-            <CardTitle className="font-heading text-base">{title}</CardTitle>
-            <CardDescription className="text-xs">{description}</CardDescription>
+    <section className={`rounded-lg border border-border bg-card p-4 sm:p-5 ${className}`}>
+      <header className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10"><Icon className="h-3.5 w-3.5 text-primary" /></span>
+          <div className="min-w-0">
+            <h3 className="font-heading text-sm font-semibold text-foreground">{title}</h3>
+            {description && <p className="text-xs text-muted-foreground">{description}</p>}
           </div>
         </div>
-      </CardHeader>
-      <Separator />
-      <CardContent className="pt-5 space-y-4">{children}</CardContent>
-    </Card>
+        {action}
+      </header>
+      <div className="space-y-4">{children}</div>
+    </section>
   );
 }
 
-// ─── Field wrapper ────────────────────────────────────────────────────────────
-function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
+function Field({ label, hint, children, className = '' }: { label: string; hint?: string; children: React.ReactNode; className?: string }) {
   return (
-    <div className="space-y-1.5">
-      <label className="text-xs font-medium text-muted-foreground block">{label}</label>
+    <div className={`space-y-1.5 ${className}`}>
+      <label className="block text-[11px] font-medium uppercase tracking-wider text-muted-foreground">{label}</label>
       {children}
-      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+      {hint && <p className="text-[11px] leading-snug text-muted-foreground/80">{hint}</p>}
     </div>
   );
 }
 
-// ─── Select ───────────────────────────────────────────────────────────────────
-function Select({ value, onChange, options }: {
-  value: string; onChange: (v: string) => void;
-  options: { value: string; label: string }[];
-}) {
+function Select({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: { value: string; label: string }[] }) {
   return (
-    <select
-      value={value}
-      onChange={e => onChange(e.target.value)}
-      className="w-full text-sm rounded-lg border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-    >
-      {options.map(o => (
-        <option key={o.value} value={o.value}>{o.label}</option>
-      ))}
+    <select value={value} onChange={e => onChange(e.target.value)} className={control}>
+      {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
     </select>
   );
 }
 
+function Info({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="min-w-0 rounded-md border border-border bg-background/60 px-3 py-2.5">
+      <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="mt-0.5 truncate text-sm font-medium text-foreground">{value}</p>
+    </div>
+  );
+}
+
+const cap = (s?: string | null) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : '—');
+
 // ─── Main Component ────────────────────────────────────────────────────────────
 export default function StudioSettings() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const [customMarket, setCustomMarket] = useState(false);
 
-  // ── Fetch profile ──
   const fetchProfile = useCallback(async () => {
     if (!user) return;
-    setLoading(true);
-    setError(null);
-
-    const { data, error: err } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
-
-    if (err) {
-      setError('Could not load your profile. Please refresh.');
-      console.error('Profile fetch error:', err);
-    } else {
+    setLoading(true); setError(null);
+    const { data, error: err } = await supabase.from('profiles').select('*').eq('id', user.id).single();
+    if (err) { setError('Could not load your profile. Please refresh.'); console.error('Profile fetch error:', err); }
+    else {
       setProfile(data as Profile);
+      const m = (data as Profile).preferred_market;
+      setCustomMarket(!!m && !MARKETS.includes(m));
     }
     setLoading(false);
   }, [user]);
 
   useEffect(() => { fetchProfile(); }, [fetchProfile]);
 
-  // ── Field setter ──
-  const set = (key: keyof Profile, val: any) => {
-    setProfile(prev => prev ? { ...prev, [key]: val } : prev);
-    setSaved(false);
-  };
+  const set = (key: keyof Profile, val: any) => { setProfile(prev => prev ? { ...prev, [key]: val } : prev); setSaved(false); setDirty(true); };
 
-  // ── Save ──
   const handleSave = async () => {
     if (!profile || !user) return;
-    setSaving(true);
-    setError(null);
-
-    const { error: err } = await supabase
-      .from('profiles')
-      .update({
-        full_name: profile.full_name,
-        display_name: profile.display_name,
-        bio: profile.bio,
-        timezone: profile.timezone,
-        preferred_market: profile.preferred_market,
-        risk_per_trade: profile.risk_per_trade,
-        default_account_type: profile.default_account_type,
-        trading_style: profile.trading_style,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', user.id);
-
+    setSaving(true); setError(null);
+    const { error: err } = await supabase.from('profiles').update({
+      full_name: profile.full_name,
+      display_name: profile.display_name,
+      bio: profile.bio,
+      timezone: profile.timezone,
+      preferred_market: profile.preferred_market,
+      risk_per_trade: profile.risk_per_trade,
+      default_account_type: profile.default_account_type,
+      trading_style: profile.trading_style,
+      updated_at: new Date().toISOString(),
+    }).eq('id', user.id);
     if (err) {
       setError('Failed to save changes. Please try again.');
       toast({ title: 'Error', description: 'Could not save profile.', variant: 'destructive' });
       console.error('Profile update error:', err);
     } else {
-      setSaved(true);
-      toast({ title: 'Profile saved', description: 'Your settings have been updated.' });
+      setSaved(true); setDirty(false);
+      toast({ title: 'Settings saved', description: 'Your settings have been updated.' });
       setTimeout(() => setSaved(false), 3000);
     }
     setSaving(false);
   };
 
-  // ── Initials for avatar ──
   const initials = profile?.display_name || profile?.full_name
-    ? (profile.display_name || profile.full_name || '')
-        .split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
+    ? (profile.display_name || profile.full_name || '').split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
     : (profile?.email?.[0] ?? 'U').toUpperCase();
 
-  // ── Loading ──
+  const header = (
+    <div>
+      <h2 className="font-heading text-2xl font-semibold text-foreground">Settings</h2>
+      <p className="text-sm text-muted-foreground">Manage your profile, trading preferences, connected accounts and workspace.</p>
+    </div>
+  );
+
   if (loading) {
     return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold font-heading text-foreground">Studio Settings</h2>
-          <p className="text-muted-foreground text-sm">Your workspace profile</p>
-        </div>
-        {[1, 2, 3].map(i => <Skeleton key={i} className="h-48 rounded-xl" />)}
-      </motion.div>
+      <div className="mx-auto max-w-6xl space-y-6">
+        {header}
+        <Skeleton className="h-24 rounded-lg" />
+        <div className="grid gap-6 lg:grid-cols-2">{[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-44 rounded-lg" />)}</div>
+      </div>
     );
   }
 
-  // ── Error ──
   if (error && !profile) {
     return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold font-heading text-foreground">Studio Settings</h2>
+      <div className="mx-auto max-w-6xl space-y-6">
+        {header}
+        <div className="flex items-center gap-3 rounded-lg border border-destructive/40 bg-card p-4">
+          <AlertCircle className="h-5 w-5 shrink-0 text-destructive" />
+          <div><p className="text-sm font-medium text-foreground">Could not load profile</p><p className="mt-0.5 text-xs text-muted-foreground">{error}</p></div>
+          <Button size="sm" variant="outline" className="ml-auto" onClick={fetchProfile}>Retry</Button>
         </div>
-        <Card className="border-0 shadow-sm border-l-4 border-l-red-500">
-          <CardContent className="pt-5 flex items-center gap-3">
-            <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
-            <div>
-              <p className="text-sm text-foreground font-medium">Could not load profile</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{error}</p>
-            </div>
-            <Button size="sm" variant="outline" className="ml-auto" onClick={fetchProfile}>Retry</Button>
-          </CardContent>
-        </Card>
-      </motion.div>
+      </div>
     );
   }
 
   if (!profile) return null;
 
+  const createdAt = (profile as any).created_at as string | undefined;
+  const memberSince = createdAt ? new Date(createdAt).toLocaleDateString(undefined, { month: 'short', year: 'numeric' }) : '—';
+  const provider = (user?.app_metadata?.provider as string | undefined) ?? 'email';
+  const providers = (user?.app_metadata?.providers as string[] | undefined) ?? [provider];
+  const lastSignIn = user?.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : '—';
+  const tzOptions = TIMEZONES.includes(profile.timezone) ? TIMEZONES : [profile.timezone, ...TIMEZONES];
+
+  const saveButton = (full = false) => (
+    <Button onClick={handleSave} disabled={saving} className={`h-9 rounded-md ${full ? 'w-full sm:w-auto sm:px-8' : ''}`}>
+      {saving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Saving...</>
+        : saved ? <><CheckCircle2 className="mr-2 h-4 w-4" />Saved</>
+        : <><Save className="mr-2 h-4 w-4" />Save Changes</>}
+    </Button>
+  );
+
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h2 className="text-2xl font-bold font-heading text-foreground">Studio Settings</h2>
-          <p className="text-muted-foreground text-sm">Manage your workspace and trading preferences</p>
+    <div className="mx-auto max-w-6xl space-y-6 animate-fade-in">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        {header}
+        <div className="flex items-center gap-3">
+          {dirty && !saving && <span className="text-xs text-muted-foreground">Unsaved changes</span>}
+          {saveButton()}
         </div>
-        <Button
-          onClick={handleSave}
-          disabled={saving}
-          className="rounded-xl"
-        >
-          {saved
-            ? <><CheckCircle2 className="h-4 w-4 mr-2" /> Saved</>
-            : <><Save className="h-4 w-4 mr-2" />{saving ? 'Saving...' : 'Save Changes'}</>
-          }
-        </Button>
       </div>
 
-      {/* Error banner */}
       {error && (
-        <Card className="border-0 border-l-4 border-l-red-500 shadow-sm">
-          <CardContent className="py-3 px-4 flex items-center gap-2">
-            <AlertCircle className="h-4 w-4 text-red-500" />
-            <p className="text-sm text-red-500">{error}</p>
-          </CardContent>
-        </Card>
+        <div className="flex items-center gap-2 rounded-lg border border-destructive/40 bg-card px-4 py-3">
+          <AlertCircle className="h-4 w-4 text-destructive" /><p className="text-sm text-destructive">{error}</p>
+        </div>
       )}
 
-      {/* Profile card (non-editable info) */}
-      <Card className="border-0 shadow-sm">
-        <CardContent className="pt-5">
-          <div className="flex items-center gap-4">
-            <Avatar className="h-16 w-16">
-              <AvatarFallback className="bg-primary text-primary-foreground font-heading text-xl">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <p className="font-heading font-bold text-foreground text-lg">
-                {profile.display_name || profile.full_name || 'Trader'}
-              </p>
-              <p className="text-sm text-muted-foreground">{profile.email}</p>
-              <Badge className="mt-1.5 bg-primary/10 text-primary border-0 capitalize text-xs">
-                {profile.subscription_plan} plan
-              </Badge>
-            </div>
+      {/* Profile overview */}
+      <section className="flex flex-col gap-4 rounded-lg border border-border bg-card p-4 sm:flex-row sm:items-center sm:p-5">
+        <Avatar className="h-12 w-12">
+          <AvatarFallback className="bg-primary font-heading text-base text-primary-foreground">{initials}</AvatarFallback>
+        </Avatar>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="truncate font-heading text-base font-semibold text-foreground">{profile.display_name || profile.full_name || 'Trader'}</p>
+            <Badge className="border-0 bg-primary/10 text-[11px] capitalize text-primary">{profile.subscription_plan} plan</Badge>
           </div>
-        </CardContent>
-      </Card>
+          <p className="truncate text-sm text-muted-foreground">{profile.email}</p>
+        </div>
+        <div className="text-xs text-muted-foreground sm:text-right">
+          <p className="uppercase tracking-wider">Member since</p>
+          <p className="text-sm font-medium text-foreground">{memberSince}</p>
+        </div>
+      </section>
 
       {/* Personal info */}
-      <Section icon={User} title="Personal Info" description="Your public trading identity">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <Section icon={User} title="Personal Info" description="Your trading identity across the app">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Field label="Display Name" hint="Shown across the app">
-            <Input
-              value={profile.display_name ?? ''}
-              onChange={e => set('display_name', e.target.value)}
-              placeholder="e.g. Amine Trader"
-              className="rounded-lg text-sm"
-            />
+            <Input value={profile.display_name ?? ''} onChange={e => set('display_name', e.target.value)} placeholder="e.g. Amine Trader" className={control} />
           </Field>
           <Field label="Full Name">
-            <Input
-              value={profile.full_name ?? ''}
-              onChange={e => set('full_name', e.target.value)}
-              placeholder="Your full name"
-              className="rounded-lg text-sm"
-            />
+            <Input value={profile.full_name ?? ''} onChange={e => set('full_name', e.target.value)} placeholder="Your full name" className={control} />
+          </Field>
+          <Field label="Bio" hint="Optional — a short note about your trading approach" className="sm:col-span-2">
+            <Textarea value={profile.bio ?? ''} onChange={e => set('bio', e.target.value)} placeholder="e.g. Day trader focused on NASDAQ liquidity sweeps..." rows={2}
+              className="resize-none rounded-md border-border bg-background text-sm focus-visible:ring-2 focus-visible:ring-primary/40" />
           </Field>
         </div>
-        <Field label="Bio" hint="Optional — a short note about your trading approach">
-          <Textarea
-            value={profile.bio ?? ''}
-            onChange={e => set('bio', e.target.value)}
-            placeholder="e.g. Day trader focused on NASDAQ liquidity sweeps..."
-            rows={2}
-            className="text-sm resize-none rounded-lg"
-          />
-        </Field>
       </Section>
 
-      {/* Trading Accounts */}
+      {/* Trading accounts */}
       <TradingAccountsSection />
-
-      {/* Connection status */}
       <ConnectionStatusSection />
 
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Trading preferences */}
+        <Section icon={TrendingUp} title="Trading Preferences" description="Default trading parameters">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Field label="Preferred Market">
+              <select value={customMarket ? '__custom' : (profile.preferred_market ?? '')} className={control}
+                onChange={e => { if (e.target.value === '__custom') { setCustomMarket(true); set('preferred_market', ''); } else { setCustomMarket(false); set('preferred_market', e.target.value); } }}>
+                <option value="">Select market...</option>
+                {MARKETS.map(m => <option key={m} value={m}>{m}</option>)}
+                <option value="__custom">Custom…</option>
+              </select>
+              {customMarket && <Input value={profile.preferred_market ?? ''} onChange={e => set('preferred_market', e.target.value.toUpperCase())} placeholder="e.g. GBPJPY" aria-label="Custom market" className={`${control} mt-2 font-mono`} />}
+            </Field>
+            <Field label="Risk Per Trade (%)" hint="Default risk used in position sizing">
+              <Input type="number" min={0.1} max={100} step={0.1} value={profile.risk_per_trade ?? 0.5} onChange={e => set('risk_per_trade', parseFloat(e.target.value))} className={control} />
+            </Field>
+            <Field label="Account Type">
+              <Select value={profile.default_account_type} onChange={v => set('default_account_type', v)} options={ACCOUNT_TYPES} />
+            </Field>
+            <Field label="Trading Style">
+              <Select value={profile.trading_style} onChange={v => set('trading_style', v)} options={TRADING_STYLES} />
+            </Field>
+          </div>
+        </Section>
 
-      {/* Trading preferences */}
-      <Section icon={TrendingUp} title="Trading Preferences" description="Setup your default trading parameters">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Preferred Market">
-            <select
-              value={profile.preferred_market ?? ''}
-              onChange={e => set('preferred_market', e.target.value)}
-              className="w-full text-sm rounded-lg border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-            >
-              <option value="">Select market...</option>
-              {MARKETS.map(m => <option key={m} value={m}>{m}</option>)}
+        {/* Workspace */}
+        <Section icon={Globe} title="Workspace" description="Timezone and display">
+          <Field label="Timezone" hint="Used for trade dates and calendar display">
+            <select value={profile.timezone} onChange={e => set('timezone', e.target.value)} className={control}>
+              {tzOptions.map(tz => <option key={tz} value={tz}>{tzLabel(tz)}</option>)}
             </select>
           </Field>
-          <Field label="Risk Per Trade (%)" hint="Default risk used in position sizing">
-            <Input
-              type="number"
-              min={0.1}
-              max={100}
-              step={0.1}
-              value={profile.risk_per_trade ?? 0.5}
-              onChange={e => set('risk_per_trade', parseFloat(e.target.value))}
-              className="rounded-lg text-sm"
-            />
-          </Field>
-          <Field label="Account Type">
-            <Select
-              value={profile.default_account_type}
-              onChange={v => set('default_account_type', v)}
-              options={ACCOUNT_TYPES}
-            />
-          </Field>
-          <Field label="Trading Style">
-            <Select
-              value={profile.trading_style}
-              onChange={v => set('trading_style', v)}
-              options={TRADING_STYLES}
-            />
-          </Field>
-        </div>
-      </Section>
+        </Section>
 
-      {/* Workspace settings */}
-      <Section icon={Globe} title="Workspace" description="Timezone and display settings">
-        <Field label="Timezone" hint="Used for trade date and calendar display">
-          <select
-            value={profile.timezone}
-            onChange={e => set('timezone', e.target.value)}
-            className="w-full text-sm rounded-lg border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-          >
-            {TIMEZONES.map(tz => <option key={tz} value={tz}>{tz}</option>)}
-          </select>
-        </Field>
-      </Section>
+        {/* Account & subscription */}
+        <Section icon={CreditCard} title="Account & Subscription" description="Plan and billing">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <Info label="Plan" value={cap(profile.subscription_plan)} />
+            <Info label="Email" value={profile.email ?? '—'} />
+            <Info label="Member Since" value={memberSince} />
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+            <ManageBillingButton />
+            <Button variant="outline" className="h-9 rounded-md" onClick={() => signOut()}><LogOut className="mr-2 h-4 w-4" />Sign out</Button>
+          </div>
+        </Section>
 
-      {/* Account info (read-only) */}
-      <Section icon={Shield} title="Account" description="Subscription and security info">
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-          {[
-            { label: 'Plan', value: profile.subscription_plan.charAt(0).toUpperCase() + profile.subscription_plan.slice(1) },
-            { label: 'Email', value: profile.email ?? '—' },
-            { label: 'Member since', value: new Date(profile?.['created_at' as keyof Profile] as string ?? '').toLocaleDateString(undefined, { month: 'short', year: 'numeric' }) },
-          ].map(item => (
-            <div key={item.label} className="bg-muted/30 rounded-lg p-3">
-              <p className="text-xs text-muted-foreground">{item.label}</p>
-              <p className="text-sm font-medium text-foreground mt-0.5 truncate">{item.value}</p>
-            </div>
-          ))}
-        </div>
-        <ManageBillingButton />
-        <p className="text-xs text-muted-foreground">
-          To change your email or password, use the account settings in your auth provider.
-        </p>
-      </Section>
-
-      {/* Save button bottom */}
-      <div className="flex justify-end pb-4">
-        <Button onClick={handleSave} disabled={saving} className="rounded-xl px-8">
-          {saved
-            ? <><CheckCircle2 className="h-4 w-4 mr-2" /> Saved</>
-            : <><Save className="h-4 w-4 mr-2" />{saving ? 'Saving...' : 'Save Changes'}</>
-          }
-        </Button>
+        {/* Security */}
+        <Section icon={Shield} title="Security" description="How you sign in">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Info label="Sign-in method" value={providers.map(p => p === 'email' ? 'Email & password' : cap(p)).join(', ')} />
+            <Info label="Last sign-in" value={lastSignIn} />
+          </div>
+          <p className="text-[11px] text-muted-foreground/80">To change your password, use “Forgot password” on the sign-in page.</p>
+        </Section>
       </div>
-    </motion.div>
+
+      <div className="flex justify-end pb-4">{saveButton(true)}</div>
+    </div>
   );
 }
 
@@ -445,7 +378,7 @@ function ManageBillingButton() {
 
   if (hasSub) {
     return (
-      <Button onClick={handleOpen} disabled={opening} variant="outline" className="rounded-xl">
+      <Button onClick={handleOpen} disabled={opening} variant="outline" className="h-9 rounded-md">
         {opening
           ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Opening…</>
           : <><CreditCard className="h-4 w-4 mr-2" /> Manage billing <ExternalLink className="h-3 w-3 ml-2 opacity-60" /></>}
