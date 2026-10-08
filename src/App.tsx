@@ -9,6 +9,7 @@ import { ProfileProvider } from "@/hooks/useProfile";
 import { ActiveAccountProvider } from "@/contexts/ActiveAccountContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
+import ResetPassword from "./pages/ResetPassword.tsx";
 import Index from "./pages/Index.tsx";
 import Onboarding from "./pages/Onboarding.tsx";
 import RequireAccess from "@/components/RequireAccess";
@@ -67,6 +68,7 @@ const App = () => (
                   <Route path="/" element={<PublicOnly><LandingPage /></PublicOnly>} />
                   <Route path="/login" element={<PublicOnly><Login /></PublicOnly>} />
                   <Route path="/signup" element={<PublicOnly><Signup /></PublicOnly>} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
                   <Route
                     path="/app"
                     element={
