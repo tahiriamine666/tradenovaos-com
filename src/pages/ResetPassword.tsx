@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -8,6 +9,9 @@ import { AuthShell, PasswordRules, authInputClass, authLabelClass, passwordValid
 
 export default function ResetPassword() {
   const navigate = useNavigate();
+  const { user, recoverySessionId } = useAuth();
+  const redirectTimer = useRef<ReturnType<typeof setTimeout>>();
+  useEffect(() => () => clearTimeout(redirectTimer.current), []);
   const [ready, setReady] = useState<'checking' | 'ok' | 'invalid'>('checking');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -17,23 +21,19 @@ export default function ResetPassword() {
   const [done, setDone] = useState(false);
 
   useEffect(() => {
-    const hash = window.location.hash;
-    const isRecovery = hash.includes('type=recovery') || new URLSearchParams(window.location.search).has('code');
-    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'PASSWORD_RECOVERY' || (session && isRecovery)) setReady('ok');
-    });
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session && isRecovery) setReady('ok');
+    if (user && recoverySessionId === user.id) setReady('ok');
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') setReady('ok');
     });
     const t = setTimeout(() => setReady((r) => (r === 'checking' ? 'invalid' : r)), 4000);
     return () => { sub.subscription.unsubscribe(); clearTimeout(t); };
-  }, []);
+  }, [user, recoverySessionId]);
 
   const canSubmit = passwordValid(password) && password === confirm && !loading;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canSubmit) return;
+    if (!canSubmit || ready !== 'ok' || !user || recoverySessionId !== user.id) return;
     setLoading(true);
     setError(null);
     const { error: err } = await supabase.auth.updateUser({ password });
@@ -41,7 +41,7 @@ export default function ResetPassword() {
     if (err) { setError(err.message); return; }
     setDone(true);
     await supabase.auth.signOut();
-    setTimeout(() => navigate('/login', { replace: true }), 2000);
+    redirectTimer.current = setTimeout(() => navigate('/login', { replace: true }), 2000);
   };
 
   if (done) {
@@ -71,9 +71,9 @@ export default function ResetPassword() {
     <AuthShell title="Set a new password" subtitle="Choose a strong password for your account.">
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="space-y-1.5">
-          <label className={authLabelClass}>New Password</label>
+          <label htmlFor="new-password" className={authLabelClass}>New Password</label>
           <div className="relative">
-            <Input type={show ? 'text' : 'password'} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className={`${authInputClass} pr-10`} />
+            <Input id="new-password" type={show ? 'text' : 'password'} autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} className={`${authInputClass} pr-10`} />
             <button type="button" aria-label={show ? 'Hide password' : 'Show password'} onClick={() => setShow((s) => !s)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
               {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
@@ -81,8 +81,8 @@ export default function ResetPassword() {
           <PasswordRules password={password} />
         </div>
         <div className="space-y-1.5">
-          <label className={authLabelClass}>Confirm Password</label>
-          <Input type={show ? 'text' : 'password'} autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className={authInputClass} />
+          <label htmlFor="confirm-password" className={authLabelClass}>Confirm Password</label>
+          <Input id="confirm-password" type={show ? 'text' : 'password'} autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className={authInputClass} />
           {confirm && confirm !== password && <p className="text-xs text-destructive">Passwords don't match.</p>}
         </div>
         {error && <p className="text-xs text-destructive">{error}</p>}
