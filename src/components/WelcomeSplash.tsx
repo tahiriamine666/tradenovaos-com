@@ -56,8 +56,7 @@ export default function WelcomeSplash() {
           key="welcome-splash"
           initial={{ opacity: 1 }}
           exit={{ opacity: 0, transition: { duration: reduceMotion ? 0.25 : 0.8, ease: EASE } }}
-          className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden"
-          style={{ background: '#000000' }}
+          className="fixed inset-0 z-[100] flex items-center justify-center overflow-hidden bg-background"
           aria-live="polite"
           aria-label="Welcome back"
         >
@@ -67,7 +66,7 @@ export default function WelcomeSplash() {
                 className="pointer-events-none absolute"
                 style={{
                   width: '70vmax', height: '70vmax', left: '50%', top: '50%',
-                  background: 'radial-gradient(circle, rgba(0,102,255,0.22) 0%, rgba(0,71,255,0.08) 40%, rgba(0,0,0,0) 70%)',
+                  background: 'radial-gradient(circle, hsl(var(--primary) / 0.22) 0%, hsl(var(--primary) / 0.08) 40%, transparent 70%)',
                   filter: 'blur(60px)',
                 }}
                 initial={{ opacity: 0, x: '-75%', y: '-30%' }}
@@ -78,7 +77,7 @@ export default function WelcomeSplash() {
                 className="pointer-events-none absolute"
                 style={{
                   width: '40vmax', height: '40vmax', left: '50%', top: '50%',
-                  background: 'radial-gradient(circle, rgba(0,140,255,0.12) 0%, rgba(0,0,0,0) 70%)',
+                  background: 'radial-gradient(circle, hsl(var(--primary) / 0.12) 0%, transparent 70%)',
                   filter: 'blur(70px)',
                 }}
                 initial={{ opacity: 0, x: '-50%', y: '-50%', scale: 0.9 }}
@@ -93,8 +92,7 @@ export default function WelcomeSplash() {
             animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
             exit={{ opacity: 0, y: reduceMotion ? 0 : -8, filter: reduceMotion ? 'blur(0px)' : 'blur(2px)' }}
             transition={{ duration: reduceMotion ? 0.3 : 1.0, delay: reduceMotion ? 0 : 0.6, ease: EASE }}
-            className="relative px-6 text-center font-heading text-3xl sm:text-4xl tracking-tight whitespace-nowrap"
-            style={{ color: '#FFFFFF', textShadow: '0 0 40px rgba(0,102,255,0.25)' }}
+            className="relative px-6 text-center font-heading text-3xl sm:text-4xl tracking-tight whitespace-nowrap text-foreground"
           >
             <span className="font-medium">Welcome Back, </span>
             <span className="font-semibold">{pretty}</span>

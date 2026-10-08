@@ -34,7 +34,7 @@ export function checkPasswordStrength(password: string): StrengthResult {
     { label: 'Too weak',  color: 'text-muted-foreground',    barColor: 'bg-muted' },
     { label: 'Weak',      color: 'text-muted-foreground',  barColor: 'bg-muted' },
     { label: 'Fair',      color: 'text-muted-foreground',   barColor: 'bg-muted' },
-    { label: 'Good',      color: 'text-blue-500',    barColor: 'bg-blue-500' },
+    { label: 'Good',      color: 'text-primary',    barColor: 'bg-primary' },
     { label: 'Strong',    color: 'text-primary', barColor: 'bg-primary' },
   ];
 

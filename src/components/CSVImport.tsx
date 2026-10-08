@@ -436,7 +436,7 @@ export default function CSVImport({ onImportComplete }: { onImportComplete?: () 
 
           {/* Invalid rows */}
           {invalidRows.length > 0 && (
-            <Card className="border-0 shadow-sm border-l-4 border-l-amber-500">
+            <Card className="border-0 shadow-sm border-l-4 border-l-primary">
               <CardHeader className="pb-2">
                 <button
                   onClick={() => setShowInvalid(v => !v)}
