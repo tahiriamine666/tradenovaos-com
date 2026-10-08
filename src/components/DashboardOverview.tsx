@@ -39,6 +39,7 @@ interface TradePlan {
   setups_to_trade: string[] | string | null;
   max_risk_per_trade: number | null;
   max_daily_loss: number | null;
+  pair?: string | null;
 }
 
 type Period = "1W" | "1M" | "3M" | "All";
@@ -96,15 +97,30 @@ function EquityCurve({ trades, loading }: { trades: Trade[]; loading: boolean })
   }, [trades, period]);
 
   const last = data[data.length - 1]?.value ?? 0;
-  const isPositive = last >= 0;
-  const stroke = isPositive ? "hsl(var(--success))" : "hsl(var(--danger))";
+  const stroke = "hsl(var(--primary))";
+  const stats = useMemo(() => {
+    if (!data.length) return null;
+    let peak = -Infinity, maxDd = 0;
+    for (const d of data) { peak = Math.max(peak, d.value, 0); maxDd = Math.max(maxDd, peak - d.value); }
+    return { peak: Math.max(peak, 0), dd: maxDd };
+  }, [data]);
 
   return (
-    <div className="rounded-xl border border-border bg-card p-5">
+    <div className="rounded-lg border border-border bg-card p-5 transition-colors duration-200 hover:border-primary/30">
       <div className="flex items-start justify-between mb-4 gap-3">
         <div>
           <h3 className="font-heading text-base font-semibold text-foreground">Equity Curve</h3>
           <p className="text-xs text-muted-foreground mt-0.5">Cumulative P&L over time</p>
+          {stats && (
+            <dl className="mt-3 flex flex-wrap gap-x-6 gap-y-1 tabular-nums">
+              {[["Net P&L", fmtMoney(last), last >= 0], ["Peak", fmtMoney(stats.peak, false), false], ["Max Drawdown", stats.dd > 0 ? `-${fmtMoney(stats.dd, false)}` : "—", false]].map(([l, v, hi]) => (
+                <div key={l as string}>
+                  <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">{l as string}</dt>
+                  <dd className={`text-sm font-semibold ${hi ? "text-primary" : "text-foreground"}`}>{v as string}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
         </div>
         <div className="flex items-center rounded-md border border-border bg-background p-0.5">
           {(["1W", "1M", "3M", "All"] as Period[]).map(p => (
@@ -113,7 +129,7 @@ function EquityCurve({ trades, loading }: { trades: Trade[]; loading: boolean })
               onClick={() => setPeriod(p)}
               className={`px-2.5 py-1 text-[11px] font-medium rounded transition-colors ${
                 period === p
-                  ? "bg-primary text-primary-foreground"
+                  ? "bg-primary/15 text-primary"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -123,28 +139,28 @@ function EquityCurve({ trades, loading }: { trades: Trade[]; loading: boolean })
         </div>
       </div>
       {loading ? (
-        <Skeleton className="h-52 w-full rounded-lg" />
+        <Skeleton className="h-64 w-full rounded-lg" />
       ) : data.length === 0 ? (
-        <div className="h-52 flex items-center justify-center text-xs text-muted-foreground">
+        <div className="h-64 flex items-center justify-center text-xs text-muted-foreground">
           No trades in this period.
         </div>
       ) : (
-        <div className="h-52">
+        <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={data} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
               <defs>
                 <linearGradient id="eqGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={stroke} stopOpacity={0.2} />
+                  <stop offset="0%" stopColor={stroke} stopOpacity={0.12} />
                   <stop offset="100%" stopColor={stroke} stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+              <CartesianGrid strokeDasharray="2 4" stroke="hsl(var(--border) / 0.6)" vertical={false} />
               <XAxis dataKey="day" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
                 axisLine={false} tickLine={false} minTickGap={20} />
               <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
                 axisLine={false} tickLine={false} width={50} tickFormatter={fmtShort} />
               <Tooltip content={<ChartTooltip />} />
-              <Area type="monotone" dataKey="value" stroke={stroke} strokeWidth={2}
+              <Area type="monotone" dataKey="value" stroke={stroke} strokeWidth={1.5}
                 fill="url(#eqGrad)" dot={false} activeDot={{ r: 4, fill: stroke, strokeWidth: 0 }} />
             </AreaChart>
           </ResponsiveContainer>
@@ -171,14 +187,16 @@ function TodayFocus({ plan, onNavigate }: { plan: TradePlan | null; onNavigate: 
     },
   ];
   return (
-    <div className="rounded-xl border border-border bg-card p-5">
+    <div className="rounded-lg border border-border bg-card p-5 transition-colors duration-200 hover:border-primary/30">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="font-heading text-base font-semibold text-foreground">Today Focus</h3>
-          <p className="text-xs text-muted-foreground mt-0.5">From your trade plan</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {plan ? <>Latest plan · <span className="text-foreground font-medium">{plan.pair || "—"}</span> · {fmtDate(plan.plan_date)}</> : "No trade plan yet"}
+          </p>
         </div>
         <button onClick={() => onNavigate("plan")}
-          className="text-xs font-medium text-primary hover:underline">
+          className="text-xs text-muted-foreground hover:text-primary transition-colors">
           {plan ? "Edit" : "Set plan"}
         </button>
       </div>
@@ -222,7 +240,7 @@ function TraderScoreCard({ trades }: { trades: Trade[] }) {
   }, [trades]);
 
   return (
-    <div className="rounded-xl border border-border bg-card p-5">
+    <div className="rounded-lg border border-border bg-card p-5 transition-colors duration-200 hover:border-primary/30">
       <div className="flex items-baseline justify-between mb-5">
         <div>
           <h3 className="font-heading text-base font-semibold text-foreground">Trader Score</h3>
@@ -230,7 +248,7 @@ function TraderScoreCard({ trades }: { trades: Trade[] }) {
         </div>
         {score && (
           <div className="text-right tabular-nums">
-            <span className="font-heading text-3xl font-semibold text-primary">{score.overall}</span>
+            <span className="font-heading text-4xl font-semibold text-foreground">{score.overall}</span>
             <span className="text-sm text-muted-foreground">/100</span>
           </div>
         )}
@@ -249,8 +267,8 @@ function TraderScoreCard({ trades }: { trades: Trade[] }) {
                 <span className="text-muted-foreground">{row.label}</span>
                 <span className="font-medium text-foreground tabular-nums">{row.value}</span>
               </div>
-              <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                <div className="h-full rounded-full bg-primary" style={{ width: `${row.value}%` }} />
+              <div className="h-1 rounded-full bg-muted overflow-hidden">
+                <div className="h-full rounded-full bg-primary transition-[width] duration-300" style={{ width: `${row.value}%` }} />
               </div>
             </div>
           ))}
@@ -264,7 +282,7 @@ function TraderScoreCard({ trades }: { trades: Trade[] }) {
 function RecentTrades({ trades, onNavigate }: { trades: Trade[]; onNavigate: (id: string) => void }) {
   const rows = trades.slice(0, 6);
   return (
-    <div className="rounded-xl border border-border bg-card p-5">
+    <div className="rounded-lg border border-border bg-card p-5 transition-colors duration-200 hover:border-primary/30">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="font-heading text-base font-semibold text-foreground">Recent Trades</h3>
@@ -347,7 +365,7 @@ function BestSetups({ trades }: { trades: Trade[] }) {
   }, [trades]);
 
   return (
-    <div className="rounded-xl border border-border bg-card p-5">
+    <div className="rounded-lg border border-border bg-card p-5 transition-colors duration-200 hover:border-primary/30">
       <div className="mb-4">
         <h3 className="font-heading text-base font-semibold text-foreground">Best Setups</h3>
         <p className="text-xs text-muted-foreground mt-0.5">Ranked by total P&L</p>
@@ -413,7 +431,7 @@ export default function DashboardOverview({ onNavigate, onAddTrade }: Props) {
     const [tR, pR] = await Promise.all([
       tradesQuery,
       supabase.from("trade_plans")
-        .select("plan_date,market_bias,session,setups_to_trade,max_risk_per_trade,max_daily_loss")
+        .select("plan_date,market_bias,session,setups_to_trade,max_risk_per_trade,max_daily_loss,pair")
         .eq("user_id", user.id)
         .order("plan_date", { ascending: false })
         .limit(1)
@@ -476,9 +494,10 @@ export default function DashboardOverview({ onNavigate, onAddTrade }: Props) {
     : null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <PageHeader
         title={new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
+        description="Trading overview for your selected account and period"
         actions={
           onAddTrade && (
             <Button onClick={onAddTrade} size="sm">
@@ -488,7 +507,8 @@ export default function DashboardOverview({ onNavigate, onAddTrade }: Props) {
         }
       />
 
-      <div className="flex items-center gap-2 -mt-2 flex-wrap">
+      <div className="flex items-center gap-2 -mt-2 flex-wrap rounded-lg border border-border bg-card px-3 py-2">
+        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Account</span>
         <Badge variant="outline" className="gap-1.5 py-1 px-2.5 text-xs font-medium">
           <Wallet className="h-3.5 w-3.5 text-muted-foreground" />
           {badgeParts ? badgeParts.join(" • ") : "All Accounts"}
@@ -512,6 +532,7 @@ export default function DashboardOverview({ onNavigate, onAddTrade }: Props) {
             </span>
           </>
         )}
+        <span className="ml-auto text-[11px] text-muted-foreground">Period · <span className="text-foreground">All time</span></span>
       </div>
 
       {activeAccount && (activeAccount.balance != null || activeAccount.equity != null) && (
@@ -634,10 +655,10 @@ export default function DashboardOverview({ onNavigate, onAddTrade }: Props) {
           </div>
 
           {/* Trader Score */}
-          <TraderScoreCard trades={trades} />
-
-          {/* Psychology Score */}
-          <PsychologyScoreCard onNavigate={onNavigate} />
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
+            <TraderScoreCard trades={trades} />
+            <PsychologyScoreCard onNavigate={onNavigate} />
+          </div>
 
           {/* Recent Trades + Best Setups */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
