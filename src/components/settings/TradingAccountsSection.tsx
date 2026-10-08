@@ -185,7 +185,7 @@ export default function TradingAccountsSection() {
       account_type: accountType,
       platform,
       firm: accountType === 'prop_firm' ? firmName : null,
-      broker: accountType === 'broker' ? firmName : firmName,
+      broker: accountType === 'broker' ? firmName : null,
       server: server.trim(),
       account_number: login.trim(),
       login: login.trim(),
@@ -197,9 +197,6 @@ export default function TradingAccountsSection() {
       payload.credentials = { password: password.trim() };
       payload.metaapi_account_id = null; // re-provision when credentials change
     }
-
-    console.log('Creating account:', { ...payload, password: payload.password ? '***' : undefined, credentials: undefined });
-    console.log('Status being inserted:', payload.status);
 
     const { data: saved, error } = editing
       ? await supabase.from('trading_accounts').update(payload as never).eq('id', editing.id).select().single()
@@ -458,7 +455,7 @@ export default function TradingAccountsSection() {
 
           {!isElite && accounts.length >= limit && (
             <p className="text-xs text-muted-foreground text-center pt-1">
-              You've reached your plan limit. Upgrade to {isPro ? 'Elite for unlimited accounts' : 'Pro for up to 3 accounts'}.
+              You've reached your plan limit. Upgrade to Elite for unlimited accounts.
             </p>
           )}
         </CardContent>

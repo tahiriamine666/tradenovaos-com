@@ -433,6 +433,7 @@ export default function DashboardOverview({ onNavigate, onAddTrade }: Props) {
       supabase.from("trade_plans")
         .select("plan_date,market_bias,session,setups_to_trade,max_risk_per_trade,max_daily_loss,pair")
         .eq("user_id", user.id)
+        .eq("account_key", activeAccountId ?? 'all')
         .order("plan_date", { ascending: false })
         .limit(1)
         .maybeSingle(),
