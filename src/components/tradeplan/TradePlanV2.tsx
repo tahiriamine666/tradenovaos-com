@@ -452,7 +452,7 @@ export default function TradePlanV2() {
 
   // Refs to flush pending edits to the date they belong to.
   const prevAi = useRef<Record<string, any>>({});
-  const pending = useRef<{ daily?: { date: string; data: Daily }; weekly?: { week: string; data: Weekly } }>({});
+  const pending = useRef<{ daily?: { date: string; pair: string; data: Daily }; weekly?: { week: string; data: Weekly } }>({});
   const timer = useRef<ReturnType<typeof setTimeout>>();
 
   const loadModels = useCallback(async () => {
@@ -462,9 +462,9 @@ export default function TradePlanV2() {
   }, [user]);
   const loadSaved = useCallback(async () => {
     if (!user) return;
-    const { data } = await supabase.from('trade_plans').select('plan_date').eq('user_id', user.id).order('plan_date', { ascending: false }).limit(1000);
+    const { data } = await supabase.from('trade_plans').select('plan_date').eq('user_id', user.id).eq('pair', pair).order('plan_date', { ascending: false }).limit(1000);
     setSaved(new Set((data || []).map((r: any) => r.plan_date)));
-  }, [user]);
+  }, [user, pair]);
   useEffect(() => { loadModels(); loadSaved(); }, [loadModels, loadSaved]);
 
   const flush = useCallback(async () => {
@@ -477,18 +477,18 @@ export default function TradePlanV2() {
         const d = p.daily.data;
         const num = (v: string) => (v.trim() === '' || isNaN(Number(v)) ? null : Number(v));
         const { error } = await supabase.from('trade_plans').upsert({
-          user_id: user.id, plan_date: p.daily.date,
+          user_id: user.id, plan_date: p.daily.date, pair: p.daily.pair,
           market_bias: d.bias ? (d.bias === 'Range' ? 'ranging' : d.bias.toLowerCase()) : 'neutral',
           notes: d.mainIdea, psych_notes: d.psychNotes,
           emotion: d.psychology[0]?.toLowerCase() || null,
           max_risk_per_trade: num(d.risk.riskPct), max_daily_loss: num(d.risk.maxLoss),
           max_trades: num(d.risk.maxTrades) as any,
           ai_analysis: { ...prevAi.current, daily_v2: d },
-        } as any, { onConflict: 'user_id,plan_date' });
+        } as any, { onConflict: 'user_id,plan_date,pair' });
         if (error) throw error;
         prevAi.current = { ...prevAi.current, daily_v2: d };
         setSaved(s => new Set(s).add(p.daily!.date));
-        if (p.daily.date === dateRef.current) setDailyExists(true);
+        if (p.daily.date === dateRef.current && p.daily.pair === pairRef.current) setDailyExists(true);
       }
       if (p.weekly) {
         const w = p.weekly.data;
@@ -506,6 +506,7 @@ export default function TradePlanV2() {
     }
   }, [user]);
   const dateRef = useRef(date); dateRef.current = date;
+  const pairRef = useRef(pair); pairRef.current = pair;
 
   useEffect(() => {
     const h = () => { flush(); };
@@ -520,7 +521,7 @@ export default function TradePlanV2() {
     setLoading(true); setCreating(false);
     (async () => {
       const [{ data: row }, { data: wk }] = await Promise.all([
-        supabase.from('trade_plans').select('*').eq('user_id', user.id).eq('plan_date', date).maybeSingle(),
+        supabase.from('trade_plans').select('*').eq('user_id', user.id).eq('plan_date', date).eq('pair', pair).maybeSingle(),
         supabase.from('trade_plan_checklists').select('data').eq('user_id', user.id).eq('account_key', 'all').eq('checklist_type', 'weekly_outlook').eq('period_date', week).maybeSingle(),
       ]);
       if (!alive) return;
@@ -532,12 +533,13 @@ export default function TradePlanV2() {
       setLoading(false); setState('idle');
     })();
     return () => { alive = false; };
-  }, [user, date, week]);
+  }, [user, date, week, pair]);
 
   const schedule = () => { setState('saving'); clearTimeout(timer.current); timer.current = setTimeout(flush, 1000); };
-  const setD = (p: Partial<Daily>) => setDaily(prev => { const n = { ...prev, ...p }; pending.current.daily = { date, data: n }; schedule(); return n; });
+  const setD = (p: Partial<Daily>) => setDaily(prev => { const n = { ...prev, ...p }; pending.current.daily = { date, pair, data: n }; schedule(); return n; });
   const setW = (p: Partial<Weekly>) => setWeekly(prev => { const n = { ...prev, ...p }; pending.current.weekly = { week, data: n }; schedule(); return n; });
 
+  const choosePair = async (p: string) => { if (p === pair) return; await flush(); setPair(p); };
   const go = async (k: string) => { await flush(); setDate(k); setCalOpen(false); };
   const showDaily = dailyExists || creating || date === today;
 
@@ -559,8 +561,8 @@ export default function TradePlanV2() {
     <div className="mx-auto max-w-7xl space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-heading text-2xl font-semibold text-foreground">Checklist — {pair}</h1>
-          <div className="mt-2"><PairPicker pair={pair} onChange={setPair} pairs={pairs} onAdd={addPair} /></div>
+          <h1 className="font-heading text-2xl font-semibold text-foreground">Daily Plan — {pair}</h1>
+          <div className="mt-2"><PairPicker pair={pair} onChange={choosePair} pairs={pairs} onAdd={addPair} /></div>
           <p className="mt-1 text-sm text-muted-foreground">{longDate(date)}</p>
         </div>
         <div className="flex items-center gap-3">
