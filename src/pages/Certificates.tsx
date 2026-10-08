@@ -62,7 +62,8 @@ export default function Certificates() {
       .from("certificates")
       .select("*")
       .eq("user_id", user.id)
-      .order("cert_date", { ascending: false });
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false });
     if (error) {
       toast({ title: "Could not load certificates", variant: "destructive" });
     } else {
@@ -139,7 +140,7 @@ export default function Certificates() {
       }
       imagePath = path;
     }
-    const { error } = await supabase.from("certificates").insert({
+    const { data: inserted, error } = await supabase.from("certificates").insert({
       user_id: user.id,
       prop_firm: firmName,
       account_size: size ? Number(size) : null,
@@ -147,14 +148,19 @@ export default function Certificates() {
       type,
       amount: amount ? Number(amount) : null,
       image_url: imagePath,
-    });
+    }).select("*").single();
     setSaving(false);
-    if (error) {
+    if (error || !inserted) {
       toast({ title: "Could not save certificate", variant: "destructive" });
     } else {
+      const row = inserted as Certificate;
+      setCerts((prev) => [row, ...prev.filter((c) => c.id !== row.id)]);
+      if (row.image_url) {
+        const { data: s } = await supabase.storage.from("certificates").createSignedUrl(row.image_url, 3600);
+        if (s?.signedUrl) setUrls((u) => ({ ...u, [row.image_url!]: s.signedUrl }));
+      }
       toast({ title: "Certificate added!" });
       resetForm();
-      load();
     }
   };
 
