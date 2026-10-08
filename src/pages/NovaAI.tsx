@@ -22,10 +22,10 @@ const card = 'rounded-2xl border border-border/70 bg-card/60';
 const label = 'text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground';
 const uid = () => Math.random().toString(36).slice(2);
 
-function Robot({ className = '', thinking = false }: { className?: string; thinking?: boolean }) {
+function Robot({ className = '', thinking = false, compact = false }: { className?: string; thinking?: boolean; compact?: boolean }) {
   return (
-    <div className={`relative ${className}`}>
-      <div className={`pointer-events-none absolute inset-[15%] rounded-full bg-primary blur-3xl transition-opacity duration-700 ${thinking ? 'animate-pulse opacity-40' : 'opacity-20'}`} style={{ animationDuration: '2.4s' }} />
+    <div className={`nova-robot relative ${compact ? 'nova-robot-compact' : ''} ${thinking ? 'nova-robot-thinking' : ''} ${className}`}>
+      <div className="nova-robot-light pointer-events-none absolute inset-[20%] rounded-full bg-primary/10 blur-xl" aria-hidden="true" />
       <img src={ROBOT} alt="NOVA" draggable={false} className="nova-float relative h-full w-full select-none object-contain mix-blend-lighten" />
     </div>
   );
@@ -243,7 +243,7 @@ export default function NovaAI() {
       )}
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <Robot className="h-20 w-14 shrink-0 sm:h-24 sm:w-16" thinking={busy} />
+          <Robot className="h-20 w-14 shrink-0 sm:h-24 sm:w-16" thinking={busy} compact />
           <div>
             <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground">NOVA <span className="text-base font-medium text-muted-foreground">· Trading Intelligence Workspace</span></h1>
             <p className="mt-1 text-sm text-muted-foreground">Analyze your trading. Understand your behavior. Improve your execution.</p>

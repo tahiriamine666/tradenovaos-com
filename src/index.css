@@ -201,11 +201,18 @@
   }
 }
 /* NOVA page */
-@keyframes nova-float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-3px) } }
-.nova-float { animation: nova-float 6s ease-in-out infinite; }
+@keyframes nova-float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(var(--nova-float-distance, -4px)) } }
+.nova-float { animation: nova-float 4.5s ease-in-out infinite; }
+.nova-robot-compact { --nova-float-distance: -2px; }
+@keyframes nova-light-pulse { 0%,100% { opacity: 0.35; } 50% { opacity: 0.7; } }
+.nova-robot-light { animation: nova-light-pulse 3.4s ease-in-out infinite; }
+.nova-robot-thinking .nova-robot-light { animation-duration: 2.8s; }
 @keyframes nova-msg { from { opacity: 0; transform: translateY(4px) } to { opacity: 1; transform: none } }
 .nova-msg { animation: nova-msg 260ms var(--ease-premium, ease-out) both; }
-@media (prefers-reduced-motion: reduce) { .nova-float, .nova-msg { animation: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .nova-float, .nova-msg, .nova-robot-light { animation: none; transform: none; }
+  .nova-robot-light { opacity: 0.35; }
+}
 
 @layer base {
   .app-shell input::placeholder, .app-shell textarea::placeholder { color: hsl(0 0% 47%); }
