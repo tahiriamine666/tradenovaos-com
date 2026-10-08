@@ -77,6 +77,7 @@ const App = () => (
                       </RequireAccess>
                     }
                   />
+                  <Route path="/app/admin" element={<Navigate to="/app?view=admin" replace />} />
                   <Route path="/onboarding" element={<ProtectedApp><Onboarding /></ProtectedApp>} />
                   <Route path="/dashboard" element={<Navigate to="/app" replace />} />
 
