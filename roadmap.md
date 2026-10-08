@@ -1,7 +1,7 @@
 # Redesign roadmap
-- [ ] Audit production schema, authorization, session and billing paths
-- [ ] Repair confirmed plan/checklist/account integrity and frontend defects
-- [ ] Verify production audit fixes with tests, browser checks and build diagnostics
+- [x] Inspect production schema, authorization, session and billing paths (remaining checks: docs/production-readiness-audit.md)
+- [x] Repair confirmed plan/checklist/account integrity and frontend defects
+- [x] Verify scoped fixes with mocked regression tests, browser checks and automatic build/typecheck; live transactions remain untested
 - [x] Replace cyan accents globally with premium royal blue and neutral surfaces/text
 - [x] Audit hardcoded colors and verify CTAs, active states, and diagnostics
 - [x] Replace TradeNova branding throughout the site with the supplied robot logo and matching favicon

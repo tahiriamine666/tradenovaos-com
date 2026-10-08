@@ -9,7 +9,7 @@
 - Access lookup failures expose retry instead of an endless spinner. Profiles clear on sign-out. All Accounts selection survives account-list refresh. Account creation uses the broker field only for broker accounts; removed payload debug logging and misleading Pro entitlement copy without changing actual entitlements.
 - Psychology does not fabricate zero for unrated scores; unassigned legacy journal mood is excluded from individual-account dashboards.
 - Certificate URLs refresh on focus and periodically, and delete controls are touch/keyboard-visible. Private certificate and screenshot buckets and ownership policies were inspected, not changed. Screenshot display remains contained.
-- Dodo webhook/portal source now uses the existing canonical `billing_subscriptions` schema rather than nonexistent `subscriptions` columns. Webhook writes preserve manual overrides and no longer mirror billing into profile plan fields. Unmatched events return retryable errors. Official Dodo documentation confirms retries and out-of-order delivery; no webhook replay or subscription mutation was performed.
+- Dodo webhook/portal source now uses the existing canonical `billing_subscriptions` schema rather than nonexistent `subscriptions` columns. Webhook writes preserve manual overrides and no longer mirror billing into profile plan fields. Read-only inspection confirmed existing unique user_id and subscription_id indexes. Unmatched events return retryable errors. Official Dodo documentation confirms retries and out-of-order delivery; no webhook replay or subscription mutation was performed.
 - Admin access metrics label manual entitlements as access rather than implying all are paid revenue.
 
 ## Migration applied
