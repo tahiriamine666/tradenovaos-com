@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Award, BadgeDollarSign, Landmark, Trophy, Upload, Trash2, FileText, Loader2, X } from "lucide-react";
+import { Award, BadgeDollarSign, Landmark, Trophy, Upload, Trash2, FileText, Loader2, X, Maximize2, ZoomIn, ZoomOut, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
 
 interface Certificate {
   id: string;
@@ -154,6 +155,13 @@ export default function Certificates() {
     toast({ title: "Certificate removed" });
   };
 
+  const [view, setView] = useState<number | null>(null);
+  const [zoom, setZoom] = useState(false);
+  const go = (d: number) => { if (!certs.length) return; setZoom(false); setView((v) => v === null ? v : (v + d + certs.length) % certs.length); };
+  const cur = view !== null ? certs[view] : null;
+  const curUrl = cur?.image_url ? urls[cur.image_url] : null;
+  const curPdf = !!cur?.image_url?.toLowerCase().endsWith(".pdf");
+
   const statCards = [
     { label: "Accounts passed", value: String(stats.passed), icon: Trophy },
     { label: "Funded capital", value: fmtMoney(stats.capital), icon: Landmark },
@@ -165,25 +173,9 @@ export default function Certificates() {
     <div className="space-y-6 content-crossfade">
       <PageHeader title="Certificates" description="Your prop firm wall — evaluations passed, funded accounts and payouts." />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {statCards.map((s, i) => (
-          <Card key={s.label} className="tn-lift feature-reveal" style={{ animationDelay: `${i * 70}ms` }}>
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                <s.icon className="h-4 w-4 text-primary" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{s.label}</p>
-                <p className="text-xl font-semibold text-foreground truncate">{s.value}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
       <Card className="feature-reveal" style={{ animationDelay: "140ms" }}>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base">Add certificate</CardTitle>
+          <CardTitle className="text-base">Add Certificate</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
@@ -270,11 +262,27 @@ export default function Certificates() {
             <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif,application/pdf" className="hidden" onChange={(e) => pickFile(e.target.files?.[0] || null)} />
             <Button onClick={handleAdd} disabled={saving} className="sm:self-end">
               {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Add to wall
+              Add to Wall
             </Button>
           </div>
         </CardContent>
       </Card>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {statCards.map((s, i) => (
+          <Card key={s.label} className="tn-lift feature-reveal" style={{ animationDelay: `${i * 70}ms` }}>
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <s.icon className="h-4 w-4 text-primary" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[11px] uppercase tracking-wider text-muted-foreground">{s.label}</p>
+                <p className="text-xl font-semibold text-foreground truncate">{s.value}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
       {loading ? (
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
@@ -293,20 +301,20 @@ export default function Certificates() {
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 min-[420px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">
           {certs.map((c, i) => {
             const url = c.image_url ? urls[c.image_url] : null;
             const isPdf = c.image_url?.toLowerCase().endsWith(".pdf");
             return (
-              <Card key={c.id} className="overflow-hidden tn-lift trade-gallery group" style={{ animationDelay: `${Math.min(i, 6) * 70}ms` }}>
+              <Card key={c.id} role="button" tabIndex={0} aria-label={`View ${c.prop_firm} certificate`} onClick={() => { setZoom(false); setView(i); }} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setZoom(false); setView(i); } }} className="overflow-hidden tn-lift trade-gallery group cursor-pointer transition-colors duration-200 hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50" style={{ animationDelay: `${Math.min(i, 6) * 70}ms` }}>
                 <div className="relative aspect-[4/3] bg-muted/30 flex items-center justify-center">
                   {url && !isPdf ? (
-                    <img src={url} alt={`${c.prop_firm} certificate`} className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+                    <img src={url} alt={`${c.prop_firm} certificate`} className="absolute inset-0 w-full h-full object-contain p-1" loading="lazy" />
                   ) : url && isPdf ? (
-                    <a href={url} target="_blank" rel="noreferrer" className="flex flex-col items-center gap-2 text-muted-foreground hover:text-primary transition-colors">
+                    <div className="flex flex-col items-center gap-2 text-muted-foreground group-hover:text-primary transition-colors">
                       <FileText className="h-8 w-8" />
-                      <span className="text-xs">Open PDF</span>
-                    </a>
+                      <span className="text-xs">PDF certificate</span>
+                    </div>
                   ) : (
                     <Award className="h-8 w-8 text-muted-foreground/40" />
                   )}
@@ -315,12 +323,13 @@ export default function Certificates() {
                   </span>
                   <button
                     type="button"
-                    onClick={() => handleDelete(c)}
+                    onClick={(e) => { e.stopPropagation(); handleDelete(c); }} onKeyDown={(e) => e.stopPropagation()}
                     className="absolute top-2 right-2 h-7 w-7 rounded-full bg-background/80 border border-border flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-muted-foreground hover:text-destructive"
                     aria-label="Delete certificate"
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
+                  <span className="pointer-events-none absolute bottom-2 right-2 rounded bg-background/80 p-1 text-muted-foreground opacity-0 transition-opacity duration-200 group-hover:opacity-100"><Maximize2 className="h-3.5 w-3.5" /></span>
                 </div>
                 <CardContent className="p-3">
                   <p className="text-sm font-medium text-foreground truncate">{c.prop_firm}</p>
@@ -335,6 +344,39 @@ export default function Certificates() {
           })}
         </div>
       )}
+
+      <Dialog open={view !== null} onOpenChange={(o) => { if (!o) setView(null); }}>
+        <DialogContent className="flex h-[94vh] w-[96vw] max-w-[96vw] flex-col gap-3 bg-background/95 p-3 sm:p-4 sm:rounded-md" onKeyDown={(e) => { if (e.key === "ArrowRight") go(1); if (e.key === "ArrowLeft") go(-1); }}>
+          <DialogTitle className="sr-only">{cur ? `${cur.prop_firm} certificate` : "Certificate"}</DialogTitle>
+          {cur && (<>
+            <div className="flex items-center gap-2 pr-8">
+              <span className="font-mono text-xs text-muted-foreground">{(view ?? 0) + 1} / {certs.length}</span>
+              {curUrl && !curPdf && (
+                <Button size="icon" variant="outline" className="ml-auto h-8 w-8" onClick={() => setZoom((z) => !z)} aria-label={zoom ? "Zoom out" : "Zoom in"}>
+                  {zoom ? <ZoomOut className="h-4 w-4" /> : <ZoomIn className="h-4 w-4" />}
+                </Button>
+              )}
+              {curUrl && <Button size="sm" variant="outline" className={`h-8 ${curPdf ? "ml-auto" : ""}`} asChild><a href={curUrl} target="_blank" rel="noreferrer"><ExternalLink className="h-3.5 w-3.5 mr-1.5" />Open certificate</a></Button>}
+            </div>
+            <div className="relative min-h-0 flex-1 rounded-md border border-border bg-background">
+              <div className={`h-full w-full ${zoom ? "overflow-auto" : "flex items-center justify-center overflow-hidden"}`}>
+                {!curUrl ? <div className="flex h-full flex-col items-center justify-center gap-2 text-muted-foreground"><Award className="h-10 w-10" /><p className="text-sm">No file uploaded for this certificate</p></div>
+                  : curPdf ? <iframe src={curUrl} title={`${cur.prop_firm} certificate PDF`} className="h-full w-full rounded-md" />
+                  : <img src={curUrl} alt={`${cur.prop_firm} certificate`} onClick={() => setZoom((z) => !z)} className={zoom ? "max-w-none cursor-zoom-out" : "h-full w-full object-contain cursor-zoom-in"} style={zoom ? { width: "200%" } : undefined} />}
+              </div>
+              {certs.length > 1 && (<>
+                <Button size="icon" variant="outline" className="absolute left-2 top-1/2 h-10 w-10 -translate-y-1/2 rounded-full bg-background/80" onClick={() => go(-1)} aria-label="Previous certificate"><ChevronLeft className="h-5 w-5" /></Button>
+                <Button size="icon" variant="outline" className="absolute right-2 top-1/2 h-10 w-10 -translate-y-1/2 rounded-full bg-background/80" onClick={() => go(1)} aria-label="Next certificate"><ChevronRight className="h-5 w-5" /></Button>
+              </>)}
+            </div>
+            <dl className="grid shrink-0 grid-cols-2 gap-3 sm:grid-cols-4">
+              {([["Prop firm", cur.prop_firm], ["Account size / amount", cur.type === "payout" && cur.amount ? fmtMoney(cur.amount) : cur.account_size ? fmtMoney(cur.account_size) : "—"], ["Type", TYPE_LABELS[cur.type]], ["Date", new Date(cur.cert_date + "T00:00:00").toLocaleDateString(undefined, { day: "2-digit", month: "short", year: "numeric" })]] as [string, string][]).map(([k, v]) => (
+                <div key={k} className="min-w-0"><dt className="text-[10px] uppercase tracking-wider text-muted-foreground">{k}</dt><dd className="truncate text-sm font-medium text-foreground">{v}</dd></div>
+              ))}
+            </dl>
+          </>)}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
