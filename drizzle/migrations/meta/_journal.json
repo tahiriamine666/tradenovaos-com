@@ -113,6 +113,13 @@
       "when": 1791472478957,
       "tag": "0015_trade_plans_emotion_nullable",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1791473773577,
+      "tag": "0016_admin_panel_overrides_audit",
+      "breakpoints": true
     }
   ]
 }

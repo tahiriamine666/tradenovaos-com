@@ -206,6 +206,45 @@ export type Database = {
           },
         ]
       }
+      admin_audit_log: {
+        Row: {
+          action: string
+          admin_email: string | null
+          admin_id: string
+          created_at: string
+          id: string
+          new_value: Json | null
+          old_value: Json | null
+          reason: string | null
+          target_email: string | null
+          target_user_id: string | null
+        }
+        Insert: {
+          action: string
+          admin_email?: string | null
+          admin_id: string
+          created_at?: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          reason?: string | null
+          target_email?: string | null
+          target_user_id?: string | null
+        }
+        Update: {
+          action?: string
+          admin_email?: string | null
+          admin_id?: string
+          created_at?: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          reason?: string | null
+          target_email?: string | null
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
       admin_users: {
         Row: {
           created_at: string
@@ -1352,6 +1391,7 @@ export type Database = {
           id: string
           last_seen_at: string | null
           main_trading_problem: string | null
+          manual_override_expires_at: string | null
           market_types: string[]
           onboarding_completed: boolean
           onboarding_step: number
@@ -1385,6 +1425,7 @@ export type Database = {
           id: string
           last_seen_at?: string | null
           main_trading_problem?: string | null
+          manual_override_expires_at?: string | null
           market_types?: string[]
           onboarding_completed?: boolean
           onboarding_step?: number
@@ -1418,6 +1459,7 @@ export type Database = {
           id?: string
           last_seen_at?: string | null
           main_trading_problem?: string | null
+          manual_override_expires_at?: string | null
           market_types?: string[]
           onboarding_completed?: boolean
           onboarding_step?: number
@@ -2593,7 +2635,22 @@ export type Database = {
         Args: { p_days?: number; p_email: string }
         Returns: Json
       }
+      admin_list_users: { Args: never; Returns: Json }
+      admin_platform_analytics: { Args: { p_days: number }; Returns: Json }
+      admin_remove_override: {
+        Args: { p_reason?: string; p_user_id: string }
+        Returns: Json
+      }
       admin_search_users: { Args: { p_query: string }; Returns: Json }
+      admin_set_plan: {
+        Args: {
+          p_expires_at?: string
+          p_plan: string
+          p_reason?: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       admin_upgrade_by_email: {
         Args: {
           p_email: string
@@ -2613,6 +2670,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      admin_user_detail: { Args: { p_user_id: string }; Returns: Json }
       award_drill_xp: {
         Args: {
           p_first_attempt_success: boolean
@@ -2647,6 +2705,7 @@ export type Database = {
         | { Args: never; Returns: boolean }
         | { Args: { _uid: string }; Returns: boolean }
       nova_period_start: { Args: { _uid: string }; Returns: string }
+      plan_info_for: { Args: { _uid: string }; Returns: Json }
       request_upgrade: {
         Args: { p_message: string; p_payoneer_ref: string; p_plan: string }
         Returns: string
