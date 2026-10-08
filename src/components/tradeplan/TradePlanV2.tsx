@@ -394,7 +394,11 @@ function PairChecklist({ date, pair, legacy, readOnly, models, onModelsChange, s
     try { return await operation; } finally { inFlight.current = null; }
   }, [user]);
   saveRef.current = flush;
-  useEffect(() => () => { void flush(); }, [flush]);
+  useEffect(() => {
+    const warn = (e: BeforeUnloadEvent) => { if (pending.current || inFlight.current) { e.preventDefault(); e.returnValue = ''; } };
+    window.addEventListener('beforeunload', warn);
+    return () => { window.removeEventListener('beforeunload', warn); void flush(); };
+  }, [flush]);
   useEffect(() => {
     if (!user) return;
     let alive = true; setCk(null);
@@ -479,6 +483,7 @@ export default function TradePlanV2() {
 
   // Refs to flush pending edits to the date they belong to.
   const prevAi = useRef<Record<string, any>>({});
+  const loadedScope = useRef('');
   const pending = useRef<{ daily?: { date: string; pair: string; accountKey: string; data: Daily; ai: Record<string, any> }; weekly?: { week: string; data: Weekly } }>({});
   const inFlight = useRef<Promise<boolean> | null>(null);
   const checklistSave = useRef<(() => Promise<boolean>) | null>(null);
@@ -575,7 +580,7 @@ export default function TradePlanV2() {
       if (!alive) return;
       if (planError || weeklyError) { setLoadError(true); setLoading(false); toast({ title: 'Could not load plan', description: (planError || weeklyError)?.message, variant: 'destructive' }); return; }
       const ai = ((row as any)?.ai_analysis || {}) as Record<string, any>;
-      prevAi.current = ai;
+      prevAi.current = ai; loadedScope.current = `${accountKey}|${date}|${pair}`;
       setDaily(row ? (ai.daily_v2 ? normDaily(ai.daily_v2) : fromLegacy(row)) : emptyDaily());
       setDailyExists(!!row);
       setWeekly({ ...EMPTY_WEEKLY, ...((wk as any)?.data || {}) });
@@ -585,7 +590,7 @@ export default function TradePlanV2() {
   }, [user, date, week, pair, accountKey, retry]);
 
   const schedule = () => { setState('saving'); clearTimeout(timer.current); timer.current = setTimeout(flush, 1000); };
-  const setD = (p: Partial<Daily>) => { if (loading || loadError || dateRef.current !== date || pairRef.current !== pair || accountRef.current !== accountKey) return; const n = { ...dailyRef.current, ...p }; dailyRef.current = n; setDaily(n); pending.current.daily = { date, pair, accountKey, data: n, ai: { ...prevAi.current } }; schedule(); };
+  const setD = (p: Partial<Daily>) => { if (loading || loadError || loadedScope.current !== `${accountKey}|${date}|${pair}`) return; const n = { ...dailyRef.current, ...p }; dailyRef.current = n; setDaily(n); pending.current.daily = { date, pair, accountKey, data: n, ai: { ...prevAi.current } }; schedule(); };
   const setW = (p: Partial<Weekly>) => { if (loading || loadError) return; const n = { ...weeklyRef.current, ...p }; weeklyRef.current = n; setWeekly(n); pending.current.weekly = { week, data: n }; schedule(); };
 
   const choosePair = async (p: string) => { if (p === pair) return; if (await saveAll()) setPair(p); };
@@ -620,7 +625,7 @@ export default function TradePlanV2() {
             {state === 'saved' && <><Check className="h-3 w-3 text-primary" /> Saved</>}
             {state === 'error' && <span className="text-destructive">Not saved</span>}
           </span>
-          <button type="button" onClick={() => { if (loading || loadError) return; if (tab === 'daily' && showDaily) pending.current.daily = { date, pair, accountKey, data: daily, ai: { ...prevAi.current } }; if (tab === 'weekly') pending.current.weekly = { week, data: weekly }; void saveAll(); }}
+          <button type="button" onClick={() => { if (loading || loadError || loadedScope.current !== `${accountKey}|${date}|${pair}`) return; if (tab === 'daily' && showDaily) pending.current.daily = { date, pair, accountKey, data: daily, ai: { ...prevAi.current } }; if (tab === 'weekly') pending.current.weekly = { week, data: weekly }; void saveAll(); }}
             className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-[0_0_20px_hsl(var(--primary)/0.25)] transition-opacity hover:opacity-90"><Save className="h-4 w-4" /> Save Plan</button>
         </div>
       </div>
