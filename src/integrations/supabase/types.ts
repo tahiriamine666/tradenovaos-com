@@ -1984,7 +1984,7 @@ export type Database = {
           created_at: string
           daily_target: number | null
           discipline_score: number
-          emotion: string
+          emotion: string | null
           focus: string | null
           id: string
           market_bias: string
@@ -2019,7 +2019,7 @@ export type Database = {
           created_at?: string
           daily_target?: number | null
           discipline_score?: number
-          emotion?: string
+          emotion?: string | null
           focus?: string | null
           id?: string
           market_bias?: string
@@ -2054,7 +2054,7 @@ export type Database = {
           created_at?: string
           daily_target?: number | null
           discipline_score?: number
-          emotion?: string
+          emotion?: string | null
           focus?: string | null
           id?: string
           market_bias?: string
