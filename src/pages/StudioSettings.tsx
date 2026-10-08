@@ -7,13 +7,15 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Save, User, TrendingUp, Globe, Shield, AlertCircle, CheckCircle2, CreditCard, ExternalLink, Loader2, LogOut } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { openCustomerPortal } from '@/lib/dodo';
 import TradingAccountsSection from '@/components/settings/TradingAccountsSection';
 import ConnectionStatusSection from '@/components/settings/ConnectionStatusSection';
+import ProfileEditDialog, { PROFILE_UPDATED_EVENT } from '@/components/settings/ProfileEditDialog';
+import { Pencil } from 'lucide-react';
 
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -138,6 +140,12 @@ export default function StudioSettings() {
   }, [user]);
 
   useEffect(() => { fetchProfile(); }, [fetchProfile]);
+  const [editOpen, setEditOpen] = useState(false);
+  useEffect(() => {
+    const h = (e: Event) => setProfile(p => p ? { ...p, ...(e as CustomEvent).detail } : p);
+    window.addEventListener(PROFILE_UPDATED_EVENT, h);
+    return () => window.removeEventListener(PROFILE_UPDATED_EVENT, h);
+  }, []);
 
   const set = (key: keyof Profile, val: any) => { setProfile(prev => prev ? { ...prev, [key]: val } : prev); setSaved(false); setDirty(true); };
 
@@ -235,8 +243,10 @@ export default function StudioSettings() {
       )}
 
       {/* Profile overview */}
-      <section className="flex flex-col gap-4 rounded-lg border border-border bg-card p-4 sm:flex-row sm:items-center sm:p-5">
+      <section role="button" tabIndex={0} onClick={() => setEditOpen(true)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setEditOpen(true); } }}
+        className="group flex cursor-pointer flex-col gap-4 rounded-lg border border-border bg-card p-4 transition-colors duration-200 hover:border-primary/40 sm:flex-row sm:items-center sm:p-5">
         <Avatar className="h-12 w-12">
+          {profile.avatar_url && <AvatarImage src={profile.avatar_url} alt="Profile photo" className="object-cover" />}
           <AvatarFallback className="bg-primary font-heading text-base text-primary-foreground">{initials}</AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
@@ -250,7 +260,11 @@ export default function StudioSettings() {
           <p className="uppercase tracking-wider">Member since</p>
           <p className="text-sm font-medium text-foreground">{memberSince}</p>
         </div>
+        <span className="inline-flex items-center gap-1.5 self-start rounded-md border border-border px-2.5 py-1.5 text-xs text-muted-foreground transition-colors group-hover:border-primary/40 group-hover:text-primary sm:self-center">
+          <Pencil className="h-3 w-3" />Edit Profile
+        </span>
       </section>
+      <ProfileEditDialog open={editOpen} onOpenChange={setEditOpen} profile={profile} markets={MARKETS} styles={STYLES} />
 
       {/* Personal info */}
       <Section icon={User} title="Personal Info" description="Your trading identity across the app">

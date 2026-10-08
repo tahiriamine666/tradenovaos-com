@@ -361,6 +361,11 @@ export default function TopBar({ dark, onToggleTheme, onLogout, activePageLabel,
       .then(({ data }) => { if (data) setProfile(data); });
   }, [user]);
 
+  useEffect(() => {
+    const h = (e: Event) => setProfile((p: any) => p ? { ...p, ...(e as CustomEvent).detail } : p);
+    window.addEventListener('tradenova:profile-updated', h);
+    return () => window.removeEventListener('tradenova:profile-updated', h);
+  }, []);
   const handleAvatarUpdated = (url: string) => setProfile((p: any) => p ? { ...p, avatar_url: url } : p);
 
   return (

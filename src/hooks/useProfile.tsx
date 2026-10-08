@@ -73,6 +73,12 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => { refresh(); }, [refresh]);
 
+  useEffect(() => {
+    const h = (e: Event) => setProfile(p => p ? { ...p, ...(e as CustomEvent).detail } : p);
+    window.addEventListener('tradenova:profile-updated', h);
+    return () => window.removeEventListener('tradenova:profile-updated', h);
+  }, []);
+
   const updateAvatar = useCallback((url: string) => {
     setProfile(p => p ? { ...p, avatar_url: url } : p);
   }, []);
