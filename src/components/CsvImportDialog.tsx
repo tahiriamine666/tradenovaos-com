@@ -133,11 +133,11 @@ export default function CsvImportDialog({ open, onOpenChange, userId, onImportCo
                 File: <span className="font-medium text-foreground">{fileName}</span>
               </p>
               <div className="flex gap-2">
-                <Badge variant="outline" className="text-emerald-500 border-emerald-500/30">
+                <Badge variant="outline" className="text-primary border-primary/30">
                   <CheckCircle2 className="h-3 w-3 mr-1" /> {validRows.length} valid
                 </Badge>
                 {invalidRows.length > 0 && (
-                  <Badge variant="outline" className="text-red-500 border-red-500/30">
+                  <Badge variant="outline" className="text-muted-foreground border-border/30">
                     <AlertCircle className="h-3 w-3 mr-1" /> {invalidRows.length} invalid
                   </Badge>
                 )}
@@ -168,9 +168,9 @@ export default function CsvImportDialog({ open, onOpenChange, userId, onImportCo
                       <TableCell className="text-sm">{row.setup || '—'}</TableCell>
                       <TableCell>
                         {row.valid ? (
-                          <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                          <CheckCircle2 className="h-4 w-4 text-primary" />
                         ) : (
-                          <span className="text-xs text-red-500">{row.errors.join(', ')}</span>
+                          <span className="text-xs text-muted-foreground">{row.errors.join(', ')}</span>
                         )}
                       </TableCell>
                     </TableRow>

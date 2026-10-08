@@ -115,7 +115,7 @@ export function FeaturePage() {
             {data.benefits.map((b, i) => (
               <motion.div key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 + i * 0.05 }}
                 className="flex items-center gap-3 p-4 rounded-2xl border border-slate-200 bg-white">
-                <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+                <Check className="h-4 w-4 text-primary flex-shrink-0" />
                 <span className="text-sm text-slate-700">{b}</span>
               </motion.div>
             ))}
@@ -156,14 +156,14 @@ const SOLUTION_DATA: Record<string, { title: string; subtitle: string; descripti
     benefits: ['Contract-level performance tracking', 'Daily loss limit enforcement', 'Session P&L breakdown', 'Setup-specific win rates', 'Tick and dollar value tracking', 'Drawdown monitoring'],
   },
   'prop-firm-traders': {
-    icon: Building2, color: 'text-amber-600', bg: 'bg-amber-500/10',
+    icon: Building2, color: 'text-muted-foreground', bg: 'bg-muted/10',
     title: 'TradeNova for Prop Firm Traders',
     subtitle: 'Pass challenges. Manage funded accounts. Scale.',
     description: 'Prop firm traders live and die by their rules. TradeNova helps you track your daily drawdown limits, maintain consistency, and document your edge for evaluation reviews. Pass more challenges with data.',
     benefits: ['Daily drawdown limit tracking', 'Challenge rule compliance alerts', 'Consistency score calculation', 'Risk management enforcement', 'Trade review documentation', 'Challenge pass rate analytics'],
   },
   'crypto-traders': {
-    icon: Globe, color: 'text-emerald-600', bg: 'bg-emerald-500/10',
+    icon: Globe, color: 'text-primary', bg: 'bg-primary/10',
     title: 'TradeNova for Crypto Traders',
     subtitle: 'Journal crypto trades across every exchange.',
     description: 'Crypto markets never close and opportunities move fast. TradeNova helps crypto traders build discipline in a 24/7 market — tracking performance across spot, futures, and DeFi with complete trade history.',
@@ -220,7 +220,7 @@ export function SolutionPage() {
             {data.benefits.map((b, i) => (
               <motion.div key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 + i * 0.05 }}
                 className="flex items-center gap-3 p-4 rounded-2xl border border-slate-200 bg-white">
-                <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+                <Check className="h-4 w-4 text-primary flex-shrink-0" />
                 <span className="text-sm text-slate-700">{b}</span>
               </motion.div>
             ))}
@@ -387,7 +387,7 @@ export function SupportedBrokersPage() {
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {brokers.filter(b => b.cat === cat).map(b => (
                   <div key={b.name} className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 bg-white">
-                    <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" />
+                    <Check className="h-4 w-4 text-primary flex-shrink-0" />
                     <span className="text-sm text-slate-700 font-medium">{b.name}</span>
                   </div>
                 ))}

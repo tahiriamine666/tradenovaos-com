@@ -22,10 +22,10 @@ const EMAIL    = 'support@tradenovaos.com';
 
 // ─── Quick help topics ────────────────────────────────────────────────────────
 const TOPICS = [
-  { id: 'billing',  icon: CreditCard,  label: 'Billing Help',     color: 'text-amber-400',   bg: 'bg-amber-400/10',  subject: 'Billing question' },
+  { id: 'billing',  icon: CreditCard,  label: 'Billing Help',     color: 'text-muted-foreground',   bg: 'bg-muted/10',  subject: 'Billing question' },
   { id: 'account',  icon: HelpCircle,  label: 'Account Issues',   color: 'text-blue-400',    bg: 'bg-blue-400/10',   subject: 'Account issue' },
-  { id: 'feature',  icon: Lightbulb,   label: 'Feature Request',  color: 'text-emerald-400', bg: 'bg-emerald-400/10',subject: 'Feature request' },
-  { id: 'bug',      icon: Bug,         label: 'Bug Report',       color: 'text-red-400',     bg: 'bg-red-400/10',    subject: 'Bug report' },
+  { id: 'feature',  icon: Lightbulb,   label: 'Feature Request',  color: 'text-primary', bg: 'bg-primary/10',subject: 'Feature request' },
+  { id: 'bug',      icon: Bug,         label: 'Bug Report',       color: 'text-muted-foreground',     bg: 'bg-muted/10',    subject: 'Bug report' },
 ];
 
 type View = 'home' | 'form' | 'success';
@@ -152,7 +152,7 @@ export default function SupportChat() {
               <PulseRing />
               <MessageCircle className="h-6 w-6 text-white relative z-10" />
               {unread && (
-                <span className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-[#080812]" />
+                <span className="absolute top-0 right-0 w-3.5 h-3.5 rounded-full bg-primary border-2 border-[#080812]" />
               )}
             </motion.button>
           )}
@@ -179,7 +179,7 @@ export default function SupportChat() {
                     <div>
                       <p className="font-bold text-white text-sm">TradeNova Support</p>
                       <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block" />
                         <p className="text-[11px] text-white/40">We reply within a few hours</p>
                       </div>
                     </div>
@@ -238,7 +238,7 @@ export default function SupportChat() {
                       {/* Direct contact */}
                       <div className="grid grid-cols-2 gap-2">
                         <a href={whatsappUrl} target="_blank" rel="noopener noreferrer"
-                          className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 text-xs font-medium hover:bg-emerald-500/10 hover:border-emerald-500/30 transition-all">
+                          className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-primary/20 bg-primary/5 text-primary text-xs font-medium hover:bg-primary/10 hover:border-primary/30 transition-all">
                           <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
                         </a>
                         <a href={`mailto:${EMAIL}?subject=Support`}
@@ -285,9 +285,9 @@ export default function SupportChat() {
                           value={form.name}
                           onChange={e => { setForm(f => ({ ...f, name: e.target.value })); setErrors(er => ({ ...er, name: '' })); }}
                           placeholder="Your name"
-                          className={`w-full text-sm rounded-xl border bg-white/[0.03] px-3 py-2.5 text-white placeholder:text-white/20 focus:outline-none focus:ring-1 transition-all ${errors.name ? 'border-red-500/40 focus:ring-red-500/30' : 'border-white/[0.08] focus:border-primary/40 focus:ring-primary/20'}`}
+                          className={`w-full text-sm rounded-xl border bg-white/[0.03] px-3 py-2.5 text-white placeholder:text-white/20 focus:outline-none focus:ring-1 transition-all ${errors.name ? 'border-border/40 focus:ring-border/30' : 'border-white/[0.08] focus:border-primary/40 focus:ring-primary/20'}`}
                         />
-                        {errors.name && <p className="text-[10px] text-red-400 mt-1 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{errors.name}</p>}
+                        {errors.name && <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{errors.name}</p>}
                       </div>
 
                       {/* Email */}
@@ -298,9 +298,9 @@ export default function SupportChat() {
                           value={form.email}
                           onChange={e => { setForm(f => ({ ...f, email: e.target.value })); setErrors(er => ({ ...er, email: '' })); }}
                           placeholder="you@example.com"
-                          className={`w-full text-sm rounded-xl border bg-white/[0.03] px-3 py-2.5 text-white placeholder:text-white/20 focus:outline-none focus:ring-1 transition-all ${errors.email ? 'border-red-500/40 focus:ring-red-500/30' : 'border-white/[0.08] focus:border-primary/40 focus:ring-primary/20'}`}
+                          className={`w-full text-sm rounded-xl border bg-white/[0.03] px-3 py-2.5 text-white placeholder:text-white/20 focus:outline-none focus:ring-1 transition-all ${errors.email ? 'border-border/40 focus:ring-border/30' : 'border-white/[0.08] focus:border-primary/40 focus:ring-primary/20'}`}
                         />
-                        {errors.email && <p className="text-[10px] text-red-400 mt-1 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{errors.email}</p>}
+                        {errors.email && <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{errors.email}</p>}
                       </div>
 
                       {/* Message */}
@@ -311,9 +311,9 @@ export default function SupportChat() {
                           onChange={e => { setForm(f => ({ ...f, message: e.target.value })); setErrors(er => ({ ...er, message: '' })); }}
                           placeholder="Describe your issue or question..."
                           rows={4}
-                          className={`w-full text-sm rounded-xl border bg-white/[0.03] px-3 py-2.5 text-white placeholder:text-white/20 focus:outline-none focus:ring-1 transition-all resize-none ${errors.message ? 'border-red-500/40 focus:ring-red-500/30' : 'border-white/[0.08] focus:border-primary/40 focus:ring-primary/20'}`}
+                          className={`w-full text-sm rounded-xl border bg-white/[0.03] px-3 py-2.5 text-white placeholder:text-white/20 focus:outline-none focus:ring-1 transition-all resize-none ${errors.message ? 'border-border/40 focus:ring-border/30' : 'border-white/[0.08] focus:border-primary/40 focus:ring-primary/20'}`}
                         />
-                        {errors.message && <p className="text-[10px] text-red-400 mt-1 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{errors.message}</p>}
+                        {errors.message && <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{errors.message}</p>}
                       </div>
 
                       {/* Actions */}
@@ -332,7 +332,7 @@ export default function SupportChat() {
                         </motion.button>
 
                         <a href={whatsappUrl} target="_blank" rel="noopener noreferrer"
-                          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 text-sm font-medium hover:bg-emerald-500/10 transition-all">
+                          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-primary/20 bg-primary/5 text-primary text-sm font-medium hover:bg-primary/10 transition-all">
                           <MessageCircle className="h-4 w-4" /> WhatsApp Support
                         </a>
                       </div>
@@ -349,9 +349,9 @@ export default function SupportChat() {
                       <motion.div
                         initial={{ scale: 0 }} animate={{ scale: 1 }}
                         transition={{ type: 'spring', damping: 14, delay: 0.1 }}
-                        className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mx-auto"
+                        className="w-16 h-16 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto"
                       >
-                        <CheckCircle2 className="h-8 w-8 text-emerald-400" />
+                        <CheckCircle2 className="h-8 w-8 text-primary" />
                       </motion.div>
                       <div>
                         <p className="font-bold text-white text-base">Message sent!</p>
@@ -362,7 +362,7 @@ export default function SupportChat() {
                       <div className="pt-2 space-y-2">
                         <p className="text-xs text-white/25">Need faster help?</p>
                         <a href={whatsappUrl} target="_blank" rel="noopener noreferrer"
-                          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-emerald-400 text-sm font-medium hover:bg-emerald-500/10 transition-all">
+                          className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border border-primary/20 bg-primary/5 text-primary text-sm font-medium hover:bg-primary/10 transition-all">
                           <MessageCircle className="h-4 w-4" /> WhatsApp Support
                         </a>
                         <button onClick={handleClose}
