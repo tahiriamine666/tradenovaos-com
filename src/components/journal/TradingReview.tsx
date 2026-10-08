@@ -1,217 +1,388 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { ChevronLeft, ChevronRight, Save } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AlertCircle, CheckCircle2, History, Loader2, Play, Save } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveAccount } from '@/contexts/ActiveAccountContext';
 import { useTradesChanged } from '@/contexts/TradeDialogContext';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import robotAsset from '@/assets/tradenova-robot.png.asset.json';
+import { fetchAll } from '@/lib/review/fetchAll';
+import {
+  ACTION_FIELDS, LEGACY_MAP, PRESETS, QUESTIONS, completion, execution, insights, iso, performance, planning, psychology, resolvePeriod, toFive,
+  type PeriodType, type Preset, type ReviewChecklist, type ReviewPlan, type ReviewTrade,
+} from '@/lib/review/stats';
 
-type PeriodType = 'weekly' | 'biweekly';
-const ANCHOR = new Date(2024, 0, 1); // Monday, anchors bi-weekly blocks
+const TRADE_COLS = 'id,pair,side,result,rr,trade_date,session,setup,playbook_id,daily_bias,weekly_context,emotion_before,emotion_after,confidence_score,discipline_score,stress_score,patience_score,followed_plan,plan_status,impulsive_entry,fomo,revenge_trade,hesitation,overconfidence,late_entry,early_exit,moved_stop,checklist_completed,planned_trade,rule_violations,mistakes,risk_percent,risk_amount';
+const LEGACY_FIELDS = Object.keys(LEGACY_MAP);
+const RATINGS = [['process_rating', 'Process'], ['execution_rating', 'Execution'], ['risk_rating', 'Risk'], ['psychology_rating', 'Psychology']] as const;
+const HISTORY_PAGE = 10;
+type SaveState = 'idle' | 'saving' | 'saved' | 'error' | 'conflict';
+type Row = { id: string; revision: number; answers: Record<string, string>; action_plan: Record<string, string>; status: string; completion_pct: number; updated_at: string; legacy: Record<string, string | null>; ratings: Record<string, number | null> };
+type HistoryRow = { id: string; period_start: string; period_end: string; completion_pct: number; status: string; updated_at: string };
 
-const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-const addDays = (d: Date, n: number) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const U = '—';
+const na = 'Unavailable';
+const money = (n: number | null | undefined) => (n == null ? na : `${n > 0 ? '+' : ''}${n.toLocaleString(undefined, { maximumFractionDigits: 2 })}`);
+const fx = (n: number | null | undefined, d = 2, suffix = '') => (n == null ? na : `${n.toLocaleString(undefined, { maximumFractionDigits: d })}${suffix}`);
+const frac = (x: { recorded: number } | null, k: string) => (x ? `${(x as any)[k]} / ${x.recorded}` : na);
 
-function periodFor(type: PeriodType, ref: Date) {
-  const d = new Date(ref.getFullYear(), ref.getMonth(), ref.getDate());
-  let start = addDays(d, -((d.getDay() + 6) % 7));
-  if (type === 'biweekly') {
-    const weeks = Math.round((start.getTime() - ANCHOR.getTime()) / (7 * 864e5));
-    if (((weeks % 2) + 2) % 2 === 1) start = addDays(start, -7);
-  }
-  return { start, end: addDays(start, type === 'weekly' ? 6 : 13) };
+function toRow(r: any): Row {
+  return {
+    id: r.id, revision: r.revision ?? 0, answers: r.answers ?? {}, action_plan: r.action_plan ?? {}, status: r.status, completion_pct: r.completion_pct, updated_at: r.updated_at,
+    legacy: Object.fromEntries(LEGACY_FIELDS.map((k) => [k, r[k] ?? null])), ratings: Object.fromEntries(RATINGS.map(([k]) => [k, r[k] ?? null])),
+  };
 }
 
-const TEXT_FIELDS = [
-  ['what_worked', 'What Worked'], ['what_didnt_work', "What Didn't Work"], ['biggest_mistake', 'Biggest Mistake'],
-  ['best_decision', 'Best Decision'], ['recurring_patterns', 'Recurring Patterns'],
-  ['rules_followed', 'Rules Followed'], ['rules_broken', 'Rules Broken'],
-  ['what_to_fix', 'What I Need to Fix'], ['what_to_modify', 'What I Need to Modify'], ['next_period_focus', 'Next Period Focus'],
-  ['keep_doing', 'Keep'], ['stop_doing', 'Stop'], ['start_doing', 'Start'], ['overall_notes', 'Overall Notes'],
-] as const;
-const RATINGS = [['process_rating', 'Process'], ['execution_rating', 'Execution'], ['risk_rating', 'Risk'], ['psychology_rating', 'Psychology']] as const;
-type Review = Record<string, string | number | null>;
-const emptyReview = (): Review => Object.fromEntries([...TEXT_FIELDS, ...RATINGS].map(([k]) => [k, null]));
-
-type T = { id: string; pair: string; side: string | null; result: number | null; rr: number | null; session: string | null; setup: string | null; playbook_id: string | null;
-  emotion_before: string | null; emotion_after: string | null; confidence_score: number | null; discipline_score: number | null; stress_score: number | null; followed_plan: boolean | null; impulsive_entry: boolean | null };
-
-const avg = (xs: number[]) => xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null;
-const fmt = (n: number | null, d = 2) => n == null ? '—' : n.toLocaleString(undefined, { maximumFractionDigits: d });
-const money = (n: number | null) => n == null ? '—' : `${n > 0 ? '+' : ''}${n.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
-function counts(xs: (string | null)[]) { const m: Record<string, number> = {}; xs.forEach((x) => { if (x) m[x] = (m[x] ?? 0) + 1; }); return Object.entries(m).sort((a, b) => b[1] - a[1]); }
-const pct = (xs: (boolean | null)[], v: boolean) => { const k = xs.filter((x) => x != null); return k.length ? `${Math.round(k.filter((x) => x === v).length / k.length * 100)}% (${k.length})` : '—'; };
-
-export function TradingReview() {
+export function TradingReview({ type = 'weekly' }: { type?: PeriodType }) {
   const { user } = useAuth();
   const { activeAccountId, version } = useActiveAccount();
-  const [type, setType] = useState<PeriodType>('weekly');
-  const [ref, setRef] = useState(new Date());
-  const [trades, setTrades] = useState<T[]>([]);
-  const [playbooks, setPlaybooks] = useState<Record<string, string>>({});
-  const [review, setReview] = useState<Review>(emptyReview());
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const { start, end } = useMemo(() => periodFor(type, ref), [type, ref]);
   const accountKey = activeAccountId ?? 'all';
-  const isCurrent = iso(periodFor(type, new Date()).start) === iso(start);
+  const [preset, setPreset] = useState<Preset>(PRESETS[type][0].id);
+  const [customStart, setCustomStart] = useState('');
+  const [customEnd, setCustomEnd] = useState('');
+  const period = useMemo(() => resolvePeriod(preset, new Date(), customStart, customEnd), [preset, customStart, customEnd]);
+  const identity = period ? `${user?.id}|${accountKey}|${type}|${period.start}|${period.end}` : null;
 
-  const load = useCallback(async () => {
-    if (!user) return;
-    setLoading(true);
-    let q = supabase.from('trades').select('id,pair,side,result,rr,session,setup,playbook_id,emotion_before,emotion_after,confidence_score,discipline_score,stress_score,followed_plan,impulsive_entry')
-      .eq('user_id', user.id).gte('trade_date', iso(start)).lte('trade_date', iso(end));
-    if (activeAccountId) q = q.eq('trading_account_id', activeAccountId);
-    const [{ data: t }, { data: r }, { data: p }] = await Promise.all([
-      q,
-      supabase.from('trading_reviews').select('*').eq('user_id', user.id).eq('account_key', accountKey).eq('period_type', type).eq('period_start', iso(start)).maybeSingle(),
-      supabase.from('playbooks').select('id,title').eq('user_id', user.id),
-    ]);
-    setTrades((t ?? []) as T[]);
-    setPlaybooks(Object.fromEntries((p ?? []).map((x) => [x.id, x.title])));
-    setReview(r ? { ...emptyReview(), ...Object.fromEntries(Object.keys(emptyReview()).map((k) => [k, (r as any)[k]])) } : emptyReview());
-    setLoading(false);
-  }, [user, activeAccountId, accountKey, type, start, end]);
-  useEffect(() => { load(); }, [load, version]);
-  useTradesChanged(load);
+  const [row, setRow] = useState<Row | null>(null);
+  const [reviewState, setReviewState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [source, setSource] = useState<{ trades: ReviewTrade[]; plans: ReviewPlan[]; checklists: ReviewChecklist[]; playbooks: Record<string, string> } | null>(null);
+  const [sourceError, setSourceError] = useState(false);
+  const [history, setHistory] = useState<HistoryRow[]>([]);
+  const [historyMore, setHistoryMore] = useState(false);
+  const [historyError, setHistoryError] = useState(false);
+  const [save, setSave] = useState<SaveState>('idle');
+  const [starting, setStarting] = useState(false);
 
-  const stats = useMemo(() => {
-    const pnl = trades.map((t) => Number(t.result ?? 0));
-    const wins = pnl.filter((x) => x > 0), losses = pnl.filter((x) => x < 0);
-    const sorted = [...trades].sort((a, b) => Number(b.result ?? 0) - Number(a.result ?? 0));
-    const nums = (k: keyof T) => trades.map((t) => t[k]).filter((x): x is number => typeof x === 'number');
-    return {
-      total: trades.length, wins: wins.length, losses: losses.length, be: pnl.filter((x) => x === 0).length,
-      winRate: trades.length ? wins.length / trades.length * 100 : null,
-      net: trades.length ? pnl.reduce((a, b) => a + b, 0) : null,
-      rr: avg(trades.filter((t) => t.rr != null).map((t) => Number(t.rr))),
-      avgWin: avg(wins), avgLoss: avg(losses), best: sorted[0], worst: sorted[sorted.length - 1],
-      pair: counts(trades.map((t) => t.pair))[0],
-      sessions: counts(trades.map((t) => t.session)), sides: counts(trades.map((t) => t.side)),
-      setups: counts(trades.map((t) => (t.playbook_id && playbooks[t.playbook_id]) || t.setup)),
-      conf: avg(nums('confidence_score')), disc: avg(nums('discipline_score')), stress: avg(nums('stress_score')),
-      plan: pct(trades.map((t) => t.followed_plan), true), impulsive: pct(trades.map((t) => t.impulsive_entry), true),
-      emoBefore: counts(trades.map((t) => t.emotion_before))[0], emoAfter: counts(trades.map((t) => t.emotion_after))[0],
-    };
-  }, [trades, playbooks]);
+  // ── Save pipeline: one request in flight, optimistic revision, latest snapshot wins
+  const dirty = useRef(false);
+  const latest = useRef<Row | null>(null);
+  const inFlight = useRef<Promise<void> | null>(null);
+  const timer = useRef<number>();
+  const persist = useCallback(async (): Promise<void> => {
+    if (inFlight.current) { await inFlight.current; if (!dirty.current) return; }
+    const snap = latest.current; if (!snap || !user || !dirty.current) return;
+    dirty.current = false;
+    setSave('saving');
+    const pct = completion(snap.answers, snap.action_plan);
+    const run = (async () => {
+      const { data, error } = await supabase.from('trading_reviews').update({
+        answers: snap.answers, action_plan: snap.action_plan, completion_pct: pct, status: pct === 100 ? 'complete' : 'draft', ...snap.ratings, revision: snap.revision + 1,
+      } as any).eq('id', snap.id).eq('user_id', user.id).eq('revision', snap.revision).select('id,revision,completion_pct,status,updated_at').maybeSingle();
+      if (error) { dirty.current = true; setSave('error'); return; }
+      if (!data) { setSave('conflict'); return; } // someone else saved first — never overwrite
+      const merged = { ...(latest.current ?? snap), revision: data.revision, completion_pct: data.completion_pct, status: data.status, updated_at: data.updated_at };
+      latest.current = merged; setRow((r) => (r && r.id === merged.id ? { ...r, revision: data.revision, completion_pct: data.completion_pct, status: data.status, updated_at: data.updated_at } : r));
+      setHistory((h) => h.map((x) => (x.id === data.id ? { ...x, completion_pct: data.completion_pct, status: data.status, updated_at: data.updated_at } : x)));
+      setSave(dirty.current ? 'saving' : 'saved');
+    })();
+    inFlight.current = run; await run; inFlight.current = null;
+    if (dirty.current && latest.current?.id === snap.id) void persist();
+  }, [user]);
+  const flush = useCallback(() => { window.clearTimeout(timer.current); return persist(); }, [persist]);
 
-  const save = async () => {
-    if (!user) return;
-    setSaving(true);
-    const { error } = await supabase.from('trading_reviews').upsert({
-      ...(review as any), user_id: user.id, account_id: activeAccountId ?? null, account_key: accountKey,
-      period_type: type, period_start: iso(start), period_end: iso(end),
-    }, { onConflict: 'user_id,account_key,period_type,period_start' });
-    setSaving(false);
-    toast(error ? { title: 'Review not saved', description: 'Please try again.', variant: 'destructive' } : { title: 'Review saved' });
+  const edit = (fn: (r: Row) => Row) => {
+    setRow((r) => { if (!r) return r; const n = fn(r); latest.current = { ...n, revision: latest.current?.revision ?? n.revision }; return n; });
+    dirty.current = true; setSave('idle');
+    window.clearTimeout(timer.current); timer.current = window.setTimeout(() => void persist(), 1200);
   };
 
-  const shift = (dir: number) => setRef(addDays(start, dir * (type === 'weekly' ? 7 : 14)));
-  const range = `${start.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} – ${end.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}`;
-  const set = (k: string, v: string | number | null) => setReview((r) => ({ ...r, [k]: v }));
-  const breakdown = (rows: [string, number][]) => rows.length ? rows.map(([k, n]) => `${k} (${n})`).join(', ') : '—';
+  // Flush before leaving: identity change, unmount, tab close
+  useEffect(() => () => { void flush(); }, [identity, flush]);
+  useEffect(() => {
+    const h = (e: BeforeUnloadEvent) => { if (dirty.current || inFlight.current) { void flush(); e.preventDefault(); e.returnValue = ''; } };
+    window.addEventListener('beforeunload', h); return () => window.removeEventListener('beforeunload', h);
+  }, [flush]);
+
+  // ── Load review (never creates)
+  useEffect(() => {
+    if (!user || !period) { setRow(null); setReviewState('ready'); return; }
+    const ctrl = new AbortController();
+    setReviewState('loading'); setRow(null); latest.current = null; dirty.current = false; setSave('idle');
+    supabase.from('trading_reviews').select('*').eq('user_id', user.id).eq('account_key', accountKey).eq('period_type', type)
+      .eq('period_start', period.start).eq('period_end', period.end).abortSignal(ctrl.signal).maybeSingle()
+      .then(({ data, error }) => {
+        if (ctrl.signal.aborted) return;
+        if (error) { setReviewState('error'); return; }
+        const r = data ? toRow(data) : null; setRow(r); latest.current = r; setReviewState('ready');
+      });
+    return () => ctrl.abort();
+  }, [user, accountKey, type, period?.start, period?.end, version]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Load source data (trades/plans/checklists). Refreshing never touches the review draft.
+  const sourceSeq = useRef(0);
+  const loadSource = useCallback(async () => {
+    if (!user || !period) return;
+    const seq = ++sourceSeq.current; setSourceError(false);
+    try {
+      const [trades, plans, checklists, pbs] = await Promise.all([
+        fetchAll<ReviewTrade>((a, b) => { let q = supabase.from('trades').select(TRADE_COLS).eq('user_id', user.id).gte('trade_date', period.start).lte('trade_date', period.end);
+          if (activeAccountId) q = q.eq('trading_account_id', activeAccountId); return q.order('trade_date').order('id').range(a, b) as any; }),
+        fetchAll<ReviewPlan>((a, b) => supabase.from('trade_plans').select('plan_date,pair,session,market_bias,max_trades,max_risk_per_trade,setups_to_trade,news_events').eq('user_id', user.id)
+          .eq('account_key', accountKey).gte('plan_date', period.start).lte('plan_date', period.end).order('plan_date').range(a, b) as any),
+        fetchAll<ReviewChecklist>((a, b) => supabase.from('trade_plan_checklists').select('checklist_type,period_date,pair,status,data').eq('user_id', user.id)
+          .eq('account_key', accountKey).gte('period_date', iso(new Date(new Date(period.start + 'T12:00:00').getTime() - 6 * 864e5))).lte('period_date', period.end).order('period_date').range(a, b) as any),
+        fetchAll<{ id: string; title: string }>((a, b) => supabase.from('playbooks').select('id,title').eq('user_id', user.id).range(a, b) as any),
+      ]);
+      if (seq !== sourceSeq.current) return;
+      const pairs = new Set(trades.map((t) => t.pair));
+      setSource({
+        trades,
+        plans: plans.filter((p) => !pairs.size || pairs.has(p.pair)),
+        checklists: checklists.filter((c) => c.pair === '' || !pairs.size || pairs.has(c.pair)),
+        playbooks: Object.fromEntries(pbs.map((p) => [p.id, p.title])),
+      });
+    } catch { if (seq === sourceSeq.current) setSourceError(true); }
+  }, [user, period?.start, period?.end, activeAccountId, accountKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { setSource(null); void loadSource(); }, [loadSource, version]);
+  useTradesChanged(loadSource);
+
+  // ── History (paginated, server-durable)
+  const loadHistory = useCallback(async (offset: number) => {
+    if (!user) return;
+    const { data, error } = await supabase.from('trading_reviews').select('id,period_start,period_end,completion_pct,status,updated_at')
+      .eq('user_id', user.id).eq('account_key', accountKey).eq('period_type', type).order('period_start', { ascending: false }).range(offset, offset + HISTORY_PAGE);
+    if (error) { setHistoryError(true); return; }
+    setHistoryError(false);
+    const rows = (data ?? []) as HistoryRow[];
+    setHistoryMore(rows.length > HISTORY_PAGE);
+    setHistory((h) => (offset ? [...h, ...rows.slice(0, HISTORY_PAGE)] : rows.slice(0, HISTORY_PAGE)));
+  }, [user, accountKey, type]);
+  useEffect(() => { void loadHistory(0); }, [loadHistory, version]);
+
+  const start = async () => {
+    if (!user || !period) return;
+    setStarting(true);
+    const { data, error } = await supabase.from('trading_reviews').insert({
+      user_id: user.id, account_id: activeAccountId ?? null, account_key: accountKey, period_type: type, period_start: period.start, period_end: period.end, preset, answers: {}, action_plan: {},
+    } as any).select('*').single();
+    setStarting(false);
+    if (error) { // duplicate (e.g. started in another tab) → reopen it
+      const { data: existing } = await supabase.from('trading_reviews').select('*').eq('user_id', user.id).eq('account_key', accountKey).eq('period_type', type).eq('period_start', period.start).eq('period_end', period.end).maybeSingle();
+      if (existing) { const r = toRow(existing); setRow(r); latest.current = r; } else setSave('error');
+      return;
+    }
+    const r = toRow(data); setRow(r); latest.current = r; void loadHistory(0);
+  };
+  const openHistory = async (h: HistoryRow) => {
+    await flush();
+    const isPreset = PRESETS[type].find((p) => p.id !== 'custom_range' && p.id !== 'custom_week' && JSON.stringify(resolvePeriod(p.id, new Date())) === JSON.stringify({ start: h.period_start, end: h.period_end }));
+    if (isPreset) setPreset(isPreset.id); else { setPreset('custom_range'); setCustomStart(h.period_start); setCustomEnd(h.period_end); }
+  };
+  const reloadAfterConflict = async () => {
+    if (!user || !row) return;
+    const { data } = await supabase.from('trading_reviews').select('*').eq('id', row.id).eq('user_id', user.id).maybeSingle();
+    if (data) { const r = toRow(data); setRow(r); latest.current = r; dirty.current = false; setSave('idle'); }
+  };
+  const changePreset = async (p: Preset) => { await flush(); setPreset(p); };
+
+  const stats = useMemo(() => {
+    if (!source) return null;
+    const setupName = (t: ReviewTrade) => (t.playbook_id && source.playbooks[t.playbook_id]) || t.setup;
+    const p = performance(source.trades, setupName), e = execution(source.trades, source.plans, source.checklists), psy = psychology(source.trades);
+    return { p, e, psy, plan: planning(source.trades, source.plans, source.checklists), ins: insights(p, e, psy) };
+  }, [source]);
+
+  const pct = row ? completion(row.answers, row.action_plan) : 0;
+  const legacyEntries = row ? Object.entries(row.legacy).filter(([, v]) => v && String(v).trim()) : [];
+  const fmtRange = period ? `${new Date(period.start + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} – ${new Date(period.end + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}` : '';
 
   return (
-    <div className="feature-reveal space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-card p-3">
-        <div className="flex rounded-md border border-border p-0.5">
-          {(['weekly', 'biweekly'] as const).map((p) => (
-            <button key={p} type="button" onClick={() => setType(p)} className={cn('rounded px-3 py-1.5 text-xs font-medium transition-colors', type === p ? 'bg-primary/20 text-primary' : 'text-muted-foreground hover:text-foreground')}>
-              {p === 'weekly' ? 'Weekly' : 'Bi-Weekly'}
-            </button>
+    <div className="feature-reveal space-y-4 pb-24 lg:pb-0">
+      <div className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-card p-3">
+        <div className="flex flex-wrap rounded-md border border-border p-0.5" role="group" aria-label="Review period">
+          {PRESETS[type].map((p) => (
+            <button key={p.id} type="button" aria-pressed={preset === p.id} onClick={() => void changePreset(p.id)}
+              className={cn('rounded px-3 py-1.5 text-xs font-medium transition-colors', preset === p.id ? 'bg-primary/15 text-primary' : 'text-muted-foreground hover:text-foreground')}>{p.label}</button>
           ))}
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" onClick={() => shift(-1)} aria-label="Previous period"><ChevronLeft className="h-4 w-4" /></Button>
-          <Button variant="outline" size="sm" onClick={() => setRef(new Date())} disabled={isCurrent}>Current</Button>
-          <Button variant="outline" size="icon" onClick={() => shift(1)} aria-label="Next period"><ChevronRight className="h-4 w-4" /></Button>
-          <span className="ml-1 font-mono text-xs text-foreground">{range}</span>
-        </div>
+        {(preset === 'custom_week' || preset === 'custom_range') && (
+          <div className="flex items-center gap-2 text-xs">
+            <input type="date" aria-label="Start date" value={customStart} onChange={(e) => setCustomStart(e.target.value)} className="rounded-md border border-border bg-background px-2 py-1 text-foreground" />
+            {preset === 'custom_range' && <><span className="text-muted-foreground">to</span>
+              <input type="date" aria-label="End date" value={customEnd} min={customStart} onChange={(e) => setCustomEnd(e.target.value)} className="rounded-md border border-border bg-background px-2 py-1 text-foreground" /></>}
+          </div>
+        )}
+        <span className="ml-auto font-mono text-xs text-foreground">{period ? fmtRange : 'Pick dates'}</span>
       </div>
 
-      {loading ? <Skeleton className="h-96 w-full" /> : (<>
-        <Block title="1. Performance Summary">
-          {stats.total === 0 ? <p className="text-sm text-muted-foreground">No trades logged in this period.</p> : (<>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-6">
-              <Kpi l="Trades" v={String(stats.total)} />
-              <Kpi l="W / L / BE" v={`${stats.wins} / ${stats.losses} / ${stats.be}`} />
-              <Kpi l="Win rate" v={`${fmt(stats.winRate, 1)}%`} />
-              <Kpi l="Net P&L" v={money(stats.net)} tone={stats.net} />
-              <Kpi l="Avg R:R" v={fmt(stats.rr)} />
-              <Kpi l="Avg win" v={money(stats.avgWin)} tone={stats.avgWin} />
-              <Kpi l="Avg loss" v={money(stats.avgLoss)} tone={stats.avgLoss} />
-              <Kpi l="Best trade" v={stats.best ? `${stats.best.pair} ${money(Number(stats.best.result ?? 0))}` : '—'} />
-              <Kpi l="Worst trade" v={stats.worst ? `${stats.worst.pair} ${money(Number(stats.worst.result ?? 0))}` : '—'} />
-              <Kpi l="Top pair" v={stats.pair ? `${stats.pair[0]} (${stats.pair[1]})` : '—'} />
-            </div>
-            <dl className="mt-3 grid gap-1.5 text-xs sm:grid-cols-3">
-              <Row l="Sessions" v={breakdown(stats.sessions)} /><Row l="Long vs short" v={breakdown(stats.sides)} /><Row l="Setups / playbooks" v={breakdown(stats.setups)} />
-            </dl>
-            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
-              <Kpi l="Avg confidence" v={stats.conf == null ? '—' : `${fmt(stats.conf, 1)}/10`} />
-              <Kpi l="Avg discipline" v={stats.disc == null ? '—' : `${fmt(stats.disc, 1)}/10`} />
-              <Kpi l="Avg stress" v={stats.stress == null ? '—' : `${fmt(stats.stress, 1)}/10`} />
-              <Kpi l="Followed plan" v={stats.plan} />
-              <Kpi l="Impulsive" v={stats.impulsive} />
-              <Kpi l="Top emotion before" v={stats.emoBefore ? stats.emoBefore[0] : '—'} />
-              <Kpi l="Top emotion after" v={stats.emoAfter ? stats.emoAfter[0] : '—'} />
-            </div>
-          </>)}
-        </Block>
-
-        <Block title="2. Process & Psychology Scores">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {RATINGS.map(([k, l]) => (
-              <div key={k}>
-                <p className="mb-1.5 text-xs font-medium text-muted-foreground">{l} <span className="font-mono text-foreground">{review[k] ?? '—'}/10</span></p>
-                <div className="flex gap-0.5">
-                  {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
-                    <button key={n} type="button" aria-label={`${l} ${n}`} onClick={() => set(k, review[k] === n ? null : n)}
-                      className={cn('h-6 flex-1 rounded-sm border text-[10px] transition-colors', Number(review[k]) >= n ? 'border-primary bg-primary/25 text-primary' : 'border-border text-muted-foreground hover:bg-muted')}>{n}</button>
-                  ))}
-                </div>
+      <div className="grid gap-4 lg:grid-cols-[1fr_260px]">
+        <div className="min-w-0 space-y-4">
+          {!period ? <Empty text="Choose a valid date range to review." /> : (<>
+            {sourceError ? <ErrorBox text="Could not load trades and plans for this period." onRetry={loadSource} /> : !stats ? <Skeleton className="h-64 w-full" /> : (
+              <div className="grid gap-4 xl:grid-cols-2">
+                <Group title="Performance">
+                  {stats.p.total === 0 ? <p className="text-sm text-muted-foreground">No trades logged in this period.</p> : (<>
+                    <Grid>
+                      <K l="Net P&L" v={money(stats.p.net)} accent={(stats.p.net ?? 0) > 0} /><K l="Trades" v={String(stats.p.total)} />
+                      <K l="W / L / BE" v={`${stats.p.wins} / ${stats.p.losses} / ${stats.p.breakeven}`} /><K l="Win rate" v={fx(stats.p.winRate, 1, '%')} />
+                      <K l="Avg R:R" v={fx(stats.p.avgRR)} /><K l="Profit factor" v={fx(stats.p.profitFactor)} /><K l="Expectancy" v={money(stats.p.expectancy)} />
+                      <K l="Avg win" v={money(stats.p.avgWin)} /><K l="Avg loss" v={money(stats.p.avgLoss)} />
+                      <K l="Best trade" v={stats.p.bestTrade ? `${stats.p.bestTrade.pair} ${money(Number(stats.p.bestTrade.result))}` : na} />
+                      <K l="Worst trade" v={stats.p.worstTrade ? `${stats.p.worstTrade.pair} ${money(Number(stats.p.worstTrade.result))}` : na} />
+                      <K l="Avg duration" v={na} />
+                    </Grid>
+                    {stats.p.unresolved > 0 && <p className="mt-2 text-xs text-muted-foreground">{stats.p.unresolved} trade(s) without a recorded result are excluded from P&L stats (not counted as breakeven).</p>}
+                    <dl className="mt-3 grid gap-1.5 text-xs sm:grid-cols-2">
+                      <R l="Best / worst pair" v={`${stats.p.bestPair ? `${stats.p.bestPair.key} ${money(stats.p.bestPair.pnl)}` : na} · ${stats.p.worstPair ? `${stats.p.worstPair.key} ${money(stats.p.worstPair.pnl)}` : na}`} />
+                      <R l="Best / worst session" v={`${stats.p.bestSession ? `${stats.p.bestSession.key} ${money(stats.p.bestSession.pnl)}` : na} · ${stats.p.worstSession ? `${stats.p.worstSession.key} ${money(stats.p.worstSession.pnl)}` : na}`} />
+                      <R l="Best / worst setup" v={`${stats.p.bestSetup ? `${stats.p.bestSetup.key} ${money(stats.p.bestSetup.pnl)}` : na} · ${stats.p.worstSetup ? `${stats.p.worstSetup.key} ${money(stats.p.worstSetup.pnl)}` : na}`} />
+                      <R l="Side performance" v={stats.p.sides.length ? stats.p.sides.map((s) => `${s.key} ${money(s.pnl)} (${s.winRate.toFixed(0)}% of ${s.trades})`).join(' · ') : na} />
+                    </dl>
+                  </>)}
+                </Group>
+                <Group title="Execution">
+                  <Grid>
+                    <K l="Followed plan" v={stats.e.plan ? `${stats.e.plan.yes} yes · ${stats.e.plan.partial} partial · ${stats.e.plan.no} no` : na} />
+                    <K l="Checklist done" v={frac(stats.e.checklist, 'completed')} /><K l="Outside planned session" v={frac(stats.e.outsideSession, 'count')} />
+                    <K l="Daily bias aligned" v={frac(stats.e.dailyBias, 'aligned')} /><K l="Weekly bias aligned" v={frac(stats.e.weeklyBias, 'aligned')} />
+                    <K l="Overtrading" v={stats.e.overtrade ? `${stats.e.overtrade.excess} extra on ${stats.e.overtrade.days.length} day(s)` : na} />
+                    <K l="Revenge" v={frac(stats.e.revenge, 'count')} /><K l="Late entries" v={frac(stats.e.lateEntries, 'count')} /><K l="Early exits" v={frac(stats.e.earlyExits, 'count')} />
+                    <K l="Moved stop" v={frac(stats.e.movedStop, 'count')} /><K l="Impulsive" v={frac(stats.e.impulsive, 'count')} /><K l="Missed setups" v={na} />
+                  </Grid>
+                </Group>
+                <Group title="Psychology">
+                  <Grid>
+                    <K l="Confidence" v={fx(toFive(stats.psy.confidence), 1, '/5')} /><K l="Discipline" v={fx(toFive(stats.psy.discipline), 1, '/5')} />
+                    <K l="Patience" v={fx(toFive(stats.psy.patience), 1, '/5')} /><K l="Stress" v={fx(toFive(stats.psy.stress), 1, '/5')} />
+                    <K l="FOMO" v={frac(stats.psy.fomo, 'count')} /><K l="Revenge" v={frac(stats.psy.revenge, 'count')} />
+                    <K l="Hesitation" v={frac(stats.psy.hesitation, 'count')} /><K l="Overconfidence" v={frac(stats.psy.overconfidence, 'count')} />
+                    <K l="Best day" v={stats.psy.bestDay ? `${stats.psy.bestDay.date} ${money(stats.psy.bestDay.pnl)}` : na} />
+                    <K l="Worst day" v={stats.psy.worstDay ? `${stats.psy.worstDay.date} ${money(stats.psy.worstDay.pnl)}` : na} />
+                    <K l="Discipline ↔ P&L" v={stats.psy.disciplineVsPnl == null ? 'Need ≥5 varied days' : `r = ${stats.psy.disciplineVsPnl.toFixed(2)}`} />
+                    <K l="Stress ↔ P&L" v={stats.psy.stressVsPnl == null ? 'Need ≥5 varied days' : `r = ${stats.psy.stressVsPnl.toFixed(2)}`} />
+                  </Grid>
+                  <dl className="mt-3 grid gap-1.5 text-xs sm:grid-cols-2">
+                    <R l="Emotions before" v={stats.psy.emotionsBefore.map(([k, n]) => `${k} (${n})`).join(', ') || na} />
+                    <R l="Emotions after" v={stats.psy.emotionsAfter.map(([k, n]) => `${k} (${n})`).join(', ') || na} />
+                  </dl>
+                </Group>
+                <Group title="Planning">
+                  <Grid>
+                    <K l="Daily plans" v={String(stats.plan.dailyPlans)} /><K l="Weekly outlooks" v={`${stats.plan.weeklyComplete} / ${stats.plan.weeklyOutlooks} complete`} />
+                    <K l="Daily outlooks" v={String(stats.plan.dailyOutlooks)} /><K l="Pair checklists" v={stats.plan.pairChecklists ? `${stats.plan.pairChecklists.complete} / ${stats.plan.pairChecklists.total}` : na} />
+                    <K l="Trades with a plan" v={stats.plan.tradesWithPlan ? `${stats.plan.tradesWithPlan.count} / ${stats.plan.tradesWithPlan.total}` : na} />
+                    <K l="Planned setup used" v={frac(stats.plan.setupMatch, 'matched')} /><K l="Risk over plan" v={frac(stats.plan.riskOver, 'over')} />
+                  </Grid>
+                  <p className="mt-3 text-xs text-muted-foreground">News recorded: <span className="text-foreground">{stats.plan.news.length ? [...new Set(stats.plan.news)].join(', ') : na}</span></p>
+                </Group>
+                <Group title="Mistakes & rules">
+                  <dl className="grid gap-1.5 text-xs">
+                    <R l="Rule violations" v={stats.e.violations.map(([k, n]) => `${k} (${n})`).join(', ') || na} />
+                    <R l="Mistake tags" v={stats.e.mistakes.map(([k, n]) => `${k} (${n})`).join(', ') || na} />
+                  </dl>
+                </Group>
+                <Group title="Insights">
+                  {stats.ins.length ? <ul className="space-y-1.5 text-sm text-foreground">{stats.ins.map((i) => <li key={i} className="flex gap-2"><span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />{i}</li>)}</ul>
+                    : <p className="text-sm text-muted-foreground">Not enough data yet.</p>}
+                </Group>
               </div>
-            ))}
-          </div>
-        </Block>
+            )}
 
-        {[
-          ['3. What Worked', ['what_worked']], ['4. What Didn\'t Work', ['what_didnt_work']], ['5. Biggest Mistake', ['biggest_mistake']],
-          ['6. Best Decision', ['best_decision']], ['7. Recurring Patterns', ['recurring_patterns']], ['8. Rules Followed / Broken', ['rules_followed', 'rules_broken']],
-          ['9. What I Need to Fix', ['what_to_fix']], ['10. What I Need to Modify', ['what_to_modify']], ['11. Next Period Focus', ['next_period_focus']],
-          ['12. Keep / Stop / Start', ['keep_doing', 'stop_doing', 'start_doing']], ['13. Overall Notes', ['overall_notes']],
-        ].map(([title, keys]) => (
-          <Block key={title as string} title={title as string}>
-            <div className={cn('grid gap-3', (keys as string[]).length === 2 && 'sm:grid-cols-2', (keys as string[]).length === 3 && 'sm:grid-cols-3')}>
-              {(keys as string[]).map((k) => (
-                <div key={k}>
-                  {(keys as string[]).length > 1 && <p className="mb-1.5 text-xs font-medium text-muted-foreground">{TEXT_FIELDS.find(([f]) => f === k)?.[1]}</p>}
-                  <textarea value={(review[k] as string) ?? ''} onChange={(e) => set(k, e.target.value || null)} rows={3}
-                    className="w-full resize-y rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30" />
+            {reviewState === 'loading' ? <Skeleton className="h-40 w-full" /> : reviewState === 'error' ? <ErrorBox text="Could not load this review. Your saved answers are safe." onRetry={() => setPreset((p) => p)} />
+              : !row ? (
+                <div className="flex flex-col items-center gap-3 rounded-md border border-dashed border-border bg-card p-8 text-center">
+                  <p className="text-sm text-foreground">No review for {fmtRange} yet.</p>
+                  <Button onClick={start} disabled={starting} className="gap-2">{starting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}Start review</Button>
                 </div>
-              ))}
-            </div>
-          </Block>
-        ))}
-
-        <div className="sticky bottom-3 flex justify-end">
-          <Button onClick={save} disabled={saving} className="gap-2 shadow-lg"><Save className="h-4 w-4" />{saving ? 'Saving…' : 'Save review'}</Button>
+              ) : (<>
+                <div className="flex flex-wrap items-center gap-3 rounded-md border border-border bg-card p-3">
+                  <div className="flex min-w-[160px] flex-1 items-center gap-2">
+                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary transition-[width] duration-300" style={{ width: `${pct}%` }} /></div>
+                    <span className="font-mono text-xs text-foreground">{pct}%</span>
+                  </div>
+                  <SaveBadge state={save} onReload={reloadAfterConflict} />
+                </div>
+                <Group title="Process ratings (1–10)">
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    {RATINGS.map(([k, l]) => (
+                      <div key={k}><p className="mb-1.5 text-xs font-medium text-muted-foreground">{l} <span className="font-mono text-foreground">{row.ratings[k] ?? U}/10</span></p>
+                        <div className="flex gap-0.5">{Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+                          <button key={n} type="button" aria-label={`${l} ${n}`} aria-pressed={row.ratings[k] === n} onClick={() => edit((r) => ({ ...r, ratings: { ...r.ratings, [k]: r.ratings[k] === n ? null : n } }))}
+                            className={cn('h-6 flex-1 rounded-sm border text-[10px] transition-colors', Number(row.ratings[k]) >= n ? 'border-primary bg-primary/25 text-primary' : 'border-border text-muted-foreground hover:bg-muted')}>{n}</button>
+                        ))}</div></div>
+                    ))}
+                  </div>
+                </Group>
+                <Group title="Reflection">
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {QUESTIONS.map(([k, q], i) => (
+                      <label key={k} className="block"><span className="mb-1.5 block text-xs font-medium text-muted-foreground">{i + 1}. {q}</span>
+                        <textarea value={row.answers[k] ?? ''} rows={2} onChange={(e) => { const v = e.target.value; edit((r) => ({ ...r, answers: { ...r.answers, [k]: v } })); }}
+                          className="w-full resize-y rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30" /></label>
+                    ))}
+                  </div>
+                </Group>
+                <Group title="Next week action plan">
+                  <div className="grid gap-3 md:grid-cols-2">
+                    {ACTION_FIELDS.map(([k, l, t]) => (
+                      <label key={k} className="block"><span className="mb-1.5 block text-xs font-medium text-muted-foreground">{l}</span>
+                        <input type={t} min={t === 'number' ? 0 : undefined} step="any" value={row.action_plan[k] ?? ''} onChange={(e) => { const v = e.target.value; edit((r) => ({ ...r, action_plan: { ...r.action_plan, [k]: v } })); }}
+                          className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30" /></label>
+                    ))}
+                  </div>
+                </Group>
+                {legacyEntries.length > 0 && (
+                  <Group title="Earlier answers (read-only)">
+                    <dl className="grid gap-2 text-sm md:grid-cols-2">{legacyEntries.map(([k, v]) => (
+                      <div key={k}><dt className="text-xs text-muted-foreground">{k.replace(/_/g, ' ')} → {QUESTIONS.find(([q]) => q === LEGACY_MAP[k])?.[1]}</dt><dd className="whitespace-pre-wrap text-foreground">{v}</dd></div>
+                    ))}</dl>
+                  </Group>
+                )}
+                <div className="sticky bottom-20 flex justify-end lg:bottom-3">
+                  <Button onClick={() => { dirty.current = true; void flush(); }} disabled={save === 'saving'} className="tn-btn-halo gap-2"><Save className="h-4 w-4" />{save === 'saving' ? 'Saving…' : 'Save review'}</Button>
+                </div>
+              </>)}
+          </>)}
         </div>
-      </>)}
+
+        <aside className="space-y-4">
+          <div className="hidden justify-center lg:flex"><RobotMark /></div>
+          <div className="rounded-md border border-border bg-card p-3">
+            <h3 className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-foreground"><History className="h-3.5 w-3.5 text-primary" />History</h3>
+            {historyError ? <ErrorBox text="History unavailable." onRetry={() => loadHistory(0)} /> : history.length === 0 ? <p className="text-xs text-muted-foreground">No saved reviews yet.</p> : (
+              <ul className="space-y-1">
+                {history.map((h) => {
+                  const active = period && h.period_start === period.start && h.period_end === period.end;
+                  return <li key={h.id}><button type="button" onClick={() => void openHistory(h)} className={cn('flex w-full items-center justify-between rounded px-2 py-1.5 text-left text-xs transition-colors', active ? 'bg-primary/15 text-primary' : 'text-foreground hover:bg-muted')}>
+                    <span className="font-mono">{h.period_start} → {h.period_end.slice(5)}</span>
+                    <span className="flex items-center gap-1 text-muted-foreground">{h.status === 'complete' && <CheckCircle2 className="h-3 w-3 text-primary" />}{h.completion_pct}%</span></button></li>;
+                })}
+              </ul>
+            )}
+            {historyMore && <Button variant="ghost" size="sm" className="mt-2 w-full text-xs" onClick={() => loadHistory(history.length)}>Load more</Button>}
+          </div>
+        </aside>
+      </div>
+      <div className="flex justify-center lg:hidden"><RobotMark small /></div>
     </div>
   );
 }
 
-function Block({ title, children }: { title: string; children: React.ReactNode }) {
-  return <section className="rounded-md border border-border bg-card p-4"><h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-foreground">{title}</h3>{children}</section>;
+function RobotMark({ small }: { small?: boolean }) {
+  return <div className={cn('relative', small ? 'h-20 w-20' : 'h-32 w-32')} aria-hidden="true">
+    <div className="absolute inset-[18%] rounded-full bg-primary/15 blur-xl" />
+    <img src={robotAsset.url} alt="" draggable={false} className="relative h-full w-full object-contain mix-blend-lighten" />
+  </div>;
 }
-function Kpi({ l, v, tone }: { l: string; v: string; tone?: number | null }) {
+function SaveBadge({ state, onReload }: { state: SaveState; onReload: () => void }) {
+  if (state === 'saving') return <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" />Saving…</span>;
+  if (state === 'saved') return <span className="flex items-center gap-1.5 text-xs text-primary"><CheckCircle2 className="h-3 w-3" />Saved</span>;
+  if (state === 'error') return <span className="flex items-center gap-1.5 text-xs text-foreground"><AlertCircle className="h-3 w-3" />Not saved — retrying on next edit or Save</span>;
+  if (state === 'conflict') return <span className="flex items-center gap-2 text-xs text-foreground"><AlertCircle className="h-3 w-3" />Changed elsewhere<Button size="sm" variant="outline" className="h-6 px-2 text-xs" onClick={onReload}>Reload latest</Button></span>;
+  return <span className="text-xs text-muted-foreground">Autosaves as you type</span>;
+}
+function Group({ title, children }: { title: string; children: React.ReactNode }) {
+  return <section className="tn-card-light rounded-md border border-border bg-card p-4"><h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-foreground">{title}</h3>{children}</section>;
+}
+const Grid = ({ children }: { children: React.ReactNode }) => <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{children}</div>;
+function K({ l, v, accent }: { l: string; v: string; accent?: boolean }) {
   return <div className="rounded-md border border-border bg-background/60 px-3 py-2"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{l}</p>
-    <p className={cn('mt-1 truncate font-mono text-sm font-semibold', tone != null && tone > 0 ? 'text-success' : tone != null && tone < 0 ? 'text-danger' : 'text-foreground')}>{v}</p></div>;
+    <p className={cn('mt-1 truncate font-mono text-sm font-semibold', v === na ? 'text-muted-foreground' : accent ? 'text-primary' : 'text-foreground')} title={v}>{v}</p></div>;
 }
-function Row({ l, v }: { l: string; v: string }) {
-  return <div><dt className="text-muted-foreground">{l}</dt><dd className="text-foreground">{v}</dd></div>;
+const R = ({ l, v }: { l: string; v: string }) => <div><dt className="text-muted-foreground">{l}</dt><dd className="text-foreground">{v}</dd></div>;
+const Empty = ({ text }: { text: string }) => <p className="rounded-md border border-dashed border-border bg-card p-6 text-center text-sm text-muted-foreground">{text}</p>;
+function ErrorBox({ text, onRetry }: { text: string; onRetry: () => void }) {
+  return <div className="flex items-center justify-between gap-3 rounded-md border border-primary/30 bg-card p-3 text-sm text-foreground"><span className="flex items-center gap-2"><AlertCircle className="h-4 w-4 text-primary" />{text}</span><Button size="sm" variant="outline" onClick={onRetry}>Retry</Button></div>;
 }
