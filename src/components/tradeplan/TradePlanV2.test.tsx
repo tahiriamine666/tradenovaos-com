@@ -29,12 +29,12 @@ vi.mock('@/integrations/supabase/client', () => ({ supabase: { from: (table: str
 beforeEach(() => { fake.account = 'account-a'; fake.rows.clear(); fake.writes = []; fake.fail = false; localStorage.clear(); });
 afterEach(() => { cleanup(); });
 const ready = () => waitFor(() => expect(screen.getByPlaceholderText("Describe today's expected scenario...")).toBeInTheDocument());
-const switchPair = async (name: string) => { fireEvent.click(screen.getByRole('button', { name, exact: true })); await waitFor(() => expect(screen.getByRole('heading', {name: `Daily Plan — ${name}`})).toBeInTheDocument()); await ready(); };
+const switchPair = async (name: string) => { fireEvent.click(screen.getByRole('button', { name })); await waitFor(() => expect(screen.getByRole('heading', {name: `Daily Plan — ${name}`})).toBeInTheDocument()); await ready(); };
 
 describe('Daily plan isolation and failure handling', () => {
   it('saves bias and risk with null emotion, isolates EURUSD/XAUUSD and accounts, and keeps full conflict keys', async () => {
     const view = render(<TradePlanV2 />); await ready();
-    fireEvent.click(screen.getByRole('button', {name:'Bullish', exact:true}));
+    fireEvent.click(screen.getByRole('button', {name:'Bullish'}));
     fireEvent.change(screen.getByPlaceholderText('1'), { target: { value: '0.5' } });
     fireEvent.click(screen.getByRole('button', {name:'Save Plan'}));
     await waitFor(() => expect(fake.writes.some(w => w.table === 'trade_plans')).toBe(true));
@@ -43,8 +43,8 @@ describe('Daily plan isolation and failure handling', () => {
     expect(eur.options.onConflict).toBe('user_id,account_key,plan_date,pair');
     fireEvent.click(screen.getAllByRole('button', {name:'Check item'})[0]);
     await switchPair('XAUUSD');
-    fireEvent.click(screen.getByRole('button', {name:'Bearish', exact:true}));
-    fireEvent.click(screen.getByRole('button', {name:'Calm', exact:true}));
+    fireEvent.click(screen.getByRole('button', {name:'Bearish'}));
+    fireEvent.click(screen.getByRole('button', {name:'Calm'}));
     fireEvent.click(screen.getByRole('button', {name:'Save Plan'}));
     await waitFor(() => expect(fake.writes.some(w => w.payload.pair === 'XAUUSD' && w.payload.emotion === 'calm')).toBe(true));
     expect(screen.queryAllByRole('button', {name:'Uncheck item'})).toHaveLength(0);
@@ -58,7 +58,7 @@ describe('Daily plan isolation and failure handling', () => {
   it('blocks pair switches on failed save and retries the same dirty snapshot', async () => {
     render(<TradePlanV2 />); await ready();
     fireEvent.change(screen.getByPlaceholderText("Describe today's expected scenario..."), {target:{value:'Retain this scenario'}});
-    fake.fail = true; fireEvent.click(screen.getByRole('button', {name:'XAUUSD',exact:true}));
+    fake.fail = true; fireEvent.click(screen.getByRole('button', {name:'XAUUSD'}));
     await waitFor(() => expect(screen.getByText('Not saved')).toBeInTheDocument());
     expect(screen.getByRole('heading', {name:'Daily Plan — EURUSD'})).toBeInTheDocument();
     fake.fail = false; await switchPair('XAUUSD');
