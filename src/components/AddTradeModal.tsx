@@ -80,15 +80,15 @@ function OutcomeSelector({ value, onChange, error }: {
   value: Outcome | ''; onChange: (v: Outcome) => void; error?: string;
 }) {
   const options = [
-    { value: 'win' as Outcome, label: 'Win', icon: TrendingUp, color: 'text-emerald-500', bg: 'bg-emerald-500/10 border-emerald-500/40' },
-    { value: 'loss' as Outcome, label: 'Loss', icon: TrendingDown, color: 'text-red-500', bg: 'bg-red-500/10 border-red-500/40' },
-    { value: 'breakeven' as Outcome, label: 'Breakeven', icon: Minus, color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/40' },
+    { value: 'win' as Outcome, label: 'Win', icon: TrendingUp, color: 'text-primary', bg: 'bg-primary/10 border-primary/40' },
+    { value: 'loss' as Outcome, label: 'Loss', icon: TrendingDown, color: 'text-muted-foreground', bg: 'bg-muted/10 border-border/40' },
+    { value: 'breakeven' as Outcome, label: 'Breakeven', icon: Minus, color: 'text-muted-foreground', bg: 'bg-muted/10 border-border/40' },
   ];
 
   return (
     <div>
       <label className="text-xs font-medium text-muted-foreground block mb-2">
-        Outcome <span className="text-red-500">*</span>
+        Outcome <span className="text-muted-foreground">*</span>
       </label>
       <div className="grid grid-cols-3 gap-2">
         {options.map(o => {
@@ -109,7 +109,7 @@ function OutcomeSelector({ value, onChange, error }: {
         })}
       </div>
       {error && (
-        <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1">
+        <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1">
           <AlertCircle className="h-3 w-3" />{error}
         </p>
       )}
@@ -124,7 +124,7 @@ function SideSelector({ value, onChange, error }: {
   return (
     <div>
       <label className="text-xs font-medium text-muted-foreground block mb-2">
-        Side <span className="text-red-500">*</span>
+        Side <span className="text-muted-foreground">*</span>
       </label>
       <div className="grid grid-cols-2 gap-2">
         {(['long', 'short'] as Side[]).map(s => (
@@ -135,8 +135,8 @@ function SideSelector({ value, onChange, error }: {
             className={`py-2.5 rounded-xl border-2 text-sm font-medium capitalize transition-all ${
               value === s
                 ? s === 'long'
-                  ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-500'
-                  : 'bg-red-500/10 border-red-500/40 text-red-500'
+                  ? 'bg-primary/10 border-primary/40 text-primary'
+                  : 'bg-muted/10 border-border/40 text-muted-foreground'
                 : 'border-border text-muted-foreground hover:bg-muted/30'
             }`}
           >
@@ -145,7 +145,7 @@ function SideSelector({ value, onChange, error }: {
         ))}
       </div>
       {error && (
-        <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1">
+        <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1">
           <AlertCircle className="h-3 w-3" />{error}
         </p>
       )}
@@ -196,7 +196,7 @@ function PlaybookSelector({ value, onChange, playbooks, onGoToPlaybooks }: {
 function FieldError({ msg }: { msg?: string }) {
   if (!msg) return null;
   return (
-    <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+    <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
       <AlertCircle className="h-3 w-3 flex-shrink-0" />{msg}
     </p>
   );
@@ -378,8 +378,8 @@ export default function AddTradeModal({
   const resultLabel = form.outcome === 'loss' ? 'Loss Amount ($)' :
     form.outcome === 'win' ? 'Profit Amount ($)' : 'P&L Amount ($)';
 
-  const resultColor = form.outcome === 'win' ? 'text-emerald-500' :
-    form.outcome === 'loss' ? 'text-red-500' : '';
+  const resultColor = form.outcome === 'win' ? 'text-primary' :
+    form.outcome === 'loss' ? 'text-muted-foreground' : '';
 
   return (
     <AnimatePresence>
@@ -433,7 +433,7 @@ export default function AddTradeModal({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-xs font-medium text-muted-foreground block mb-1.5">
-                  Pair <span className="text-red-500">*</span>
+                  Pair <span className="text-muted-foreground">*</span>
                 </label>
                 <Input
                   value={form.pair}
@@ -445,7 +445,7 @@ export default function AddTradeModal({
               </div>
               <div>
                 <label className="text-xs font-medium text-muted-foreground block mb-1.5">
-                  Date <span className="text-red-500">*</span>
+                  Date <span className="text-muted-foreground">*</span>
                 </label>
                 <input
                   type="date"
@@ -465,12 +465,12 @@ export default function AddTradeModal({
             {form.outcome !== 'breakeven' && (
               <div>
                 <label className={`text-xs font-medium block mb-1.5 ${resultColor || 'text-muted-foreground'}`}>
-                  {resultLabel} <span className="text-red-500">*</span>
+                  {resultLabel} <span className="text-muted-foreground">*</span>
                 </label>
                 <div className="relative">
                   <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium ${
-                    form.outcome === 'win' ? 'text-emerald-500' :
-                    form.outcome === 'loss' ? 'text-red-500' : 'text-muted-foreground'
+                    form.outcome === 'win' ? 'text-primary' :
+                    form.outcome === 'loss' ? 'text-muted-foreground' : 'text-muted-foreground'
                   }`}>
                     {form.outcome === 'loss' ? '-$' : '+$'}
                   </span>
@@ -486,7 +486,7 @@ export default function AddTradeModal({
                 </div>
                 {form.outcome && form.result && (
                   <p className={`text-xs mt-1 font-medium ${
-                    form.outcome === 'win' ? 'text-emerald-500' : 'text-red-500'
+                    form.outcome === 'win' ? 'text-primary' : 'text-muted-foreground'
                   }`}>
                     Will save as: {form.outcome === 'win' ? '+' : '-'}${Math.abs(Number(form.result)).toFixed(2)}
                   </p>
@@ -497,9 +497,9 @@ export default function AddTradeModal({
 
             {/* Breakeven indicator */}
             {form.outcome === 'breakeven' && (
-              <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2.5">
-                <Minus className="h-4 w-4 text-amber-500 flex-shrink-0" />
-                <p className="text-sm text-amber-600 dark:text-amber-400">Result will be saved as $0.00</p>
+              <div className="flex items-center gap-2 bg-muted/10 border border-border/20 rounded-lg px-3 py-2.5">
+                <Minus className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <p className="text-sm text-muted-foreground dark:text-muted-foreground">Result will be saved as $0.00</p>
               </div>
             )}
 

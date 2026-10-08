@@ -57,7 +57,7 @@ function SidebarUser({ onNavigate }: { onNavigate: (id: string) => void }) {
   const { profile, displayName } = useProfile();
   const plan = profile?.plan_type ?? null;
   const badge = plan === 'elite'
-    ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+    ? 'bg-muted/10 text-muted-foreground border-border/20'
     : plan === 'pro'
     ? 'bg-primary/10 text-primary border-primary/20'
     : 'bg-muted text-muted-foreground border-border';

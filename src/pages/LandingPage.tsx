@@ -44,11 +44,11 @@ const SETUP_DATA = [
 ];
 
 const SCORE_ITEMS = [
-  { label: 'Win %',       value: 82, color: '#10b981' },
+  { label: 'Win %',       value: 82, color: '#38BDF8' },
   { label: 'R:R',         value: 76, color: 'hsl(var(--primary))' },
-  { label: 'Discipline',  value: 88, color: '#10b981' },
+  { label: 'Discipline',  value: 88, color: '#38BDF8' },
   { label: 'Execution',   value: 79, color: 'hsl(var(--primary))' },
-  { label: 'Consistency', value: 85, color: '#10b981' },
+  { label: 'Consistency', value: 85, color: '#38BDF8' },
 ];
 
 const ease: any = [0.22, 1, 0.36, 1];
@@ -256,7 +256,7 @@ function Hero({ onSignup }: { onSignup: () => void }) {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }}
           className="flex flex-wrap justify-center gap-4 sm:gap-6 text-xs text-foreground/80 mb-16">
           {['14-day trial', 'Payment method required', 'Setup in 2 minutes', '143 traders trust TradeNova'].map(t => (
-            <span key={t} className="flex items-center gap-1.5"><Check className="h-3 w-3 text-emerald-500" />{t}</span>
+            <span key={t} className="flex items-center gap-1.5"><Check className="h-3 w-3 text-primary" />{t}</span>
           ))}
         </motion.div>
 
@@ -282,8 +282,8 @@ function Hero({ onSignup }: { onSignup: () => void }) {
               className="rounded-md bg-card/95 backdrop-blur-xl border border-primary/20 shadow-2xl shadow-primary/20 p-3 w-[210px]"
             >
               <div className="flex items-center gap-2 mb-1.5">
-                <div className="w-7 h-7 rounded-md bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center">
-                  <TrendingUp className="h-3.5 w-3.5 text-emerald-600" />
+                <div className="w-7 h-7 rounded-md bg-primary/10 border border-primary/25 flex items-center justify-center">
+                  <TrendingUp className="h-3.5 w-3.5 text-primary" />
                 </div>
                 <div>
                   <p className="text-[9px] text-muted-foreground font-semibold tracking-wider uppercase">Trade Closed</p>
@@ -291,7 +291,7 @@ function Hero({ onSignup }: { onSignup: () => void }) {
                 </div>
               </div>
               <div className="flex items-end justify-between">
-                <span className="text-lg font-black font-mono text-emerald-600">+$480</span>
+                <span className="text-lg font-black font-mono text-primary">+$480</span>
                 <span className="text-[9px] text-muted-foreground/70">+2.4R</span>
               </div>
             </motion.div>
@@ -320,7 +320,7 @@ function Hero({ onSignup }: { onSignup: () => void }) {
                   initial={{ width: 0 }}
                   animate={{ width: '84%' }}
                   transition={{ duration: 1.4, delay: 2 }}
-                  className="h-full bg-emerald-300"
+                  className="h-full bg-primary"
                 />
               </div>
             </motion.div>
@@ -341,7 +341,7 @@ function Hero({ onSignup }: { onSignup: () => void }) {
               <div className="flex items-baseline gap-1 mb-2">
                 <span className="text-2xl font-black font-mono text-primary">82</span>
                 <span className="text-[10px] text-muted-foreground/70">/100</span>
-                <span className="ml-auto text-[9px] font-bold text-emerald-600">▲ +4</span>
+                <span className="ml-auto text-[9px] font-bold text-primary">▲ +4</span>
               </div>
               <div className="flex gap-0.5">
                 {Array.from({ length: 10 }).map((_, i) => (
@@ -361,9 +361,9 @@ function Hero({ onSignup }: { onSignup: () => void }) {
             {/* Browser chrome */}
             <div className="flex items-center gap-3 px-5 py-3.5 border-b border-white/[0.06] bg-foreground/[0.02]">
               <div className="flex gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-red-500/60" />
-                <div className="w-3 h-3 rounded-full bg-yellow-500/60" />
-                <div className="w-3 h-3 rounded-full bg-green-500/60" />
+                <div className="w-3 h-3 rounded-full bg-muted/60" />
+                <div className="w-3 h-3 rounded-full bg-muted/60" />
+                <div className="w-3 h-3 rounded-full bg-primary/60" />
               </div>
               <div className="flex-1 flex justify-center">
                 <div className="bg-foreground/[0.02] border border-white/[0.06] rounded-lg px-8 py-1 text-[11px] text-white/30">app.tradenovaos.com/dashboard</div>
@@ -466,15 +466,15 @@ function Hero({ onSignup }: { onSignup: () => void }) {
                           <p className="text-[12px] font-bold text-foreground">Equity Curve</p>
                           <p className="text-[9px] text-muted-foreground/70">Cumulative P&L over time</p>
                         </div>
-                        <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">+$12,480</span>
+                        <span className="text-[10px] text-primary font-bold bg-primary border border-primary px-2 py-0.5 rounded-full">+$12,480</span>
                       </div>
                       <ResponsiveContainer width="100%" height={140}>
                         <AreaChart data={EQUITY_DATA} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
-                          <defs><linearGradient id="hg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#10b981" stopOpacity={0.32}/><stop offset="100%" stopColor="#10b981" stopOpacity={0}/></linearGradient></defs>
+                          <defs><linearGradient id="hg" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#38BDF8" stopOpacity={0.32}/><stop offset="100%" stopColor="#38BDF8" stopOpacity={0}/></linearGradient></defs>
                           <CartesianGrid strokeDasharray="2 4" stroke="#e2e8f0" vertical={false} />
                           <XAxis dataKey="day" tick={{fontSize:8, fill:'#94a3b8'}} axisLine={false} tickLine={false} />
                           <YAxis tick={{fontSize:8, fill:'#94a3b8'}} axisLine={false} tickLine={false} />
-                          <Area type="monotone" dataKey="value" stroke="#10b981" strokeWidth={2} fill="url(#hg)" dot={false}/>
+                          <Area type="monotone" dataKey="value" stroke="#38BDF8" strokeWidth={2} fill="url(#hg)" dot={false}/>
                         </AreaChart>
                       </ResponsiveContainer>
                     </motion.div>
@@ -617,13 +617,13 @@ function Hero({ onSignup }: { onSignup: () => void }) {
                           <motion.div key={i} initial={{opacity:0,y:4}} animate={{opacity:1,y:0}} transition={{delay:1.2+i*0.05}}
                             className="flex items-center justify-between px-2.5 py-1.5 rounded-lg border border-border/70 bg-muted/60">
                             <div className="flex items-center gap-2 min-w-0">
-                              <span className={`w-1.5 h-1.5 rounded-full ${t.win ? 'bg-emerald-500' : 'bg-red-500'}`} />
+                              <span className={`w-1.5 h-1.5 rounded-full ${t.win ? 'bg-primary' : 'bg-muted'}`} />
                               <div className="leading-tight min-w-0">
                                 <p className="text-[10px] font-bold text-foreground truncate">{t.pair}</p>
                                 <p className="text-[8px] text-muted-foreground">{t.side} · {t.date}</p>
                               </div>
                             </div>
-                            <p className={`text-[11px] font-bold font-mono ${t.win ? 'text-emerald-600' : 'text-red-600'}`}>{t.result>0?'+':'-'}${Math.abs(t.result)}</p>
+                            <p className={`text-[11px] font-bold font-mono ${t.win ? 'text-primary' : 'text-muted-foreground'}`}>{t.result>0?'+':'-'}${Math.abs(t.result)}</p>
                           </motion.div>
                         ))}
                       </div>
@@ -637,7 +637,7 @@ function Hero({ onSignup }: { onSignup: () => void }) {
                           <div key={s.name}>
                             <div className="flex items-center justify-between mb-1">
                               <span className="text-[10px] text-foreground/80 font-medium">{s.name}</span>
-                              <span className="text-[10px] font-bold font-mono text-emerald-600">+${s.value.toLocaleString()}</span>
+                              <span className="text-[10px] font-bold font-mono text-primary">+${s.value.toLocaleString()}</span>
                             </div>
                             <div className="h-1 bg-secondary rounded-full overflow-hidden">
                               <motion.div initial={{width:0}} animate={{width:`${s.pct}%`}} transition={{duration:0.7,delay:1.25+i*0.08}} className="h-full rounded-full bg-gradient-to-r from-primary to-cyan-400"/>
@@ -686,11 +686,11 @@ const CM: Record<string,any> = {
   violet: {bg:'bg-primary/10', b:'border-primary/20',  t:'text-primary',  bd:'bg-primary/15 text-primary'},
   blue:   {bg:'bg-blue-500/10',    b:'border-blue-500/20',    t:'text-blue-400',    bd:'bg-blue-500/15 text-blue-300'},
   pink:   {bg:'bg-primary/10',    b:'border-primary/20',    t:'text-primary',    bd:'bg-primary/15 text-primary'},
-  emerald:{bg:'bg-emerald-500/10', b:'border-emerald-500/20', t:'text-emerald-400', bd:'bg-emerald-500/15 text-emerald-300'},
-  amber:  {bg:'bg-amber-500/10',   b:'border-amber-500/20',   t:'text-amber-400',   bd:'bg-amber-500/15 text-amber-300'},
+  emerald:{bg:'bg-primary/10', b:'border-primary/20', t:'text-primary', bd:'bg-primary/15 text-primary'},
+  amber:  {bg:'bg-muted/10',   b:'border-border/20',   t:'text-muted-foreground',   bd:'bg-muted/15 text-muted-foreground'},
   purple: {bg:'bg-primary/10', b:'border-primary/20',  t:'text-primary',  bd:'bg-primary/15 text-primary'},
   cyan:   {bg:'bg-cyan-500/10', b:'border-cyan-500/20',    t:'text-cyan-400',    bd:'bg-cyan-500/15 text-cyan-300'},
-  green:  {bg:'bg-green-500/10', b:'border-green-500/20',   t:'text-green-400',   bd:'bg-green-500/15 text-green-300'},
+  green:  {bg:'bg-primary/10', b:'border-primary/20',   t:'text-primary',   bd:'bg-primary/15 text-primary'},
 };
 
 function Features() {
@@ -785,7 +785,7 @@ function DashboardShowcase({ onSignup }: { onSignup: () => void }) {
           className="rounded-lg border border-white/[0.06] bg-[#08080f] overflow-hidden shadow-2xl shadow-primary/15">
           <div className="grid grid-cols-2 lg:grid-cols-4 border-b border-white/[0.06]">
             {[
-              {l:'Total P&L', v:'+$12,480.75', c:'text-emerald-400'},
+              {l:'Total P&L', v:'+$12,480.75', c:'text-primary'},
               {l:'Win Rate',  v:'68%',          c:'text-white'},
               {l:'Avg R:R',   v:'1:3.2',        c:'text-blue-400'},
               {l:'Trades',    v:'143',           c:'text-primary'},
@@ -801,7 +801,7 @@ function DashboardShowcase({ onSignup }: { onSignup: () => void }) {
             <div className="lg:col-span-2 p-5 sm:p-6 border-r border-white/[0.06]">
               <div className="flex items-center justify-between mb-4">
                 <div><p className="text-sm font-bold text-white">Equity Curve</p><p className="text-[11px] text-white/30">Jan – Dec 2025</p></div>
-                <span className="text-sm font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full">+$12,480.75</span>
+                <span className="text-sm font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">+$12,480.75</span>
               </div>
               <ResponsiveContainer width="100%" height={180}>
                 <AreaChart data={EQUITY_DATA}>
@@ -839,12 +839,12 @@ function DashboardShowcase({ onSignup }: { onSignup: () => void }) {
                   <motion.div key={i} initial={{opacity:0,x:-6}} animate={inView?{opacity:1,x:0}:{}} transition={{delay:0.15+i*0.07}}
                     className="flex items-center justify-between py-2.5 border-b border-white/[0.04] last:border-0 hover:bg-card rounded-lg px-2 -mx-2 transition-colors">
                     <div className="flex items-center gap-3">
-                      <div className={`w-1 h-6 rounded-full ${t.win?'bg-emerald-500':'bg-red-500'}`}/>
+                      <div className={`w-1 h-6 rounded-full ${t.win?'bg-primary':'bg-muted'}`}/>
                       <div><p className="text-sm font-semibold text-white">{t.pair}</p><p className="text-[10px] text-white/30">{t.side} · {t.date}</p></div>
                     </div>
                     <div className="text-right">
-                      <p className={`text-sm font-bold font-mono ${t.win?'text-emerald-400':'text-red-400'}`}>{t.result>0?'+':''}${Math.abs(t.result).toFixed(2)}</p>
-                      <p className={`text-[10px] ${t.win?'text-emerald-400/50':'text-red-400/50'}`}>{t.win?'Win':'Loss'}</p>
+                      <p className={`text-sm font-bold font-mono ${t.win?'text-primary':'text-muted-foreground'}`}>{t.result>0?'+':''}${Math.abs(t.result).toFixed(2)}</p>
+                      <p className={`text-[10px] ${t.win?'text-primary/50':'text-muted-foreground/50'}`}>{t.win?'Win':'Loss'}</p>
                     </div>
                   </motion.div>
                 ))}
@@ -859,7 +859,7 @@ function DashboardShowcase({ onSignup }: { onSignup: () => void }) {
                       <span className="text-sm font-semibold text-white">{s.name}</span>
                       <div className="flex items-center gap-3">
                         <span className="text-[10px] text-white/30">{s.pct}% WR</span>
-                        <span className="text-sm font-bold text-emerald-400">+${s.value.toLocaleString()}</span>
+                        <span className="text-sm font-bold text-primary">+${s.value.toLocaleString()}</span>
                       </div>
                     </div>
                     <div className="h-1.5 bg-foreground/[0.05] rounded-full overflow-hidden">
@@ -902,7 +902,7 @@ function Testimonials() {
           {tms.map((t,i) => (
             <motion.div key={t.name} initial={{opacity:0,y:16}} animate={inView?{opacity:1,y:0}:{}} transition={{delay:i*0.09,duration:0.5}} whileHover={{y:-4,transition:{duration:0.2}}}
               className="rounded-md border border-border bg-card p-5 hover:border-primary/25 hover:bg-muted transition-all">
-              <div className="flex gap-0.5 mb-4">{[1,2,3,4,5].map(j=><Star key={j} className="h-3.5 w-3.5 text-amber-600 fill-amber-400"/>)}</div>
+              <div className="flex gap-0.5 mb-4">{[1,2,3,4,5].map(j=><Star key={j} className="h-3.5 w-3.5 text-muted-foreground fill-muted-foreground"/>)}</div>
               <p className="text-sm text-foreground/80 leading-relaxed mb-5">"{t.text}"</p>
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-primary/25 border border-primary/25 flex items-center justify-center text-[11px] font-bold text-primary">{t.av}</div>
@@ -940,7 +940,7 @@ function Pricing({ onSignup }: { onSignup: () => void }) {
                 <div className="flex items-end gap-1"><span className="text-4xl font-black text-foreground">{p.price}</span>{(p as any).per&&<span className="text-muted-foreground text-sm mb-1">{(p as any).per}</span>}</div>
                 <p className="text-xs text-muted-foreground mt-1">{p.desc}</p>
               </div>
-              <ul className="space-y-2.5 mb-6">{p.features.map(f=><li key={f} className="flex items-center gap-2 text-sm text-muted-foreground"><Check className="h-3.5 w-3.5 text-emerald-600 flex-shrink-0"/>{f}</li>)}</ul>
+              <ul className="space-y-2.5 mb-6">{p.features.map(f=><li key={f} className="flex items-center gap-2 text-sm text-muted-foreground"><Check className="h-3.5 w-3.5 text-primary flex-shrink-0"/>{f}</li>)}</ul>
               <button onClick={onSignup} className={`w-full py-3 rounded-md text-sm font-bold transition-all ${p.hi?'bg-primary hover:bg-primary text-foreground hover:shadow-lg hover:shadow-primary/20':'border border-border text-foreground/80 hover:bg-secondary hover:text-foreground'}`}>{p.cta}</button>
             </motion.div>
           ))}

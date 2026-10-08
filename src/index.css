@@ -19,8 +19,8 @@
     --muted-foreground: 215 20% 65%;
     --accent: 199 60% 10%;
     --accent-foreground: 210 40% 98%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 215 20% 65%;
+    --destructive-foreground: 210 33% 1%;
     --border: 221 38% 14%;
     --input: 221 38% 14%;
     --ring: 199 93% 60%;
@@ -40,12 +40,12 @@
     --surface-1: 220 30% 4%;
     --surface-2: 220 27% 4%;
     --surface-3: 218 27% 6%;
-    --success: 142 71% 45%;
+    --success: 199 93% 60%;
     --success-foreground: 210 33% 1%;
-    --warning: 38 92% 50%;
+    --warning: 210 40% 98%;
     --warning-foreground: 210 33% 1%;
-    --danger: 0 84% 60%;
-    --danger-foreground: 210 40% 98%;
+    --danger: 215 20% 65%;
+    --danger-foreground: 210 33% 1%;
 
     --blue-glow: 199 93% 60%;
     --electric-blue: 199 93% 60%;

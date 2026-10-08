@@ -498,7 +498,7 @@ export default function DashboardOverview({ onNavigate, onAddTrade }: Props) {
             <Badge
               variant="outline"
               className={`py-1 px-2 text-[11px] ${
-                activeAccount.status === 'connected' ? 'text-emerald-600 border-emerald-500/30 bg-emerald-500/10'
+                activeAccount.status === 'connected' ? 'text-primary border-primary/30 bg-primary/10'
                 : activeAccount.status === 'error' ? 'text-danger border-danger/30 bg-danger/10'
                 : 'text-muted-foreground'
               }`}

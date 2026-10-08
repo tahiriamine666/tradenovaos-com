@@ -241,7 +241,7 @@ export default function FairValueGapsGuide() {
                 <div className="flex flex-wrap gap-4 mb-5">
                   {['Free forever plan', 'No credit card', 'Setup in 2 minutes'].map((t) => (
                     <span key={t} className="flex items-center gap-1.5 text-xs text-slate-700">
-                      <Check className="h-3 w-3 text-emerald-600" />
+                      <Check className="h-3 w-3 text-primary" />
                       {t}
                     </span>
                   ))}

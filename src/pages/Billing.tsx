@@ -29,11 +29,11 @@ function fmtDate(iso: string | null): string {
 }
 
 const STATUS_LABEL: Record<string, { label: string; color: string }> = {
-  on_trial:  { label: 'Trial active',   color: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' },
-  trialing:  { label: 'Trial active',   color: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' },
-  active:    { label: 'Active',         color: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' },
-  past_due:  { label: 'Past due',       color: 'bg-amber-500/15 text-amber-600 dark:text-amber-400' },
-  paused:    { label: 'Paused',         color: 'bg-amber-500/15 text-amber-600 dark:text-amber-400' },
+  on_trial:  { label: 'Trial active',   color: 'bg-primary/15 text-primary dark:text-primary' },
+  trialing:  { label: 'Trial active',   color: 'bg-primary/15 text-primary dark:text-primary' },
+  active:    { label: 'Active',         color: 'bg-primary/15 text-primary dark:text-primary' },
+  past_due:  { label: 'Past due',       color: 'bg-muted/15 text-muted-foreground dark:text-muted-foreground' },
+  paused:    { label: 'Paused',         color: 'bg-muted/15 text-muted-foreground dark:text-muted-foreground' },
   cancelled: { label: 'Cancelled',      color: 'bg-muted text-muted-foreground' },
   canceled:  { label: 'Cancelled',      color: 'bg-muted text-muted-foreground' },
   expired:   { label: 'Expired',        color: 'bg-muted text-muted-foreground' },
@@ -116,7 +116,7 @@ export default function Billing() {
               <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div className="flex items-center gap-4">
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                    effectivePlan === 'elite' ? 'bg-amber-500/15 text-amber-500'
+                    effectivePlan === 'elite' ? 'bg-muted/15 text-muted-foreground'
                       : effectivePlan === 'pro' ? 'bg-primary/15 text-primary dark:text-primary'
                       : 'bg-muted text-muted-foreground'
                   }`}>

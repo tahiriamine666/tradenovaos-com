@@ -30,8 +30,8 @@ const NAV_ITEMS = [
     dropdown: [
       { icon: TrendingUp,  label: 'Forex Traders',       desc: 'Optimize your forex edge with data',          path: '/solutions/forex-traders',       color: 'text-primary' },
       { icon: BarChart3,   label: 'Futures Traders',     desc: 'Track and improve futures performance',       path: '/solutions/futures-traders',     color: 'text-blue-600' },
-      { icon: Building2,   label: 'Prop Firm Traders',   desc: 'Pass challenges and manage funded accounts',  path: '/solutions/prop-firm-traders',   color: 'text-amber-600' },
-      { icon: Globe,       label: 'Crypto Traders',      desc: 'Journal crypto trades across all exchanges',  path: '/solutions/crypto-traders',      color: 'text-emerald-600' },
+      { icon: Building2,   label: 'Prop Firm Traders',   desc: 'Pass challenges and manage funded accounts',  path: '/solutions/prop-firm-traders',   color: 'text-muted-foreground' },
+      { icon: Globe,       label: 'Crypto Traders',      desc: 'Journal crypto trades across all exchanges',  path: '/solutions/crypto-traders',      color: 'text-primary' },
       { icon: Users,       label: 'Trading Communities', desc: 'Tools for trading educators and groups',      path: '/solutions/trading-communities', color: 'text-primary' },
     ],
   },

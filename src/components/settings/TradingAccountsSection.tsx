@@ -46,11 +46,11 @@ const money = (v: number | null | undefined, currency?: string | null) =>
 
 function StatusPill({ status }: { status: Status }) {
   const map: Record<Status, { label: string; icon: React.ElementType; cls: string }> = {
-    connected:    { label: 'Connected',    icon: CheckCircle2, cls: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
+    connected:    { label: 'Connected',    icon: CheckCircle2, cls: 'bg-primary/10 text-primary border-primary/20' },
     pending:      { label: 'Pending',      icon: CircleDashed, cls: 'bg-muted text-muted-foreground border-border' },
     connecting:   { label: 'Connecting',   icon: RefreshCw,    cls: 'bg-primary/10 text-primary border-primary/20' },
     disconnected: { label: 'Disconnected', icon: CircleDashed, cls: 'bg-muted text-muted-foreground border-border' },
-    error:        { label: 'Error',        icon: XCircle,      cls: 'bg-red-500/10 text-red-500 border-red-500/20' },
+    error:        { label: 'Error',        icon: XCircle,      cls: 'bg-muted/10 text-muted-foreground border-border/20' },
   };
   const { label, icon: Icon, cls } = map[status] ?? map.disconnected;
   return (
@@ -397,7 +397,7 @@ export default function TradingAccountsSection() {
                       </div>
                       <div className="rounded-lg bg-muted/50 py-2">
                         <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Profit</p>
-                        <p className={`text-sm font-semibold ${(profitPct ?? 0) >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                        <p className={`text-sm font-semibold ${(profitPct ?? 0) >= 0 ? 'text-primary' : 'text-muted-foreground'}`}>
                           {profitPct == null ? '—' : `${profitPct >= 0 ? '+' : ''}${profitPct}%`}
                         </p>
                       </div>
@@ -421,7 +421,7 @@ export default function TradingAccountsSection() {
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-[10px] text-muted-foreground">
                         {a.sync_error
-                          ? <span className="text-red-500">{a.sync_error}</span>
+                          ? <span className="text-muted-foreground">{a.sync_error}</span>
                           : a.last_synced_at
                             ? `Synced ${new Date(a.last_synced_at).toLocaleString()} · ${met.trades ?? 0} trades`
                             : 'Never synced'}
@@ -444,7 +444,7 @@ export default function TradingAccountsSection() {
                         <Button
                           size="icon" variant="ghost" title="Delete"
                           onClick={() => setDeleteTarget(a)}
-                          className="text-red-500 hover:text-red-500 hover:bg-red-500/10"
+                          className="text-muted-foreground hover:text-muted-foreground hover:bg-muted/10"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -664,7 +664,7 @@ export default function TradingAccountsSection() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-500 hover:bg-red-500/90">
+            <AlertDialogAction onClick={handleDelete} className="bg-muted hover:bg-muted/90">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

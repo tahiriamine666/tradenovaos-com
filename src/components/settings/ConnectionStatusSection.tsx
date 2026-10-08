@@ -17,11 +17,11 @@ import ConnectionDiagnostics, { initialSteps, mergeSteps, type DiagStep } from '
 type Status = TradingAccountRecord['status'];
 
 const STATUS_META: Record<Status, { label: string; cls: string; icon: React.ElementType }> = {
-  connected:    { label: 'Connected',    cls: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20', icon: CheckCircle2 },
+  connected:    { label: 'Connected',    cls: 'bg-primary/10 text-primary border-primary/20', icon: CheckCircle2 },
   connecting:   { label: 'Connecting',   cls: 'bg-primary/10 text-primary border-primary/20',             icon: RefreshCw },
   pending:      { label: 'Pending',      cls: 'bg-muted text-muted-foreground border-border',             icon: CircleDashed },
   disconnected: { label: 'Disconnected', cls: 'bg-muted text-muted-foreground border-border',             icon: CircleDashed },
-  error:        { label: 'Error',        cls: 'bg-red-500/10 text-red-500 border-red-500/20',             icon: XCircle },
+  error:        { label: 'Error',        cls: 'bg-muted/10 text-muted-foreground border-border/20',             icon: XCircle },
 };
 
 const money = (v: number | null | undefined, currency?: string | null) =>
@@ -148,8 +148,8 @@ export default function ConnectionStatusSection() {
                 </div>
 
                 {a.sync_error && (
-                  <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-2.5">
-                    <p className="text-[11px] text-red-500 break-words">{a.sync_error}</p>
+                  <div className="rounded-lg border border-border/30 bg-muted/5 p-2.5">
+                    <p className="text-[11px] text-muted-foreground break-words">{a.sync_error}</p>
                   </div>
                 )}
 
