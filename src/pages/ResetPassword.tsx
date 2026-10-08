@@ -36,12 +36,17 @@ export default function ResetPassword() {
     if (!canSubmit || ready !== 'ok' || !user || recoverySessionId !== user.id) return;
     setLoading(true);
     setError(null);
-    const { error: err } = await supabase.auth.updateUser({ password });
-    setLoading(false);
-    if (err) { setError(err.message); return; }
-    setDone(true);
-    await supabase.auth.signOut();
-    redirectTimer.current = setTimeout(() => navigate('/login', { replace: true }), 2000);
+    try {
+      const { error: err } = await supabase.auth.updateUser({ password });
+      if (err) { setError(err.message); return; }
+      setDone(true);
+      await supabase.auth.signOut();
+      redirectTimer.current = setTimeout(() => navigate('/login', { replace: true }), 2000);
+    } catch {
+      setError('Could not complete the request. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (done) {
