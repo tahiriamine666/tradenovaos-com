@@ -1,0 +1,213 @@
+// Pure statistics for Weekly / Bi-Weekly reviews. Unknown values are `null`
+// (rendered as "Unavailable"), never fake zeros. A trade whose `result` is
+// null is UNRESOLVED — it is not breakeven.
+
+export type ReviewTrade = {
+  id: string; pair: string; side: string | null; result: number | null; rr: number | null;
+  trade_date: string; session: string | null; setup: string | null; playbook_id: string | null;
+  daily_bias: string | null; weekly_context?: string | null;
+  emotion_before: string | null; emotion_after: string | null;
+  confidence_score: number | null; discipline_score: number | null; stress_score: number | null; patience_score: number | null;
+  followed_plan: boolean | null; plan_status: string | null; impulsive_entry: boolean | null;
+  fomo: boolean | null; revenge_trade: boolean | null; hesitation: boolean | null; overconfidence: boolean | null;
+  late_entry: boolean | null; early_exit: boolean | null; moved_stop: boolean | null;
+  checklist_completed: boolean | null; planned_trade: boolean | null;
+  rule_violations: string[] | null; mistakes: string[] | null;
+  risk_percent: number | null; risk_amount: number | null;
+};
+export type ReviewPlan = {
+  plan_date: string; pair: string; session: string | null; market_bias: string | null;
+  max_trades: number | null; max_risk_per_trade: number | null; setups_to_trade: string[] | null;
+  news_events: unknown; checklist?: unknown;
+};
+export type ReviewChecklist = { checklist_type: string; period_date: string; pair: string; status: string; data: any };
+
+export const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+export const addDays = (d: Date, n: number) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+export const parseIso = (s: string) => { const [y, m, d] = s.split('-').map(Number); return new Date(y, m - 1, d); };
+const monday = (d: Date) => addDays(new Date(d.getFullYear(), d.getMonth(), d.getDate()), -((d.getDay() + 6) % 7));
+
+export type PeriodType = 'weekly' | 'biweekly';
+export type Preset = 'this_week' | 'last_week' | 'custom_week' | 'current_2w' | 'previous_2w' | 'custom_range';
+export const PRESETS: Record<PeriodType, { id: Preset; label: string }[]> = {
+  weekly: [{ id: 'this_week', label: 'This Week' }, { id: 'last_week', label: 'Last Week' }, { id: 'custom_week', label: 'Custom Week' }, { id: 'custom_range', label: 'Custom Date Range' }],
+  biweekly: [{ id: 'current_2w', label: 'Current 2 Weeks' }, { id: 'previous_2w', label: 'Previous 2 Weeks' }, { id: 'custom_range', label: 'Custom Date Range' }],
+};
+
+/** Returns ISO start/end for a preset. `customStart` picks the week for custom_week; custom_range uses both. */
+export function resolvePeriod(preset: Preset, today: Date, customStart?: string, customEnd?: string): { start: string; end: string } | null {
+  const m = monday(today);
+  switch (preset) {
+    case 'this_week': return { start: iso(m), end: iso(addDays(m, 6)) };
+    case 'last_week': return { start: iso(addDays(m, -7)), end: iso(addDays(m, -1)) };
+    case 'current_2w': return { start: iso(addDays(m, -7)), end: iso(addDays(m, 6)) };
+    case 'previous_2w': return { start: iso(addDays(m, -21)), end: iso(addDays(m, -8)) };
+    case 'custom_week': { if (!customStart) return null; const s = monday(parseIso(customStart)); return { start: iso(s), end: iso(addDays(s, 6)) }; }
+    case 'custom_range': if (!customStart || !customEnd || customEnd < customStart) return null; return { start: customStart, end: customEnd };
+  }
+}
+
+const num = (v: unknown) => (v == null || v === '' || Number.isNaN(Number(v)) ? null : Number(v));
+export const avg = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
+const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0);
+function group<T>(xs: T[], key: (x: T) => string | null | undefined) {
+  const m = new Map<string, T[]>(); xs.forEach((x) => { const k = key(x); if (k) m.set(k, [...(m.get(k) ?? []), x]); }); return m;
+}
+export function counts(xs: (string | null | undefined)[]) {
+  const m: Record<string, number> = {}; xs.forEach((x) => { if (x) m[x] = (m[x] ?? 0) + 1; });
+  return Object.entries(m).sort((a, b) => b[1] - a[1]);
+}
+
+// ── Performance ──────────────────────────────────────────────────────────────
+export function performance(trades: ReviewTrade[], setupName: (t: ReviewTrade) => string | null = (t) => t.setup) {
+  const resolved = trades.filter((t) => num(t.result) != null);
+  const pnl = resolved.map((t) => Number(t.result));
+  const wins = pnl.filter((x) => x > 0), losses = pnl.filter((x) => x < 0);
+  const grossWin = sum(wins), grossLoss = Math.abs(sum(losses));
+  const rank = (m: Map<string, ReviewTrade[]>) => [...m.entries()].map(([k, ts]) => ({ key: k, pnl: sum(ts.map((t) => Number(t.result))), trades: ts.length }))
+    .sort((a, b) => b.pnl - a.pnl);
+  const byPair = rank(group(resolved, (t) => t.pair)), bySession = rank(group(resolved, (t) => t.session)), bySetup = rank(group(resolved, setupName));
+  const sorted = [...resolved].sort((a, b) => Number(b.result) - Number(a.result));
+  const rrs = trades.map((t) => num(t.rr)).filter((x): x is number => x != null);
+  return {
+    total: trades.length, resolved: resolved.length, unresolved: trades.length - resolved.length,
+    wins: wins.length, losses: losses.length, breakeven: pnl.filter((x) => x === 0).length,
+    winRate: resolved.length ? (wins.length / resolved.length) * 100 : null,
+    net: resolved.length ? sum(pnl) : null,
+    avgRR: avg(rrs), avgWin: avg(wins), avgLoss: avg(losses),
+    profitFactor: grossLoss > 0 ? grossWin / grossLoss : null, // null when no losses (undefined ratio)
+    expectancy: resolved.length ? sum(pnl) / resolved.length : null,
+    bestTrade: sorted[0] ?? null, worstTrade: sorted.length ? sorted[sorted.length - 1] : null,
+    bestPair: byPair[0] ?? null, worstPair: byPair.length > 1 ? byPair[byPair.length - 1] : null,
+    bestSession: bySession[0] ?? null, worstSession: bySession.length > 1 ? bySession[bySession.length - 1] : null,
+    bestSetup: bySetup[0] ?? null, worstSetup: bySetup.length > 1 ? bySetup[bySetup.length - 1] : null,
+    sides: rank(group(resolved, (t) => t.side)).map((s) => ({ ...s, winRate: (resolved.filter((t) => t.side === s.key && Number(t.result) > 0).length / s.trades) * 100 })),
+    duration: null as null, // trades store no entry/exit timestamps
+  };
+}
+
+// ── Execution ────────────────────────────────────────────────────────────────
+export const planStatus = (t: ReviewTrade): 'yes' | 'no' | 'partial' | null =>
+  (t.plan_status as any) ?? (t.followed_plan === true ? 'yes' : t.followed_plan === false ? 'no' : null);
+const flagCount = (trades: ReviewTrade[], k: keyof ReviewTrade) => {
+  const rec = trades.filter((t) => t[k] != null); return rec.length ? { count: rec.filter((t) => t[k] === true).length, recorded: rec.length } : null;
+};
+const biasDir = (b: string | null | undefined) => { const s = (b ?? '').toLowerCase(); return s.includes('bull') ? 'long' : s.includes('bear') ? 'short' : null; };
+
+export function execution(trades: ReviewTrade[], plans: ReviewPlan[], checklists: ReviewChecklist[]) {
+  const ps = trades.map(planStatus).filter(Boolean) as string[];
+  const planFor = (t: ReviewTrade) => plans.find((p) => p.plan_date === t.trade_date && p.pair === t.pair) ?? null;
+  const sessionChecked = trades.filter((t) => t.session && planFor(t)?.session);
+  const dailyAligned = trades.filter((t) => t.side && biasDir(t.daily_bias));
+  const weekly = checklists.filter((c) => c.checklist_type === 'weekly_outlook' || c.checklist_type === 'weekly');
+  const weeklyBiasFor = (t: ReviewTrade) => {
+    const w = weekly.filter((c) => c.period_date <= t.trade_date && t.trade_date <= iso(addDays(parseIso(c.period_date), 6)));
+    return biasDir(w.map((c) => c.data?.bias).find(Boolean));
+  };
+  const weeklyAligned = trades.filter((t) => t.side && weeklyBiasFor(t));
+  const days = group(trades, (t) => `${t.trade_date}|${t.pair}`);
+  const overtrade: { date: string; pair: string; trades: number; max: number }[] = [];
+  let overtradeChecked = 0;
+  days.forEach((ts, k) => { const [date, pair] = k.split('|'); const p = plans.find((x) => x.plan_date === date && x.pair === pair); const max = num(p?.max_trades);
+    if (max != null && max > 0) { overtradeChecked++; if (ts.length > max) overtrade.push({ date, pair, trades: ts.length, max }); } });
+  const ruleAttempts = trades.filter((t) => t.checklist_completed != null);
+  return {
+    plan: ps.length ? { yes: ps.filter((x) => x === 'yes').length, no: ps.filter((x) => x === 'no').length, partial: ps.filter((x) => x === 'partial').length, recorded: ps.length } : null,
+    violations: counts(trades.flatMap((t) => t.rule_violations ?? [])),
+    mistakes: counts(trades.flatMap((t) => t.mistakes ?? [])),
+    checklist: ruleAttempts.length ? { completed: ruleAttempts.filter((t) => t.checklist_completed).length, recorded: ruleAttempts.length } : null,
+    outsideSession: sessionChecked.length ? { count: sessionChecked.filter((t) => planFor(t)!.session!.toLowerCase() !== t.session!.toLowerCase()).length, recorded: sessionChecked.length } : null,
+    dailyBias: dailyAligned.length ? { aligned: dailyAligned.filter((t) => biasDir(t.daily_bias) === t.side).length, recorded: dailyAligned.length } : null,
+    weeklyBias: weeklyAligned.length ? { aligned: weeklyAligned.filter((t) => weeklyBiasFor(t) === t.side).length, recorded: weeklyAligned.length } : null,
+    overtrade: overtradeChecked ? { days: overtrade, excess: sum(overtrade.map((d) => d.trades - d.max)), checkedDays: overtradeChecked } : null,
+    revenge: flagCount(trades, 'revenge_trade'), lateEntries: flagCount(trades, 'late_entry'), earlyExits: flagCount(trades, 'early_exit'),
+    movedStop: flagCount(trades, 'moved_stop'), impulsive: flagCount(trades, 'impulsive_entry'),
+    missedSetups: null as null, // not recorded anywhere in the data model
+  };
+}
+
+// ── Planning ─────────────────────────────────────────────────────────────────
+export function planning(trades: ReviewTrade[], plans: ReviewPlan[], checklists: ReviewChecklist[]) {
+  const withPlan = trades.filter((t) => plans.some((p) => p.plan_date === t.trade_date && p.pair === t.pair));
+  const setupComparable = trades.filter((t) => t.setup && plans.find((p) => p.plan_date === t.trade_date && p.pair === t.pair)?.setups_to_trade?.length);
+  const riskComparable = trades.filter((t) => num(t.risk_percent) != null && num(plans.find((p) => p.plan_date === t.trade_date && p.pair === t.pair)?.max_risk_per_trade) != null);
+  const news = plans.flatMap((p) => (Array.isArray(p.news_events) ? p.news_events : []));
+  const weekly = checklists.filter((c) => c.checklist_type === 'weekly_outlook' || c.checklist_type === 'weekly');
+  weekly.forEach((c) => { if (Array.isArray(c.data?.news)) news.push(...c.data.news); });
+  const pairChecks = checklists.filter((c) => c.checklist_type === 'pair_checklist');
+  return {
+    dailyPlans: plans.length, planDays: new Set(plans.map((p) => p.plan_date)).size,
+    weeklyOutlooks: weekly.length, weeklyComplete: weekly.filter((c) => c.status === 'complete').length,
+    dailyOutlooks: checklists.filter((c) => c.checklist_type === 'daily').length,
+    pairChecklists: pairChecks.length ? { complete: pairChecks.filter((c) => c.status === 'complete').length, total: pairChecks.length } : null,
+    tradesWithPlan: trades.length ? { count: withPlan.length, total: trades.length } : null,
+    setupMatch: setupComparable.length ? { matched: setupComparable.filter((t) => plans.find((p) => p.plan_date === t.trade_date && p.pair === t.pair)!.setups_to_trade!.some((s) => s.toLowerCase() === t.setup!.toLowerCase())).length, recorded: setupComparable.length } : null,
+    riskOver: riskComparable.length ? { over: riskComparable.filter((t) => Number(t.risk_percent) > Number(plans.find((p) => p.plan_date === t.trade_date && p.pair === t.pair)!.max_risk_per_trade)).length, recorded: riskComparable.length } : null,
+    news: news.map((n: any) => (typeof n === 'string' ? n : n?.title)).filter(Boolean) as string[],
+  };
+}
+
+// ── Psychology (scores stored 1–10; UI shows /5 as value/2) ─────────────────
+export const toFive = (v: number | null) => (v == null ? null : v / 2);
+export function pearson(xs: number[], ys: number[]) {
+  const n = xs.length; if (n < 5 || n !== ys.length) return null;
+  const mx = sum(xs) / n, my = sum(ys) / n;
+  const sxy = sum(xs.map((x, i) => (x - mx) * (ys[i] - my))), sxx = sum(xs.map((x) => (x - mx) ** 2)), syy = sum(ys.map((y) => (y - my) ** 2));
+  if (sxx === 0 || syy === 0) return null; return sxy / Math.sqrt(sxx * syy);
+}
+export function psychology(trades: ReviewTrade[]) {
+  const scores = (k: keyof ReviewTrade) => avg(trades.map((t) => num(t[k])).filter((x): x is number => x != null));
+  const byDay = [...group(trades.filter((t) => num(t.result) != null), (t) => t.trade_date).entries()].map(([date, ts]) => ({
+    date, pnl: sum(ts.map((t) => Number(t.result))), discipline: avg(ts.map((t) => num(t.discipline_score)).filter((x): x is number => x != null)),
+    stress: avg(ts.map((t) => num(t.stress_score)).filter((x): x is number => x != null)),
+  })).sort((a, b) => b.pnl - a.pnl);
+  const corr = (k: 'discipline' | 'stress') => { const d = byDay.filter((x) => x[k] != null); return pearson(d.map((x) => x[k]!), d.map((x) => x.pnl)); };
+  return {
+    confidence: scores('confidence_score'), discipline: scores('discipline_score'), patience: scores('patience_score'), stress: scores('stress_score'),
+    fomo: flagCount(trades, 'fomo'), revenge: flagCount(trades, 'revenge_trade'), hesitation: flagCount(trades, 'hesitation'), overconfidence: flagCount(trades, 'overconfidence'),
+    emotionsBefore: counts(trades.map((t) => t.emotion_before)), emotionsAfter: counts(trades.map((t) => t.emotion_after)),
+    bestDay: byDay[0] ?? null, worstDay: byDay.length > 1 ? byDay[byDay.length - 1] : null,
+    disciplineVsPnl: corr('discipline'), stressVsPnl: corr('stress'),
+  };
+}
+
+// ── Rule-based insights (only with sufficient real samples) ─────────────────
+export function insights(p: ReturnType<typeof performance>, e: ReturnType<typeof execution>, psy: ReturnType<typeof psychology>): string[] {
+  const out: string[] = [];
+  if (p.resolved >= 5 && p.winRate != null) out.push(`Win rate ${p.winRate.toFixed(0)}% across ${p.resolved} resolved trades.`);
+  if (p.bestSetup && p.bestSetup.trades >= 3) out.push(`Best setup by P&L: ${p.bestSetup.key} (${p.bestSetup.trades} trades).`);
+  if (e.plan && e.plan.recorded >= 5 && e.plan.no / e.plan.recorded >= 0.3) out.push(`Plan not followed on ${e.plan.no} of ${e.plan.recorded} recorded trades.`);
+  if (e.violations[0] && e.violations[0][1] >= 2) out.push(`Most broken rule: ${e.violations[0][0]} (${e.violations[0][1]}×).`);
+  if (e.overtrade && e.overtrade.days.length) out.push(`Exceeded planned max trades on ${e.overtrade.days.length} day(s), ${e.overtrade.excess} extra trade(s).`);
+  if (psy.disciplineVsPnl != null && Math.abs(psy.disciplineVsPnl) >= 0.5) out.push(`Discipline and daily P&L move ${psy.disciplineVsPnl > 0 ? 'together' : 'opposite'} (r=${psy.disciplineVsPnl.toFixed(2)}).`);
+  if (psy.fomo && psy.fomo.recorded >= 5 && psy.fomo.count >= 2) out.push(`FOMO flagged on ${psy.fomo.count} of ${psy.fomo.recorded} trades.`);
+  return out;
+}
+
+// ── Reflection / action plan ─────────────────────────────────────────────────
+export const QUESTIONS = [
+  ['did_well', 'What did I do well?'], ['went_wrong', 'What went wrong?'], ['repeated_mistakes', 'What mistakes repeated?'],
+  ['rule_broken_most', 'Which rule did I break most?'], ['best_setup', 'Which setup worked best?'], ['worst_setup', 'Which setup performed worst?'],
+  ['learned', 'What did I learn?'], ['stop_doing', 'What should I stop doing?'], ['continue_doing', 'What should I continue doing?'],
+  ['improve_next', 'What should I improve next week?'], ['main_focus', 'Main focus for next week'], ['process_goal', 'One process goal'],
+  ['risk_goal', 'One risk goal'], ['psychology_goal', 'One psychology goal'],
+] as const;
+export const ACTION_FIELDS = [
+  ['primary_focus', 'Primary focus', 'text'], ['max_trades_per_day', 'Max trades per day', 'number'], ['max_daily_loss', 'Max daily loss', 'number'],
+  ['risk_per_trade', 'Risk per trade (%)', 'number'], ['preferred_sessions', 'Preferred sessions', 'text'], ['avoid_conditions', 'Avoid these conditions', 'text'],
+  ['rules_focus', 'Rules to focus on', 'text'], ['psychology_focus', 'Psychology focus', 'text'], ['setup_focus', 'Setup focus', 'text'],
+  ['commitment', 'One sentence commitment', 'text'],
+] as const;
+/** Legacy text columns → new question ids (shown read-only; never auto-copied over a new answer). */
+export const LEGACY_MAP: Record<string, string> = {
+  what_worked: 'did_well', what_didnt_work: 'went_wrong', recurring_patterns: 'repeated_mistakes', rules_broken: 'rule_broken_most',
+  biggest_mistake: 'went_wrong', best_decision: 'did_well', rules_followed: 'continue_doing', what_to_fix: 'improve_next',
+  what_to_modify: 'improve_next', next_period_focus: 'main_focus', keep_doing: 'continue_doing', stop_doing: 'stop_doing',
+  start_doing: 'improve_next', overall_notes: 'learned',
+};
+const filled = (v: unknown) => v != null && String(v).trim() !== '';
+export function completion(answers: Record<string, unknown>, action: Record<string, unknown>) {
+  const total = QUESTIONS.length + ACTION_FIELDS.length;
+  const done = QUESTIONS.filter(([k]) => filled(answers[k])).length + ACTION_FIELDS.filter(([k]) => filled(action[k])).length;
+  return Math.round((done / total) * 100);
+}
