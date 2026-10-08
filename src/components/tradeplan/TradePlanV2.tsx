@@ -10,6 +10,7 @@ import { toast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import robotAsset from '@/assets/tradenova-robot-full.jpg.asset.json';
+import { ChecklistRobot, type RobotReaction } from './ChecklistRobot';
 // Local Vite preview doesn't proxy CDN asset paths; hosted preview does.
 const robotSrc = import.meta.env.DEV ? `https://id-preview--0ee4a120-abbf-401b-9623-1114b47e7fda.lovable.app${robotAsset.url}` : robotAsset.url;
 
@@ -232,6 +233,8 @@ function Checklist({ daily, set, models, onModelsChange, readOnly }: { daily: Da
   const [draft, setDraft] = useState('');
   const [naming, setNaming] = useState<string | null>(null);
   const dragId = useRef<string | null>(null);
+  const [robotReaction, setRobotReaction] = useState<RobotReaction | null>(null);
+  const reactionId = useRef(0);
   const items = daily.checklist;
   const done = items.filter(i => daily.checked[i.id]).length;
   const complete = items.length > 0 && done === items.length;
@@ -290,7 +293,13 @@ function Checklist({ daily, set, models, onModelsChange, readOnly }: { daily: Da
             <div key={i.id} draggable={!readOnly} onDragStart={() => (dragId.current = i.id)} onDragOver={e => e.preventDefault()} onDrop={() => drop(i.id)}
               className={`group flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-all duration-300 ${daily.checked[i.id] ? 'border-primary/30 bg-primary/[0.05]' : 'border-border bg-background/40'}`}>
               {!readOnly && <GripVertical className="h-4 w-4 cursor-grab text-muted-foreground/40" />}
-              <Box disabled={readOnly} checked={!!daily.checked[i.id]} onClick={() => set({ checked: { ...daily.checked, [i.id]: !daily.checked[i.id] } })} />
+              <Box disabled={readOnly} checked={!!daily.checked[i.id]} onClick={() => {
+                if (!daily.checked[i.id]) {
+                  reactionId.current += 1;
+                  setRobotReaction({ id: reactionId.current, kind: done + 1 === items.length ? 'complete' : 'progress' });
+                }
+                set({ checked: { ...daily.checked, [i.id]: !daily.checked[i.id] } });
+              }} />
               {readOnly ? <span className="flex-1 text-sm text-foreground">{i.text}</span> :
                 <input className={`min-w-0 flex-1 bg-transparent text-sm outline-none transition-colors ${daily.checked[i.id] ? 'text-foreground/60' : 'text-foreground'}`} value={i.text} onChange={e => set({ checklist: items.map(x => x.id === i.id ? { ...x, text: e.target.value } : x) })} />}
               {!readOnly && <button type="button" onClick={() => set({ checklist: items.filter(x => x.id !== i.id) })} className="p-1 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-primary" aria-label="Delete item"><Trash2 className="h-3.5 w-3.5" /></button>}
@@ -305,13 +314,7 @@ function Checklist({ daily, set, models, onModelsChange, readOnly }: { daily: Da
             </div>
           )}
         </div>
-        <div className="relative mx-auto flex w-40 flex-col items-center sm:w-full">
-          <div className={`pointer-events-none absolute inset-x-[10%] inset-y-[15%] rounded-full bg-primary blur-3xl transition-opacity duration-1000 ${complete ? 'animate-pulse' : ''}`}
-            style={{ opacity: complete ? 0.32 : 0.05 + (pct / 100) * 0.18, animationDuration: '4s' }} />
-          <img src={robotSrc} alt="TradeNova robot" draggable={false}
-            className="relative max-h-[420px] w-full select-none object-contain mix-blend-lighten" />
-          {complete && <p className="relative mt-2 text-xs font-semibold text-primary animate-fade-in">✓ Checklist Complete</p>}
-        </div>
+        <ChecklistRobot src={robotSrc} complete={complete} reaction={robotReaction} />
       </div>
     </div>
   );

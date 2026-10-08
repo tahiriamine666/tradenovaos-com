@@ -1,4 +1,5 @@
 # Redesign roadmap
+- [x] Animate checklist robot with CSS; verified click-only progress/completion, no uncheck/reload celebration, reduced motion, offscreen pause and mobile framing using intercepted saves; automatic build OK
 - [x] Reconfirm exact #1D7FFF globally; minimized hover brightness, verified rendered public/app accents, active-source old-accent scan clean and automatic build OK; unused metadata and authentic media remain exceptions
 - [x] Hide platform-injected published Lovable badge; public domain has no badge; NOVA float/pulse, stable dimensions, reduced motion and mobile layout verified; automatic build OK
 - [x] Apply exact reference blue globally; rendered RGB 29/127/255 and lighter hover verified, automatic build/typecheck passed; old accents remain only in unused generated palette metadata
