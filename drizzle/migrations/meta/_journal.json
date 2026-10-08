@@ -134,6 +134,13 @@
       "when": 1791498055311,
       "tag": "0018_trading_review_v2_and_trade_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1791499808829,
+      "tag": "0019_restore_old_review_unique_for_compat",
+      "breakpoints": true
     }
   ]
 }

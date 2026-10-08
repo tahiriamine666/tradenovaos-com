@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { AlertCircle, CheckCircle2, History, Loader2, Play, Save } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,20 +7,22 @@ import { useTradesChanged } from '@/contexts/TradeDialogContext';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+// No transparent robot asset exists yet (both robot PNGs are opaque RGB), so the JPEG + lighten blend is kept.
 import robotAsset from '@/assets/tradenova-robot-full.jpg.asset.json';
 const robotSrc = import.meta.env.DEV ? `https://id-preview--0ee4a120-abbf-401b-9623-1114b47e7fda.lovable.app${robotAsset.url}` : robotAsset.url;
 import { fetchAll } from '@/lib/review/fetchAll';
+import { getReviewQueue, type Draft, type SaveFn, type SaveState } from '@/lib/review/saveQueue';
 import {
   ACTION_FIELDS, LEGACY_MAP, PRESETS, QUESTIONS, completion, execution, insights, iso, performance, planning, psychology, resolvePeriod, toFive,
-  type PeriodType, type Preset, type ReviewChecklist, type ReviewPlan, type ReviewTrade,
+  type PeriodType, type Preset, type ReviewChecklist, type ReviewJournal, type ReviewPlan, type ReviewTrade,
 } from '@/lib/review/stats';
 
 const TRADE_COLS = 'id,pair,side,result,rr,trade_date,session,setup,playbook_id,daily_bias,weekly_context,emotion_before,emotion_after,confidence_score,discipline_score,stress_score,patience_score,followed_plan,plan_status,impulsive_entry,fomo,revenge_trade,hesitation,overconfidence,late_entry,early_exit,moved_stop,checklist_completed,planned_trade,rule_violations,mistakes,risk_percent,risk_amount';
+const JOURNAL_COLS = 'id,entry_date,mood,confidence_level,energy_level,rule_adherence,stress_score,stress_label,confidence_score,emotional_trigger,mistakes_list';
 const LEGACY_FIELDS = Object.keys(LEGACY_MAP);
 const RATINGS = [['process_rating', 'Process'], ['execution_rating', 'Execution'], ['risk_rating', 'Risk'], ['psychology_rating', 'Psychology']] as const;
 const HISTORY_PAGE = 10;
-type SaveState = 'idle' | 'saving' | 'saved' | 'error' | 'conflict';
-type Row = { id: string; revision: number; answers: Record<string, string>; action_plan: Record<string, string>; status: string; completion_pct: number; updated_at: string; legacy: Record<string, string | null>; ratings: Record<string, number | null> };
+type ServerRow = { id: string; revision: number; draft: Draft; completion_pct: number; status: string; updated_at: string; legacy: Record<string, string | null> };
 type HistoryRow = { id: string; period_start: string; period_end: string; completion_pct: number; status: string; updated_at: string };
 
 const U = '—';
@@ -29,12 +31,24 @@ const money = (n: number | null | undefined) => (n == null ? na : `${n > 0 ? '+'
 const fx = (n: number | null | undefined, d = 2, suffix = '') => (n == null ? na : `${n.toLocaleString(undefined, { maximumFractionDigits: d })}${suffix}`);
 const frac = (x: { recorded: number } | null, k: string) => (x ? `${(x as any)[k]} / ${x.recorded}` : na);
 
-function toRow(r: any): Row {
+function toServerRow(r: any): ServerRow {
   return {
-    id: r.id, revision: r.revision ?? 0, answers: r.answers ?? {}, action_plan: r.action_plan ?? {}, status: r.status, completion_pct: r.completion_pct, updated_at: r.updated_at,
-    legacy: Object.fromEntries(LEGACY_FIELDS.map((k) => [k, r[k] ?? null])), ratings: Object.fromEntries(RATINGS.map(([k]) => [k, r[k] ?? null])),
+    id: r.id, revision: r.revision ?? 0, completion_pct: r.completion_pct, status: r.status, updated_at: r.updated_at,
+    draft: { answers: r.answers ?? {}, action_plan: r.action_plan ?? {}, ratings: Object.fromEntries(RATINGS.map(([k]) => [k, r[k] ?? null])) },
+    legacy: Object.fromEntries(LEGACY_FIELDS.map((k) => [k, r[k] ?? null])),
   };
 }
+
+/** Optimistic-revision update; the row id and base revision are captured by the queue per review. */
+export const makeSaver = (userId: string): SaveFn => async (id, base, d) => {
+  const pct = completion(d.answers, d.action_plan);
+  const { data, error } = await supabase.from('trading_reviews').update({
+    answers: d.answers, action_plan: d.action_plan, completion_pct: pct, status: pct === 100 ? 'complete' : 'draft', ...d.ratings, revision: base + 1,
+  } as any).eq('id', id).eq('user_id', userId).eq('revision', base).select('id,revision,completion_pct,status,updated_at').maybeSingle();
+  if (error) return { ok: false, kind: 'error', message: error.message };
+  if (!data) return { ok: false, kind: 'conflict' };
+  return { ok: true, revision: data.revision, completion_pct: data.completion_pct, status: data.status, updated_at: data.updated_at };
+};
 
 export function TradingReview({ type = 'weekly' }: { type?: PeriodType }) {
   const { user } = useAuth();
@@ -44,112 +58,103 @@ export function TradingReview({ type = 'weekly' }: { type?: PeriodType }) {
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
   const period = useMemo(() => resolvePeriod(preset, new Date(), customStart, customEnd), [preset, customStart, customEnd]);
-  const identity = period ? `${user?.id}|${accountKey}|${type}|${period.start}|${period.end}` : null;
 
-  const [row, setRow] = useState<Row | null>(null);
+  const [reviewId, setReviewId] = useState<string | null>(null);
+  const [legacy, setLegacy] = useState<Record<string, string | null>>({});
   const [reviewState, setReviewState] = useState<'loading' | 'ready' | 'error'>('loading');
-  const [source, setSource] = useState<{ trades: ReviewTrade[]; plans: ReviewPlan[]; checklists: ReviewChecklist[]; playbooks: Record<string, string> } | null>(null);
+  const [source, setSource] = useState<{ trades: ReviewTrade[]; plans: ReviewPlan[]; checklists: ReviewChecklist[]; journal: ReviewJournal[]; playbooks: Record<string, string> } | null>(null);
   const [sourceError, setSourceError] = useState(false);
   const [history, setHistory] = useState<HistoryRow[]>([]);
   const [historyMore, setHistoryMore] = useState(false);
   const [historyError, setHistoryError] = useState(false);
-  const [save, setSave] = useState<SaveState>('idle');
   const [starting, setStarting] = useState(false);
+  const [startError, setStartError] = useState<string | null>(null);
+  const [navBlocked, setNavBlocked] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
 
-  // ── Save pipeline: one request in flight, optimistic revision, latest snapshot wins
-  const dirty = useRef(false);
-  const latest = useRef<Row | null>(null);
-  const inFlight = useRef<Promise<void> | null>(null);
-  const timer = useRef<number>();
-  const revs = useRef(new Map<string, number>());
-  const persist = useCallback(async (): Promise<void> => {
-    const captured = latest.current; // captured synchronously so identity switches can't drop it
-    if (inFlight.current) { await inFlight.current; if (!dirty.current) return; }
-    const base = latest.current?.id === captured?.id ? latest.current : captured;
-    if (!base || !user || !dirty.current) return;
-    const snap = { ...base, revision: revs.current.get(base.id) ?? base.revision };
-    dirty.current = false;
-    setSave('saving');
-    const pct = completion(snap.answers, snap.action_plan);
-    const run = (async () => {
-      const { data, error } = await supabase.from('trading_reviews').update({
-        answers: snap.answers, action_plan: snap.action_plan, completion_pct: pct, status: pct === 100 ? 'complete' : 'draft', ...snap.ratings, revision: snap.revision + 1,
-      } as any).eq('id', snap.id).eq('user_id', user.id).eq('revision', snap.revision).select('id,revision,completion_pct,status,updated_at').maybeSingle();
-      if (error) { dirty.current = true; setSave('error'); return; }
-      if (!data) { setSave('conflict'); return; }
-      revs.current.set(data.id, data.revision); // someone else saved first — never overwrite
-      const merged = { ...(latest.current ?? snap), revision: data.revision, completion_pct: data.completion_pct, status: data.status, updated_at: data.updated_at };
-      latest.current = merged; setRow((r) => (r && r.id === merged.id ? { ...r, revision: data.revision, completion_pct: data.completion_pct, status: data.status, updated_at: data.updated_at } : r));
-      setHistory((h) => h.map((x) => (x.id === data.id ? { ...x, completion_pct: data.completion_pct, status: data.status, updated_at: data.updated_at } : x)));
-      setSave(dirty.current ? 'saving' : 'saved');
-    })();
-    inFlight.current = run; await run; inFlight.current = null;
-    if (dirty.current && latest.current?.id === snap.id) void persist();
-  }, [user]);
-  const flush = useCallback(() => { window.clearTimeout(timer.current); return persist(); }, [persist]);
+  // ── Per-review-id save queue (module-level per user, so drafts survive tab/account switches)
+  const queue = useMemo(() => (user ? getReviewQueue(user.id, makeSaver(user.id)) : null), [user]);
+  useSyncExternalStore(useCallback((cb) => queue?.subscribe(cb) ?? (() => {}), [queue]), () => (queue ? JSON.stringify(queue.unsaved().map((e) => e.id)) + (queue.get(reviewId)?.status ?? '') + (queue.get(reviewId)?.gen ?? '') + (queue.get(reviewId)?.revision ?? '') : ''));
+  const entry = queue?.get(reviewId) ?? null;
+  const save: SaveState = entry?.status ?? 'idle';
+  const otherUnsaved = queue ? queue.unsaved().filter((e) => e.id !== reviewId).length : 0;
+  const timers = useRef(new Map<string, number>());
+  const clearTimers = () => { timers.current.forEach((t) => window.clearTimeout(t)); timers.current.clear(); };
 
-  const edit = (fn: (r: Row) => Row) => {
-    setRow((r) => { if (!r) return r; const n = fn(r); latest.current = { ...n, revision: latest.current?.revision ?? n.revision }; return n; });
-    dirty.current = true; setSave('idle');
-    window.clearTimeout(timer.current); timer.current = window.setTimeout(() => void persist(), 1200);
+  const edit = (fn: (d: Draft) => Draft) => {
+    if (!queue || !reviewId) return;
+    const id = reviewId; // captured: the timer always saves THIS review
+    queue.edit(id, fn);
+    window.clearTimeout(timers.current.get(id));
+    if (queue.get(id)?.status !== 'conflict') timers.current.set(id, window.setTimeout(() => { timers.current.delete(id); void queue.flush(id); }, 1200));
+  };
+  const saveNow = () => { if (!queue || !reviewId) return; window.clearTimeout(timers.current.get(reviewId)); void queue.flush(reviewId); };
+
+  /** Runs `go` only once every draft is on the server; otherwise blocks and keeps the drafts. */
+  const guarded = async (go: () => void) => {
+    if (!queue) return go();
+    clearTimers();
+    const ok = await queue.flushAll();
+    if (!ok) { setNavBlocked(true); return; }
+    setNavBlocked(false); go();
   };
 
-  // Flush before leaving: identity change, unmount, tab close
-  useEffect(() => () => { void flush(); }, [identity, flush]);
+  // Unmount (tab switch / leaving Journal): attempt to save; drafts stay in the queue either way.
+  useEffect(() => () => { clearTimers(); void queue?.flushAll(); }, [queue]);
   useEffect(() => {
-    const h = (e: BeforeUnloadEvent) => { if (dirty.current || inFlight.current) { void flush(); e.preventDefault(); e.returnValue = ''; } };
+    const h = (e: BeforeUnloadEvent) => { if (queue && (queue.unsaved().length || queue.isBusy())) { clearTimers(); void queue.flushAll(); e.preventDefault(); e.returnValue = ''; } };
     window.addEventListener('beforeunload', h); return () => window.removeEventListener('beforeunload', h);
-  }, [flush]);
+  }, [queue]);
+  // Account switches can't be blocked from here: try to save, keep any failed drafts and surface them.
+  useEffect(() => { if (queue?.unsaved().length) { clearTimers(); void queue.flushAll(); } }, [accountKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Load review (never creates)
+  // ── Load review (never creates). queue.load() never replaces an unsaved/in-flight draft.
   useEffect(() => {
-    if (!user || !period) { setRow(null); setReviewState('ready'); return; }
+    if (!user || !period || !queue) { setReviewId(null); setReviewState('ready'); return; }
     const ctrl = new AbortController();
-    setReviewState('loading'); setRow(null); latest.current = null; dirty.current = false; setSave('idle');
+    setReviewState('loading'); setReviewId(null); setStartError(null);
     supabase.from('trading_reviews').select('*').eq('user_id', user.id).eq('account_key', accountKey).eq('period_type', type)
       .eq('period_start', period.start).eq('period_end', period.end).abortSignal(ctrl.signal).maybeSingle()
       .then(({ data, error }) => {
         if (ctrl.signal.aborted) return;
         if (error) { setReviewState('error'); return; }
-        const r = data ? toRow(data) : null; if (r) revs.current.set(r.id, r.revision); setRow(r); latest.current = r; setReviewState('ready');
+        if (data) { const r = toServerRow(data); queue.load(r); setLegacy(r.legacy); setReviewId(r.id); } else setLegacy({});
+        setReviewState('ready');
       });
     return () => ctrl.abort();
-  }, [user, accountKey, type, period?.start, period?.end, version, reloadKey]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user, queue, accountKey, type, period?.start, period?.end, reloadKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Load source data (trades/plans/checklists). Refreshing never touches the review draft.
+  // ── Source data. Refreshing never touches the review draft. Every list has a deterministic id tiebreaker.
   const sourceSeq = useRef(0);
   const loadSource = useCallback(async () => {
     if (!user || !period) return;
     const seq = ++sourceSeq.current; setSourceError(false);
     try {
-      const [trades, plans, checklists, pbs] = await Promise.all([
+      const [trades, plans, checklists, journal, pbs] = await Promise.all([
         fetchAll<ReviewTrade>((a, b) => { let q = supabase.from('trades').select(TRADE_COLS).eq('user_id', user.id).gte('trade_date', period.start).lte('trade_date', period.end);
           if (activeAccountId) q = q.eq('trading_account_id', activeAccountId); return q.order('trade_date').order('id').range(a, b) as any; }),
-        fetchAll<ReviewPlan>((a, b) => supabase.from('trade_plans').select('plan_date,pair,session,market_bias,max_trades,max_risk_per_trade,setups_to_trade,news_events').eq('user_id', user.id)
-          .eq('account_key', accountKey).gte('plan_date', period.start).lte('plan_date', period.end).order('plan_date').range(a, b) as any),
-        fetchAll<ReviewChecklist>((a, b) => supabase.from('trade_plan_checklists').select('checklist_type,period_date,pair,status,data').eq('user_id', user.id)
-          .eq('account_key', accountKey).gte('period_date', iso(new Date(new Date(period.start + 'T12:00:00').getTime() - 6 * 864e5))).lte('period_date', period.end).order('period_date').range(a, b) as any),
-        fetchAll<{ id: string; title: string }>((a, b) => supabase.from('playbooks').select('id,title').eq('user_id', user.id).range(a, b) as any),
+        fetchAll<ReviewPlan>((a, b) => supabase.from('trade_plans').select('id,plan_date,pair,session,market_bias,max_trades,max_risk_per_trade,setups_to_trade,news_events').eq('user_id', user.id)
+          .eq('account_key', accountKey).gte('plan_date', period.start).lte('plan_date', period.end).order('plan_date').order('pair').order('id').range(a, b) as any),
+        fetchAll<ReviewChecklist>((a, b) => supabase.from('trade_plan_checklists').select('id,checklist_type,period_date,pair,status,data').eq('user_id', user.id)
+          .eq('account_key', accountKey).gte('period_date', iso(new Date(new Date(period.start + 'T12:00:00').getTime() - 6 * 864e5))).lte('period_date', period.end).order('period_date').order('id').range(a, b) as any),
+        fetchAll<ReviewJournal>((a, b) => supabase.from('journal_entries').select(JOURNAL_COLS).eq('user_id', user.id)
+          .gte('entry_date', period.start).lte('entry_date', period.end).order('entry_date').order('id').range(a, b) as any),
+        fetchAll<{ id: string; title: string }>((a, b) => supabase.from('playbooks').select('id,title').eq('user_id', user.id).order('id').range(a, b) as any),
       ]);
       if (seq !== sourceSeq.current) return;
-      const pairs = new Set(trades.map((t) => t.pair));
-      setSource({
-        trades,
-        plans: plans.filter((p) => !pairs.size || pairs.has(p.pair)),
-        checklists: checklists.filter((c) => c.pair === '' || !pairs.size || pairs.has(c.pair)),
-        playbooks: Object.fromEntries(pbs.map((p) => [p.id, p.title])),
-      });
+      // All plans/checklists in scope are kept, including pairs that were planned but never traded.
+      setSource({ trades, plans, checklists, journal, playbooks: Object.fromEntries(pbs.map((p) => [p.id, p.title])) });
     } catch { if (seq === sourceSeq.current) setSourceError(true); }
   }, [user, period?.start, period?.end, activeAccountId, accountKey]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { setSource(null); void loadSource(); }, [loadSource, version]);
   useTradesChanged(loadSource);
 
-  // ── History (paginated, server-durable)
+  // ── History (paginated, deterministic order)
   const loadHistory = useCallback(async (offset: number) => {
     if (!user) return;
     const { data, error } = await supabase.from('trading_reviews').select('id,period_start,period_end,completion_pct,status,updated_at')
-      .eq('user_id', user.id).eq('account_key', accountKey).eq('period_type', type).order('period_start', { ascending: false }).range(offset, offset + HISTORY_PAGE);
+      .eq('user_id', user.id).eq('account_key', accountKey).eq('period_type', type)
+      .order('period_start', { ascending: false }).order('period_end', { ascending: false }).order('id', { ascending: false }).range(offset, offset + HISTORY_PAGE);
     if (error) { setHistoryError(true); return; }
     setHistoryError(false);
     const rows = (data ?? []) as HistoryRow[];
@@ -157,42 +162,52 @@ export function TradingReview({ type = 'weekly' }: { type?: PeriodType }) {
     setHistory((h) => (offset ? [...h, ...rows.slice(0, HISTORY_PAGE)] : rows.slice(0, HISTORY_PAGE)));
   }, [user, accountKey, type]);
   useEffect(() => { void loadHistory(0); }, [loadHistory, version]);
+  // Keep history badges in step with saved meta
+  const metaFor = (h: HistoryRow) => { const e = queue?.get(h.id); return e ? { ...h, ...e.meta } : h; };
 
   const start = async () => {
-    if (!user || !period) return;
-    setStarting(true);
+    if (!user || !period || !queue) return;
+    setStarting(true); setStartError(null);
     const { data, error } = await supabase.from('trading_reviews').insert({
       user_id: user.id, account_id: activeAccountId ?? null, account_key: accountKey, period_type: type, period_start: period.start, period_end: period.end, preset, answers: {}, action_plan: {},
     } as any).select('*').single();
-    setStarting(false);
-    if (error) { // duplicate (e.g. started in another tab) → reopen it
-      const { data: existing } = await supabase.from('trading_reviews').select('*').eq('user_id', user.id).eq('account_key', accountKey).eq('period_type', type).eq('period_start', period.start).eq('period_end', period.end).maybeSingle();
-      if (existing) { const r = toRow(existing); setRow(r); latest.current = r; } else setSave('error');
+    if (error) {
+      const { data: existing } = await supabase.from('trading_reviews').select('*').eq('user_id', user.id).eq('account_key', accountKey).eq('period_type', type).eq('period_start', period.start).order('period_end').order('id');
+      setStarting(false);
+      const same = existing?.find((r: any) => r.period_end === period.end);
+      if (same) { const r = toServerRow(same); queue.load(r); setLegacy(r.legacy); setReviewId(r.id); return; } // started in another tab → reopen
+      const other = existing?.[0];
+      setStartError(other
+        ? `A ${type === 'weekly' ? 'weekly' : 'bi-weekly'} review starting ${period.start} already exists (ending ${other.period_end}). Open it from History — only one review per start date is allowed until the latest update is published.`
+        : 'Could not start the review. Please try again.');
       return;
     }
-    const r = toRow(data); setRow(r); latest.current = r; void loadHistory(0);
+    setStarting(false);
+    const r = toServerRow(data); queue.load(r); setLegacy(r.legacy); setReviewId(r.id); void loadHistory(0);
   };
-  const openHistory = async (h: HistoryRow) => {
-    await flush();
+  const openHistory = (h: HistoryRow) => guarded(() => {
     const isPreset = PRESETS[type].find((p) => p.id !== 'custom_range' && p.id !== 'custom_week' && JSON.stringify(resolvePeriod(p.id, new Date())) === JSON.stringify({ start: h.period_start, end: h.period_end }));
     if (isPreset) setPreset(isPreset.id); else { setPreset('custom_range'); setCustomStart(h.period_start); setCustomEnd(h.period_end); }
-  };
+  });
   const reloadAfterConflict = async () => {
-    if (!user || !row) return;
-    const { data } = await supabase.from('trading_reviews').select('*').eq('id', row.id).eq('user_id', user.id).maybeSingle();
-    if (data) { const r = toRow(data); revs.current.set(r.id, r.revision); setRow(r); latest.current = r; dirty.current = false; setSave('idle'); }
+    if (!user || !reviewId || !queue) return;
+    if (!window.confirm('Replace your unsaved changes with the latest saved version?')) return;
+    const { data } = await supabase.from('trading_reviews').select('*').eq('id', reviewId).eq('user_id', user.id).maybeSingle();
+    if (data) { const r = toServerRow(data); queue.replaceWithServer(r); setLegacy(r.legacy); }
   };
-  const changePreset = async (p: Preset) => { await flush(); setPreset(p); };
+  const changePreset = (p: Preset) => guarded(() => setPreset(p));
+  const changeCustom = (which: 'start' | 'end', v: string) => guarded(() => (which === 'start' ? setCustomStart(v) : setCustomEnd(v)));
 
   const stats = useMemo(() => {
     if (!source) return null;
     const setupName = (t: ReviewTrade) => (t.playbook_id && source.playbooks[t.playbook_id]) || t.setup;
-    const p = performance(source.trades, setupName), e = execution(source.trades, source.plans, source.checklists), psy = psychology(source.trades);
+    const p = performance(source.trades, setupName), e = execution(source.trades, source.plans, source.checklists), psy = psychology(source.trades, source.journal);
     return { p, e, psy, plan: planning(source.trades, source.plans, source.checklists), ins: insights(p, e, psy) };
   }, [source]);
 
+  const row = entry ? { ...entry.draft, ratings: entry.draft.ratings } : null;
   const pct = row ? completion(row.answers, row.action_plan) : 0;
-  const legacyEntries = row ? Object.entries(row.legacy).filter(([, v]) => v && String(v).trim()) : [];
+  const legacyEntries = row ? Object.entries(legacy).filter(([, v]) => v && String(v).trim()) : [];
   const fmtRange = period ? `${new Date(period.start + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} – ${new Date(period.end + 'T12:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}` : '';
 
   return (
@@ -206,14 +221,21 @@ export function TradingReview({ type = 'weekly' }: { type?: PeriodType }) {
         </div>
         {(preset === 'custom_week' || preset === 'custom_range') && (
           <div className="flex items-center gap-2 text-xs">
-            <input type="date" aria-label="Start date" value={customStart} onChange={(e) => setCustomStart(e.target.value)} className="rounded-md border border-border bg-background px-2 py-1 text-foreground" />
+            <input type="date" aria-label="Start date" value={customStart} onChange={(e) => void changeCustom('start', e.target.value)} className="rounded-md border border-border bg-background px-2 py-1 text-foreground" />
             {preset === 'custom_range' && <><span className="text-muted-foreground">to</span>
-              <input type="date" aria-label="End date" value={customEnd} min={customStart} onChange={(e) => setCustomEnd(e.target.value)} className="rounded-md border border-border bg-background px-2 py-1 text-foreground" /></>}
+              <input type="date" aria-label="End date" value={customEnd} min={customStart} onChange={(e) => void changeCustom('end', e.target.value)} className="rounded-md border border-border bg-background px-2 py-1 text-foreground" /></>}
           </div>
         )}
         <span className="ml-auto font-mono text-xs text-foreground">{period ? fmtRange : 'Pick dates'}</span>
       </div>
 
+      {(navBlocked || otherUnsaved > 0) && (
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-primary/40 bg-card p-3 text-sm text-foreground">
+          <span className="flex items-center gap-2"><AlertCircle className="h-4 w-4 text-primary" />
+            {navBlocked ? 'Unsaved review changes could not be saved, so you stayed on this period. Your changes are kept.' : `${otherUnsaved} other review draft(s) have unsaved changes. They are kept and will save when you return to them.`}</span>
+          <Button size="sm" variant="outline" onClick={() => { setNavBlocked(false); void queue?.flushAll(); }}>Retry saving</Button>
+        </div>
+      )}
       <div className="grid gap-4 lg:grid-cols-[1fr_260px]">
         <div className="min-w-0 space-y-4">
           {!period ? <Empty text="Choose a valid date range to review." /> : (<>
@@ -291,6 +313,7 @@ export function TradingReview({ type = 'weekly' }: { type?: PeriodType }) {
               : !row ? (
                 <div className="flex flex-col items-center gap-3 rounded-md border border-dashed border-border bg-card p-8 text-center">
                   <p className="text-sm text-foreground">No review for {fmtRange} yet.</p>
+                  {startError && <p role="alert" className="max-w-md text-xs text-foreground">{startError}</p>}
                   <Button onClick={start} disabled={starting} className="gap-2">{starting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}Start review</Button>
                 </div>
               ) : (<>
@@ -299,7 +322,7 @@ export function TradingReview({ type = 'weekly' }: { type?: PeriodType }) {
                     <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary transition-[width] duration-300" style={{ width: `${pct}%` }} /></div>
                     <span className="font-mono text-xs text-foreground">{pct}%</span>
                   </div>
-                  <SaveBadge state={save} onReload={reloadAfterConflict} />
+                  <SaveBadge state={save} onReload={reloadAfterConflict} onRetry={saveNow} />
                 </div>
                 <Group title="Process ratings (1–10)">
                   <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -338,7 +361,7 @@ export function TradingReview({ type = 'weekly' }: { type?: PeriodType }) {
                   </Group>
                 )}
                 <div className="sticky bottom-20 flex justify-end lg:bottom-3">
-                  <Button onClick={() => { dirty.current = true; void flush(); }} disabled={save === 'saving'} className="tn-btn-halo gap-2"><Save className="h-4 w-4" />{save === 'saving' ? 'Saving…' : 'Save review'}</Button>
+                  <Button onClick={saveNow} disabled={save === 'saving'} className="tn-btn-halo gap-2"><Save className="h-4 w-4" />{save === 'saving' ? 'Saving…' : 'Save review'}</Button>
                 </div>
               </>)}
           </>)}
@@ -350,7 +373,7 @@ export function TradingReview({ type = 'weekly' }: { type?: PeriodType }) {
             <h3 className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-foreground"><History className="h-3.5 w-3.5 text-primary" />History</h3>
             {historyError ? <ErrorBox text="History unavailable." onRetry={() => loadHistory(0)} /> : history.length === 0 ? <p className="text-xs text-muted-foreground">No saved reviews yet.</p> : (
               <ul className="space-y-1">
-                {history.map((h) => {
+                {history.map((raw) => { const h = metaFor(raw);
                   const active = period && h.period_start === period.start && h.period_end === period.end;
                   return <li key={h.id}><button type="button" onClick={() => void openHistory(h)} className={cn('flex w-full items-center justify-between rounded px-2 py-1.5 text-left text-xs transition-colors', active ? 'bg-primary/15 text-primary' : 'text-foreground hover:bg-muted')}>
                     <span className="font-mono">{h.period_start} → {h.period_end.slice(5)}</span>
@@ -373,11 +396,11 @@ function RobotMark({ small }: { small?: boolean }) {
     <img src={robotSrc} alt="" draggable={false} className="relative h-full w-full object-contain mix-blend-lighten" />
   </div>;
 }
-function SaveBadge({ state, onReload }: { state: SaveState; onReload: () => void }) {
+function SaveBadge({ state, onReload, onRetry }: { state: SaveState; onReload: () => void; onRetry: () => void }) {
   if (state === 'saving') return <span className="flex items-center gap-1.5 text-xs text-muted-foreground"><Loader2 className="h-3 w-3 animate-spin" />Saving…</span>;
   if (state === 'saved') return <span className="flex items-center gap-1.5 text-xs text-primary"><CheckCircle2 className="h-3 w-3" />Saved</span>;
-  if (state === 'error') return <span className="flex items-center gap-1.5 text-xs text-foreground"><AlertCircle className="h-3 w-3" />Not saved — retrying on next edit or Save</span>;
-  if (state === 'conflict') return <span className="flex items-center gap-2 text-xs text-foreground"><AlertCircle className="h-3 w-3" />Changed elsewhere<Button size="sm" variant="outline" className="h-6 px-2 text-xs" onClick={onReload}>Reload latest</Button></span>;
+  if (state === 'error') return <span className="flex items-center gap-1.5 text-xs text-foreground"><AlertCircle className="h-3 w-3" />Not saved — your changes are kept<Button size="sm" variant="outline" className="h-6 px-2 text-xs" onClick={onRetry}>Retry</Button></span>;
+  if (state === 'conflict') return <span className="flex items-center gap-2 text-xs text-foreground"><AlertCircle className="h-3 w-3" />Changed elsewhere — your changes are kept<Button size="sm" variant="outline" className="h-6 px-2 text-xs" onClick={onReload}>Reload latest</Button></span>;
   return <span className="text-xs text-muted-foreground">Autosaves as you type</span>;
 }
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
