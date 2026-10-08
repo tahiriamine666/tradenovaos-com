@@ -48,7 +48,7 @@ export default function FairValueGapsGuide() {
         <motion.button
           onClick={() => navigate('/resources/blog')}
           whileHover={{ x: -2 }}
-          className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-violet-700 mb-8"
+          className="inline-flex items-center gap-2 text-sm text-slate-600 hover:text-primary mb-8"
         >
           <ArrowLeft className="h-4 w-4" /> Back to blog
         </motion.button>
@@ -59,7 +59,7 @@ export default function FairValueGapsGuide() {
           transition={{ duration: 0.5 }}
         >
           <div className="flex items-center gap-3 mb-6">
-            <span className="text-[10px] font-bold text-violet-600 bg-violet-500/10 px-2 py-0.5 rounded-full">
+            <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">
               Price Action
             </span>
             <span className="text-[11px] text-slate-700">June 20, 2026</span>
@@ -224,9 +224,9 @@ export default function FairValueGapsGuide() {
             </ul>
           </article>
 
-          <div className="mt-14 rounded-2xl border border-violet-200 bg-violet-50/60 p-6 sm:p-8">
+          <div className="mt-14 rounded-2xl border border-primary bg-primary/60 p-6 sm:p-8">
             <div className="flex items-start gap-4">
-              <div className="hidden sm:flex w-12 h-12 rounded-xl bg-violet-600 text-white items-center justify-center flex-shrink-0">
+              <div className="hidden sm:flex w-12 h-12 rounded-xl bg-primary text-white items-center justify-center flex-shrink-0">
                 <Target className="h-6 w-6" />
               </div>
               <div>
@@ -248,7 +248,7 @@ export default function FairValueGapsGuide() {
                 </div>
                 <button
                   onClick={() => navigate('/signup')}
-                  className="inline-flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-6 py-3 rounded-xl font-bold text-sm transition-all hover:shadow-xl hover:shadow-violet-500/20"
+                  className="inline-flex items-center gap-2 bg-primary hover:bg-primary text-white px-6 py-3 rounded-xl font-bold text-sm transition-all hover:shadow-xl hover:shadow-primary/20"
                 >
                   Start free — build your FVG playbook
                   <ArrowRight className="h-4 w-4" />

@@ -117,7 +117,7 @@ export default function Billing() {
                 <div className="flex items-center gap-4">
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
                     effectivePlan === 'elite' ? 'bg-amber-500/15 text-amber-500'
-                      : effectivePlan === 'pro' ? 'bg-violet-500/15 text-violet-600 dark:text-violet-400'
+                      : effectivePlan === 'pro' ? 'bg-primary/15 text-primary dark:text-primary'
                       : 'bg-muted text-muted-foreground'
                   }`}>
                     <PlanIcon className="h-5 w-5" />
@@ -147,7 +147,7 @@ export default function Billing() {
 
               <div className="mt-6 flex flex-wrap gap-2">
                 {effectivePlan !== 'elite' && (
-                  <Button asChild className="rounded-xl bg-violet-600 hover:bg-violet-500 text-white">
+                  <Button asChild className="rounded-xl bg-primary hover:bg-primary text-white">
                     <Link to="/pricing">Upgrade Plan</Link>
                   </Button>
                 )}
