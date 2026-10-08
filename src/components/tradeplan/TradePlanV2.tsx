@@ -92,7 +92,8 @@ function useSigned(path: string) {
   const [url, setUrl] = useState('');
   useEffect(() => {
     let alive = true;
-    if (!path) { setUrl(''); return; }
+    setUrl('');
+    if (!path) return;
     supabase.storage.from('trade-screenshots').createSignedUrl(path, 3600).then(({ data }) => { if (alive) setUrl(data?.signedUrl || ''); });
     return () => { alive = false; };
   }, [path]);
@@ -122,7 +123,7 @@ function ImageSlot({ title, path, onChange, readOnly }: { title: string; path: s
       <div className="group relative aspect-video overflow-hidden rounded-xl border border-dashed border-border bg-background/50">
         {url ? (
           <>
-            <img src={url} alt={title} className="h-full w-full object-cover" />
+            <img src={url} alt={title} className="h-full w-full object-contain" />
             <div className="absolute inset-0 flex items-end justify-end gap-1.5 bg-gradient-to-t from-background/80 to-transparent p-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
               <button type="button" onClick={() => setFull(true)} className="rounded-lg bg-card/90 p-1.5 text-foreground hover:text-primary" aria-label="Preview"><Maximize2 className="h-3.5 w-3.5" /></button>
               {!readOnly && <>
@@ -203,7 +204,7 @@ function RulesEditor({ rules, onChange }: { rules: Rule[]; onChange: (r: Rule[])
       {rules.map((r, i) => (
         <div key={r.id} className="flex items-center gap-2 rounded-xl border border-border bg-background/40 px-3 py-2">
           <Box checked={r.done} onClick={() => onChange(rules.map(x => x.id === r.id ? { ...x, done: !x.done } : x))} />
-          <input className="flex-1 bg-transparent text-sm text-foreground outline-none" value={r.text} onChange={e => onChange(rules.map(x => x.id === r.id ? { ...x, text: e.target.value } : x))} />
+          <input className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none" value={r.text} onChange={e => onChange(rules.map(x => x.id === r.id ? { ...x, text: e.target.value } : x))} />
           <button type="button" onClick={() => move(i, -1)} className="p-1 text-muted-foreground hover:text-primary" aria-label="Move up"><ArrowUp className="h-3.5 w-3.5" /></button>
           <button type="button" onClick={() => move(i, 1)} className="p-1 text-muted-foreground hover:text-primary" aria-label="Move down"><ArrowDown className="h-3.5 w-3.5" /></button>
           <button type="button" onClick={() => onChange(rules.filter(x => x.id !== r.id))} className="p-1 text-muted-foreground hover:text-primary" aria-label="Delete rule"><Trash2 className="h-3.5 w-3.5" /></button>
@@ -218,7 +219,7 @@ function RulesEditor({ rules, onChange }: { rules: Rule[]; onChange: (r: Rule[])
 }
 function Box({ checked, onClick, disabled }: { checked: boolean; onClick?: () => void; disabled?: boolean }) {
   return (
-    <button type="button" disabled={disabled} onClick={onClick} aria-pressed={checked}
+    <button type="button" disabled={disabled} onClick={onClick} aria-label={checked ? "Uncheck item" : "Check item"} aria-pressed={checked}
       className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-all duration-300 ${checked ? 'border-primary bg-primary text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)/0.4)]' : 'border-foreground/25 hover:border-primary/60'}`}>
       {checked && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
     </button>
@@ -291,7 +292,7 @@ function Checklist({ daily, set, models, onModelsChange, readOnly }: { daily: Da
               {!readOnly && <GripVertical className="h-4 w-4 cursor-grab text-muted-foreground/40" />}
               <Box disabled={readOnly} checked={!!daily.checked[i.id]} onClick={() => set({ checked: { ...daily.checked, [i.id]: !daily.checked[i.id] } })} />
               {readOnly ? <span className="flex-1 text-sm text-foreground">{i.text}</span> :
-                <input className={`flex-1 bg-transparent text-sm outline-none transition-colors ${daily.checked[i.id] ? 'text-foreground/60' : 'text-foreground'}`} value={i.text} onChange={e => set({ checklist: items.map(x => x.id === i.id ? { ...x, text: e.target.value } : x) })} />}
+                <input className={`min-w-0 flex-1 bg-transparent text-sm outline-none transition-colors ${daily.checked[i.id] ? 'text-foreground/60' : 'text-foreground'}`} value={i.text} onChange={e => set({ checklist: items.map(x => x.id === i.id ? { ...x, text: e.target.value } : x) })} />}
               {!readOnly && <button type="button" onClick={() => set({ checklist: items.filter(x => x.id !== i.id) })} className="p-1 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-primary" aria-label="Delete item"><Trash2 className="h-3.5 w-3.5" /></button>}
             </div>
           ))}
@@ -357,17 +358,23 @@ const Text = ({ v }: { v: string }) => v?.trim() ? <p className="whitespace-pre-
 // ── Pair-specific checklist state (trade_plan_checklists, type pair_checklist) ─
 export const DEFAULT_PAIRS = ['EURUSD', 'GBPUSD', 'USDJPY', 'XAUUSD', 'NAS100', 'US30', 'BTCUSD'];
 type PairCk = Pick<Daily, 'checklist' | 'checked' | 'modelId'>;
-function PairChecklist({ date, pair, legacy, readOnly, models, onModelsChange }: { date: string; pair: string; legacy: Daily | null; readOnly?: boolean; models: Model[]; onModelsChange: () => void }) {
+function PairChecklist({ date, pair, legacy, readOnly, models, onModelsChange, saveRef }: { date: string; pair: string; legacy: Daily | null; readOnly?: boolean; models: Model[]; onModelsChange: () => void; saveRef: React.MutableRefObject<(() => Promise<boolean>) | null> }) {
   const { user } = useAuth();
   const { activeAccountId } = useActiveAccount();
   const accountKey = activeAccountId ?? 'all';
   const [ck, setCk] = useState<PairCk | null>(null);
   const pending = useRef<{ key: string; data: PairCk } | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>();
-  const flush = useCallback(async () => {
+  const inFlight = useRef<Promise<boolean> | null>(null);
+  const ckRef = useRef<PairCk | null>(null);
+  const [saveState, setSaveState] = useState<SaveState>('idle');
+  const flush = useCallback(async (): Promise<boolean> => {
+    if (inFlight.current) return inFlight.current;
+    const run = async () => {
     clearTimeout(timer.current);
+    while (pending.current && user) {
     const p = pending.current; pending.current = null;
-    if (!p || !user) return;
+    setSaveState('saving');
     const [d, pr, acc] = p.key.split('|');
     const done = p.data.checklist.filter(i => p.data.checked[i.id]).length;
     const { error } = await supabase.from('trade_plan_checklists').upsert({
@@ -375,36 +382,43 @@ function PairChecklist({ date, pair, legacy, readOnly, models, onModelsChange }:
       period_date: d, pair: pr, data: p.data as any,
       status: done === 0 ? 'empty' : done === p.data.checklist.length ? 'complete' : 'partial',
     }, { onConflict: 'user_id,account_key,checklist_type,period_date,pair' });
-    if (error) toast({ title: 'Checklist not saved', description: error.message, variant: 'destructive' });
+    if (error) { if (!pending.current) pending.current = p; setSaveState('error'); toast({ title: 'Checklist not saved', description: error.message, variant: 'destructive' }); return false; }
+    }
+    setSaveState('saved'); return true;
+    };
+    const operation = run().catch(() => { setSaveState('error'); return false; });
+    inFlight.current = operation;
+    try { return await operation; } finally { inFlight.current = null; }
   }, [user]);
+  saveRef.current = flush;
   useEffect(() => () => { void flush(); }, [flush]);
   useEffect(() => {
     if (!user) return;
     let alive = true; setCk(null);
     (async () => {
-      await flush();
-      const { data } = await supabase.from('trade_plan_checklists').select('data').eq('user_id', user.id).eq('account_key', accountKey)
+      if (!await flush()) return;
+      const { data, error } = await supabase.from('trade_plan_checklists').select('data').eq('user_id', user.id).eq('account_key', accountKey)
         .eq('checklist_type', 'pair_checklist').eq('period_date', date).eq('pair', pair).maybeSingle();
       if (!alive) return;
+      if (error) { setSaveState('error'); toast({ title: 'Could not load checklist', description: error.message, variant: 'destructive' }); return; }
       const row = (data as any)?.data as PairCk | undefined;
       // Older checklists were not pair-tagged and were used for EURUSD: show them only there until edited.
       const base = legacy && pair === 'EURUSD' ? legacy : emptyDaily();
-      setCk(row ? { checklist: row.checklist ?? [], checked: row.checked ?? {}, modelId: row.modelId ?? '' } : { checklist: base.checklist, checked: base.checked, modelId: base.modelId });
+      const next = row ? { checklist: row.checklist ?? [], checked: row.checked ?? {}, modelId: row.modelId ?? '' } : { checklist: base.checklist, checked: base.checked, modelId: base.modelId };
+      ckRef.current = next; setCk(next);
     })();
     return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, accountKey, date, pair]);
-  if (!ck) return <div className={`${card} h-64 animate-pulse`} />;
+  if (!ck) return <div className={`${card} p-5`} role="status">{saveState === 'error' ? 'Checklist unavailable. Retry by selecting this plan again.' : 'Loading checklist…'}</div>;
   const set = (patch: Partial<Daily>) => {
-    if (readOnly) return;
-    setCk(prev => {
-      const n = { ...(prev as PairCk), ...patch } as PairCk;
-      pending.current = { key: `${date}|${pair}|${accountKey}`, data: { checklist: n.checklist, checked: n.checked, modelId: n.modelId } };
-      clearTimeout(timer.current); timer.current = setTimeout(() => void flush(), 800);
-      return n;
-    });
+    if (readOnly || !ckRef.current) return;
+    const n = { ...ckRef.current, ...patch } as PairCk;
+    ckRef.current = n; setCk(n); setSaveState('saving');
+    pending.current = { key: `${date}|${pair}|${accountKey}`, data: { checklist: n.checklist, checked: n.checked, modelId: n.modelId } };
+    clearTimeout(timer.current); timer.current = setTimeout(() => void flush(), 800);
   };
-  return <Checklist readOnly={readOnly} daily={{ ...emptyDaily(), ...ck }} set={set} models={models} onModelsChange={onModelsChange} />;
+  return <div className="space-y-2"><p className="text-xs text-muted-foreground" aria-live="polite">{saveState === 'saving' ? 'Saving checklist…' : saveState === 'saved' ? 'Checklist saved' : saveState === 'error' ? 'Checklist not saved' : ''}</p><Checklist readOnly={readOnly} daily={{ ...emptyDaily(), ...ck }} set={set} models={models} onModelsChange={onModelsChange} /></div>;
 }
 
 function PairPicker({ pair, onChange, pairs, onAdd }: { pair: string; onChange: (p: string) => void; pairs: string[]; onAdd: (p: string) => void }) {
@@ -430,6 +444,8 @@ type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 
 export default function TradePlanV2() {
   const { user } = useAuth();
+  const { activeAccountId, activeAccount } = useActiveAccount();
+  const accountKey = activeAccountId ?? 'all';
   const today = toKey(new Date());
   const [date, setDate] = useState(today);
   const pairKey = `tn-checklist-pair:${user?.id ?? ''}`;
@@ -441,6 +457,8 @@ export default function TradePlanV2() {
   const [tab, setTab] = useState<Tab>('daily');
   const [calOpen, setCalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [retry, setRetry] = useState(0);
   const [daily, setDaily] = useState<Daily>(emptyDaily);
   const [weekly, setWeekly] = useState<Weekly>(EMPTY_WEEKLY);
   const [dailyExists, setDailyExists] = useState(false);
@@ -452,7 +470,11 @@ export default function TradePlanV2() {
 
   // Refs to flush pending edits to the date they belong to.
   const prevAi = useRef<Record<string, any>>({});
-  const pending = useRef<{ daily?: { date: string; pair: string; data: Daily }; weekly?: { week: string; data: Weekly } }>({});
+  const pending = useRef<{ daily?: { date: string; pair: string; accountKey: string; data: Daily; ai: Record<string, any> }; weekly?: { week: string; data: Weekly } }>({});
+  const inFlight = useRef<Promise<boolean> | null>(null);
+  const checklistSave = useRef<(() => Promise<boolean>) | null>(null);
+  const dailyRef = useRef(daily); dailyRef.current = daily;
+  const weeklyRef = useRef(weekly); weeklyRef.current = weekly;
   const timer = useRef<ReturnType<typeof setTimeout>>();
 
   const loadModels = useCallback(async () => {
@@ -462,51 +484,65 @@ export default function TradePlanV2() {
   }, [user]);
   const loadSaved = useCallback(async () => {
     if (!user) return;
-    const { data } = await supabase.from('trade_plans').select('plan_date').eq('user_id', user.id).eq('pair', pair).order('plan_date', { ascending: false }).limit(1000);
+    const { data } = await supabase.from('trade_plans').select('plan_date').eq('user_id', user.id).eq('account_key', accountKey).eq('pair', pair).order('plan_date', { ascending: false }).limit(1000);
     setSaved(new Set((data || []).map((r: any) => r.plan_date)));
-  }, [user, pair]);
+  }, [user, pair, accountKey]);
   useEffect(() => { loadModels(); loadSaved(); }, [loadModels, loadSaved]);
 
-  const flush = useCallback(async () => {
+  const flush = useCallback(async (): Promise<boolean> => {
+    if (inFlight.current) return inFlight.current;
+    const run = async () => {
     clearTimeout(timer.current);
+    while (user && (pending.current.daily || pending.current.weekly)) {
     const p = pending.current; pending.current = {};
-    if (!user || (!p.daily && !p.weekly)) return;
     setState('saving');
     try {
       if (p.daily) {
         const d = p.daily.data;
         const num = (v: string) => (v.trim() === '' || isNaN(Number(v)) ? null : Number(v));
         const { error } = await supabase.from('trade_plans').upsert({
-          user_id: user.id, plan_date: p.daily.date, pair: p.daily.pair,
+          user_id: user.id, plan_date: p.daily.date, pair: p.daily.pair, account_key: p.daily.accountKey, account_id: p.daily.accountKey === 'all' ? null : p.daily.accountKey,
           market_bias: d.bias ? (d.bias === 'Range' ? 'ranging' : d.bias.toLowerCase()) : 'neutral',
           notes: d.mainIdea, psych_notes: d.psychNotes,
           emotion: d.psychology[0]?.toLowerCase() || null,
           max_risk_per_trade: num(d.risk.riskPct), max_daily_loss: num(d.risk.maxLoss),
-          max_trades: num(d.risk.maxTrades) as any,
-          ai_analysis: { ...prevAi.current, daily_v2: d },
-        } as any, { onConflict: 'user_id,plan_date,pair' });
+          max_trades: num(d.risk.maxTrades) == null ? null : Math.max(0, Math.trunc(Number(d.risk.maxTrades))),
+          ai_analysis: { ...p.daily.ai, daily_v2: d },
+        } as any, { onConflict: 'user_id,account_key,plan_date,pair' });
         if (error) throw error;
-        prevAi.current = { ...prevAi.current, daily_v2: d };
-        setSaved(s => new Set(s).add(p.daily!.date));
-        if (p.daily.date === dateRef.current && p.daily.pair === pairRef.current) setDailyExists(true);
+        if (p.daily.date === dateRef.current && p.daily.pair === pairRef.current && p.daily.accountKey === accountRef.current) {
+          prevAi.current = { ...p.daily.ai, daily_v2: d };
+          const savedDate = p.daily.date; setSaved(s => new Set(s).add(savedDate)); setDailyExists(true);
+        }
+        p.daily = undefined;
       }
       if (p.weekly) {
         const w = p.weekly.data;
         const filled = [w.bias, w.scenario, w.chart, w.mainIdea].filter(Boolean).length + (w.news.length ? 1 : 0);
         const { error } = await supabase.from('trade_plan_checklists').upsert({
-          user_id: user.id, account_key: 'all', checklist_type: 'weekly_outlook', period_date: p.weekly.week,
+          user_id: user.id, account_key: 'all', account_id: null, pair: '', checklist_type: 'weekly_outlook', period_date: p.weekly.week,
           data: w as any, status: filled === 0 ? 'empty' : filled === 5 ? 'complete' : 'partial',
         }, { onConflict: 'user_id,account_key,checklist_type,period_date,pair' });
         if (error) throw error;
       }
       setState('saved');
     } catch (e: any) {
+      // Keep the failed snapshot unless a newer edit for this scope is already queued.
+      pending.current = { ...p, ...pending.current };
       setState('error');
       toast({ title: 'Could not save plan', description: e?.message, variant: 'destructive' });
+      return false;
     }
+    }
+    return true;
+    };
+    const operation = run(); inFlight.current = operation;
+    try { return await operation; } finally { inFlight.current = null; }
   }, [user]);
   const dateRef = useRef(date); dateRef.current = date;
   const pairRef = useRef(pair); pairRef.current = pair;
+  const accountRef = useRef(accountKey); accountRef.current = accountKey;
+  const saveAll = async () => { const planOK = await flush(); const checklistOK = await checklistSave.current?.(); return planOK && checklistOK !== false; };
 
   useEffect(() => {
     const h = () => { flush(); };
@@ -518,13 +554,15 @@ export default function TradePlanV2() {
   useEffect(() => {
     if (!user) return;
     let alive = true;
-    setLoading(true); setCreating(false);
+    setLoading(true); setLoadError(false); setCreating(false);
     (async () => {
-      const [{ data: row }, { data: wk }] = await Promise.all([
-        supabase.from('trade_plans').select('*').eq('user_id', user.id).eq('plan_date', date).eq('pair', pair).maybeSingle(),
-        supabase.from('trade_plan_checklists').select('data').eq('user_id', user.id).eq('account_key', 'all').eq('checklist_type', 'weekly_outlook').eq('period_date', week).maybeSingle(),
+      if (!await saveAll()) { if (alive) { setLoadError(true); setLoading(false); } return; }
+      const [{ data: row, error: planError }, { data: wk, error: weeklyError }] = await Promise.all([
+        supabase.from('trade_plans').select('*').eq('user_id', user.id).eq('account_key', accountKey).eq('plan_date', date).eq('pair', pair).maybeSingle(),
+        supabase.from('trade_plan_checklists').select('data').eq('user_id', user.id).eq('account_key', 'all').eq('checklist_type', 'weekly_outlook').eq('pair', '').eq('period_date', week).maybeSingle(),
       ]);
       if (!alive) return;
+      if (planError || weeklyError) { setLoadError(true); setLoading(false); toast({ title: 'Could not load plan', description: (planError || weeklyError)?.message, variant: 'destructive' }); return; }
       const ai = ((row as any)?.ai_analysis || {}) as Record<string, any>;
       prevAi.current = ai;
       setDaily(row ? (ai.daily_v2 ? normDaily(ai.daily_v2) : fromLegacy(row)) : emptyDaily());
@@ -533,14 +571,14 @@ export default function TradePlanV2() {
       setLoading(false); setState('idle');
     })();
     return () => { alive = false; };
-  }, [user, date, week, pair]);
+  }, [user, date, week, pair, accountKey, retry]);
 
   const schedule = () => { setState('saving'); clearTimeout(timer.current); timer.current = setTimeout(flush, 1000); };
-  const setD = (p: Partial<Daily>) => setDaily(prev => { const n = { ...prev, ...p }; pending.current.daily = { date, pair, data: n }; schedule(); return n; });
-  const setW = (p: Partial<Weekly>) => setWeekly(prev => { const n = { ...prev, ...p }; pending.current.weekly = { week, data: n }; schedule(); return n; });
+  const setD = (p: Partial<Daily>) => { if (loading || loadError) return; const n = { ...dailyRef.current, ...p }; dailyRef.current = n; setDaily(n); pending.current.daily = { date, pair, accountKey, data: n, ai: { ...prevAi.current } }; schedule(); };
+  const setW = (p: Partial<Weekly>) => { if (loading || loadError) return; const n = { ...weeklyRef.current, ...p }; weeklyRef.current = n; setWeekly(n); pending.current.weekly = { week, data: n }; schedule(); };
 
-  const choosePair = async (p: string) => { if (p === pair) return; await flush(); setPair(p); };
-  const go = async (k: string) => { await flush(); setDate(k); setCalOpen(false); };
+  const choosePair = async (p: string) => { if (p === pair) return; if (await saveAll()) setPair(p); };
+  const go = async (k: string) => { if (await saveAll()) { setDate(k); setCalOpen(false); } };
   const showDaily = dailyExists || creating || date === today;
 
   const weekLabel = useMemo(() => {
@@ -563,7 +601,7 @@ export default function TradePlanV2() {
         <div>
           <h1 className="font-heading text-2xl font-semibold text-foreground">Daily Plan — {pair}</h1>
           <div className="mt-2"><PairPicker pair={pair} onChange={choosePair} pairs={pairs} onAdd={addPair} /></div>
-          <p className="mt-1 text-sm text-muted-foreground">{longDate(date)}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{longDate(date)} · {activeAccount?.account_name || 'All Accounts / historical unassigned plans'}</p>
         </div>
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1.5 text-xs text-muted-foreground" aria-live="polite">
@@ -571,7 +609,7 @@ export default function TradePlanV2() {
             {state === 'saved' && <><Check className="h-3 w-3 text-primary" /> Saved</>}
             {state === 'error' && <span className="text-destructive">Not saved</span>}
           </span>
-          <button type="button" onClick={() => { if (tab === 'daily' && showDaily) pending.current.daily = { date, pair, data: daily }; if (tab === 'weekly') pending.current.weekly = { week, data: weekly }; flush(); }}
+          <button type="button" onClick={() => { if (loading || loadError) return; if (tab === 'daily' && showDaily) pending.current.daily = { date, pair, accountKey, data: daily, ai: { ...prevAi.current } }; if (tab === 'weekly') pending.current.weekly = { week, data: weekly }; void saveAll(); }}
             className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-[0_0_20px_hsl(var(--primary)/0.25)] transition-opacity hover:opacity-90"><Save className="h-4 w-4" /> Save Plan</button>
         </div>
       </div>
@@ -591,12 +629,12 @@ export default function TradePlanV2() {
         <main className="min-w-0 space-y-5">
           <div className="inline-flex rounded-xl border border-border bg-card p-1">
             {([['weekly', 'Weekly Outlook'], ['daily', 'Daily Plan'], ['full', 'Full View']] as [Tab, string][]).map(([k, l]) => (
-              <button key={k} type="button" onClick={() => setTab(k)} aria-pressed={tab === k}
+              <button key={k} type="button" onClick={async () => { if (await saveAll()) setTab(k); }} aria-pressed={tab === k}
                 className={`rounded-lg px-3 py-2 text-[11px] font-bold uppercase tracking-[0.12em] transition-all duration-300 sm:px-4 ${tab === k ? 'bg-primary/15 text-primary shadow-[0_0_14px_hsl(var(--primary)/0.15)]' : 'text-muted-foreground hover:text-foreground'}`}>{l}</button>
             ))}
           </div>
 
-          {loading ? (
+          {loadError ? <div className={`${card} p-6`} role="alert"><p>Plan unavailable or previous changes not saved.</p><button type="button" className="mt-3 text-primary underline" onClick={() => setRetry(n => n + 1)}>Retry</button></div> : loading ? (
             <div className={`${card} flex items-center justify-center py-20`}><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
           ) : (
             <div key={`${tab}-${date}`} className="content-crossfade space-y-5">
@@ -642,7 +680,7 @@ export default function TradePlanV2() {
                     <Field title="Rules"><RulesEditor rules={daily.rules} onChange={r => setD({ rules: r })} /></Field>
                     <Field title="Main Idea"><Area value={daily.mainIdea} onChange={v => setD({ mainIdea: v })} placeholder="What is today's main trading idea?" /></Field>
                   </div>
-                  <PairChecklist date={date} pair={pair} legacy={dailyExists ? daily : null} models={models} onModelsChange={loadModels} />
+                  <PairChecklist date={date} pair={pair} legacy={dailyExists ? daily : null} models={models} onModelsChange={loadModels} saveRef={checklistSave} />
                 </>
               ))}
 
@@ -677,7 +715,7 @@ export default function TradePlanV2() {
                       {daily.rules.length ? daily.rules.map(r => <div key={r.id} className="flex items-center gap-2 text-sm text-foreground"><Box disabled checked={r.done} />{r.text}</div>) : <p className="text-sm text-muted-foreground">—</p>}
                     </Block>
                     <Block title="Main Idea"><Text v={daily.mainIdea} /></Block>
-                    <PairChecklist readOnly date={date} pair={pair} legacy={dailyExists ? daily : null} models={models} onModelsChange={() => {}} />
+                    <PairChecklist readOnly date={date} pair={pair} legacy={dailyExists ? daily : null} models={models} onModelsChange={() => {}} saveRef={checklistSave} />
                   </>}
                 </div>
               )}
