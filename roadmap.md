@@ -1,4 +1,6 @@
 # Redesign roadmap
+- [ ] Replace cyan accents globally with premium royal blue and neutral surfaces/text
+- [ ] Audit hardcoded colors and verify CTAs, active states, and diagnostics
 - [x] Replace TradeNova branding throughout the site with the supplied robot logo and matching favicon
 - [x] Install the new TradeNova N logo and favicon
 - [x] Apply the black and ice-blue global design system and typography

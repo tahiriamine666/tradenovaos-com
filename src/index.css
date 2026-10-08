@@ -5,52 +5,52 @@
 @layer base {
   :root,
   .dark {
-    --background: 210 33% 1%;
-    --foreground: 210 40% 98%;
-    --card: 220 30% 4%;
-    --card-foreground: 210 40% 98%;
-    --popover: 218 27% 6%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 199 93% 60%;
-    --primary-foreground: 210 33% 1%;
-    --secondary: 218 27% 6%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 220 27% 6%;
-    --muted-foreground: 215 20% 65%;
-    --accent: 199 60% 10%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 215 20% 65%;
-    --destructive-foreground: 210 33% 1%;
-    --border: 221 38% 14%;
-    --input: 221 38% 14%;
-    --ring: 199 93% 60%;
+    --background: 0 0% 1%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 4%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 6%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 6%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 6%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 221 55% 10%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 0% 65%;
+    --destructive-foreground: 0 0% 1%;
+    --border: 0 0% 14%;
+    --input: 0 0% 14%;
+    --ring: 221.2 83.2% 53.3%;
     --radius: 0.5rem;
 
-    --sidebar-background: 210 33% 1%;
-    --sidebar-foreground: 215 20% 65%;
-    --sidebar-primary: 199 93% 60%;
-    --sidebar-primary-foreground: 210 33% 1%;
-    --sidebar-accent: 199 60% 9%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 221 38% 12%;
-    --sidebar-ring: 199 93% 60%;
+    --sidebar-background: 0 0% 1%;
+    --sidebar-foreground: 0 0% 65%;
+    --sidebar-primary: 221.2 83.2% 53.3%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 221 55% 9%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 12%;
+    --sidebar-ring: 221.2 83.2% 53.3%;
 
-    --surface: 218 27% 6%;
-    --surface-foreground: 210 40% 98%;
-    --surface-1: 220 30% 4%;
-    --surface-2: 220 27% 4%;
-    --surface-3: 218 27% 6%;
-    --success: 199 93% 60%;
-    --success-foreground: 210 33% 1%;
-    --warning: 210 40% 98%;
-    --warning-foreground: 210 33% 1%;
-    --danger: 215 20% 65%;
-    --danger-foreground: 210 33% 1%;
+    --surface: 0 0% 6%;
+    --surface-foreground: 0 0% 98%;
+    --surface-1: 0 0% 4%;
+    --surface-2: 0 0% 4%;
+    --surface-3: 0 0% 6%;
+    --success: 221.2 83.2% 53.3%;
+    --success-foreground: 0 0% 98%;
+    --warning: 0 0% 98%;
+    --warning-foreground: 0 0% 1%;
+    --danger: 0 0% 65%;
+    --danger-foreground: 0 0% 1%;
 
-    --blue-glow: 199 93% 60%;
-    --electric-blue: 199 93% 60%;
-    --ice-blue: 210 40% 98%;
-    --terminal-grid: 221 38% 14%;
+    --blue-glow: 221.2 83.2% 53.3%;
+    --electric-blue: 221.2 83.2% 53.3%;
+    --ice-blue: 0 0% 98%;
+    --terminal-grid: 0 0% 14%;
     font-family: 'Manrope', system-ui, sans-serif;
   }
 
@@ -206,5 +206,5 @@
 @media (prefers-reduced-motion: reduce) { .nova-float, .nova-msg { animation: none; } }
 
 @layer base {
-  .app-shell input::placeholder, .app-shell textarea::placeholder { color: hsl(215 16% 47%); }
+  .app-shell input::placeholder, .app-shell textarea::placeholder { color: hsl(0 0% 47%); }
 }
