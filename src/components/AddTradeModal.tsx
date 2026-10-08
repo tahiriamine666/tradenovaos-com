@@ -321,7 +321,7 @@ export default function AddTradeModal({
       weekly_context: form.weekly_context.trim() || null,
       daily_bias: form.daily_bias || null,
       timeframe: form.timeframe || null,
-      trading_account_id: activeAccountId || null,
+      trading_account_id: editTrade ? (editTrade as any).trading_account_id ?? null : activeAccountId || null,
       ...psy,
       psychology_note: psy.psychology_note?.trim() || null,
     };

@@ -368,6 +368,7 @@ function PairChecklist({ date, pair, legacy, readOnly, models, onModelsChange, s
   const timer = useRef<ReturnType<typeof setTimeout>>();
   const inFlight = useRef<Promise<boolean> | null>(null);
   const ckRef = useRef<PairCk | null>(null);
+  const hasStoredRow = useRef(false);
   const [saveState, setSaveState] = useState<SaveState>('idle');
   const flush = useCallback(async (): Promise<boolean> => {
     if (inFlight.current) return inFlight.current;
@@ -403,7 +404,7 @@ function PairChecklist({ date, pair, legacy, readOnly, models, onModelsChange, s
         .eq('checklist_type', 'pair_checklist').eq('period_date', date).eq('pair', pair).maybeSingle();
       if (!alive) return;
       if (error) { setSaveState('error'); toast({ title: 'Could not load checklist', description: error.message, variant: 'destructive' }); return; }
-      const row = (data as any)?.data as PairCk | undefined;
+      const row = (data as any)?.data as PairCk | undefined; hasStoredRow.current = !!row;
       // Older checklists were not pair-tagged and were used for EURUSD: show them only there until edited.
       const base = legacy && pair === 'EURUSD' ? legacy : emptyDaily();
       const next = row ? { checklist: row.checklist ?? [], checked: row.checked ?? {}, modelId: row.modelId ?? '' } : { checklist: base.checklist, checked: base.checked, modelId: base.modelId };
@@ -413,7 +414,7 @@ function PairChecklist({ date, pair, legacy, readOnly, models, onModelsChange, s
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, accountKey, date, pair]);
   useEffect(() => {
-    if (legacy && pair === 'EURUSD' && ckScope === `${date}|${pair}|${accountKey}` && ckRef.current?.checklist.length === 0 && !pending.current) {
+    if (legacy && pair === 'EURUSD' && ckScope === `${date}|${pair}|${accountKey}` && !hasStoredRow.current && !pending.current && saveState === 'idle') {
       const next = { checklist: legacy.checklist, checked: legacy.checked, modelId: legacy.modelId };
       ckRef.current = next; setCk(next);
     }
@@ -422,7 +423,7 @@ function PairChecklist({ date, pair, legacy, readOnly, models, onModelsChange, s
   const set = (patch: Partial<Daily>) => {
     if (readOnly || !ckRef.current || ckScope !== `${date}|${pair}|${accountKey}`) return;
     const n = { ...ckRef.current, ...patch } as PairCk;
-    ckRef.current = n; setCk(n); setSaveState('saving');
+    ckRef.current = n; setCk(n); setSaveState('saving'); hasStoredRow.current = true;
     pending.current = { key: `${date}|${pair}|${accountKey}`, data: { checklist: n.checklist, checked: n.checked, modelId: n.modelId } };
     clearTimeout(timer.current); timer.current = setTimeout(() => void flush(), 800);
   };
