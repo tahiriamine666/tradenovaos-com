@@ -571,7 +571,7 @@ export default function TradePlanV2() {
             {state === 'saved' && <><Check className="h-3 w-3 text-primary" /> Saved</>}
             {state === 'error' && <span className="text-destructive">Not saved</span>}
           </span>
-          <button type="button" onClick={() => { if (tab === 'daily' && showDaily) pending.current.daily = { date, data: daily }; if (tab === 'weekly') pending.current.weekly = { week, data: weekly }; flush(); }}
+          <button type="button" onClick={() => { if (tab === 'daily' && showDaily) pending.current.daily = { date, pair, data: daily }; if (tab === 'weekly') pending.current.weekly = { week, data: weekly }; flush(); }}
             className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-[0_0_20px_hsl(var(--primary)/0.25)] transition-opacity hover:opacity-90"><Save className="h-4 w-4" /> Save Plan</button>
         </div>
       </div>
