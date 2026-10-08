@@ -772,11 +772,10 @@ function TradeDetails({ trade, onClose, onEdit, onDuplicate, onDelete, onAIRevie
           {/* Tabs */}
           <div className="px-5 pb-24">
             <Tabs defaultValue="notes" className="w-full">
-              <TabsList className="grid grid-cols-4 w-full">
+              <TabsList className="grid grid-cols-3 w-full">
                 <TabsTrigger value="notes">Notes</TabsTrigger>
                 <TabsTrigger value="mistakes">Mistakes</TabsTrigger>
                 <TabsTrigger value="ai">AI</TabsTrigger>
-                <TabsTrigger value="playbook">Playbook</TabsTrigger>
               </TabsList>
 
               <TabsContent value="notes" className="pt-3">
@@ -876,39 +875,6 @@ function TradeDetails({ trade, onClose, onEdit, onDuplicate, onDelete, onAIRevie
                 )}
               </TabsContent>
 
-              <TabsContent value="playbook" className="pt-3">
-                {linkedPb ? (
-                  <div className="space-y-3">
-                    <div className="rounded-md border border-primary/20 bg-primary/5 p-3">
-                      <p className="text-[10px] text-primary uppercase tracking-wider font-semibold mb-1">Linked Playbook</p>
-                      <p className="text-sm font-semibold text-foreground">{linkedPb.title}</p>
-                      {trade.setup && <p className="text-xs text-muted-foreground mt-0.5">{trade.setup}</p>}
-                    </div>
-                    {linkedPb.entry_rules && (
-                      <div className="rounded-md border border-border bg-card p-3">
-                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Entry Rules</p>
-                        <p className="text-sm text-foreground/80 whitespace-pre-wrap">{linkedPb.entry_rules}</p>
-                      </div>
-                    )}
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="rounded-md border border-success/20 bg-success/5 p-3 text-center">
-                        <p className="text-[10px] font-semibold text-success uppercase tracking-wider mb-1">Rules followed</p>
-                        <p className="text-xl font-semibold text-success">{Math.max(0, 5 - (trade.mistakes?.length ?? 0))}</p>
-                      </div>
-                      <div className="rounded-md border border-danger/20 bg-danger/5 p-3 text-center">
-                        <p className="text-[10px] font-semibold text-danger uppercase tracking-wider mb-1">Rules broken</p>
-                        <p className="text-xl font-semibold text-danger">{trade.mistakes?.length ?? 0}</p>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <Target className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
-                    <p className="text-sm text-muted-foreground">No playbook linked</p>
-                    <Button variant="link" size="sm" onClick={() => onEdit(trade)}>Link a playbook</Button>
-                  </div>
-                )}
-              </TabsContent>
             </Tabs>
           </div>
         </div>
