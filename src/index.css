@@ -278,3 +278,23 @@
 .checklist-robot-reaction[data-reaction='complete'] .robot-floor { animation: robot-floor-bright 1s ease-in-out; }
 @keyframes robot-floor-bright { 50% { opacity: 1; transform: scaleX(1.08); } }
 @media (prefers-reduced-motion: reduce) { .robot-floor { animation: none !important; } }
+
+/* ─── App lighting system (static, low-opacity, pointer-safe) ─── */
+.tn-app-ambient { position: relative; isolation: isolate; }
+.tn-app-ambient::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 520px; z-index: -1; pointer-events: none;
+  background: radial-gradient(ellipse 55% 70% at 50% -10%, hsl(var(--primary) / 0.09), transparent 70%),
+              radial-gradient(ellipse 30% 50% at 100% 0%, hsl(var(--primary) / 0.05), transparent 70%); }
+.tn-page-light > * { position: relative; }
+.tn-card-light { transition: border-color 250ms ease, box-shadow 250ms ease; }
+@media (hover: hover) and (pointer: fine) {
+  .tn-card-light:hover, main [class*="bg-card"].rounded-lg:hover, main [class*="bg-card"].rounded-xl:hover {
+    box-shadow: 0 0 0 1px hsl(var(--primary) / 0.14), 0 14px 36px -22px hsl(var(--primary) / 0.4); }
+}
+.tn-kpi-light, .tn-kpi-light ~ div { background-image: linear-gradient(180deg, hsl(var(--primary) / 0.05), transparent 45%);
+  box-shadow: inset 0 1px 0 hsl(var(--primary) / 0.18); }
+.tn-chart-light { background-image: radial-gradient(ellipse 70% 60% at 50% 75%, hsl(var(--primary) / 0.07), transparent 70%); }
+.tn-active-light { box-shadow: 0 0 0 1px hsl(var(--primary) / 0.28), 0 0 14px -4px hsl(var(--primary) / 0.45); }
+.tn-btn-halo { box-shadow: 0 6px 18px -8px hsl(var(--primary) / 0.55); }
+/* Selected filter chips / segmented controls across the app */
+main [aria-pressed="true"], main [data-state="on"], main button.bg-primary\/15 { box-shadow: 0 0 0 1px hsl(var(--primary) / 0.22), 0 0 12px -5px hsl(var(--primary) / 0.4); }
+main button[class*="focus-visible"]:focus-visible { box-shadow: 0 0 0 3px hsl(var(--primary) / 0.25); }
