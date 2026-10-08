@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowDownRight, ArrowUpRight, Brain, CalendarDays, Clock, Crosshair, Gauge, ImageIcon, Layers, LineChart, StickyNote, Tags } from 'lucide-react';
+import { ArrowDownRight, ArrowUpRight, Brain, CalendarDays, Clock, Crosshair, Gauge, ImageIcon, Layers, LineChart, Maximize2, StickyNote, Tags, ZoomIn, ZoomOut } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
@@ -57,6 +57,8 @@ function Bullet({ children }: { children: React.ReactNode }) {
 }
 
 export function TradeDetailDialog({ trade, open, onOpenChange }: { trade: DetailTrade | null; open: boolean; onOpenChange: (open: boolean) => void }) {
+  const [lightbox, setLightbox] = useState<'before' | 'after' | null>(null);
+  const [zoom, setZoom] = useState(false);
   const [chartUrls, setChartUrls] = useState<{ before: string | null; after: string | null }>({ before: null, after: null });
 
   useEffect(() => {
@@ -82,7 +84,7 @@ export function TradeDetailDialog({ trade, open, onOpenChange }: { trade: Detail
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto p-0">
+      <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto p-0">
         {/* Hero header — different from reference: big P/L banner instead of a form */}
         <div className={cn('border-b border-border px-6 py-5', isWin ? 'bg-success/10' : isLoss ? 'bg-danger/10' : 'bg-muted/20')}>
           <div className="flex flex-wrap items-start justify-between gap-4">
@@ -181,26 +183,48 @@ export function TradeDetailDialog({ trade, open, onOpenChange }: { trade: Detail
 
           {/* Before / after chart comparison */}
           <Section icon={Layers} title="Trade screenshots">
-            <div className="grid gap-3 sm:grid-cols-2">
-              {(['before', 'after'] as const).map((stage) => <div key={stage} className="min-w-0">
-                <p className="mb-2 text-xs font-semibold text-foreground">{stage === 'before' ? 'Before entry' : 'After trade'}</p>
-                {chartUrls[stage] ? (
-                  <a href={chartUrls[stage] ?? undefined} target="_blank" rel="noopener noreferrer" aria-label={`Open ${stage} screenshot`}>
-                    <img src={chartUrls[stage] ?? undefined} alt={`${trade.pair} ${stage} trade`} className="aspect-video w-full rounded-md border border-border object-contain bg-background" />
-                  </a>
-                ) : (
-                  <div className="flex aspect-video flex-col items-center justify-center gap-2 rounded-md border border-dashed border-border text-muted-foreground">
-                    <ImageIcon className="h-5 w-5" />
-                    <p className="text-xs">No {stage} screenshot</p>
-                  </div>
-                )}
-              </div>)}
-            </div>
+            {(() => {
+              const stages = (['before', 'after'] as const);
+              const present = stages.filter(st => chartUrls[st]);
+              const shown = present.length === 1 ? present : stages;
+              return (
+                <div className={cn('grid gap-4', shown.length === 2 && 'md:grid-cols-2')}>
+                  {shown.map((stage) => <div key={stage} className="min-w-0">
+                    <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{stage === 'before' ? 'Before entry' : 'After trade'}</p>
+                    {chartUrls[stage] ? (
+                      <button type="button" onClick={() => { setZoom(false); setLightbox(stage); }} aria-label={`Expand ${stage} screenshot`}
+                        className="group relative block w-full cursor-zoom-in overflow-hidden rounded-md border border-border bg-background transition-colors duration-200 hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50">
+                        <img src={chartUrls[stage] ?? undefined} alt={`${trade.pair} ${stage} trade`} className="aspect-video w-full object-contain" />
+                        <span className="absolute right-2 top-2 rounded bg-background/80 p-1 text-muted-foreground opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-visible:opacity-100"><Maximize2 className="h-3.5 w-3.5" /></span>
+                      </button>
+                    ) : (
+                      <div className="flex h-20 items-center justify-center gap-2 rounded-md border border-dashed border-border text-muted-foreground">
+                        <ImageIcon className="h-4 w-4" /><p className="text-xs">No {stage} screenshot</p>
+                      </div>
+                    )}
+                  </div>)}
+                </div>
+              );
+            })()}
           </Section>
 
           <p className="flex items-center gap-1.5 pb-1 text-[11px] text-muted-foreground"><Clock className="h-3 w-3" /> Logged on {dateLabel}</p>
         </div>
       </DialogContent>
+      <Dialog open={!!lightbox} onOpenChange={(o) => { if (!o) setLightbox(null); }}>
+        <DialogContent className="flex h-[92vh] w-[96vw] max-w-[96vw] flex-col gap-2 border-border bg-background/95 p-3 sm:rounded-md">
+          <div className="flex items-center gap-2 pr-8">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{trade.pair} · {lightbox === 'before' ? 'Before entry' : 'After trade'}</p>
+            <button type="button" onClick={() => setZoom(z => !z)} className="ml-auto rounded border border-border p-1.5 text-muted-foreground hover:text-foreground" aria-label={zoom ? 'Zoom out' : 'Zoom in'}>
+              {zoom ? <ZoomOut className="h-3.5 w-3.5" /> : <ZoomIn className="h-3.5 w-3.5" />}
+            </button>
+          </div>
+          <div className={cn('min-h-0 flex-1 rounded border border-border bg-background', zoom ? 'overflow-auto' : 'flex items-center justify-center overflow-hidden')}>
+            {lightbox && chartUrls[lightbox] && <img src={chartUrls[lightbox]!} alt={`${trade.pair} ${lightbox} trade, full size`} onClick={() => setZoom(z => !z)}
+              className={zoom ? 'max-w-none cursor-zoom-out' : 'h-full w-full cursor-zoom-in object-contain'} style={zoom ? { width: '200%' } : undefined} />}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }
