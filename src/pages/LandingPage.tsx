@@ -172,7 +172,7 @@ function HeroBackground() {
       {PARTICLES.map((p) => (
         <motion.span
           key={p.id}
-          className="absolute rounded-full bg-primary/80/60"
+          className="absolute rounded-full bg-primary/50"
           style={{ left: `${p.x}%`, top: `${p.y}%`, width: p.size, height: p.size, filter: 'blur(0.5px)' }}
           animate={{ y: [0, -40, 0], opacity: [0, 0.8, 0] }}
           transition={{ duration: p.duration, repeat: Infinity, delay: p.delay, ease: 'easeInOut' }}
