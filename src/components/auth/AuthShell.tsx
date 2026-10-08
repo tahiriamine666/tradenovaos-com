@@ -5,7 +5,7 @@ import { signInWithGoogle } from '@/lib/googleAuth';
 export function AuthShell({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-10">
-      <div className="w-full max-w-[400px] rounded-2xl border border-border/60 bg-card p-6 sm:p-8">
+      <div className="tn-ambient tn-edge-light w-full max-w-[400px] rounded-2xl border border-border/60 bg-card p-6 sm:p-8">
         <div className="text-center mb-6">
           <BrandLogo className="mx-auto w-14 h-14 object-contain mix-blend-screen" />
           <h1 className="mt-4 text-2xl font-heading font-semibold text-foreground">{title}</h1>
