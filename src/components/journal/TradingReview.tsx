@@ -7,7 +7,8 @@ import { useTradesChanged } from '@/contexts/TradeDialogContext';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import robotAsset from '@/assets/tradenova-robot.png.asset.json';
+import robotAsset from '@/assets/tradenova-robot-full.jpg.asset.json';
+const robotSrc = import.meta.env.DEV ? `https://id-preview--0ee4a120-abbf-401b-9623-1114b47e7fda.lovable.app${robotAsset.url}` : robotAsset.url;
 import { fetchAll } from '@/lib/review/fetchAll';
 import {
   ACTION_FIELDS, LEGACY_MAP, PRESETS, QUESTIONS, completion, execution, insights, iso, performance, planning, psychology, resolvePeriod, toFive,
@@ -54,15 +55,20 @@ export function TradingReview({ type = 'weekly' }: { type?: PeriodType }) {
   const [historyError, setHistoryError] = useState(false);
   const [save, setSave] = useState<SaveState>('idle');
   const [starting, setStarting] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   // ── Save pipeline: one request in flight, optimistic revision, latest snapshot wins
   const dirty = useRef(false);
   const latest = useRef<Row | null>(null);
   const inFlight = useRef<Promise<void> | null>(null);
   const timer = useRef<number>();
+  const revs = useRef(new Map<string, number>());
   const persist = useCallback(async (): Promise<void> => {
+    const captured = latest.current; // captured synchronously so identity switches can't drop it
     if (inFlight.current) { await inFlight.current; if (!dirty.current) return; }
-    const snap = latest.current; if (!snap || !user || !dirty.current) return;
+    const base = latest.current?.id === captured?.id ? latest.current : captured;
+    if (!base || !user || !dirty.current) return;
+    const snap = { ...base, revision: revs.current.get(base.id) ?? base.revision };
     dirty.current = false;
     setSave('saving');
     const pct = completion(snap.answers, snap.action_plan);
@@ -71,7 +77,8 @@ export function TradingReview({ type = 'weekly' }: { type?: PeriodType }) {
         answers: snap.answers, action_plan: snap.action_plan, completion_pct: pct, status: pct === 100 ? 'complete' : 'draft', ...snap.ratings, revision: snap.revision + 1,
       } as any).eq('id', snap.id).eq('user_id', user.id).eq('revision', snap.revision).select('id,revision,completion_pct,status,updated_at').maybeSingle();
       if (error) { dirty.current = true; setSave('error'); return; }
-      if (!data) { setSave('conflict'); return; } // someone else saved first — never overwrite
+      if (!data) { setSave('conflict'); return; }
+      revs.current.set(data.id, data.revision); // someone else saved first — never overwrite
       const merged = { ...(latest.current ?? snap), revision: data.revision, completion_pct: data.completion_pct, status: data.status, updated_at: data.updated_at };
       latest.current = merged; setRow((r) => (r && r.id === merged.id ? { ...r, revision: data.revision, completion_pct: data.completion_pct, status: data.status, updated_at: data.updated_at } : r));
       setHistory((h) => h.map((x) => (x.id === data.id ? { ...x, completion_pct: data.completion_pct, status: data.status, updated_at: data.updated_at } : x)));
@@ -105,10 +112,10 @@ export function TradingReview({ type = 'weekly' }: { type?: PeriodType }) {
       .then(({ data, error }) => {
         if (ctrl.signal.aborted) return;
         if (error) { setReviewState('error'); return; }
-        const r = data ? toRow(data) : null; setRow(r); latest.current = r; setReviewState('ready');
+        const r = data ? toRow(data) : null; if (r) revs.current.set(r.id, r.revision); setRow(r); latest.current = r; setReviewState('ready');
       });
     return () => ctrl.abort();
-  }, [user, accountKey, type, period?.start, period?.end, version]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [user, accountKey, type, period?.start, period?.end, version, reloadKey]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Load source data (trades/plans/checklists). Refreshing never touches the review draft.
   const sourceSeq = useRef(0);
@@ -173,7 +180,7 @@ export function TradingReview({ type = 'weekly' }: { type?: PeriodType }) {
   const reloadAfterConflict = async () => {
     if (!user || !row) return;
     const { data } = await supabase.from('trading_reviews').select('*').eq('id', row.id).eq('user_id', user.id).maybeSingle();
-    if (data) { const r = toRow(data); setRow(r); latest.current = r; dirty.current = false; setSave('idle'); }
+    if (data) { const r = toRow(data); revs.current.set(r.id, r.revision); setRow(r); latest.current = r; dirty.current = false; setSave('idle'); }
   };
   const changePreset = async (p: Preset) => { await flush(); setPreset(p); };
 
@@ -280,7 +287,7 @@ export function TradingReview({ type = 'weekly' }: { type?: PeriodType }) {
               </div>
             )}
 
-            {reviewState === 'loading' ? <Skeleton className="h-40 w-full" /> : reviewState === 'error' ? <ErrorBox text="Could not load this review. Your saved answers are safe." onRetry={() => setPreset((p) => p)} />
+            {reviewState === 'loading' ? <Skeleton className="h-40 w-full" /> : reviewState === 'error' ? <ErrorBox text="Could not load this review. Your saved answers are safe." onRetry={() => setReloadKey((k) => k + 1)} />
               : !row ? (
                 <div className="flex flex-col items-center gap-3 rounded-md border border-dashed border-border bg-card p-8 text-center">
                   <p className="text-sm text-foreground">No review for {fmtRange} yet.</p>
@@ -363,7 +370,7 @@ export function TradingReview({ type = 'weekly' }: { type?: PeriodType }) {
 function RobotMark({ small }: { small?: boolean }) {
   return <div className={cn('relative', small ? 'h-20 w-20' : 'h-32 w-32')} aria-hidden="true">
     <div className="absolute inset-[18%] rounded-full bg-primary/15 blur-xl" />
-    <img src={robotAsset.url} alt="" draggable={false} className="relative h-full w-full object-contain mix-blend-lighten" />
+    <img src={robotSrc} alt="" draggable={false} className="relative h-full w-full object-contain mix-blend-lighten" />
   </div>;
 }
 function SaveBadge({ state, onReload }: { state: SaveState; onReload: () => void }) {
