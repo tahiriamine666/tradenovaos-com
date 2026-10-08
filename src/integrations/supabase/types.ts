@@ -2135,31 +2135,47 @@ export type Database = {
           account_type: string
           ai_review: Json
           before_screenshot_url: string | null
+          checklist_completed: boolean | null
           confidence_score: number | null
           created_at: string
           daily_bias: string | null
           discipline_score: number | null
+          early_exit: boolean | null
           emotion: string | null
           emotion_after: string | null
           emotion_before: string | null
           entry_price: number | null
+          entry_reason: string | null
           execution_score: number | null
           exit_price: number | null
+          exit_reason: string | null
           external_id: string | null
           followed_plan: boolean | null
+          fomo: boolean | null
+          hesitation: boolean | null
           id: string
           impulsive_entry: boolean | null
           is_starred: boolean
+          late_entry: boolean | null
           mistakes: string[]
+          moved_stop: boolean | null
           notes: string | null
           outcome: string | null
+          overconfidence: boolean | null
           pair: string
+          patience_score: number | null
+          plan_status: string | null
+          planned_trade: boolean | null
           playbook_id: string | null
           psych_discipline_score: number | null
           psychology_note: string | null
           quantity: number | null
           result: number | null
+          revenge_trade: boolean | null
+          risk_amount: number | null
+          risk_percent: number | null
           rr: number | null
+          rule_violations: string[]
           screenshot_url: string | null
           session: string | null
           setup: string | null
@@ -2179,31 +2195,47 @@ export type Database = {
           account_type?: string
           ai_review?: Json
           before_screenshot_url?: string | null
+          checklist_completed?: boolean | null
           confidence_score?: number | null
           created_at?: string
           daily_bias?: string | null
           discipline_score?: number | null
+          early_exit?: boolean | null
           emotion?: string | null
           emotion_after?: string | null
           emotion_before?: string | null
           entry_price?: number | null
+          entry_reason?: string | null
           execution_score?: number | null
           exit_price?: number | null
+          exit_reason?: string | null
           external_id?: string | null
           followed_plan?: boolean | null
+          fomo?: boolean | null
+          hesitation?: boolean | null
           id?: string
           impulsive_entry?: boolean | null
           is_starred?: boolean
+          late_entry?: boolean | null
           mistakes?: string[]
+          moved_stop?: boolean | null
           notes?: string | null
           outcome?: string | null
+          overconfidence?: boolean | null
           pair: string
+          patience_score?: number | null
+          plan_status?: string | null
+          planned_trade?: boolean | null
           playbook_id?: string | null
           psych_discipline_score?: number | null
           psychology_note?: string | null
           quantity?: number | null
           result?: number | null
+          revenge_trade?: boolean | null
+          risk_amount?: number | null
+          risk_percent?: number | null
           rr?: number | null
+          rule_violations?: string[]
           screenshot_url?: string | null
           session?: string | null
           setup?: string | null
@@ -2223,31 +2255,47 @@ export type Database = {
           account_type?: string
           ai_review?: Json
           before_screenshot_url?: string | null
+          checklist_completed?: boolean | null
           confidence_score?: number | null
           created_at?: string
           daily_bias?: string | null
           discipline_score?: number | null
+          early_exit?: boolean | null
           emotion?: string | null
           emotion_after?: string | null
           emotion_before?: string | null
           entry_price?: number | null
+          entry_reason?: string | null
           execution_score?: number | null
           exit_price?: number | null
+          exit_reason?: string | null
           external_id?: string | null
           followed_plan?: boolean | null
+          fomo?: boolean | null
+          hesitation?: boolean | null
           id?: string
           impulsive_entry?: boolean | null
           is_starred?: boolean
+          late_entry?: boolean | null
           mistakes?: string[]
+          moved_stop?: boolean | null
           notes?: string | null
           outcome?: string | null
+          overconfidence?: boolean | null
           pair?: string
+          patience_score?: number | null
+          plan_status?: string | null
+          planned_trade?: boolean | null
           playbook_id?: string | null
           psych_discipline_score?: number | null
           psychology_note?: string | null
           quantity?: number | null
           result?: number | null
+          revenge_trade?: boolean | null
+          risk_amount?: number | null
+          risk_percent?: number | null
           rr?: number | null
+          rule_violations?: string[]
           screenshot_url?: string | null
           session?: string | null
           setup?: string | null
@@ -2377,8 +2425,11 @@ export type Database = {
         Row: {
           account_id: string | null
           account_key: string
+          action_plan: Json
+          answers: Json
           best_decision: string | null
           biggest_mistake: string | null
+          completion_pct: number
           created_at: string
           execution_rating: number | null
           id: string
@@ -2388,13 +2439,16 @@ export type Database = {
           period_end: string
           period_start: string
           period_type: string
+          preset: string | null
           process_rating: number | null
           psychology_rating: number | null
           recurring_patterns: string | null
+          revision: number
           risk_rating: number | null
           rules_broken: string | null
           rules_followed: string | null
           start_doing: string | null
+          status: string
           stop_doing: string | null
           updated_at: string
           user_id: string
@@ -2406,8 +2460,11 @@ export type Database = {
         Insert: {
           account_id?: string | null
           account_key?: string
+          action_plan?: Json
+          answers?: Json
           best_decision?: string | null
           biggest_mistake?: string | null
+          completion_pct?: number
           created_at?: string
           execution_rating?: number | null
           id?: string
@@ -2417,13 +2474,16 @@ export type Database = {
           period_end: string
           period_start: string
           period_type: string
+          preset?: string | null
           process_rating?: number | null
           psychology_rating?: number | null
           recurring_patterns?: string | null
+          revision?: number
           risk_rating?: number | null
           rules_broken?: string | null
           rules_followed?: string | null
           start_doing?: string | null
+          status?: string
           stop_doing?: string | null
           updated_at?: string
           user_id?: string
@@ -2435,8 +2495,11 @@ export type Database = {
         Update: {
           account_id?: string | null
           account_key?: string
+          action_plan?: Json
+          answers?: Json
           best_decision?: string | null
           biggest_mistake?: string | null
+          completion_pct?: number
           created_at?: string
           execution_rating?: number | null
           id?: string
@@ -2446,13 +2509,16 @@ export type Database = {
           period_end?: string
           period_start?: string
           period_type?: string
+          preset?: string | null
           process_rating?: number | null
           psychology_rating?: number | null
           recurring_patterns?: string | null
+          revision?: number
           risk_rating?: number | null
           rules_broken?: string | null
           rules_followed?: string | null
           start_doing?: string | null
+          status?: string
           stop_doing?: string | null
           updated_at?: string
           user_id?: string

@@ -127,6 +127,13 @@
       "when": 1791475828028,
       "tag": "0017_scope_daily_plans_by_account",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791498055311,
+      "tag": "0018_trading_review_v2_and_trade_fields",
+      "breakpoints": true
     }
   ]
 }

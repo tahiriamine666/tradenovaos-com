@@ -171,12 +171,13 @@ export default function TradeJournal() {
       </div>
 
       <Tabs defaultValue="trades" className="space-y-4">
-        <TabsList className="h-9 rounded-md border border-border bg-card p-0.5">
-          {['trades', 'review'].map(v => (
-            <TabsTrigger key={v} value={v} className="h-8 rounded px-4 text-xs font-semibold capitalize transition-colors duration-200 data-[state=active]:bg-primary/15 data-[state=active]:text-primary data-[state=active]:shadow-none">{v}</TabsTrigger>
+        <TabsList className="h-auto flex-wrap rounded-md border border-border bg-card p-0.5">
+          {([['trades', 'Daily Journal'], ['weekly', 'Weekly Review'], ['biweekly', 'Bi-Weekly Review']] as const).map(([v, label]) => (
+            <TabsTrigger key={v} value={v} className="h-8 rounded px-4 text-xs font-semibold capitalize transition-colors duration-200 data-[state=active]:bg-primary/15 data-[state=active]:text-primary data-[state=active]:shadow-none">{label}</TabsTrigger>
           ))}
         </TabsList>
-        <TabsContent value="review"><TradingReview /></TabsContent>
+        <TabsContent value="weekly"><TradingReview type="weekly" /></TabsContent>
+        <TabsContent value="biweekly"><TradingReview type="biweekly" /></TabsContent>
         <TabsContent value="trades" className="space-y-3">
           {!loading && trades.length > 0 && (
             <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-card p-2">
