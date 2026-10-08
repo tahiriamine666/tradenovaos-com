@@ -16,7 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import {
   X, TrendingUp, TrendingDown, Minus, AlertCircle,
-  Target, BookOpen, ArrowRight, Save,
+  Target, BookOpen, ArrowRight, Save, ChevronDown, Loader2,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { PsychologyFields, EMPTY_PSYCHOLOGY, psychologyFrom, type Psychology } from '@/components/journal/PsychologyFields';
@@ -45,7 +45,22 @@ interface TradeForm {
   weekly_context: string;
   daily_bias: string;
   timeframe: string;
+  entry_price: string;
+  stop_loss: string;
+  take_profit: string;
+  risk_amount: string;
+  risk_percent: string;
+  entry_reason: string;
+  exit_reason: string;
+  mistakes: string;
+  rule_violations: string;
 }
+
+type Flags = { planned_trade: boolean | null; checklist_completed: boolean | null; late_entry: boolean | null; early_exit: boolean | null; moved_stop: boolean | null };
+const EMPTY_FLAGS: Flags = { planned_trade: null, checklist_completed: null, late_entry: null, early_exit: null, moved_stop: null };
+const tagsToText = (a: unknown) => (Array.isArray(a) ? a.join(', ') : '');
+const textToTags = (s: string) => [...new Set(s.split(',').map(x => x.trim()).filter(Boolean))];
+const numOrNull = (s: string) => (s.trim() === '' || isNaN(Number(s)) ? null : Number(s));
 
 interface ValidationErrors {
   pair?: string;
@@ -69,7 +84,35 @@ const EMPTY_FORM: TradeForm = {
   weekly_context: '',
   daily_bias: '',
   timeframe: '',
+  entry_price: '', stop_loss: '', take_profit: '', risk_amount: '', risk_percent: '',
+  entry_reason: '', exit_reason: '', mistakes: '', rule_violations: '',
 };
+
+function Section({ title, defaultOpen = false, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="rounded-lg border border-border bg-muted/10">
+      <button type="button" onClick={() => setOpen(o => !o)} aria-expanded={open} className="flex w-full items-center justify-between px-3 py-2.5 text-left text-sm font-medium text-foreground">
+        {title}<ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-300 ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && <div className="space-y-3 border-t border-border px-3 py-3">{children}</div>}
+    </div>
+  );
+}
+
+function YesNo({ label, value, onChange }: { label: string; value: boolean | null; onChange: (v: boolean | null) => void }) {
+  return (
+    <div>
+      <p className="mb-1.5 text-xs font-medium text-muted-foreground">{label}</p>
+      <div className="flex gap-1">
+        {([true, false] as const).map(b => (
+          <button key={String(b)} type="button" aria-label={`${label} ${b ? 'yes' : 'no'}`} aria-pressed={value === b} onClick={() => onChange(value === b ? null : b)}
+            className={`h-7 flex-1 rounded border text-[11px] font-semibold transition-colors ${value === b ? 'border-primary bg-primary/20 text-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}>{b ? 'Yes' : 'No'}</button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 const SESSIONS = ['london', 'new_york', 'asia', 'overlap'];
 const TIMEFRAMES = ['1m', '5m', '15m', '30m', '1H', '4H', 'Daily', 'Weekly'];
@@ -223,6 +266,10 @@ export default function AddTradeModal({
   const [chartFile, setChartFile] = useState<File | null>(null);
   const [beforeFile, setBeforeFile] = useState<File | null>(null);
   const [psy, setPsy] = useState<Psychology>(EMPTY_PSYCHOLOGY);
+  const [flags, setFlags] = useState<Flags>(EMPTY_FLAGS);
+  const [full, setFull] = useState<any>(null);
+  const [loadingFull, setLoadingFull] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
   // Load playbooks
   useEffect(() => {
@@ -236,32 +283,42 @@ export default function AddTradeModal({
       .then(({ data }) => setPlaybooks(data ?? []));
   }, [user, open]);
 
-  // Populate form in edit mode
+  // Edit mode: fetch the COMPLETE own-user trade so partial list rows never wipe fields/account
   useEffect(() => {
-    if (editTrade) {
+    if (!open || !editTrade?.id || !user) { setFull(null); setLoadError(false); return; }
+    let cancelled = false;
+    setLoadingFull(true); setLoadError(false); setFull(null);
+    supabase.from('trades').select('*').eq('id', editTrade.id).eq('user_id', user.id).maybeSingle().then(({ data, error }) => {
+      if (cancelled) return;
+      setLoadingFull(false);
+      if (error || !data) { setLoadError(true); return; }
+      setFull(data);
+    });
+    return () => { cancelled = true; };
+  }, [editTrade?.id, open, user]);
+
+  useEffect(() => {
+    const t = editTrade ? full : null;
+    if (t) {
+      const s = (v: unknown) => (v == null ? '' : String(v));
       setForm({
-        pair: editTrade.pair ?? '',
-        side: editTrade.side ?? '',
-        outcome: editTrade.outcome ?? '',
-        result: editTrade.result != null ? String(Math.abs(editTrade.result)) : '',
-        trade_date: editTrade.trade_date ?? new Date().toISOString().split('T')[0],
-        setup: editTrade.setup ?? '',
-        playbook_id: editTrade.playbook_id ?? '',
-        notes: editTrade.notes ?? '',
-        rr: editTrade.rr != null ? String(editTrade.rr) : '',
-        session: editTrade.session ?? '',
-        weekly_context: editTrade.weekly_context ?? '',
-        daily_bias: editTrade.daily_bias ?? '',
-        timeframe: editTrade.timeframe ?? '',
+        pair: t.pair ?? '', side: t.side ?? '', outcome: t.outcome ?? '',
+        result: t.result != null ? String(Math.abs(t.result)) : '',
+        trade_date: t.trade_date ?? new Date().toISOString().split('T')[0],
+        setup: t.setup ?? '', playbook_id: t.playbook_id ?? '', notes: t.notes ?? '', rr: s(t.rr), session: t.session ?? '',
+        weekly_context: t.weekly_context ?? '', daily_bias: t.daily_bias ?? '', timeframe: t.timeframe ?? '',
+        entry_price: s(t.entry_price), stop_loss: s(t.stop_loss), take_profit: s(t.take_profit), risk_amount: s(t.risk_amount), risk_percent: s(t.risk_percent),
+        entry_reason: t.entry_reason ?? '', exit_reason: t.exit_reason ?? '', mistakes: tagsToText(t.mistakes), rule_violations: tagsToText(t.rule_violations),
       });
+      setFlags({ planned_trade: t.planned_trade ?? null, checklist_completed: t.checklist_completed ?? null, late_entry: t.late_entry ?? null, early_exit: t.early_exit ?? null, moved_stop: t.moved_stop ?? null });
+      setPsy(psychologyFrom(t));
     } else {
-      setForm(EMPTY_FORM);
+      setForm(EMPTY_FORM); setFlags(EMPTY_FLAGS); setPsy(EMPTY_PSYCHOLOGY);
     }
-    setPsy(psychologyFrom(editTrade));
     setChartFile(null);
     setBeforeFile(null);
     setErrors({});
-  }, [editTrade, open]);
+  }, [editTrade, full, open]);
 
   const set = (k: keyof TradeForm, v: string) => {
     setForm(f => ({ ...f, [k]: v }));
@@ -303,7 +360,8 @@ export default function AddTradeModal({
 
   // Save
   const handleSave = async () => {
-    if (!validate() || !user) return;
+    if (!user || (editTrade && !full)) return;
+    if (!validate()) return;
     setSaving(true);
 
     const payload: any = {
@@ -321,6 +379,11 @@ export default function AddTradeModal({
       weekly_context: form.weekly_context.trim() || null,
       daily_bias: form.daily_bias || null,
       timeframe: form.timeframe || null,
+      entry_price: numOrNull(form.entry_price), stop_loss: numOrNull(form.stop_loss), take_profit: numOrNull(form.take_profit),
+      risk_amount: numOrNull(form.risk_amount), risk_percent: numOrNull(form.risk_percent),
+      entry_reason: form.entry_reason.trim() || null, exit_reason: form.exit_reason.trim() || null,
+      mistakes: textToTags(form.mistakes), rule_violations: textToTags(form.rule_violations),
+      ...flags,
       ...(!editTrade ? { trading_account_id: activeAccountId || null } : {}),
       ...psy,
       psychology_note: psy.psychology_note?.trim() || null,
