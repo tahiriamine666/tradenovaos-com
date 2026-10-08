@@ -362,6 +362,7 @@ function PairChecklist({ date, pair, legacy, readOnly, models, onModelsChange, s
   const { user } = useAuth();
   const { activeAccountId } = useActiveAccount();
   const accountKey = activeAccountId ?? 'all';
+  const [ckScope, setCkScope] = useState('');
   const [ck, setCk] = useState<PairCk | null>(null);
   const pending = useRef<{ key: string; data: PairCk } | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout>>();
@@ -406,14 +407,20 @@ function PairChecklist({ date, pair, legacy, readOnly, models, onModelsChange, s
       // Older checklists were not pair-tagged and were used for EURUSD: show them only there until edited.
       const base = legacy && pair === 'EURUSD' ? legacy : emptyDaily();
       const next = row ? { checklist: row.checklist ?? [], checked: row.checked ?? {}, modelId: row.modelId ?? '' } : { checklist: base.checklist, checked: base.checked, modelId: base.modelId };
-      ckRef.current = next; setCk(next);
+      ckRef.current = next; setCk(next); setCkScope(`${date}|${pair}|${accountKey}`);
     })();
     return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, accountKey, date, pair]);
+  useEffect(() => {
+    if (legacy && pair === 'EURUSD' && ckScope === `${date}|${pair}|${accountKey}` && ckRef.current?.checklist.length === 0 && !pending.current) {
+      const next = { checklist: legacy.checklist, checked: legacy.checked, modelId: legacy.modelId };
+      ckRef.current = next; setCk(next);
+    }
+  }, [legacy, date, pair, accountKey, ckScope]);
   if (!ck) return <div className={`${card} p-5`} role="status">{saveState === 'error' ? 'Checklist unavailable. Retry by selecting this plan again.' : 'Loading checklist…'}</div>;
   const set = (patch: Partial<Daily>) => {
-    if (readOnly || !ckRef.current) return;
+    if (readOnly || !ckRef.current || ckScope !== `${date}|${pair}|${accountKey}`) return;
     const n = { ...ckRef.current, ...patch } as PairCk;
     ckRef.current = n; setCk(n); setSaveState('saving');
     pending.current = { key: `${date}|${pair}|${accountKey}`, data: { checklist: n.checklist, checked: n.checked, modelId: n.modelId } };
@@ -577,7 +584,7 @@ export default function TradePlanV2() {
   }, [user, date, week, pair, accountKey, retry]);
 
   const schedule = () => { setState('saving'); clearTimeout(timer.current); timer.current = setTimeout(flush, 1000); };
-  const setD = (p: Partial<Daily>) => { if (loading || loadError) return; const n = { ...dailyRef.current, ...p }; dailyRef.current = n; setDaily(n); pending.current.daily = { date, pair, accountKey, data: n, ai: { ...prevAi.current } }; schedule(); };
+  const setD = (p: Partial<Daily>) => { if (loading || loadError || dateRef.current !== date || pairRef.current !== pair || accountRef.current !== accountKey) return; const n = { ...dailyRef.current, ...p }; dailyRef.current = n; setDaily(n); pending.current.daily = { date, pair, accountKey, data: n, ai: { ...prevAi.current } }; schedule(); };
   const setW = (p: Partial<Weekly>) => { if (loading || loadError) return; const n = { ...weeklyRef.current, ...p }; weeklyRef.current = n; setWeekly(n); pending.current.weekly = { week, data: n }; schedule(); };
 
   const choosePair = async (p: string) => { if (p === pair) return; if (await saveAll()) setPair(p); };
@@ -640,7 +647,7 @@ export default function TradePlanV2() {
           {loadError ? <div className={`${card} p-6`} role="alert"><p>Plan unavailable or previous changes not saved.</p><button type="button" className="mt-3 text-primary underline" onClick={() => setRetry(n => n + 1)}>Retry</button></div> : loading ? (
             <div className={`${card} flex items-center justify-center py-20`}><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
           ) : (
-            <div key={`${tab}-${date}`} className="content-crossfade space-y-5">
+            <div key={`${tab}-${date}-${accountKey}-${pair}`} className="content-crossfade space-y-5">
               {tab === 'weekly' && (
                 <div className={`${card} space-y-6 p-5 sm:p-6`}>
                   <div><p className={label}>Weekly Outlook</p><p className="mt-1 text-sm text-foreground">{weekLabel}</p></div>
@@ -683,7 +690,7 @@ export default function TradePlanV2() {
                     <Field title="Rules"><RulesEditor rules={daily.rules} onChange={r => setD({ rules: r })} /></Field>
                     <Field title="Main Idea"><Area value={daily.mainIdea} onChange={v => setD({ mainIdea: v })} placeholder="What is today's main trading idea?" /></Field>
                   </div>
-                  <PairChecklist date={date} pair={pair} legacy={dailyExists ? daily : null} models={models} onModelsChange={loadModels} saveRef={checklistSave} />
+
                 </>
               ))}
 
@@ -718,12 +725,15 @@ export default function TradePlanV2() {
                       {daily.rules.length ? daily.rules.map(r => <div key={r.id} className="flex items-center gap-2 text-sm text-foreground"><Box disabled checked={r.done} />{r.text}</div>) : <p className="text-sm text-muted-foreground">—</p>}
                     </Block>
                     <Block title="Main Idea"><Text v={daily.mainIdea} /></Block>
-                    <PairChecklist readOnly date={date} pair={pair} legacy={dailyExists ? daily : null} models={models} onModelsChange={() => {}} saveRef={checklistSave} />
+
                   </>}
                 </div>
               )}
             </div>
           )}
+          <div className={loading || loadError || tab === 'weekly' || !showDaily ? 'hidden' : ''}>
+            <PairChecklist date={date} pair={pair} legacy={!loading && dailyExists ? daily : null} readOnly={loading || loadError || tab !== 'daily'} models={models} onModelsChange={loadModels} saveRef={checklistSave} />
+          </div>
         </main>
       </div>
     </div>

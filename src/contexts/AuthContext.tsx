@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session);
       keepUser(session?.user ?? null);
       setLoading(false);
-    });
+    }).catch(() => { if (alive && !receivedEvent) setLoading(false); });
 
     return () => { alive = false; subscription.unsubscribe(); };
   }, []);
