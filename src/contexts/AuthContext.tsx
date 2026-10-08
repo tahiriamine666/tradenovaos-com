@@ -7,6 +7,7 @@ interface AuthContextType {
   session: Session | null;
   user: User | null;
   loading: boolean;
+  recoverySessionId: string | null;
   signUp: (email: string, password: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -18,23 +19,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [recoverySessionId, setRecoverySessionId] = useState<string | null>(null);
 
   useEffect(() => {
     // Keep the same user object across token refreshes (tab focus) so guards and data hooks don't reset.
     const keepUser = (next: User | null) => setUser((prev) => (prev && next && prev.id === next.id ? prev : next));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    let alive = true;
+    let receivedEvent = false;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!alive) return;
+      receivedEvent = true;
+      if (event === 'PASSWORD_RECOVERY') setRecoverySessionId(session?.user.id ?? null);
+      if (event === 'SIGNED_OUT') setRecoverySessionId(null);
       setSession(session);
       keepUser(session?.user ?? null);
       setLoading(false);
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!alive || receivedEvent) return;
       setSession(session);
       keepUser(session?.user ?? null);
       setLoading(false);
-    });
+    }).catch(() => { if (alive && !receivedEvent) setLoading(false); });
 
-    return () => subscription.unsubscribe();
+    return () => { alive = false; subscription.unsubscribe(); };
   }, []);
 
   const signUp = async (email: string, password: string) => {
@@ -53,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ session, user, loading, recoverySessionId, signUp, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );

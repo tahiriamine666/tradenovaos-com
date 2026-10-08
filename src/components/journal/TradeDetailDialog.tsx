@@ -71,7 +71,7 @@ export function TradeDetailDialog({ trade, open, onOpenChange }: { trade: Detail
       return data?.signedUrl ?? null;
     };
     Promise.all([resolve(trade?.before_screenshot_url ?? null), resolve(trade?.screenshot_url ?? null)])
-      .then(([before, after]) => { if (active) setChartUrls({ before, after }); });
+      .then(([before, after]) => { if (active) setChartUrls({ before, after }); }).catch(() => { if (active) setChartUrls({ before: null, after: null }); });
     return () => { active = false; };
   }, [trade?.id, trade?.before_screenshot_url, trade?.screenshot_url]);
 

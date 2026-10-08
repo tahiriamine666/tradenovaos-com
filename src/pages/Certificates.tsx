@@ -69,6 +69,7 @@ export default function Certificates() {
       const rows = (data || []) as Certificate[];
       setCerts(rows);
       const paths = rows.map((r) => r.image_url).filter(Boolean) as string[];
+      setUrls({});
       if (paths.length) {
         const { data: signed } = await supabase.storage.from("certificates").createSignedUrls(paths, 3600);
         const map: Record<string, string> = {};
@@ -80,6 +81,19 @@ export default function Certificates() {
   }, [user, toast]);
 
   useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    const refreshFiles = async () => {
+      const paths = certs.flatMap(c => c.image_url ? [c.image_url] : []);
+      if (!paths.length) return;
+      const { data } = await supabase.storage.from('certificates').createSignedUrls(paths, 3600);
+      const next: Record<string, string> = {};
+      data?.forEach(item => { if (item.path && item.signedUrl) next[item.path] = item.signedUrl; });
+      setUrls(next);
+    };
+    const timer = window.setInterval(() => void refreshFiles(), 50 * 60 * 1000);
+    window.addEventListener('focus', refreshFiles);
+    return () => { window.clearInterval(timer); window.removeEventListener('focus', refreshFiles); };
+  }, [certs]);
 
   const stats = useMemo(() => {
     const passed = certs.filter((c) => c.type === "eval_passed" || c.type === "funded");
@@ -324,7 +338,7 @@ export default function Certificates() {
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); handleDelete(c); }} onKeyDown={(e) => e.stopPropagation()}
-                    className="absolute top-2 right-2 h-7 w-7 rounded-full bg-background/80 border border-border flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-muted-foreground hover:text-destructive"
+                    className="absolute top-2 right-2 h-7 w-7 rounded-full bg-background/80 border border-border flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus-visible:opacity-100 transition-opacity duration-300 text-muted-foreground hover:text-destructive"
                     aria-label="Delete certificate"
                   >
                     <Trash2 className="h-3.5 w-3.5" />

@@ -46,13 +46,13 @@ Deno.serve(async (req) => {
     );
 
     const { data: row, error: rowError } = await admin
-      .from("subscriptions")
-      .select("dodo_customer_id")
+      .from("billing_subscriptions")
+      .select("customer_id")
       .eq("user_id", userId)
       .maybeSingle();
 
     if (rowError) throw rowError;
-    const customerId = row?.dodo_customer_id;
+    const customerId = row?.customer_id;
     if (!customerId) {
       return new Response(JSON.stringify({ error: "no_customer" }), {
         status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 export async function signInWithGoogle() {
   try { sessionStorage.setItem('tradenova-welcome-pending', '1'); } catch { /* ignore */ }
   const result = await lovable.auth.signInWithOAuth('google', {
-    redirect_uri: window.location.origin,
+    redirect_uri: ['tradenovaos.com', 'www.tradenovaos.com'].includes(window.location.hostname) ? 'https://tradenovaos.com' : window.location.origin,
   });
   if (result.error) {
     toast.error(result.error.message ?? 'Google sign-in failed');

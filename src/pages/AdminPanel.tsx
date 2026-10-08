@@ -202,7 +202,7 @@ export default function AdminPanel() {
             <Metric label="Active users" value={stats.active_users} hint="Seen, traded or journaled" />
             <Metric label="Pro users" value={stats.pro_users} hint="Current" />
             <Metric label="Elite users" value={stats.elite_users} hint="Current" />
-            <Metric label="Active paid" value={stats.active_paid_users} hint={`${stats.override_users} via override`} />
+            <Metric label="Active access" value={stats.active_paid_users} hint={`${stats.override_users} via override`} />
             <Metric label="New subscriptions" value={stats.new_subscriptions} hint="Dodo, in period" />
             <Metric label="Cancellations" value={stats.cancellations} hint="Dodo, in period" />
             <Metric label="Trades logged" value={stats.trades_logged} />
@@ -246,7 +246,7 @@ export default function AdminPanel() {
 
       {tab === 'subscriptions' && (
         <div className="rounded-xl border border-border/60 bg-card">
-          <div className="border-b border-border/60 p-3 text-sm font-medium">Paid users <span className="text-muted-foreground font-normal">· {subscribers.length}</span></div>
+          <div className="border-b border-border/60 p-3 text-sm font-medium">Entitled users <span className="text-muted-foreground font-normal">· {subscribers.length}</span></div>
           <UserTable rows={subscribers} onOpen={setSelected} showSource />
         </div>
       )}

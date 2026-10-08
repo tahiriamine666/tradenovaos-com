@@ -120,6 +120,13 @@
       "when": 1791473773577,
       "tag": "0016_admin_panel_overrides_audit",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791475828028,
+      "tag": "0017_scope_daily_plans_by_account",
+      "breakpoints": true
     }
   ]
 }

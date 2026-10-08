@@ -16,7 +16,15 @@ export default function ForgotPassword({ onBack }: { onBack: () => void }) {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) { setError('Please enter a valid email.'); return; }
     setLoading(true);
     setError(null);
-    const { error: err } = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: resetRedirectUrl() });
+    let err: { status?: number } | null = null;
+    try {
+      const result = await supabase.auth.resetPasswordForEmail(email.trim(), { redirectTo: resetRedirectUrl() });
+      err = result.error;
+    } catch {
+      setLoading(false);
+      setError('Unable to send a reset link right now. Please try again.');
+      return;
+    }
     setLoading(false);
     // Rate limits are the only error worth surfacing; never reveal whether the account exists.
     if (err && err.status === 429) { setError('Too many requests. Please wait a few minutes and try again.'); return; }
@@ -34,8 +42,8 @@ export default function ForgotPassword({ onBack }: { onBack: () => void }) {
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <label className={authLabelClass}>Email</label>
-            <Input type="email" autoFocus value={email} onChange={(e) => { setEmail(e.target.value); setError(null); }} placeholder="you@example.com" className={authInputClass} />
+            <label htmlFor="recovery-email" className={authLabelClass}>Email</label>
+            <Input id="recovery-email" type="email" autoComplete="email" autoFocus value={email} onChange={(e) => { setEmail(e.target.value); setError(null); }} placeholder="you@example.com" className={authInputClass} />
           </div>
           {error && <p className="text-xs text-destructive">{error}</p>}
           <Button type="submit" disabled={loading} className="w-full h-11 rounded-xl">{loading ? 'Sending…' : 'Send reset link'}</Button>
