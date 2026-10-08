@@ -483,8 +483,11 @@ export default function AddTradeModal({
           </div>
 
           {/* Scrollable body */}
-          <div className="overflow-y-auto flex-1 px-5 py-5 space-y-4">
-
+          <div className="overflow-y-auto flex-1 px-5 py-5 space-y-3">
+            {editTrade && loadingFull && <div className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />Loading full trade…</div>}
+            {editTrade && loadError && <p className="rounded-lg border border-primary/30 px-3 py-2 text-sm text-foreground">Could not load this trade. Close and try again — nothing was changed.</p>}
+            {(!editTrade || full) && (<>
+            <Section title="Trade Details" defaultOpen>
             {/* Outcome — first, most important */}
             <OutcomeSelector
               value={form.outcome}
@@ -595,6 +598,22 @@ export default function AddTradeModal({
               </div>
             </div>
 
+            {/* Timeframe + before / after screenshots */}
+            <div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground block mb-1.5">Timeframe</label>
+                <select
+                  value={form.timeframe}
+                  onChange={e => set('timeframe', e.target.value)}
+                  className="w-full text-sm rounded-lg border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                >
+                  <option value="">Select timeframe</option>
+                  {TIMEFRAMES.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+            </div>
+            </Section>
+            <Section title="Planning">
             {/* Weekly context + Daily bias */}
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -619,45 +638,6 @@ export default function AddTradeModal({
               </div>
             </div>
 
-            {/* Timeframe + before / after screenshots */}
-            <div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground block mb-1.5">Timeframe</label>
-                <select
-                  value={form.timeframe}
-                  onChange={e => set('timeframe', e.target.value)}
-                  className="w-full text-sm rounded-lg border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-                >
-                  <option value="">Select timeframe</option>
-                  {TIMEFRAMES.map(t => <option key={t} value={t}>{t}</option>)}
-                </select>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div>
-                <label className="text-xs font-medium text-muted-foreground block mb-1.5">Before screenshot</label>
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp,image/gif"
-                  onChange={e => setBeforeFile(e.target.files?.[0] ?? null)}
-                  className="w-full text-xs rounded-lg border border-border bg-background px-3 py-2 text-muted-foreground file:mr-2 file:rounded file:border-0 file:bg-muted file:px-2 file:py-1 file:text-xs file:text-foreground"
-                />
-                {editTrade?.before_screenshot_url && !beforeFile && <p className="mt-1 text-xs text-muted-foreground">Current before image saved</p>}
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground block mb-1.5">After screenshot</label>
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp,image/gif"
-                  onChange={e => setChartFile(e.target.files?.[0] ?? null)}
-                  className="w-full text-xs rounded-lg border border-border bg-background px-3 py-2 text-muted-foreground file:mr-2 file:rounded file:border-0 file:bg-muted file:px-2 file:py-1 file:text-xs file:text-foreground"
-                />
-                {editTrade?.screenshot_url && !chartFile && <p className="mt-1 text-xs text-muted-foreground">Current after image saved</p>}
-              </div>
-            </div>
-
-
-
             {/* Setup (text) */}
             <div>
               <label className="text-xs font-medium text-muted-foreground block mb-1.5">Setup Tag</label>
@@ -669,8 +649,6 @@ export default function AddTradeModal({
               />
             </div>
 
-            <PsychologyFields key={`${editTrade?.id ?? 'new'}-${open}`} value={psy} onChange={setPsy} />
-
             {/* Playbook */}
             <PlaybookSelector
               value={form.playbook_id}
@@ -679,6 +657,35 @@ export default function AddTradeModal({
               onGoToPlaybooks={handleGoToPlaybooks}
             />
 
+            <div className="grid grid-cols-2 gap-3">
+              <YesNo label="Planned trade" value={flags.planned_trade} onChange={v => setFlags(f => ({ ...f, planned_trade: v }))} />
+              <YesNo label="Checklist completed" value={flags.checklist_completed} onChange={v => setFlags(f => ({ ...f, checklist_completed: v }))} />
+            </div>
+            <div><label className="text-xs font-medium text-muted-foreground block mb-1.5" htmlFor="f-rv">Rule violations (comma separated)</label><Input id="f-rv" value={form.rule_violations} onChange={e => set('rule_violations', e.target.value)} placeholder="No confirmation, Traded news" className="rounded-lg" /></div>
+            </Section>
+            <Section title="Risk">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <div><label className="text-xs font-medium text-muted-foreground block mb-1.5" htmlFor="f-entry_price">Entry</label><Input id="f-entry_price" type="number" step="any" value={form.entry_price} onChange={e => set('entry_price', e.target.value)} placeholder="1.0850" className="rounded-lg" /></div>
+              <div><label className="text-xs font-medium text-muted-foreground block mb-1.5" htmlFor="f-stop_loss">Stop loss</label><Input id="f-stop_loss" type="number" step="any" value={form.stop_loss} onChange={e => set('stop_loss', e.target.value)} placeholder="1.0820" className="rounded-lg" /></div>
+              <div><label className="text-xs font-medium text-muted-foreground block mb-1.5" htmlFor="f-take_profit">Take profit</label><Input id="f-take_profit" type="number" step="any" value={form.take_profit} onChange={e => set('take_profit', e.target.value)} placeholder="1.0920" className="rounded-lg" /></div>
+              <div><label className="text-xs font-medium text-muted-foreground block mb-1.5" htmlFor="f-risk_amount">Risk amount ($)</label><Input id="f-risk_amount" type="number" step="any" value={form.risk_amount} onChange={e => set('risk_amount', e.target.value)} placeholder="100" className="rounded-lg" /></div>
+              <div><label className="text-xs font-medium text-muted-foreground block mb-1.5" htmlFor="f-risk_percent">Risk per trade (%)</label><Input id="f-risk_percent" type="number" step="any" value={form.risk_percent} onChange={e => set('risk_percent', e.target.value)} placeholder="1" className="rounded-lg" /></div>
+            </div>
+            </Section>
+            <Section title="Psychology">
+              <PsychologyFields key={`${editTrade?.id ?? 'new'}-${open}-${full ? 1 : 0}`} value={psy} onChange={setPsy} collapsible={false} />
+            </Section>
+            <Section title="Review / Notes">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div><label className="text-xs font-medium text-muted-foreground block mb-1.5" htmlFor="f-er">Entry reason</label><Textarea id="f-er" value={form.entry_reason} onChange={e => set('entry_reason', e.target.value)} rows={2} className="text-sm resize-none rounded-lg" /></div>
+              <div><label className="text-xs font-medium text-muted-foreground block mb-1.5" htmlFor="f-xr">Exit reason</label><Textarea id="f-xr" value={form.exit_reason} onChange={e => set('exit_reason', e.target.value)} rows={2} className="text-sm resize-none rounded-lg" /></div>
+            </div>
+            <div><label className="text-xs font-medium text-muted-foreground block mb-1.5" htmlFor="f-mt">Mistake tags (comma separated)</label><Input id="f-mt" value={form.mistakes} onChange={e => set('mistakes', e.target.value)} placeholder="Early entry, Oversized" className="rounded-lg" /></div>
+            <div className="grid grid-cols-3 gap-3">
+              <YesNo label="Late entry" value={flags.late_entry} onChange={v => setFlags(f => ({ ...f, late_entry: v }))} />
+              <YesNo label="Early exit" value={flags.early_exit} onChange={v => setFlags(f => ({ ...f, early_exit: v }))} />
+              <YesNo label="Moved stop" value={flags.moved_stop} onChange={v => setFlags(f => ({ ...f, moved_stop: v }))} />
+            </div>
             {/* Notes */}
             <div>
               <label className="text-xs font-medium text-muted-foreground block mb-1.5">Notes</label>
@@ -690,11 +697,40 @@ export default function AddTradeModal({
                 className="text-sm resize-none rounded-lg"
               />
             </div>
+            </Section>
+            <Section title="Screenshots">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground block mb-1.5">Before screenshot</label>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  onChange={e => setBeforeFile(e.target.files?.[0] ?? null)}
+                  className="w-full text-xs rounded-lg border border-border bg-background px-3 py-2 text-muted-foreground file:mr-2 file:rounded file:border-0 file:bg-muted file:px-2 file:py-1 file:text-xs file:text-foreground"
+                />
+                {full?.before_screenshot_url && !beforeFile && <p className="mt-1 text-xs text-muted-foreground">Current before image saved</p>}
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground block mb-1.5">After screenshot</label>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  onChange={e => setChartFile(e.target.files?.[0] ?? null)}
+                  className="w-full text-xs rounded-lg border border-border bg-background px-3 py-2 text-muted-foreground file:mr-2 file:rounded file:border-0 file:bg-muted file:px-2 file:py-1 file:text-xs file:text-foreground"
+                />
+                {full?.screenshot_url && !chartFile && <p className="mt-1 text-xs text-muted-foreground">Current after image saved</p>}
+              </div>
+            </div>
+
+
+
+            </Section>
+            </>)}
           </div>
 
           {/* Footer */}
           <div className="px-5 py-4 border-t border-border flex gap-3 flex-shrink-0">
-            <Button onClick={handleSave} disabled={saving} className="rounded-xl flex-1">
+            <Button onClick={handleSave} disabled={saving || (!!editTrade && !full)} className="rounded-xl flex-1">
               <Save className="h-4 w-4 mr-2" />
               {saving ? 'Saving...' : editTrade ? 'Update Trade' : 'Save Trade'}
             </Button>
