@@ -89,6 +89,7 @@ export default function TradeJournal() {
     toast({ title: 'Trade removed', description: `${trade.pair} deleted.` });
   };
 
+  const openDetail = (t: JournalTrade) => setSelected({ ...t, weekly: ctx(t.weekly_context) ?? '—', daily: ctx(t.daily_bias) ?? '—' } as DetailTrade);
   const [q, setQ] = useState('');
   const [fPair, setFPair] = useState('');
   const [fResult, setFResult] = useState('');
@@ -217,7 +218,7 @@ export default function TradeJournal() {
                       const pnl = t.result == null ? null : Number(t.result);
                       const w = ctx(t.weekly_context), d = ctx(t.daily_bias);
                       return (
-                        <tr key={t.id} onClick={() => setSelected(t)} tabIndex={0} onKeyDown={e => e.key === 'Enter' && setSelected(t)}
+                        <tr key={t.id} onClick={() => openDetail(t)} tabIndex={0} onKeyDown={e => e.key === 'Enter' && openDetail(t)}
                           className="group h-12 cursor-pointer transition-colors duration-200 hover:bg-primary/5 focus:bg-primary/5 focus:outline-none">
                           <td className="whitespace-nowrap px-3 text-xs text-muted-foreground">{fmtDate(t.trade_date)}</td>
                           <td className="whitespace-nowrap px-3 font-semibold text-foreground">{t.pair}{t.side && <span className="ml-1.5 text-[10px] font-medium uppercase text-muted-foreground">{t.side}</span>}</td>
@@ -266,7 +267,7 @@ export default function TradeJournal() {
                       <div><dt className="inline text-muted-foreground">Session: </dt><dd className="inline text-foreground">{t.session || '—'}</dd></div>
                     </dl>
                     <div className="mt-2.5 flex items-center justify-between border-t border-border pt-2">
-                      <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-primary" onClick={() => setSelected(t)}>View Details</Button>
+                      <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-primary" onClick={() => openDetail(t)}>View Details</Button>
                       <div className="flex gap-1">
                         <button type="button" aria-label={`Edit ${t.pair} trade`} onClick={() => openEdit(t as never)} className="rounded p-1.5 text-muted-foreground hover:text-foreground"><Pencil className="h-3.5 w-3.5" /></button>
                         <button type="button" aria-label={`Delete ${t.pair} trade`} onClick={() => handleDelete(t)} className="rounded p-1.5 text-muted-foreground hover:text-danger"><Trash2 className="h-3.5 w-3.5" /></button>
