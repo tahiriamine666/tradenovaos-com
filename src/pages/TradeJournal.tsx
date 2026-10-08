@@ -57,10 +57,11 @@ export default function TradeJournal() {
   const load = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    let query = supabase.from('trades').select('id,pair,side,result,rr,trade_date,setup,notes,outcome,screenshot_url,before_screenshot_url,session,tags,weekly_context,daily_bias,timeframe,playbook_id,emotion_before,emotion_after,confidence_score,discipline_score,execution_score,stress_score,followed_plan,impulsive_entry,psychology_note')
+    let query = supabase.from('trades').select('id,trading_account_id,pair,side,result,rr,trade_date,setup,notes,outcome,screenshot_url,before_screenshot_url,session,tags,weekly_context,daily_bias,timeframe,playbook_id,emotion_before,emotion_after,confidence_score,discipline_score,execution_score,stress_score,followed_plan,impulsive_entry,psychology_note')
       .eq('user_id', user.id).order('trade_date', { ascending: false });
     if (activeAccountId) query = query.eq('trading_account_id', activeAccountId);
-    const { data } = await query;
+    const { data, error } = await query;
+    if (error) { toast({ title: "Could not load trades", description: error.message, variant: "destructive" }); setLoading(false); return; }
     const rows = (data ?? []) as JournalTrade[];
     setTrades(rows);
     const pairs = await Promise.all(rows.filter((trade) => trade.screenshot_url || trade.before_screenshot_url).map(async (trade) => {
