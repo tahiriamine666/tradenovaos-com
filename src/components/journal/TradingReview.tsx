@@ -383,10 +383,10 @@ function SaveBadge({ state, onReload }: { state: SaveState; onReload: () => void
 function Group({ title, children }: { title: string; children: React.ReactNode }) {
   return <section className="tn-card-light rounded-md border border-border bg-card p-4"><h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-foreground">{title}</h3>{children}</section>;
 }
-const Grid = ({ children }: { children: React.ReactNode }) => <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">{children}</div>;
+const Grid = ({ children }: { children: React.ReactNode }) => <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-2 2xl:grid-cols-3">{children}</div>;
 function K({ l, v, accent }: { l: string; v: string; accent?: boolean }) {
   return <div className="rounded-md border border-border bg-background/60 px-3 py-2"><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{l}</p>
-    <p className={cn('mt-1 truncate font-mono text-sm font-semibold', v === na ? 'text-muted-foreground' : accent ? 'text-primary' : 'text-foreground')} title={v}>{v}</p></div>;
+    <p className={cn('mt-1 break-words font-mono text-[13px] font-semibold leading-snug', v === na ? 'text-muted-foreground' : accent ? 'text-primary' : 'text-foreground')} title={v}>{v}</p></div>;
 }
 const R = ({ l, v }: { l: string; v: string }) => <div><dt className="text-muted-foreground">{l}</dt><dd className="text-foreground">{v}</dd></div>;
 const Empty = ({ text }: { text: string }) => <p className="rounded-md border border-dashed border-border bg-card p-6 text-center text-sm text-muted-foreground">{text}</p>;
