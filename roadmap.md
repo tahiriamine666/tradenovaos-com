@@ -1,4 +1,5 @@
 # Redesign roadmap
+- [x] Apply exact reference blue globally; rendered RGB 29/127/255 and lighter hover verified, automatic build/typecheck passed; old accents remain only in unused generated palette metadata
 - [x] Inspect production schema, authorization, session and billing paths (remaining checks: docs/production-readiness-audit.md)
 - [x] Repair confirmed plan/checklist/account integrity and frontend defects
 - [x] Verify scoped fixes with mocked regression tests, browser checks and automatic build/typecheck; live transactions remain untested
