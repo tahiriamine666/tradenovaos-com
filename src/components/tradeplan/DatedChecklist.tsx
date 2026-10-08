@@ -95,6 +95,7 @@ export default function DatedChecklist<T extends Record<string, any>>({ type, se
       checklist_type: type,
       period_date: p.key,
       data: p.data as any,
+      pair: '',
       status: computeStatus(p.data, statusFields),
     }, { onConflict: 'user_id,account_key,checklist_type,period_date,pair' });
     setSave(error ? 'dirty' : pending.current ? 'dirty' : 'saved');
@@ -111,7 +112,7 @@ export default function DatedChecklist<T extends Record<string, any>>({ type, se
     (async () => {
       await flush();
       const { data: row } = await supabase.from('trade_plan_checklists').select('data')
-        .eq('user_id', user.id).eq('account_key', accountKey).eq('checklist_type', type)
+        .eq('user_id', user.id).eq('account_key', accountKey).eq('checklist_type', type).eq('pair', '')
         .eq('period_date', toKey(period)).maybeSingle();
       if (id !== reqId.current) return;
       const fallback = readOnly && selectedDate && toKey(period) === toKey(periodOf(type, fromKey(selectedDate)))
@@ -147,7 +148,7 @@ export default function DatedChecklist<T extends Record<string, any>>({ type, se
     if (!user) return;
     const prev = shift(type, period, -1);
     const { data: row } = await supabase.from('trade_plan_checklists').select('id')
-      .eq('user_id', user.id).eq('account_key', accountKey).eq('checklist_type', type)
+      .eq('user_id', user.id).eq('account_key', accountKey).eq('checklist_type', type).eq('pair', '')
       .eq('period_date', toKey(prev)).maybeSingle();
     go(prev);
     if (!row) setNotice(type === 'weekly' ? 'No Weekly Outlook saved for the previous week.' : `No checklist saved for ${prev.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}.`);
@@ -157,7 +158,7 @@ export default function DatedChecklist<T extends Record<string, any>>({ type, se
     if (!user) return;
     const prev = shift(type, period, -1);
     const { data: row } = await supabase.from('trade_plan_checklists').select('data')
-      .eq('user_id', user.id).eq('account_key', accountKey).eq('checklist_type', type)
+      .eq('user_id', user.id).eq('account_key', accountKey).eq('checklist_type', type).eq('pair', '')
       .eq('period_date', toKey(prev)).maybeSingle();
     if (!row) { setNotice(`No previous ${unit.toLowerCase()} checklist to copy.`); return; }
     write({ ...template, ...(row.data as any) });
@@ -168,7 +169,7 @@ export default function DatedChecklist<T extends Record<string, any>>({ type, se
     if (!user) return;
     setHistoryOpen(true);
     const { data: rows } = await supabase.from('trade_plan_checklists').select('period_date,status')
-      .eq('user_id', user.id).eq('account_key', accountKey).eq('checklist_type', type)
+      .eq('user_id', user.id).eq('account_key', accountKey).eq('checklist_type', type).eq('pair', '')
       .order('period_date', { ascending: false }).limit(60);
     const map = new Map((rows ?? []).map(r => [r.period_date, r.status as Status]));
     const list: { period_date: string; status: Status }[] = [];

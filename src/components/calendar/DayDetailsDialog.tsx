@@ -71,7 +71,7 @@ export default function DayDetailsDialog({ date, onClose, onDateChange }: { date
     let tq = supabase.from('trades').select('*').eq('user_id', user.id).eq('trade_date', key).order('created_at');
     if (activeAccountId) tq = tq.eq('trading_account_id', activeAccountId);
     const ckq = (type: string, period: string) => supabase.from('trade_plan_checklists').select('data,status')
-      .eq('user_id', user.id).eq('account_key', accountKey).eq('checklist_type', type).eq('period_date', period).maybeSingle();
+      .eq('user_id', user.id).eq('account_key', accountKey).eq('checklist_type', type).eq('pair', '').eq('period_date', period).maybeSingle();
     const [t, j, p, d, w] = await Promise.all([
       tq,
       supabase.from('journal_entries').select('*').eq('user_id', user.id).eq('entry_date', key).limit(1).maybeSingle(),
