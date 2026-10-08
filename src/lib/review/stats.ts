@@ -21,6 +21,11 @@ export type ReviewPlan = {
   news_events: unknown; checklist?: unknown;
 };
 export type ReviewChecklist = { checklist_type: string; period_date: string; pair: string; status: string; data: any };
+/** Journal entries are user-level (not tied to an account); scales are stored as entered. */
+export type ReviewJournal = {
+  entry_date: string; mood: string | null; confidence_level: number | null; energy_level: number | null; rule_adherence: number | null;
+  stress_score: number | null; stress_label: string | null; confidence_score: number | null; emotional_trigger: string | null; mistakes_list: string[] | null;
+};
 
 export const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 export const addDays = (d: Date, n: number) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
@@ -92,6 +97,8 @@ export const planStatus = (t: ReviewTrade): 'yes' | 'no' | 'partial' | null =>
 const flagCount = (trades: ReviewTrade[], k: keyof ReviewTrade) => {
   const rec = trades.filter((t) => t[k] != null); return rec.length ? { count: rec.filter((t) => t[k] === true).length, recorded: rec.length } : null;
 };
+/** A trade's rule_violations is known only if it lists something or the trade was saved with the newer plan/checklist fields. */
+export const violationsKnown = (trades: ReviewTrade[]) => trades.filter((t) => (t.rule_violations?.length ?? 0) > 0 || t.plan_status != null || t.planned_trade != null || t.checklist_completed != null);
 const biasDir = (b: string | null | undefined) => { const s = (b ?? '').toLowerCase(); return s.includes('bull') ? 'long' : s.includes('bear') ? 'short' : null; };
 
 export function execution(trades: ReviewTrade[], plans: ReviewPlan[], checklists: ReviewChecklist[]) {
@@ -114,6 +121,7 @@ export function execution(trades: ReviewTrade[], plans: ReviewPlan[], checklists
   return {
     plan: ps.length ? { yes: ps.filter((x) => x === 'yes').length, no: ps.filter((x) => x === 'no').length, partial: ps.filter((x) => x === 'partial').length, recorded: ps.length } : null,
     violations: counts(trades.flatMap((t) => t.rule_violations ?? [])),
+    violationsRecorded: violationsKnown(trades).length, // historic rows default to [] — that is NOT a known zero
     mistakes: counts(trades.flatMap((t) => t.mistakes ?? [])),
     checklist: ruleAttempts.length ? { completed: ruleAttempts.filter((t) => t.checklist_completed).length, recorded: ruleAttempts.length } : null,
     outsideSession: sessionChecked.length ? { count: sessionChecked.filter((t) => planFor(t)!.session!.toLowerCase() !== t.session!.toLowerCase()).length, recorded: sessionChecked.length } : null,
@@ -144,6 +152,9 @@ export function planning(trades: ReviewTrade[], plans: ReviewPlan[], checklists:
     setupMatch: setupComparable.length ? { matched: setupComparable.filter((t) => plans.find((p) => p.plan_date === t.trade_date && p.pair === t.pair)!.setups_to_trade!.some((s) => s.toLowerCase() === t.setup!.toLowerCase())).length, recorded: setupComparable.length } : null,
     riskOver: riskComparable.length ? { over: riskComparable.filter((t) => Number(t.risk_percent) > Number(plans.find((p) => p.plan_date === t.trade_date && p.pair === t.pair)!.max_risk_per_trade)).length, recorded: riskComparable.length } : null,
     news: news.map((n: any) => (typeof n === 'string' ? n : n?.title)).filter(Boolean) as string[],
+    plannedPairs: [...new Set(plans.map((p) => p.pair).filter(Boolean))].sort(),
+    untradedPlans: plans.filter((p) => !trades.some((t) => t.trade_date === p.plan_date && t.pair === p.pair)).map((p) => ({ date: p.plan_date, pair: p.pair })),
+    weeklyBiases: weekly.map((c) => ({ week: c.period_date, bias: (c.data?.bias as string) || null })).filter((w) => w.bias),
   };
 }
 
@@ -155,7 +166,10 @@ export function pearson(xs: number[], ys: number[]) {
   const sxy = sum(xs.map((x, i) => (x - mx) * (ys[i] - my))), sxx = sum(xs.map((x) => (x - mx) ** 2)), syy = sum(ys.map((y) => (y - my) ** 2));
   if (sxx === 0 || syy === 0) return null; return sxy / Math.sqrt(sxx * syy);
 }
-export function psychology(trades: ReviewTrade[]) {
+const FEAR = /fear|anxious|anxiety|scared|nervous/i;
+/** Per-trade psychology score on 1–10: mean of confidence, discipline, patience and inverted stress (11 − stress). */
+export const tradePsychScore = (t: ReviewTrade) => avg([num(t.confidence_score), num(t.discipline_score), num(t.patience_score), num(t.stress_score) == null ? null : 11 - Number(t.stress_score)].filter((x): x is number => x != null));
+export function psychology(trades: ReviewTrade[], journal: ReviewJournal[] = []) {
   const scores = (k: keyof ReviewTrade) => avg(trades.map((t) => num(t[k])).filter((x): x is number => x != null));
   const byDay = [...group(trades.filter((t) => num(t.result) != null), (t) => t.trade_date).entries()].map(([date, ts]) => ({
     date, pnl: sum(ts.map((t) => Number(t.result))), discipline: avg(ts.map((t) => num(t.discipline_score)).filter((x): x is number => x != null)),
@@ -168,6 +182,29 @@ export function psychology(trades: ReviewTrade[]) {
     emotionsBefore: counts(trades.map((t) => t.emotion_before)), emotionsAfter: counts(trades.map((t) => t.emotion_after)),
     bestDay: byDay[0] ?? null, worstDay: byDay.length > 1 ? byDay[byDay.length - 1] : null,
     disciplineVsPnl: corr('discipline'), stressVsPnl: corr('stress'),
+    ...psychDays(trades),
+    fear: (() => { const tr = trades.filter((t) => t.emotion_before != null || t.emotion_after != null); const jr = journal.filter((j) => j.mood || j.emotional_trigger);
+      if (!tr.length && !jr.length) return null;
+      return { trades: tr.filter((t) => FEAR.test(`${t.emotion_before ?? ''} ${t.emotion_after ?? ''}`)).length, tradesRecorded: tr.length,
+        journalDays: jr.filter((j) => FEAR.test(`${j.mood ?? ''} ${j.emotional_trigger ?? ''}`)).length, journalRecorded: jr.length }; })(),
+    journal: journalSummary(journal),
+  };
+}
+
+/** Best / worst days ranked by average psychology score (not P&L). Needs ≥2 scored days for a worst day. */
+export function psychDays(trades: ReviewTrade[]) {
+  const days = [...group(trades, (t) => t.trade_date).entries()].map(([date, ts]) => ({ date, score: avg(ts.map(tradePsychScore).filter((x): x is number => x != null)), trades: ts.length }))
+    .filter((d): d is { date: string; score: number; trades: number } => d.score != null).sort((a, b) => b.score - a.score || a.date.localeCompare(b.date));
+  const all = trades.map(tradePsychScore).filter((x): x is number => x != null);
+  return { psychScore: avg(all), psychScored: all.length, bestPsychDay: days[0] ?? null, worstPsychDay: days.length > 1 ? days[days.length - 1] : null };
+}
+export function journalSummary(journal: ReviewJournal[]) {
+  if (!journal.length) return null;
+  const a = (k: keyof ReviewJournal) => { const xs = journal.map((j) => num(j[k])).filter((x): x is number => x != null); return xs.length ? { avg: avg(xs)!, n: xs.length } : null; };
+  return {
+    entries: journal.length, confidence: a('confidence_level'), energy: a('energy_level'), ruleAdherence: a('rule_adherence'), stress: a('stress_score'),
+    moods: counts(journal.map((j) => j.mood)), stressLabels: counts(journal.map((j) => j.stress_label)),
+    triggers: counts(journal.map((j) => j.emotional_trigger)), mistakes: counts(journal.flatMap((j) => j.mistakes_list ?? [])),
   };
 }
 
