@@ -40,20 +40,21 @@ export function ActiveAccountProvider({ children }: { children: React.ReactNode 
   const [version, setVersion] = useState(0);
 
   const load = useCallback(async () => {
-    if (!user) { setAccounts([]); setLoading(false); return; }
+    if (!user) { setAccounts([]); setActiveAccountIdState(null); setLoading(false); return; }
     setLoading(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('trading_accounts')
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: true });
+    if (error) { setLoading(false); return; }
     const rows = (data ?? []) as unknown as TradingAccountRecord[];
     setAccounts(rows);
     setLoading(false);
 
     // Choose active account: stored -> default -> first
     setActiveAccountIdState(prev => {
-      if (prev === 'all') return null;
+      if (prev === 'all' || localStorage.getItem(STORAGE_KEY) === 'all') return null;
       if (prev && rows.some(r => r.id === prev)) return prev;
       const def = rows.find(r => r.is_default);
       return def?.id ?? rows[0]?.id ?? null;

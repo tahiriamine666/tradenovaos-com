@@ -377,11 +377,12 @@ function PairChecklist({ date, pair, legacy, readOnly, models, onModelsChange, s
     setSaveState('saving');
     const [d, pr, acc] = p.key.split('|');
     const done = p.data.checklist.filter(i => p.data.checked[i.id]).length;
-    const { error } = await supabase.from('trade_plan_checklists').upsert({
+    let error;
+    try { ({ error } = await supabase.from('trade_plan_checklists').upsert({
       user_id: user.id, account_key: acc, account_id: acc === 'all' ? null : acc, checklist_type: 'pair_checklist',
       period_date: d, pair: pr, data: p.data as any,
       status: done === 0 ? 'empty' : done === p.data.checklist.length ? 'complete' : 'partial',
-    }, { onConflict: 'user_id,account_key,checklist_type,period_date,pair' });
+    }, { onConflict: 'user_id,account_key,checklist_type,period_date,pair' })); } catch (failure) { error = failure; }
     if (error) { if (!pending.current) pending.current = p; setSaveState('error'); toast({ title: 'Checklist not saved', description: error.message, variant: 'destructive' }); return false; }
     }
     setSaveState('saved'); return true;
@@ -545,9 +546,11 @@ export default function TradePlanV2() {
   const saveAll = async () => { const planOK = await flush(); const checklistOK = await checklistSave.current?.(); return planOK && checklistOK !== false; };
 
   useEffect(() => {
-    const h = () => { flush(); };
+    const warn = (e: BeforeUnloadEvent) => { if (pending.current.daily || pending.current.weekly || inFlight.current) { e.preventDefault(); e.returnValue = ''; } };
+    window.addEventListener('beforeunload', warn);
+    const h = () => { void flush(); };
     window.addEventListener('pagehide', h);
-    return () => { window.removeEventListener('pagehide', h); flush(); };
+    return () => { window.removeEventListener('pagehide', h); window.removeEventListener('beforeunload', warn); void flush(); };
   }, [flush]);
 
   // Load the selected day's plan and its week's outlook.
