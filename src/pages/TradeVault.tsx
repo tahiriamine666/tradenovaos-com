@@ -5,7 +5,7 @@ import { useActiveAccount } from '@/contexts/ActiveAccountContext';
 import {
   Plus, Search, TrendingUp, TrendingDown, Minus, Check, X, Edit, Trash2, Copy, Upload,
   ChevronLeft, ChevronRight, BarChart3, CalendarDays, AlertCircle, Sparkles, RefreshCw,
-  Target, RotateCcw, SlidersHorizontal, BookOpen, Maximize2, ImageIcon,
+  RotateCcw, SlidersHorizontal, BookOpen, Maximize2, ImageIcon,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -690,7 +690,6 @@ function TradeDetails({ trade, onClose, onEdit, onDuplicate, onDelete, onAIRevie
   const isWin = (trade.result ?? 0) > 0;
   const isLoss = (trade.result ?? 0) < 0;
   const ai = trade.ai_review as any ?? {};
-  const linkedPb = playbooks.find(p => p.id === trade.playbook_id);
   const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
   const [zoomOpen, setZoomOpen] = useState(false);
 
