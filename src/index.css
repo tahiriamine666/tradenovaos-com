@@ -11,44 +11,46 @@
     --card-foreground: 0 0% 98%;
     --popover: 0 0% 6%;
     --popover-foreground: 0 0% 98%;
-    --primary: 221.2 83.2% 53.3%;
+    /* Exact reference blue: #1D7FFF / RGB 29, 127, 255. */
+    --primary: 213.98230088495575 100% 55.68627450980392%;
+    --primary-hover: 213.98230088495575 100% 60%;
     --primary-foreground: 0 0% 98%;
     --secondary: 0 0% 6%;
     --secondary-foreground: 0 0% 98%;
     --muted: 0 0% 6%;
     --muted-foreground: 0 0% 65%;
-    --accent: 221 55% 10%;
+    --accent: var(--primary) / 0.12;
     --accent-foreground: 0 0% 98%;
     --destructive: 0 0% 65%;
     --destructive-foreground: 0 0% 1%;
     --border: 0 0% 14%;
     --input: 0 0% 14%;
-    --ring: 221.2 83.2% 53.3%;
+    --ring: var(--primary) / 0.4;
     --radius: 0.5rem;
 
     --sidebar-background: 0 0% 1%;
     --sidebar-foreground: 0 0% 65%;
-    --sidebar-primary: 221.2 83.2% 53.3%;
+    --sidebar-primary: var(--primary);
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 221 55% 9%;
+    --sidebar-accent: var(--primary) / 0.1;
     --sidebar-accent-foreground: 0 0% 98%;
     --sidebar-border: 0 0% 12%;
-    --sidebar-ring: 221.2 83.2% 53.3%;
+    --sidebar-ring: var(--primary) / 0.4;
 
     --surface: 0 0% 6%;
     --surface-foreground: 0 0% 98%;
     --surface-1: 0 0% 4%;
     --surface-2: 0 0% 4%;
     --surface-3: 0 0% 6%;
-    --success: 221.2 83.2% 53.3%;
+    --success: var(--primary);
     --success-foreground: 0 0% 98%;
     --warning: 0 0% 98%;
     --warning-foreground: 0 0% 1%;
     --danger: 0 0% 65%;
     --danger-foreground: 0 0% 1%;
 
-    --blue-glow: 221.2 83.2% 53.3%;
-    --electric-blue: 221.2 83.2% 53.3%;
+    --blue-glow: var(--primary);
+    --electric-blue: var(--primary);
     --ice-blue: 0 0% 98%;
     --terminal-grid: 0 0% 14%;
     font-family: 'Manrope', system-ui, sans-serif;
@@ -107,7 +109,7 @@
   }
 
   .app-shell :is(button, a, input, select, textarea):focus-visible {
-    outline: 1px solid hsl(var(--blue-glow) / 0.75);
+    outline: 1px solid hsl(var(--blue-glow) / 0.4);
     outline-offset: 2px;
   }
 
