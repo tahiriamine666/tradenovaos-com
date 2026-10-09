@@ -1,4 +1,5 @@
 # Redesign roadmap
+- [ ] Add versioned first-visit cookie consent, policy, reopening controls and verify persistence/accessibility without changing auth
 - [x] Weekly / Bi-Weekly Trading Review + sectioned Add Trade form with extended psychology
 - [x] Animate checklist robot with CSS; verified click-only progress/completion, no uncheck/reload celebration, reduced motion, offscreen pause and mobile framing using intercepted saves; automatic build OK
 - [x] Reconfirm exact #1D7FFF globally; minimized hover brightness, verified rendered public/app accents, active-source old-accent scan clean and automatic build OK; unused metadata and authentic media remain exceptions
