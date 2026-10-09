@@ -16,6 +16,7 @@ import TradingAccountsSection from '@/components/settings/TradingAccountsSection
 import ConnectionStatusSection from '@/components/settings/ConnectionStatusSection';
 import ProfileEditDialog, { PROFILE_UPDATED_EVENT, emitProfileUpdated } from '@/components/settings/ProfileEditDialog';
 import { Pencil } from 'lucide-react';
+import { CookieSettingsButton } from '@/components/CookieConsent';
 
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -335,6 +336,9 @@ export default function StudioSettings() {
         </Section>
 
         {/* Security */}
+        <Section icon={Shield} title="Privacy" description="Cookie preferences">
+          <CookieSettingsButton className="min-h-11 border border-border" />
+        </Section>
         <Section icon={Shield} title="Security" description="How you sign in">
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Info label="Sign-in method" value={providers.map(p => p === 'email' ? 'Email & password' : cap(p)).join(', ')} />

@@ -25,6 +25,9 @@ import FairValueGapsGuide from "./pages/blog/FairValueGapsGuide.tsx";
 import BillingSuccess from "./pages/BillingSuccess.tsx";
 import BillingCancel from "./pages/BillingCancel.tsx";
 import Billing from "./pages/Billing.tsx";
+import CookiePolicy from "./pages/CookiePolicy";
+import CookieConsentPanel from "@/components/CookieConsent";
+import { CookieConsentProvider } from "@/contexts/CookieConsentContext";
 
 const queryClient = new QueryClient();
 
@@ -60,6 +63,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <CookieConsentProvider>
         <AuthProvider>
           <ProfileProvider>
             <PlanProvider>
@@ -103,6 +107,7 @@ const App = () => (
                   <Route path="/contact" element={<MarketingPlaceholder group="static" staticKey="contact" />} />
                   <Route path="/careers" element={<MarketingPlaceholder group="static" staticKey="careers" />} />
                   <Route path="/privacy" element={<MarketingPlaceholder group="static" staticKey="privacy" />} />
+                  <Route path="/cookies" element={<CookiePolicy />} />
                   <Route path="/terms" element={<MarketingPlaceholder group="static" staticKey="terms" />} />
                   <Route path="/help" element={<MarketingPlaceholder group="static" staticKey="help" />} />
 
@@ -112,6 +117,8 @@ const App = () => (
             </PlanProvider>
           </ProfileProvider>
         </AuthProvider>
+        <CookieConsentPanel />
+        </CookieConsentProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

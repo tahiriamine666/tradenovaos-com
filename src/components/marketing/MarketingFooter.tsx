@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Twitter, Instagram, ArrowRight } from 'lucide-react';
 import BrandLogo from '@/components/BrandLogo';
+import { CookieSettingsButton } from '@/components/CookieConsent';
 
 const COLS: { title: string; links: { label: string; to: string; external?: boolean }[] }[] = [
   {
@@ -32,6 +33,7 @@ const COLS: { title: string; links: { label: string; to: string; external?: bool
       { label: 'Careers', to: '/careers' },
       { label: 'Blog', to: '/blog' },
       { label: 'Privacy Policy', to: '/privacy' },
+      { label: 'Cookie Policy', to: '/cookies' },
       { label: 'Terms & Conditions', to: '/terms' },
     ],
   },
@@ -118,6 +120,7 @@ export default function MarketingFooter() {
       <div className="relative border-t border-border">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground/80">
           <p>© {new Date().getFullYear()} TradeNova. All rights reserved.</p>
+          <CookieSettingsButton className="min-h-11 text-xs text-muted-foreground" />
           <a href="https://tradenovaos.com" target="_blank" rel="noreferrer noopener"
             className="hover:text-primary transition-colors">tradenovaos.com</a>
         </div>

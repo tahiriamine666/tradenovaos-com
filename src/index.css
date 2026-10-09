@@ -298,3 +298,22 @@
 /* Selected filter chips / segmented controls across the app */
 main [aria-pressed="true"], main [data-state="on"], main button.bg-primary\/15 { box-shadow: 0 0 0 1px hsl(var(--primary) / 0.22), 0 0 12px -5px hsl(var(--primary) / 0.4); }
 main button[class*="focus-visible"]:focus-visible { box-shadow: 0 0 0 3px hsl(var(--primary) / 0.25); }
+
+/* Compact consent panel, above mobile navigation; no animated backdrop. */
+.tn-cookie-banner {
+  width: min(640px, calc(100% - 2rem));
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  background-image: var(--light-ambient);
+}
+@media (max-width: 639px) {
+  .tn-cookie-banner {
+    width: 100%;
+    bottom: 0;
+    border-radius: 8px 8px 0 0;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+}
