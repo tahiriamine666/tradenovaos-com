@@ -40,8 +40,8 @@ const COLS: { title: string; links: { label: string; to: string; external?: bool
 ];
 
 const SOCIAL = [
-  { label: 'X / Twitter', Icon: Twitter, href: 'https://twitter.com' },
-  { label: 'Instagram', Icon: Instagram, href: 'https://www.instagram.com/tradenova_app/' },
+  { label: 'TradeNova on X', Icon: Twitter, href: 'https://x.com/tradenova1mw' },
+  { label: 'TradeNova on Instagram', Icon: Instagram, href: 'https://www.instagram.com/tradenovaos1/' },
 ];
 
 export default function MarketingFooter() {
@@ -106,7 +106,7 @@ export default function MarketingFooter() {
             <ul className="flex items-center gap-3">
               {SOCIAL.map(s => (
                 <li key={s.label}>
-                  <a href={s.href} target="_blank" rel="noreferrer noopener" aria-label={s.label}
+                  <a href={s.href} target="_blank" rel="noopener noreferrer" aria-label={s.label}
                     className="group flex items-center justify-center w-10 h-10 rounded-md bg-muted border border-border text-muted-foreground hover:bg-primary/15 hover:border-primary/30 hover:text-primary transition-colors">
                     <s.Icon className="h-4 w-4" />
                   </a>
