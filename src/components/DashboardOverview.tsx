@@ -7,10 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useActiveAccount } from "@/contexts/ActiveAccountContext";
 import { Plus, Upload, AlertCircle, Wallet } from "lucide-react";
-import {
-  AreaChart, Area, CartesianGrid, ResponsiveContainer,
-  XAxis, YAxis, Tooltip,
-} from "recharts";
+import { AreaChart, Area, CartesianGrid, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
 
 import { PageHeader } from "@/components/ui/page-header";
 import { MetricCard } from "@/components/ui/metric-card";
@@ -46,7 +43,7 @@ type Period = "1W" | "1M" | "3M" | "All";
 
 // ─── Utils ────────────────────────────────────────────────────────────────────
 function fmtMoney(v: number, sign = true) {
-  const s = sign ? (v >= 0 ? "+" : "") : "";
+  const s = v < 0 ? "-" : sign ? "+" : "";
   return `${s}$${Math.abs(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 function fmtShort(v: number) {
@@ -72,9 +69,7 @@ function ChartTooltip({ active, payload, label }: any) {
   return (
     <div className="rounded-md border border-border bg-popover px-2.5 py-1.5 shadow-md">
       <p className="text-[11px] text-muted-foreground">{label}</p>
-      <p className={`text-xs font-semibold tabular-nums ${v >= 0 ? "text-success" : "text-danger"}`}>
-        {fmtMoney(v)}
-      </p>
+      <p className={`text-xs font-semibold tabular-nums ${v >= 0 ? "text-success" : "text-danger"}`}>{fmtMoney(v)}</p>
     </div>
   );
 }
@@ -85,12 +80,10 @@ function EquityCurve({ trades, loading }: { trades: Trade[]; loading: boolean })
 
   const data = useMemo(() => {
     const cutoff = periodCutoff(period);
-    const filtered = cutoff
-      ? trades.filter(t => new Date(t.trade_date) >= cutoff)
-      : trades;
+    const filtered = cutoff ? trades.filter((t) => new Date(t.trade_date) >= cutoff) : trades;
     const asc = [...filtered].sort((a, b) => a.trade_date.localeCompare(b.trade_date));
     let cum = 0;
-    return asc.map(t => {
+    return asc.map((t) => {
       cum += t.result ?? 0;
       return { day: fmtDate(t.trade_date), value: Number(cum.toFixed(2)) };
     });
@@ -100,8 +93,12 @@ function EquityCurve({ trades, loading }: { trades: Trade[]; loading: boolean })
   const stroke = "hsl(var(--primary))";
   const stats = useMemo(() => {
     if (!data.length) return null;
-    let peak = -Infinity, maxDd = 0;
-    for (const d of data) { peak = Math.max(peak, d.value, 0); maxDd = Math.max(maxDd, peak - d.value); }
+    let peak = -Infinity,
+      maxDd = 0;
+    for (const d of data) {
+      peak = Math.max(peak, d.value, 0);
+      maxDd = Math.max(maxDd, peak - d.value);
+    }
     return { peak: Math.max(peak, 0), dd: maxDd };
   }, [data]);
 
@@ -113,7 +110,11 @@ function EquityCurve({ trades, loading }: { trades: Trade[]; loading: boolean })
           <p className="text-xs text-muted-foreground mt-0.5">Cumulative P&L over time</p>
           {stats && (
             <dl className="mt-3 flex flex-wrap gap-x-6 gap-y-1 tabular-nums">
-              {[["Net P&L", fmtMoney(last), last >= 0], ["Peak", fmtMoney(stats.peak, false), false], ["Max Drawdown", stats.dd > 0 ? `-${fmtMoney(stats.dd, false)}` : "—", false]].map(([l, v, hi]) => (
+              {[
+                ["Net P&L", fmtMoney(last), last >= 0],
+                ["Peak", fmtMoney(stats.peak, false), false],
+                ["Max Drawdown", stats.dd > 0 ? `-${fmtMoney(stats.dd, false)}` : "—", false],
+              ].map(([l, v, hi]) => (
                 <div key={l as string}>
                   <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">{l as string}</dt>
                   <dd className={`text-sm font-semibold ${hi ? "text-primary" : "text-foreground"}`}>{v as string}</dd>
@@ -123,7 +124,7 @@ function EquityCurve({ trades, loading }: { trades: Trade[]; loading: boolean })
           )}
         </div>
         <div className="flex items-center rounded-md border border-border bg-background p-0.5">
-          {(["1W", "1M", "3M", "All"] as Period[]).map(p => (
+          {(["1W", "1M", "3M", "All"] as Period[]).map((p) => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
@@ -155,13 +156,30 @@ function EquityCurve({ trades, loading }: { trades: Trade[]; loading: boolean })
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="2 4" stroke="hsl(var(--border) / 0.6)" vertical={false} />
-              <XAxis dataKey="day" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                axisLine={false} tickLine={false} minTickGap={20} />
-              <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                axisLine={false} tickLine={false} width={50} tickFormatter={fmtShort} />
+              <XAxis
+                dataKey="day"
+                tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                axisLine={false}
+                tickLine={false}
+                minTickGap={20}
+              />
+              <YAxis
+                tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                axisLine={false}
+                tickLine={false}
+                width={50}
+                tickFormatter={fmtShort}
+              />
               <Tooltip content={<ChartTooltip />} />
-              <Area type="monotone" dataKey="value" stroke={stroke} strokeWidth={1.5}
-                fill="url(#eqGrad)" dot={false} activeDot={{ r: 4, fill: stroke, strokeWidth: 0 }} />
+              <Area
+                type="monotone"
+                dataKey="value"
+                stroke={stroke}
+                strokeWidth={1.5}
+                fill="url(#eqGrad)"
+                dot={false}
+                activeDot={{ r: 4, fill: stroke, strokeWidth: 0 }}
+              />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -174,7 +192,7 @@ function EquityCurve({ trades, loading }: { trades: Trade[]; loading: boolean })
 function TodayFocus({ plan, onNavigate }: { plan: TradePlan | null; onNavigate: (id: string) => void }) {
   const rows = [
     { label: "Market Bias", value: plan?.market_bias || "—" },
-    { label: "Session",     value: plan?.session || "—" },
+    { label: "Session", value: plan?.session || "—" },
     {
       label: "Main Setup",
       value: Array.isArray(plan?.setups_to_trade)
@@ -192,16 +210,25 @@ function TodayFocus({ plan, onNavigate }: { plan: TradePlan | null; onNavigate: 
         <div>
           <h3 className="font-heading text-base font-semibold text-foreground">Today Focus</h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {plan ? <>Latest plan · <span className="text-foreground font-medium">{plan.pair || "—"}</span> · {fmtDate(plan.plan_date)}</> : "No trade plan yet"}
+            {plan ? (
+              <>
+                Latest plan · <span className="text-foreground font-medium">{plan.pair || "—"}</span> ·{" "}
+                {fmtDate(plan.plan_date)}
+              </>
+            ) : (
+              "No trade plan yet"
+            )}
           </p>
         </div>
-        <button onClick={() => onNavigate("plan")}
-          className="text-xs text-muted-foreground hover:text-primary transition-colors">
+        <button
+          onClick={() => onNavigate("plan")}
+          className="text-xs text-muted-foreground hover:text-primary transition-colors"
+        >
           {plan ? "Edit" : "Set plan"}
         </button>
       </div>
       <dl className="grid grid-cols-2 gap-3">
-        {rows.map(r => (
+        {rows.map((r) => (
           <div key={r.label} className="rounded-lg border border-border bg-background p-3">
             <dt className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">{r.label}</dt>
             <dd className="mt-1 text-sm font-medium text-foreground truncate">{r.value}</dd>
@@ -216,20 +243,20 @@ function TodayFocus({ plan, onNavigate }: { plan: TradePlan | null; onNavigate: 
 function TraderScoreCard({ trades }: { trades: Trade[] }) {
   const score = useMemo(() => {
     if (!trades.length) return null;
-    const wins = trades.filter(t => t.result > 0);
+    const wins = trades.filter((t) => t.result > 0);
     const wr = (wins.length / trades.length) * 100;
 
     // Discipline = % of trades with both outcome label and setup tagged.
-    const tagged = trades.filter(t => t.outcome && t.setup).length;
+    const tagged = trades.filter((t) => t.outcome && t.setup).length;
     const discipline = Math.round((tagged / trades.length) * 100);
 
     // Execution = win rate weighted by avg R:R (clamped).
-    const rrs = trades.map(t => t.rr ?? 0).filter(r => r > 0);
+    const rrs = trades.map((t) => t.rr ?? 0).filter((r) => r > 0);
     const avgRR = rrs.length ? rrs.reduce((s, r) => s + r, 0) / rrs.length : 0;
     const execution = Math.min(100, Math.round(wr * 0.6 + Math.min(avgRR, 3) * 13));
 
     // Consistency = inverse of coefficient of variation on results.
-    const results = trades.map(t => t.result);
+    const results = trades.map((t) => t.result);
     const mean = results.reduce((s, v) => s + v, 0) / results.length;
     const stddev = Math.sqrt(results.reduce((s, v) => s + (v - mean) ** 2, 0) / results.length);
     const cv = mean !== 0 ? Math.abs(stddev / mean) : 1.5;
@@ -258,17 +285,20 @@ function TraderScoreCard({ trades }: { trades: Trade[] }) {
       ) : (
         <div className="space-y-3">
           {[
-            { label: "Discipline",  value: score.discipline },
-            { label: "Execution",   value: score.execution },
+            { label: "Discipline", value: score.discipline },
+            { label: "Execution", value: score.execution },
             { label: "Consistency", value: score.consistency },
-          ].map(row => (
+          ].map((row) => (
             <div key={row.label}>
               <div className="flex items-center justify-between text-xs mb-1.5">
                 <span className="text-muted-foreground">{row.label}</span>
                 <span className="font-medium text-foreground tabular-nums">{row.value}</span>
               </div>
               <div className="h-1 rounded-full bg-muted overflow-hidden">
-                <div className="h-full rounded-full bg-primary transition-[width] duration-300" style={{ width: `${row.value}%` }} />
+                <div
+                  className="h-full rounded-full bg-primary transition-[width] duration-300"
+                  style={{ width: `${row.value}%` }}
+                />
               </div>
             </div>
           ))}
@@ -288,8 +318,7 @@ function RecentTrades({ trades, onNavigate }: { trades: Trade[]; onNavigate: (id
           <h3 className="font-heading text-base font-semibold text-foreground">Recent Trades</h3>
           <p className="text-xs text-muted-foreground mt-0.5">Last 6 executions</p>
         </div>
-        <button onClick={() => onNavigate("trades")}
-          className="text-xs font-medium text-primary hover:underline">
+        <button onClick={() => onNavigate("trades")} className="text-xs font-medium text-primary hover:underline">
           View all
         </button>
       </div>
@@ -308,23 +337,23 @@ function RecentTrades({ trades, onNavigate }: { trades: Trade[]; onNavigate: (id
               </tr>
             </thead>
             <tbody>
-              {rows.map(t => {
+              {rows.map((t) => {
                 const pos = (t.result ?? 0) >= 0;
                 return (
                   <tr key={t.id} className="border-b border-border last:border-0">
                     <td className="py-2.5 font-medium text-foreground">{t.pair}</td>
                     <td className={`py-2.5 text-xs font-medium ${pos ? "text-success" : "text-danger"}`}>
-                      {pos ? "Win" : "Loss"}
+                      {t.result == null ? "Unavailable" : t.result === 0 ? "Breakeven" : pos ? "Win" : "Loss"}
                     </td>
-                    <td className={`py-2.5 text-right tabular-nums font-medium ${pos ? "text-success" : "text-danger"}`}>
+                    <td
+                      className={`py-2.5 text-right tabular-nums font-medium ${pos ? "text-success" : "text-danger"}`}
+                    >
                       {fmtMoney(t.result ?? 0)}
                     </td>
                     <td className="py-2.5 text-right tabular-nums text-muted-foreground">
                       {t.rr != null ? `1:${t.rr.toFixed(1)}` : "—"}
                     </td>
-                    <td className="py-2.5 text-right text-xs text-muted-foreground">
-                      {fmtDate(t.trade_date)}
-                    </td>
+                    <td className="py-2.5 text-right text-xs text-muted-foreground">{fmtDate(t.trade_date)}</td>
                   </tr>
                 );
               })}
@@ -340,7 +369,7 @@ function RecentTrades({ trades, onNavigate }: { trades: Trade[]; onNavigate: (id
 function BestSetups({ trades }: { trades: Trade[] }) {
   const rows = useMemo(() => {
     const m: Record<string, { trades: number; wins: number; pnl: number; rrSum: number; rrCount: number }> = {};
-    trades.forEach(t => {
+    trades.forEach((t) => {
       const k = t.setup?.trim();
       if (!k) return;
       if (!m[k]) m[k] = { trades: 0, wins: 0, pnl: 0, rrSum: 0, rrCount: 0 };
@@ -385,7 +414,7 @@ function BestSetups({ trades }: { trades: Trade[] }) {
               </tr>
             </thead>
             <tbody>
-              {rows.map(r => (
+              {rows.map((r) => (
                 <tr key={r.name} className="border-b border-border last:border-0">
                   <td className="py-2.5 font-medium text-foreground truncate max-w-[140px]">{r.name}</td>
                   <td className="py-2.5 text-right tabular-nums text-muted-foreground">{r.winRate}%</td>
@@ -393,7 +422,9 @@ function BestSetups({ trades }: { trades: Trade[] }) {
                     {r.avgRR != null ? `1:${r.avgRR.toFixed(1)}` : "—"}
                   </td>
                   <td className="py-2.5 text-right tabular-nums text-muted-foreground">{r.trades}</td>
-                  <td className={`py-2.5 text-right tabular-nums font-medium ${r.pnl >= 0 ? "text-success" : "text-danger"}`}>
+                  <td
+                    className={`py-2.5 text-right tabular-nums font-medium ${r.pnl >= 0 ? "text-success" : "text-danger"}`}
+                  >
                     {fmtMoney(r.pnl)}
                   </td>
                 </tr>
@@ -407,7 +438,10 @@ function BestSetups({ trades }: { trades: Trade[] }) {
 }
 
 // ─── Main DashboardOverview ──────────────────────────────────────────────────────
-interface Props { onNavigate: (id: string) => void; onAddTrade?: () => void; }
+interface Props {
+  onNavigate: (id: string) => void;
+  onAddTrade?: () => void;
+}
 
 export default function DashboardOverview({ onNavigate, onAddTrade }: Props) {
   const { user } = useAuth();
@@ -421,7 +455,8 @@ export default function DashboardOverview({ onNavigate, onAddTrade }: Props) {
     if (!user) return;
     setLoading(true);
     setError(null);
-    let tradesQuery: any = supabase.from("trades")
+    let tradesQuery: any = supabase
+      .from("trades")
       .select("id,pair,side,result,outcome,trade_date,setup,rr,trading_account_id")
       .eq("user_id", user.id)
       .order("trade_date", { ascending: false });
@@ -430,42 +465,53 @@ export default function DashboardOverview({ onNavigate, onAddTrade }: Props) {
     }
     const [tR, pR] = await Promise.all([
       tradesQuery,
-      supabase.from("trade_plans")
+      supabase
+        .from("trade_plans")
         .select("plan_date,market_bias,session,setups_to_trade,max_risk_per_trade,max_daily_loss,pair")
         .eq("user_id", user.id)
-        .eq("account_key", activeAccountId ?? 'all')
+        .eq("account_key", activeAccountId ?? "all")
         .order("plan_date", { ascending: false })
         .limit(1)
         .maybeSingle(),
     ]);
-    if (tR.error) { setError("Could not load trades."); console.error(tR.error); }
-    else setTrades((tR.data as Trade[]) ?? []);
+    if (tR.error) {
+      setError("Could not load trades.");
+      console.error(tR.error);
+    } else setTrades((tR.data as Trade[]) ?? []);
     setPlan((pR.data as TradePlan | null) ?? null);
     setLoading(false);
   }, [user, activeAccountId]);
 
-  useEffect(() => { load(); }, [load, version]);
+  useEffect(() => {
+    load();
+  }, [load, version]);
 
   // ── Metrics + period comparison ──────────────────────────────────────
   const m = useMemo(() => {
-    const wins = trades.filter(t => t.result > 0);
-    const losses = trades.filter(t => t.result < 0);
+    const wins = trades.filter((t) => t.result > 0);
+    const losses = trades.filter((t) => t.result < 0);
     const totalPnl = trades.reduce((s, t) => s + (t.result ?? 0), 0);
     const winRate = trades.length ? Math.round((wins.length / trades.length) * 100) : 0;
 
-    const rrs = trades.map(t => t.rr).filter((r): r is number => r != null && r > 0);
+    const rrs = trades.map((t) => t.rr).filter((r): r is number => r != null && r > 0);
     const avgRR = rrs.length ? rrs.reduce((s, r) => s + r, 0) / rrs.length : null;
 
     // Build last-30-day sparkline (cumulative P&L by day) for each metric.
-    const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 30);
-    const recent = trades.filter(t => new Date(t.trade_date) >= cutoff)
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 30);
+    const recent = trades
+      .filter((t) => new Date(t.trade_date) >= cutoff)
       .sort((a, b) => a.trade_date.localeCompare(b.trade_date));
     let cum = 0;
-    const pnlSpark = recent.map(t => { cum += t.result ?? 0; return cum; });
+    const pnlSpark = recent.map((t) => {
+      cum += t.result ?? 0;
+      return cum;
+    });
 
     // Previous period comparison (30d before last 30d).
-    const prevCutoff = new Date(); prevCutoff.setDate(prevCutoff.getDate() - 60);
-    const prev = trades.filter(t => {
+    const prevCutoff = new Date();
+    prevCutoff.setDate(prevCutoff.getDate() - 60);
+    const prev = trades.filter((t) => {
       const d = new Date(t.trade_date);
       return d >= prevCutoff && d < cutoff;
     });
@@ -474,18 +520,22 @@ export default function DashboardOverview({ onNavigate, onAddTrade }: Props) {
     const pnlDelta = recentPnl - prevPnl;
 
     return {
-      totalPnl, winRate, avgRR,
+      totalPnl,
+      winRate,
+      avgRR,
       tradesCount: trades.length,
-      wins: wins.length, losses: losses.length,
-      pnlSpark, pnlDelta, recentPnlCount: recent.length, prevCount: prev.length,
+      wins: wins.length,
+      losses: losses.length,
+      pnlSpark,
+      pnlDelta,
+      recentPnlCount: recent.length,
+      prevCount: prev.length,
     };
   }, [trades]);
 
   const isEmpty = !loading && trades.length === 0;
 
-  const platformLabel = activeAccount
-    ? activeAccount.platform.toUpperCase().replace('_', ' ')
-    : null;
+  const platformLabel = activeAccount ? activeAccount.platform.toUpperCase().replace("_", " ") : null;
   const badgeParts = activeAccount
     ? [
         platformLabel,
@@ -519,12 +569,14 @@ export default function DashboardOverview({ onNavigate, onAddTrade }: Props) {
             <Badge
               variant="outline"
               className={`py-1 px-2 text-[11px] ${
-                activeAccount.status === 'connected' ? 'text-primary border-primary/30 bg-primary/10'
-                : activeAccount.status === 'error' ? 'text-danger border-danger/30 bg-danger/10'
-                : 'text-muted-foreground'
+                activeAccount.status === "connected"
+                  ? "text-primary border-primary/30 bg-primary/10"
+                  : activeAccount.status === "error"
+                    ? "text-danger border-danger/30 bg-danger/10"
+                    : "text-muted-foreground"
               }`}
             >
-              {activeAccount.status === 'connecting' ? 'Syncing…' : activeAccount.status}
+              {activeAccount.status === "connecting" ? "Syncing…" : activeAccount.status}
             </Badge>
             <span className="text-[11px] text-muted-foreground">
               {activeAccount.last_synced_at
@@ -533,21 +585,25 @@ export default function DashboardOverview({ onNavigate, onAddTrade }: Props) {
             </span>
           </>
         )}
-        <span className="ml-auto text-[11px] text-muted-foreground">Period · <span className="text-foreground">All time</span></span>
+        <span className="ml-auto text-[11px] text-muted-foreground">
+          Period · <span className="text-foreground">All time</span>
+        </span>
       </div>
 
       {activeAccount && (activeAccount.balance != null || activeAccount.equity != null) && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {([
-            ['Balance', activeAccount.balance],
-            ['Equity', activeAccount.equity],
-            ['Free Margin', activeAccount.free_margin],
-            ['Margin Used', activeAccount.margin],
-          ] as [string, number | null | undefined][]).map(([label, val]) => (
+          {(
+            [
+              ["Balance", activeAccount.balance],
+              ["Equity", activeAccount.equity],
+              ["Free Margin", activeAccount.free_margin],
+              ["Margin Used", activeAccount.margin],
+            ] as [string, number | null | undefined][]
+          ).map(([label, val]) => (
             <div key={label} className="tn-kpi-light tn-card-light rounded-xl border border-border bg-card px-4 py-3">
               <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</p>
               <p className="text-base font-semibold text-foreground">
-                {val == null ? '—' : `$${Number(val).toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
+                {val == null ? "—" : `$${Number(val).toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
               </p>
             </div>
           ))}
@@ -558,20 +614,22 @@ export default function DashboardOverview({ onNavigate, onAddTrade }: Props) {
         <div className="flex items-center gap-2 rounded-lg border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">
           <AlertCircle className="h-4 w-4" />
           <span>{error}</span>
-          <button onClick={load} className="ml-auto underline">Retry</button>
+          <button onClick={load} className="ml-auto underline">
+            Retry
+          </button>
         </div>
       )}
 
       {isEmpty && !error ? (
         activeAccount ? (
           <EmptyState
-            title={activeAccount.status === 'error' ? 'Account connection issue' : 'Importing your trade history'}
+            title={activeAccount.status === "error" ? "Account connection issue" : "Importing your trade history"}
             description={
               activeAccount.sync_error
                 ? activeAccount.sync_error
-                : activeAccount.status === 'connecting'
-                  ? 'We are pulling closed trades from your account — this usually takes about a minute.'
-                  : 'No closed trades found on this account yet. Trades will appear here automatically after each sync.'
+                : activeAccount.status === "connecting"
+                  ? "We are pulling closed trades from your account — this usually takes about a minute."
+                  : "No closed trades found on this account yet. Trades will appear here automatically after each sync."
             }
             actions={
               <>
@@ -610,7 +668,6 @@ export default function DashboardOverview({ onNavigate, onAddTrade }: Props) {
             }
           />
         )
-
       ) : (
         <>
           {/* Metric cards */}
@@ -619,10 +676,11 @@ export default function DashboardOverview({ onNavigate, onAddTrade }: Props) {
               label="Total P&L"
               value={loading ? "—" : fmtMoney(m.totalPnl)}
               hint={
-                loading ? "" :
-                m.prevCount > 0
-                  ? `${m.pnlDelta >= 0 ? "+" : ""}${fmtMoney(m.pnlDelta, false)} vs prev 30d`
-                  : "Last 30 days"
+                loading
+                  ? ""
+                  : m.prevCount > 0
+                    ? `${m.pnlDelta >= 0 ? "+" : ""}${fmtMoney(m.pnlDelta, false)} vs prev 30d`
+                    : "Last 30 days"
               }
               spark={m.pnlSpark}
               tone={m.totalPnl >= 0 ? "success" : "danger"}
@@ -639,12 +697,7 @@ export default function DashboardOverview({ onNavigate, onAddTrade }: Props) {
               hint={m.avgRR != null ? "From logged R:R" : "Log R:R per trade"}
               tone="primary"
             />
-            <MetricCard
-              label="Trades"
-              value={loading ? "—" : `${m.tradesCount}`}
-              hint="Total logged"
-              tone="neutral"
-            />
+            <MetricCard label="Trades" value={loading ? "—" : `${m.tradesCount}`} hint="Total logged" tone="neutral" />
           </div>
 
           {/* Equity + Today Focus */}
