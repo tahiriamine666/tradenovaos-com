@@ -58,6 +58,8 @@ export function TradingReview({ type = 'weekly' }: { type?: PeriodType }) {
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
   const period = useMemo(() => resolvePeriod(preset, new Date(), customStart, customEnd), [preset, customStart, customEnd]);
+  const identityRef = useRef('');
+  identityRef.current = `${user?.id}|${accountKey}|${type}|${period?.start}|${period?.end}`;
 
   const [reviewId, setReviewId] = useState<string | null>(null);
   const [legacy, setLegacy] = useState<Record<string, string | null>>({});
@@ -169,13 +171,16 @@ export function TradingReview({ type = 'weekly' }: { type?: PeriodType }) {
 
   const start = async () => {
     if (!user || !period || !queue) return;
+    const startedFor = identityRef.current;
     setStarting(true); setStartError(null);
     const { data, error } = await supabase.from('trading_reviews').insert({
       user_id: user.id, account_id: activeAccountId ?? null, account_key: accountKey, period_type: type, period_start: period.start, period_end: period.end, preset, answers: {}, action_plan: {},
     } as any).select('*').single();
+    if (startedFor !== identityRef.current) { setStarting(false); return; }
     if (error) {
       const { data: existing } = await supabase.from('trading_reviews').select('*').eq('user_id', user.id).eq('account_key', accountKey).eq('period_type', type).eq('period_start', period.start).order('period_end').order('id');
       setStarting(false);
+      if (startedFor !== identityRef.current) return;
       const same = existing?.find((r: any) => r.period_end === period.end);
       if (same) { const r = toServerRow(same); queue.load(r); setLegacy(r.legacy); setReviewId(r.id); return; } // started in another tab → reopen
       const other = existing?.[0];
@@ -434,3 +439,4 @@ const Empty = ({ text }: { text: string }) => <p className="rounded-md border bo
 function ErrorBox({ text, onRetry }: { text: string; onRetry: () => void }) {
   return <div className="flex items-center justify-between gap-3 rounded-md border border-primary/30 bg-card p-3 text-sm text-foreground"><span className="flex items-center gap-2"><AlertCircle className="h-4 w-4 text-primary" />{text}</span><Button size="sm" variant="outline" onClick={onRetry}>Retry</Button></div>;
 }
+
