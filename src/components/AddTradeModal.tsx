@@ -16,9 +16,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import {
   X, TrendingUp, TrendingDown, Minus, AlertCircle,
-  Target, BookOpen, ArrowRight, Save,
+  Target, BookOpen, ArrowRight, Save, ChevronDown, Loader2,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { PsychologyFields, EMPTY_PSYCHOLOGY, psychologyFrom, type Psychology } from '@/components/journal/PsychologyFields';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Outcome = 'win' | 'loss' | 'breakeven';
@@ -44,7 +45,22 @@ interface TradeForm {
   weekly_context: string;
   daily_bias: string;
   timeframe: string;
+  entry_price: string;
+  stop_loss: string;
+  take_profit: string;
+  risk_amount: string;
+  risk_percent: string;
+  entry_reason: string;
+  exit_reason: string;
+  mistakes: string;
+  rule_violations: string;
 }
+
+type Flags = { planned_trade: boolean | null; checklist_completed: boolean | null; late_entry: boolean | null; early_exit: boolean | null; moved_stop: boolean | null };
+const EMPTY_FLAGS: Flags = { planned_trade: null, checklist_completed: null, late_entry: null, early_exit: null, moved_stop: null };
+const tagsToText = (a: unknown) => (Array.isArray(a) ? a.join(', ') : '');
+const textToTags = (s: string) => [...new Set(s.split(',').map(x => x.trim()).filter(Boolean))];
+const numOrNull = (s: string) => (s.trim() === '' || isNaN(Number(s)) ? null : Number(s));
 
 interface ValidationErrors {
   pair?: string;
@@ -68,7 +84,35 @@ const EMPTY_FORM: TradeForm = {
   weekly_context: '',
   daily_bias: '',
   timeframe: '',
+  entry_price: '', stop_loss: '', take_profit: '', risk_amount: '', risk_percent: '',
+  entry_reason: '', exit_reason: '', mistakes: '', rule_violations: '',
 };
+
+function Section({ title, defaultOpen = false, children }: { title: string; defaultOpen?: boolean; children: React.ReactNode }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="rounded-lg border border-border bg-muted/10">
+      <button type="button" onClick={() => setOpen(o => !o)} aria-expanded={open} className="flex w-full items-center justify-between px-3 py-2.5 text-left text-sm font-medium text-foreground">
+        {title}<ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-300 ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && <div className="space-y-3 border-t border-border px-3 py-3">{children}</div>}
+    </div>
+  );
+}
+
+function YesNo({ label, value, onChange }: { label: string; value: boolean | null; onChange: (v: boolean | null) => void }) {
+  return (
+    <div>
+      <p className="mb-1.5 text-xs font-medium text-muted-foreground">{label}</p>
+      <div className="flex gap-1">
+        {([true, false] as const).map(b => (
+          <button key={String(b)} type="button" aria-label={`${label} ${b ? 'yes' : 'no'}`} aria-pressed={value === b} onClick={() => onChange(value === b ? null : b)}
+            className={`h-7 flex-1 rounded border text-[11px] font-semibold transition-colors ${value === b ? 'border-primary bg-primary/20 text-primary' : 'border-border text-muted-foreground hover:bg-muted'}`}>{b ? 'Yes' : 'No'}</button>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 const SESSIONS = ['london', 'new_york', 'asia', 'overlap'];
 const TIMEFRAMES = ['1m', '5m', '15m', '30m', '1H', '4H', 'Daily', 'Weekly'];
@@ -79,15 +123,15 @@ function OutcomeSelector({ value, onChange, error }: {
   value: Outcome | ''; onChange: (v: Outcome) => void; error?: string;
 }) {
   const options = [
-    { value: 'win' as Outcome, label: 'Win', icon: TrendingUp, color: 'text-emerald-500', bg: 'bg-emerald-500/10 border-emerald-500/40' },
-    { value: 'loss' as Outcome, label: 'Loss', icon: TrendingDown, color: 'text-red-500', bg: 'bg-red-500/10 border-red-500/40' },
-    { value: 'breakeven' as Outcome, label: 'Breakeven', icon: Minus, color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/40' },
+    { value: 'win' as Outcome, label: 'Win', icon: TrendingUp, color: 'text-primary', bg: 'bg-primary/10 border-primary/40' },
+    { value: 'loss' as Outcome, label: 'Loss', icon: TrendingDown, color: 'text-muted-foreground', bg: 'bg-muted/10 border-border/40' },
+    { value: 'breakeven' as Outcome, label: 'Breakeven', icon: Minus, color: 'text-muted-foreground', bg: 'bg-muted/10 border-border/40' },
   ];
 
   return (
     <div>
       <label className="text-xs font-medium text-muted-foreground block mb-2">
-        Outcome <span className="text-red-500">*</span>
+        Outcome <span className="text-muted-foreground">*</span>
       </label>
       <div className="grid grid-cols-3 gap-2">
         {options.map(o => {
@@ -108,7 +152,7 @@ function OutcomeSelector({ value, onChange, error }: {
         })}
       </div>
       {error && (
-        <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1">
+        <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1">
           <AlertCircle className="h-3 w-3" />{error}
         </p>
       )}
@@ -123,7 +167,7 @@ function SideSelector({ value, onChange, error }: {
   return (
     <div>
       <label className="text-xs font-medium text-muted-foreground block mb-2">
-        Side <span className="text-red-500">*</span>
+        Side <span className="text-muted-foreground">*</span>
       </label>
       <div className="grid grid-cols-2 gap-2">
         {(['long', 'short'] as Side[]).map(s => (
@@ -134,8 +178,8 @@ function SideSelector({ value, onChange, error }: {
             className={`py-2.5 rounded-xl border-2 text-sm font-medium capitalize transition-all ${
               value === s
                 ? s === 'long'
-                  ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-500'
-                  : 'bg-red-500/10 border-red-500/40 text-red-500'
+                  ? 'bg-primary/10 border-primary/40 text-primary'
+                  : 'bg-muted/10 border-border/40 text-muted-foreground'
                 : 'border-border text-muted-foreground hover:bg-muted/30'
             }`}
           >
@@ -144,7 +188,7 @@ function SideSelector({ value, onChange, error }: {
         ))}
       </div>
       {error && (
-        <p className="text-xs text-red-500 mt-1.5 flex items-center gap-1">
+        <p className="text-xs text-muted-foreground mt-1.5 flex items-center gap-1">
           <AlertCircle className="h-3 w-3" />{error}
         </p>
       )}
@@ -195,7 +239,7 @@ function PlaybookSelector({ value, onChange, playbooks, onGoToPlaybooks }: {
 function FieldError({ msg }: { msg?: string }) {
   if (!msg) return null;
   return (
-    <p className="text-xs text-red-500 mt-1 flex items-center gap-1">
+    <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
       <AlertCircle className="h-3 w-3 flex-shrink-0" />{msg}
     </p>
   );
@@ -221,6 +265,11 @@ export default function AddTradeModal({
   const [playbooks, setPlaybooks] = useState<Playbook[]>([]);
   const [chartFile, setChartFile] = useState<File | null>(null);
   const [beforeFile, setBeforeFile] = useState<File | null>(null);
+  const [psy, setPsy] = useState<Psychology>(EMPTY_PSYCHOLOGY);
+  const [flags, setFlags] = useState<Flags>(EMPTY_FLAGS);
+  const [full, setFull] = useState<any>(null);
+  const [loadingFull, setLoadingFull] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
   // Load playbooks
   useEffect(() => {
@@ -234,31 +283,42 @@ export default function AddTradeModal({
       .then(({ data }) => setPlaybooks(data ?? []));
   }, [user, open]);
 
-  // Populate form in edit mode
+  // Edit mode: fetch the COMPLETE own-user trade so partial list rows never wipe fields/account
   useEffect(() => {
-    if (editTrade) {
+    if (!open || !editTrade?.id || !user) { setFull(null); setLoadError(false); return; }
+    let cancelled = false;
+    setLoadingFull(true); setLoadError(false); setFull(null);
+    supabase.from('trades').select('*').eq('id', editTrade.id).eq('user_id', user.id).maybeSingle().then(({ data, error }) => {
+      if (cancelled) return;
+      setLoadingFull(false);
+      if (error || !data) { setLoadError(true); return; }
+      setFull(data);
+    });
+    return () => { cancelled = true; };
+  }, [editTrade?.id, open, user]);
+
+  useEffect(() => {
+    const t = editTrade ? full : null;
+    if (t) {
+      const s = (v: unknown) => (v == null ? '' : String(v));
       setForm({
-        pair: editTrade.pair ?? '',
-        side: editTrade.side ?? '',
-        outcome: editTrade.outcome ?? '',
-        result: editTrade.result != null ? String(Math.abs(editTrade.result)) : '',
-        trade_date: editTrade.trade_date ?? new Date().toISOString().split('T')[0],
-        setup: editTrade.setup ?? '',
-        playbook_id: editTrade.playbook_id ?? '',
-        notes: editTrade.notes ?? '',
-        rr: editTrade.rr != null ? String(editTrade.rr) : '',
-        session: editTrade.session ?? '',
-        weekly_context: editTrade.weekly_context ?? '',
-        daily_bias: editTrade.daily_bias ?? '',
-        timeframe: editTrade.timeframe ?? '',
+        pair: t.pair ?? '', side: t.side ?? '', outcome: t.outcome ?? '',
+        result: t.result != null ? String(Math.abs(t.result)) : '',
+        trade_date: t.trade_date ?? new Date().toISOString().split('T')[0],
+        setup: t.setup ?? '', playbook_id: t.playbook_id ?? '', notes: t.notes ?? '', rr: s(t.rr), session: t.session ?? '',
+        weekly_context: t.weekly_context ?? '', daily_bias: t.daily_bias ?? '', timeframe: t.timeframe ?? '',
+        entry_price: s(t.entry_price), stop_loss: s(t.stop_loss), take_profit: s(t.take_profit), risk_amount: s(t.risk_amount), risk_percent: s(t.risk_percent),
+        entry_reason: t.entry_reason ?? '', exit_reason: t.exit_reason ?? '', mistakes: tagsToText(t.mistakes), rule_violations: tagsToText(t.rule_violations),
       });
+      setFlags({ planned_trade: t.planned_trade ?? null, checklist_completed: t.checklist_completed ?? null, late_entry: t.late_entry ?? null, early_exit: t.early_exit ?? null, moved_stop: t.moved_stop ?? null });
+      setPsy(psychologyFrom(t));
     } else {
-      setForm(EMPTY_FORM);
+      setForm(EMPTY_FORM); setFlags(EMPTY_FLAGS); setPsy(EMPTY_PSYCHOLOGY);
     }
     setChartFile(null);
     setBeforeFile(null);
     setErrors({});
-  }, [editTrade, open]);
+  }, [editTrade, full, open]);
 
   const set = (k: keyof TradeForm, v: string) => {
     setForm(f => ({ ...f, [k]: v }));
@@ -300,7 +360,8 @@ export default function AddTradeModal({
 
   // Save
   const handleSave = async () => {
-    if (!validate() || !user) return;
+    if (!user || (editTrade && !full)) return;
+    if (!validate()) return;
     setSaving(true);
 
     const payload: any = {
@@ -318,7 +379,14 @@ export default function AddTradeModal({
       weekly_context: form.weekly_context.trim() || null,
       daily_bias: form.daily_bias || null,
       timeframe: form.timeframe || null,
-      trading_account_id: activeAccountId || null,
+      entry_price: numOrNull(form.entry_price), stop_loss: numOrNull(form.stop_loss), take_profit: numOrNull(form.take_profit),
+      risk_amount: numOrNull(form.risk_amount), risk_percent: numOrNull(form.risk_percent),
+      entry_reason: form.entry_reason.trim() || null, exit_reason: form.exit_reason.trim() || null,
+      mistakes: textToTags(form.mistakes), rule_violations: textToTags(form.rule_violations),
+      ...flags,
+      ...(!editTrade ? { trading_account_id: activeAccountId || null } : {}),
+      ...psy,
+      psychology_note: psy.psychology_note?.trim() || null,
     };
 
     for (const [file, field, label] of [
@@ -373,8 +441,8 @@ export default function AddTradeModal({
   const resultLabel = form.outcome === 'loss' ? 'Loss Amount ($)' :
     form.outcome === 'win' ? 'Profit Amount ($)' : 'P&L Amount ($)';
 
-  const resultColor = form.outcome === 'win' ? 'text-emerald-500' :
-    form.outcome === 'loss' ? 'text-red-500' : '';
+  const resultColor = form.outcome === 'win' ? 'text-primary' :
+    form.outcome === 'loss' ? 'text-muted-foreground' : '';
 
   return (
     <AnimatePresence>
@@ -415,8 +483,11 @@ export default function AddTradeModal({
           </div>
 
           {/* Scrollable body */}
-          <div className="overflow-y-auto flex-1 px-5 py-5 space-y-4">
-
+          <div className="overflow-y-auto flex-1 px-5 py-5 space-y-3">
+            {editTrade && loadingFull && <div className="flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />Loading full trade…</div>}
+            {editTrade && loadError && <p className="rounded-lg border border-primary/30 px-3 py-2 text-sm text-foreground">Could not load this trade. Close and try again — nothing was changed.</p>}
+            {(!editTrade || full) && (<>
+            <Section title="Trade Details" defaultOpen>
             {/* Outcome — first, most important */}
             <OutcomeSelector
               value={form.outcome}
@@ -428,7 +499,7 @@ export default function AddTradeModal({
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-xs font-medium text-muted-foreground block mb-1.5">
-                  Pair <span className="text-red-500">*</span>
+                  Pair <span className="text-muted-foreground">*</span>
                 </label>
                 <Input
                   value={form.pair}
@@ -440,7 +511,7 @@ export default function AddTradeModal({
               </div>
               <div>
                 <label className="text-xs font-medium text-muted-foreground block mb-1.5">
-                  Date <span className="text-red-500">*</span>
+                  Date <span className="text-muted-foreground">*</span>
                 </label>
                 <input
                   type="date"
@@ -460,12 +531,12 @@ export default function AddTradeModal({
             {form.outcome !== 'breakeven' && (
               <div>
                 <label className={`text-xs font-medium block mb-1.5 ${resultColor || 'text-muted-foreground'}`}>
-                  {resultLabel} <span className="text-red-500">*</span>
+                  {resultLabel} <span className="text-muted-foreground">*</span>
                 </label>
                 <div className="relative">
                   <span className={`absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium ${
-                    form.outcome === 'win' ? 'text-emerald-500' :
-                    form.outcome === 'loss' ? 'text-red-500' : 'text-muted-foreground'
+                    form.outcome === 'win' ? 'text-primary' :
+                    form.outcome === 'loss' ? 'text-muted-foreground' : 'text-muted-foreground'
                   }`}>
                     {form.outcome === 'loss' ? '-$' : '+$'}
                   </span>
@@ -481,7 +552,7 @@ export default function AddTradeModal({
                 </div>
                 {form.outcome && form.result && (
                   <p className={`text-xs mt-1 font-medium ${
-                    form.outcome === 'win' ? 'text-emerald-500' : 'text-red-500'
+                    form.outcome === 'win' ? 'text-primary' : 'text-muted-foreground'
                   }`}>
                     Will save as: {form.outcome === 'win' ? '+' : '-'}${Math.abs(Number(form.result)).toFixed(2)}
                   </p>
@@ -492,9 +563,9 @@ export default function AddTradeModal({
 
             {/* Breakeven indicator */}
             {form.outcome === 'breakeven' && (
-              <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2.5">
-                <Minus className="h-4 w-4 text-amber-500 flex-shrink-0" />
-                <p className="text-sm text-amber-600 dark:text-amber-400">Result will be saved as $0.00</p>
+              <div className="flex items-center gap-2 bg-muted/10 border border-border/20 rounded-lg px-3 py-2.5">
+                <Minus className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                <p className="text-sm text-muted-foreground dark:text-muted-foreground">Result will be saved as $0.00</p>
               </div>
             )}
 
@@ -527,6 +598,22 @@ export default function AddTradeModal({
               </div>
             </div>
 
+            {/* Timeframe + before / after screenshots */}
+            <div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground block mb-1.5">Timeframe</label>
+                <select
+                  value={form.timeframe}
+                  onChange={e => set('timeframe', e.target.value)}
+                  className="w-full text-sm rounded-lg border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                >
+                  <option value="">Select timeframe</option>
+                  {TIMEFRAMES.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+            </div>
+            </Section>
+            <Section title="Planning">
             {/* Weekly context + Daily bias */}
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -551,45 +638,6 @@ export default function AddTradeModal({
               </div>
             </div>
 
-            {/* Timeframe + before / after screenshots */}
-            <div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground block mb-1.5">Timeframe</label>
-                <select
-                  value={form.timeframe}
-                  onChange={e => set('timeframe', e.target.value)}
-                  className="w-full text-sm rounded-lg border border-border bg-background px-3 py-2 text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-                >
-                  <option value="">Select timeframe</option>
-                  {TIMEFRAMES.map(t => <option key={t} value={t}>{t}</option>)}
-                </select>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <div>
-                <label className="text-xs font-medium text-muted-foreground block mb-1.5">Before screenshot</label>
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp,image/gif"
-                  onChange={e => setBeforeFile(e.target.files?.[0] ?? null)}
-                  className="w-full text-xs rounded-lg border border-border bg-background px-3 py-2 text-muted-foreground file:mr-2 file:rounded file:border-0 file:bg-muted file:px-2 file:py-1 file:text-xs file:text-foreground"
-                />
-                {editTrade?.before_screenshot_url && !beforeFile && <p className="mt-1 text-xs text-muted-foreground">Current before image saved</p>}
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground block mb-1.5">After screenshot</label>
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp,image/gif"
-                  onChange={e => setChartFile(e.target.files?.[0] ?? null)}
-                  className="w-full text-xs rounded-lg border border-border bg-background px-3 py-2 text-muted-foreground file:mr-2 file:rounded file:border-0 file:bg-muted file:px-2 file:py-1 file:text-xs file:text-foreground"
-                />
-                {editTrade?.screenshot_url && !chartFile && <p className="mt-1 text-xs text-muted-foreground">Current after image saved</p>}
-              </div>
-            </div>
-
-
-
             {/* Setup (text) */}
             <div>
               <label className="text-xs font-medium text-muted-foreground block mb-1.5">Setup Tag</label>
@@ -609,6 +657,35 @@ export default function AddTradeModal({
               onGoToPlaybooks={handleGoToPlaybooks}
             />
 
+            <div className="grid grid-cols-2 gap-3">
+              <YesNo label="Planned trade" value={flags.planned_trade} onChange={v => setFlags(f => ({ ...f, planned_trade: v }))} />
+              <YesNo label="Checklist completed" value={flags.checklist_completed} onChange={v => setFlags(f => ({ ...f, checklist_completed: v }))} />
+            </div>
+            <div><label className="text-xs font-medium text-muted-foreground block mb-1.5" htmlFor="f-rv">Rule violations (comma separated)</label><Input id="f-rv" value={form.rule_violations} onChange={e => set('rule_violations', e.target.value)} placeholder="No confirmation, Traded news" className="rounded-lg" /></div>
+            </Section>
+            <Section title="Risk">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <div><label className="text-xs font-medium text-muted-foreground block mb-1.5" htmlFor="f-entry_price">Entry</label><Input id="f-entry_price" type="number" step="any" value={form.entry_price} onChange={e => set('entry_price', e.target.value)} placeholder="1.0850" className="rounded-lg" /></div>
+              <div><label className="text-xs font-medium text-muted-foreground block mb-1.5" htmlFor="f-stop_loss">Stop loss</label><Input id="f-stop_loss" type="number" step="any" value={form.stop_loss} onChange={e => set('stop_loss', e.target.value)} placeholder="1.0820" className="rounded-lg" /></div>
+              <div><label className="text-xs font-medium text-muted-foreground block mb-1.5" htmlFor="f-take_profit">Take profit</label><Input id="f-take_profit" type="number" step="any" value={form.take_profit} onChange={e => set('take_profit', e.target.value)} placeholder="1.0920" className="rounded-lg" /></div>
+              <div><label className="text-xs font-medium text-muted-foreground block mb-1.5" htmlFor="f-risk_amount">Risk amount ($)</label><Input id="f-risk_amount" type="number" step="any" value={form.risk_amount} onChange={e => set('risk_amount', e.target.value)} placeholder="100" className="rounded-lg" /></div>
+              <div><label className="text-xs font-medium text-muted-foreground block mb-1.5" htmlFor="f-risk_percent">Risk per trade (%)</label><Input id="f-risk_percent" type="number" step="any" value={form.risk_percent} onChange={e => set('risk_percent', e.target.value)} placeholder="1" className="rounded-lg" /></div>
+            </div>
+            </Section>
+            <Section title="Psychology">
+              <PsychologyFields key={`${editTrade?.id ?? 'new'}-${open}-${full ? 1 : 0}`} value={psy} onChange={setPsy} collapsible={false} />
+            </Section>
+            <Section title="Review / Notes">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div><label className="text-xs font-medium text-muted-foreground block mb-1.5" htmlFor="f-er">Entry reason</label><Textarea id="f-er" value={form.entry_reason} onChange={e => set('entry_reason', e.target.value)} rows={2} className="text-sm resize-none rounded-lg" /></div>
+              <div><label className="text-xs font-medium text-muted-foreground block mb-1.5" htmlFor="f-xr">Exit reason</label><Textarea id="f-xr" value={form.exit_reason} onChange={e => set('exit_reason', e.target.value)} rows={2} className="text-sm resize-none rounded-lg" /></div>
+            </div>
+            <div><label className="text-xs font-medium text-muted-foreground block mb-1.5" htmlFor="f-mt">Mistake tags (comma separated)</label><Input id="f-mt" value={form.mistakes} onChange={e => set('mistakes', e.target.value)} placeholder="Early entry, Oversized" className="rounded-lg" /></div>
+            <div className="grid grid-cols-3 gap-3">
+              <YesNo label="Late entry" value={flags.late_entry} onChange={v => setFlags(f => ({ ...f, late_entry: v }))} />
+              <YesNo label="Early exit" value={flags.early_exit} onChange={v => setFlags(f => ({ ...f, early_exit: v }))} />
+              <YesNo label="Moved stop" value={flags.moved_stop} onChange={v => setFlags(f => ({ ...f, moved_stop: v }))} />
+            </div>
             {/* Notes */}
             <div>
               <label className="text-xs font-medium text-muted-foreground block mb-1.5">Notes</label>
@@ -620,11 +697,40 @@ export default function AddTradeModal({
                 className="text-sm resize-none rounded-lg"
               />
             </div>
+            </Section>
+            <Section title="Screenshots">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground block mb-1.5">Before screenshot</label>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  onChange={e => setBeforeFile(e.target.files?.[0] ?? null)}
+                  className="w-full text-xs rounded-lg border border-border bg-background px-3 py-2 text-muted-foreground file:mr-2 file:rounded file:border-0 file:bg-muted file:px-2 file:py-1 file:text-xs file:text-foreground"
+                />
+                {full?.before_screenshot_url && !beforeFile && <p className="mt-1 text-xs text-muted-foreground">Current before image saved</p>}
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground block mb-1.5">After screenshot</label>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  onChange={e => setChartFile(e.target.files?.[0] ?? null)}
+                  className="w-full text-xs rounded-lg border border-border bg-background px-3 py-2 text-muted-foreground file:mr-2 file:rounded file:border-0 file:bg-muted file:px-2 file:py-1 file:text-xs file:text-foreground"
+                />
+                {full?.screenshot_url && !chartFile && <p className="mt-1 text-xs text-muted-foreground">Current after image saved</p>}
+              </div>
+            </div>
+
+
+
+            </Section>
+            </>)}
           </div>
 
           {/* Footer */}
           <div className="px-5 py-4 border-t border-border flex gap-3 flex-shrink-0">
-            <Button onClick={handleSave} disabled={saving} className="rounded-xl flex-1">
+            <Button onClick={handleSave} disabled={saving || (!!editTrade && !full)} className="rounded-xl flex-1">
               <Save className="h-4 w-4 mr-2" />
               {saving ? 'Saving...' : editTrade ? 'Update Trade' : 'Save Trade'}
             </Button>
