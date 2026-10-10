@@ -20,7 +20,7 @@ type Impact = 'low' | 'medium' | 'high';
 interface NewsItem { id: string; title: string; date?: string; time: string; impact: Impact; notes: string }
 type Rule = { id: string; text: string; done: boolean };
 interface CheckItem { id: string; text: string }
-interface Weekly { bias: string; scenario: string; chart: string; news: NewsItem[]; mainIdea: string }
+interface Weekly { bias: string; scenario: string; chart: string; news: NewsItem[]; newsShot: string; mainIdea: string }
 interface Daily {
   bias: string; price: string; priceCustom: string; scenario: string;
   before: string; after: string; news: NewsItem[]; newsShot: string;
@@ -32,7 +32,7 @@ interface Daily {
 interface Model { id: string; name: string; items: CheckItem[] }
 
 const uid = () => crypto.randomUUID();
-const EMPTY_WEEKLY: Weekly = { bias: '', scenario: '', chart: '', news: [], mainIdea: '' };
+const EMPTY_WEEKLY: Weekly = { bias: '', scenario: '', chart: '', news: [], newsShot: '', mainIdea: '' };
 const DEFAULT_CHECK = ['Weekly bias aligned', 'Daily bias confirmed', 'Liquidity identified', 'Key level reached', 'Confirmation present', 'Risk calculated', 'News checked', 'Psychology stable'];
 const emptyDaily = (): Daily => ({
   bias: '', price: '', priceCustom: '', scenario: '', before: '', after: '', news: [], newsShot: '',
@@ -105,7 +105,7 @@ function useSigned(path: string) {
   }, [path]);
   return url;
 }
-function ImageSlot({ title, path, onChange, readOnly }: { title: string; path: string; onChange?: (p: string) => void; readOnly?: boolean }) {
+function ImageSlot({ title, path, onChange, readOnly, hint = 'Upload chart screenshot' }: { title: string; path: string; onChange?: (p: string) => void; readOnly?: boolean; hint?: string }) {
   const { user } = useAuth();
   const ref = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -145,7 +145,7 @@ function ImageSlot({ title, path, onChange, readOnly }: { title: string; path: s
             onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) upload(f); }}
             className="flex h-full w-full flex-col items-center justify-center gap-2 text-muted-foreground transition-colors hover:text-primary">
             {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5" />}
-            <span className="text-xs">Upload chart screenshot</span>
+            <span className="text-xs">{hint}</span>
           </button>
         )}
       </div>
@@ -180,6 +180,22 @@ function NewsEditor({ items, onChange, withDate }: { items: NewsItem[]; onChange
       ))}
       <button type="button" onClick={() => onChange([...items, { id: uid(), title: '', time: '', impact: 'medium', notes: '' }])}
         className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:opacity-80"><Plus className="h-3.5 w-3.5" /> Add event</button>
+    </div>
+  );
+}
+// News section: a ForexFactory screenshot is the primary input; manual event rows stay available behind a toggle.
+function NewsBlock({ items, onChange, withDate, shotPath, onShot }: { items: NewsItem[]; onChange: (n: NewsItem[]) => void; withDate?: boolean; shotPath: string; onShot: (p: string) => void }) {
+  const [manual, setManual] = useState(false);
+  return (
+    <div className="space-y-3">
+      <ImageSlot title="News screenshot (ForexFactory)" hint="Upload news screenshot" path={shotPath} onChange={onShot} />
+      {manual ? (
+        <NewsEditor items={items} onChange={onChange} withDate={withDate} />
+      ) : (
+        <button type="button" onClick={() => setManual(true)} className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:opacity-80">
+          <Plus className="h-3.5 w-3.5" /> {items.length ? `Edit events (${items.length})` : 'Add event manually'}
+        </button>
+      )}
     </div>
   );
 }
@@ -688,7 +704,7 @@ export default function TradePlanV2() {
                   <Field title="Weekly Bias"><Chips options={BIASES} value={weekly.bias} onChange={v => setW({ bias: v })} /></Field>
                   <Field title="Where could price go and what is the big story?"><Area value={weekly.scenario} onChange={v => setW({ scenario: v })} placeholder="Write your weekly scenario..." /></Field>
                   <div className="max-w-xl"><ImageSlot title="Chart Screenshot" path={weekly.chart} onChange={p => setW({ chart: p })} /></div>
-                  <Field title="News / Events"><NewsEditor withDate items={weekly.news} onChange={n => setW({ news: n })} /></Field>
+                  <Field title="News / Events"><NewsBlock withDate items={weekly.news} onChange={n => setW({ news: n })} shotPath={weekly.newsShot || ''} onShot={p => setW({ newsShot: p })} /></Field>
                   <Field title="Main Idea"><Area value={weekly.mainIdea} onChange={v => setW({ mainIdea: v })} placeholder="What is the main idea for this trading week?" /></Field>
                 </div>
               )}
@@ -708,8 +724,7 @@ export default function TradePlanV2() {
                       <ImageSlot title="Before" path={daily.before} onChange={p => setD({ before: p })} />
                       <ImageSlot title="After" path={daily.after} onChange={p => setD({ after: p })} />
                     </div>
-                    <Field title="News"><NewsEditor items={daily.news} onChange={n => setD({ news: n })} /></Field>
-                    <ImageSlot title="ForexFactory screenshot" path={daily.newsShot || ''} onChange={p => setD({ newsShot: p })} />
+                    <Field title="News"><NewsBlock items={daily.news} onChange={n => setD({ news: n })} shotPath={daily.newsShot || ''} onShot={p => setD({ newsShot: p })} /></Field>
                     <Field title="Risk Management">
                       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                         {([['riskPct', 'Risk %', '1'], ['maxLoss', 'Max Daily Loss', '500'], ['maxTrades', 'Max Trades', '2'], ['rr', 'R:R Target', '1:3']] as const).map(([k, l, ph]) => (
@@ -738,6 +753,7 @@ export default function TradePlanV2() {
                       <Text v={weekly.scenario} />
                       <div className="max-w-xl"><ImageSlot readOnly title="Weekly Chart" path={weekly.chart} /></div>
                       <NewsView items={weekly.news} />
+                      {weekly.newsShot && <div className="max-w-xl"><ImageSlot readOnly title="News screenshot" path={weekly.newsShot} /></div>}
                       <div><p className="mb-1 text-xs text-muted-foreground">Main idea</p><Text v={weekly.mainIdea} /></div>
                     </div>
                   </Block>
@@ -747,7 +763,7 @@ export default function TradePlanV2() {
                       <Text v={daily.scenario} />
                     </Block>
                     {(daily.before || daily.after) && <Block title="Before / After Charts"><div className="grid gap-4 sm:grid-cols-2"><ImageSlot readOnly title="Before" path={daily.before} /><ImageSlot readOnly title="After" path={daily.after} /></div></Block>}
-                    <Block title="News"><NewsView items={daily.news} />{daily.newsShot && <div className="mt-3 max-w-xl"><ImageSlot readOnly title="ForexFactory screenshot" path={daily.newsShot} /></div>}</Block>
+                    <Block title="News"><NewsView items={daily.news} />{daily.newsShot && <div className="mt-3 max-w-xl"><ImageSlot readOnly title="News screenshot" path={daily.newsShot} /></div>}</Block>
                     <Block title="Risk Management">
                       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                         {([['Risk %', daily.risk.riskPct], ['Max Daily Loss', daily.risk.maxLoss], ['Max Trades', daily.risk.maxTrades], ['R:R Target', daily.risk.rr]]).map(([l, v]) => (
