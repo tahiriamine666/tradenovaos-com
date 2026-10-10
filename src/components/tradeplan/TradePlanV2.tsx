@@ -48,6 +48,21 @@ const BIASES = ['Bullish', 'Bearish', 'Neutral', 'Range'];
 const PRICES = ['Premium', 'Discount', 'Mid-Range', 'Custom'];
 const PSYCH = ['Calm', 'Focused', 'Confident', 'Neutral', 'Stressed', 'Fearful', 'FOMO', 'Revenge Trading'];
 
+// Editable field layout for the plan editor. Saved once per user in workspace_layouts
+// (page daily_plan / weekly_outlook) so every day and every pair renders the same order.
+export const DAILY_LAYOUT_DEFAULT = ['bias_price', 'scenario', 'charts', 'news', 'risk', 'psychology', 'rules', 'main_idea'];
+export const WEEKLY_LAYOUT_DEFAULT = ['bias', 'scenario', 'charts', 'news', 'main_idea'];
+export function normalizeLayoutOrder(saved: unknown, fallback: string[]): string[] {
+  if (!Array.isArray(saved)) return [...fallback];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const id of saved) {
+    if (typeof id === 'string' && fallback.includes(id) && !seen.has(id)) { seen.add(id); out.push(id); }
+  }
+  for (const id of fallback) if (!seen.has(id)) out.push(id);
+  return out;
+}
+
 const pad = (n: number) => String(n).padStart(2, '0');
 const toKey = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const fromKey = (k: string) => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
@@ -522,6 +537,13 @@ export default function TradePlanV2() {
   const [state, setState] = useState<SaveState>('idle');
   const week = weekStartKey(date);
 
+  // Editable plan field layout (drag & drop with the mouse, saved once per user).
+  const [dailyOrder, setDailyOrder] = useState<string[]>(DAILY_LAYOUT_DEFAULT);
+  const [weeklyOrder, setWeeklyOrder] = useState<string[]>(WEEKLY_LAYOUT_DEFAULT);
+  const [layoutEdit, setLayoutEdit] = useState<Tab | null>(null);
+  const [layoutDraft, setLayoutDraft] = useState<string[]>([]);
+  const layoutDrag = useRef<string | null>(null);
+
   // Refs to flush pending edits to the date they belong to.
   const prevAi = useRef<Record<string, any>>({});
   const loadedScope = useRef('');
@@ -640,6 +662,22 @@ export default function TradePlanV2() {
     return () => { alive = false; };
   }, [user, date, week, pair, accountKey, retry]);
 
+  // Load the saved field layout once per user: the same order for every day and pair.
+  useEffect(() => {
+    if (!user) return;
+    let alive = true;
+    (async () => {
+      const [{ data: d1 }, { data: d2 }] = await Promise.all([
+        supabase.from('workspace_layouts').select('layout').eq('user_id', user.id).eq('page', 'daily_plan').maybeSingle(),
+        supabase.from('workspace_layouts').select('layout').eq('user_id', user.id).eq('page', 'weekly_outlook').maybeSingle(),
+      ]);
+      if (!alive) return;
+      if (d1?.layout) setDailyOrder(normalizeLayoutOrder((d1.layout as { order?: unknown }).order, DAILY_LAYOUT_DEFAULT));
+      if (d2?.layout) setWeeklyOrder(normalizeLayoutOrder((d2.layout as { order?: unknown }).order, WEEKLY_LAYOUT_DEFAULT));
+    })();
+    return () => { alive = false; };
+  }, [user, retry]);
+
   const schedule = () => { setState('saving'); clearTimeout(timer.current); timer.current = setTimeout(flush, 1000); };
   const setD = (p: Partial<Daily>) => { if (loading || loadError || loadedScope.current !== `${accountKey}|${date}|${pair}`) return; const n = { ...dailyRef.current, ...p }; dailyRef.current = n; setDaily(n); pending.current.daily = { date, pair, accountKey, data: n, ai: { ...prevAi.current } }; schedule(); };
   const setW = (p: Partial<Weekly>) => { if (loading || loadError) return; const n = { ...weeklyRef.current, ...p }; weeklyRef.current = n; setWeekly(n); pending.current.weekly = { week, data: n }; schedule(); };
@@ -650,6 +688,28 @@ export default function TradePlanV2() {
     const cur = ruleDefaultsRef.current;
     const same = cur.length === next.length && cur.every((x, i) => x.id === next[i].id && x.text === next[i].text);
     if (!same) { ruleDefaultsRef.current = next; pending.current.defaults = next; schedule(); }
+  };
+
+  // Edit Layout: drag sections up/down with the mouse; the order is saved once per user,
+  // so every day and every pair keeps the same layout. Cancel reverts, Reset restores defaults.
+  const startLayoutEdit = (t: Tab) => { setLayoutEdit(t); setLayoutDraft(t === 'daily' ? dailyOrder : weeklyOrder); };
+  const reorderDraft = (fromId: string, toId: string) => setLayoutDraft(prev => {
+    const arr = [...prev]; const from = arr.indexOf(fromId); const to = arr.indexOf(toId);
+    if (from < 0 || to < 0 || from === to) return prev;
+    arr.splice(from, 1); arr.splice(to, 0, fromId);
+    return arr;
+  });
+  const cancelLayoutEdit = () => { setLayoutEdit(null); layoutDrag.current = null; };
+  const resetLayoutDraft = () => setLayoutDraft(layoutEdit === 'daily' ? [...DAILY_LAYOUT_DEFAULT] : [...WEEKLY_LAYOUT_DEFAULT]);
+  const saveLayoutEdit = async () => {
+    if (!layoutEdit || !user) { cancelLayoutEdit(); return; }
+    const page = layoutEdit === 'daily' ? 'daily_plan' : 'weekly_outlook';
+    const clean = normalizeLayoutOrder(layoutDraft, layoutEdit === 'daily' ? DAILY_LAYOUT_DEFAULT : WEEKLY_LAYOUT_DEFAULT);
+    const { error } = await supabase.from('workspace_layouts').upsert({ user_id: user.id, page, layout: { order: clean } }, { onConflict: 'user_id,page' });
+    if (error) { toast({ title: 'Layout not saved', description: error.message, variant: 'destructive' }); return; }
+    if (layoutEdit === 'daily') setDailyOrder(clean); else setWeeklyOrder(clean);
+    toast({ title: 'Layout saved' });
+    setLayoutEdit(null);
   };
 
   const choosePair = async (p: string) => { if (p === pair) return; if (await saveAll()) setPair(p); };
