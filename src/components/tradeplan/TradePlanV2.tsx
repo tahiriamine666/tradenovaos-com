@@ -852,18 +852,18 @@ export default function TradePlanV2() {
           {loadError ? <div className={`${card} p-6`} role="alert"><p>Plan unavailable or previous changes not saved.</p><button type="button" className="mt-3 text-primary underline" onClick={() => setRetry(n => n + 1)}>Retry</button></div> : loading ? (
             <div className={`${card} flex items-center justify-center py-20`}><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
           ) : (
-            <div key={`${tab}-${date}-${accountKey}-${pair}`} className="content-crossfade space-y-5">
+            <div key={`${tab}-${date}-${accountKey}-${pair}`} className="content-crossfade">
               {tab === 'weekly' && (
-                <div className={`${card} space-y-6 p-5 sm:p-6`}>
+                <div className={`${card} flex flex-col gap-6 p-5 sm:p-6`}>
                   <div><p className={label}>Weekly Outlook</p><p className="mt-1 text-sm text-foreground">{weekLabel}</p></div>
-                  {weeklyOrder.map(id => layoutWrap(id, weeklyNodes[id]))}
+                  {weeklyOrder.map((id, i) => layoutWrap(id, weeklyNodes[id], i))}
                 </div>
               )}
 
               {tab === 'daily' && (!showDaily ? empty : (
                 <>
-                  <div className={`${card} space-y-6 p-5 sm:p-6`}>
-                    {dailyOrder.map(id => layoutWrap(id, dailyNodes[id]))}
+                  <div className={`${card} flex flex-col gap-6 p-5 sm:p-6`}>
+                    {dailyOrder.map((id, i) => layoutWrap(id, dailyNodes[id], i))}
                   </div>
                 </>
               ))}
