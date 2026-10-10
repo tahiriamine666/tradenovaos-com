@@ -857,14 +857,14 @@ export default function TradePlanV2() {
               {tab === 'weekly' && (
                 <div className={`${card} flex flex-col gap-6 p-5 sm:p-6`}>
                   <div><p className={label}>Weekly Outlook</p><p className="mt-1 text-sm text-foreground">{weekLabel}</p></div>
-                  {weeklyOrder.map((id, i) => layoutWrap(id, weeklyNodes[id], i))}
+                  {(layoutEdit === 'weekly' ? layoutDraft : weeklyOrder).map((id, i) => layoutWrap(id, weeklyNodes[id], i))}
                 </div>
               )}
 
               {tab === 'daily' && (!showDaily ? empty : (
                 <>
                   <div className={`${card} flex flex-col gap-6 p-5 sm:p-6`}>
-                    {dailyOrder.map((id, i) => layoutWrap(id, dailyNodes[id], i))}
+                    {(layoutEdit === 'daily' ? layoutDraft : dailyOrder).map((id, i) => layoutWrap(id, dailyNodes[id], i))}
                   </div>
                 </>
               ))}
