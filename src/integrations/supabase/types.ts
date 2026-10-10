@@ -1279,6 +1279,72 @@ export type Database = {
         }
         Relationships: []
       }
+      plan_welcome_emails: {
+        Row: {
+          activation_no: number
+          activation_transaction_id: number
+          attempts: number
+          created_at: string
+          error: string | null
+          first_attempt_at: string | null
+          first_name: string
+          id: string
+          lease_token: string | null
+          lease_until: string | null
+          next_attempt_at: string | null
+          plan: string
+          recipient: string
+          resend_id: string | null
+          sent_at: string | null
+          source: string
+          source_event_id: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          activation_no?: never
+          activation_transaction_id?: number
+          attempts?: number
+          created_at?: string
+          error?: string | null
+          first_attempt_at?: string | null
+          first_name: string
+          id?: string
+          lease_token?: string | null
+          lease_until?: string | null
+          next_attempt_at?: string | null
+          plan: string
+          recipient: string
+          resend_id?: string | null
+          sent_at?: string | null
+          source: string
+          source_event_id?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          activation_no?: never
+          activation_transaction_id?: number
+          attempts?: number
+          created_at?: string
+          error?: string | null
+          first_attempt_at?: string | null
+          first_name?: string
+          id?: string
+          lease_token?: string | null
+          lease_until?: string | null
+          next_attempt_at?: string | null
+          plan?: string
+          recipient?: string
+          resend_id?: string | null
+          sent_at?: string | null
+          source?: string
+          source_event_id?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       playbooks: {
         Row: {
           ai_insight: string | null
@@ -2743,6 +2809,15 @@ export type Database = {
         Returns: undefined
       }
       admin_user_detail: { Args: { p_user_id: string }; Returns: Json }
+      apply_dodo_welcome_billing_event: {
+        Args: {
+          p_event_id: string
+          p_status_only?: boolean
+          p_subscription: Json
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       award_drill_xp: {
         Args: {
           p_first_attempt_success: boolean
@@ -2752,8 +2827,48 @@ export type Database = {
         }
         Returns: number
       }
+      claim_plan_welcome_email: {
+        Args: never
+        Returns: {
+          activation_no: number
+          activation_transaction_id: number
+          attempts: number
+          created_at: string
+          error: string | null
+          first_attempt_at: string | null
+          first_name: string
+          id: string
+          lease_token: string | null
+          lease_until: string | null
+          next_attempt_at: string | null
+          plan: string
+          recipient: string
+          resend_id: string | null
+          sent_at: string | null
+          source: string
+          source_event_id: string | null
+          status: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "plan_welcome_emails"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       community_user_tier: { Args: never; Returns: string }
       consume_nova_credit: { Args: never; Returns: Json }
+      finish_plan_welcome_email: {
+        Args: {
+          p_error: string
+          p_id: string
+          p_lease_token: string
+          p_retryable: boolean
+          p_sent_id: string
+        }
+        Returns: boolean
+      }
       get_access_state: { Args: never; Returns: Json }
       get_active_users_now: { Args: never; Returns: Json }
       get_admin_analytics: { Args: { days_back?: number }; Returns: Json }
