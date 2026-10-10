@@ -522,7 +522,8 @@ export default function TradePlanV2() {
     setState('saving');
     try {
       if (p.defaults) {
-        const { error } = await supabase.from('daily_plan_rules').upsert({ user_id: user.id, rules: p.defaults });
+        const row: Database['public']['Tables']['daily_plan_rules']['Insert'] = { user_id: user.id, rules: p.defaults };
+        const { error } = await supabase.from('daily_plan_rules').upsert(row);
         if (error) throw error;
         p.defaults = undefined;
       }
