@@ -5,7 +5,7 @@ Publication is pending owner inspection. No publishing, checkout creation, charg
 ## Changed files
 
 - `src/lib/pricing.ts`: centralized monthly integer cents and annual provider-quote equivalents.
-- `src/lib/pricing.test.ts`: exact $5.99/$9.99 and $132→$11/$264→$22 checks.
+- `src/lib/pricing.test.ts`: exact $5.99/$9.99 and $71.88→$5.99/$119.88→$9.99 checks.
 - `src/pages/Pricing.tsx`: monthly plan prices.
 - `src/pages/LandingPage.tsx`: monthly navigation/pricing copy.
 - `src/pages/marketing/PublicPricingPage.tsx`: pricing SEO description.
@@ -31,14 +31,14 @@ Authenticated, read-only `action: "prices"` returned:
 |---|---:|---:|
 | Pro monthly | 5.99 | 14 |
 | Elite monthly | 9.99 | 14 |
-| Pro annual | 132 | 7 |
-| Elite annual | 264 | 0 |
+| Pro annual | 71.88 | 7 |
+| Elite annual | 119.88 | 0 |
 
-The deployed authenticated read-only response independently verified exact runtime monthly IDs: Pro `pdt_0NiAkpxz9gAN0Spuarqm5`, Elite `pdt_0NiAlZAx8DbY0elDOHsMG`, with USD 5.99/9.99 and 14-day product trials. Both match the owner's independently verified LIVE hosted checkouts. Annual runtime products returned Pro `pdt_0NiAmV62ykhrW7sAAVde7` (132), Elite `pdt_0NiAmBjsscYee7NKrWj7J` (264). No product references were changed. No API keys were retrieved or printed, and no checkout session was created.
+The deployed authenticated read-only response previously verified exact runtime monthly IDs: Pro `pdt_0NiAkpxz9gAN0Spuarqm5`, Elite `pdt_0NiAlZAx8DbY0elDOHsMG`, with USD 5.99/9.99 and 14-day product trials. Both match the owner's independently verified LIVE hosted checkouts. Owner has now verified annual Pro `pdt_0NiAmV62ykhrW7sAAVde7` (71.88), Elite `pdt_0NiAmBjsscYee7NKrWj7J` (119.88); a fresh authenticated runtime check is pending. No product references were changed. No API keys were retrieved or printed, and no checkout session was created.
 
 Deployed `dodo-checkout` submitted source/settings SHA-256: `102baaa926452682a675c1d69af60c3ce6b80016cbcb807b78035af448875fcd`; runtime verification performed after deployment.
 
-Annual prices and trials were preserved. `Onboarding.tsx` sends `onboarding: true`; the real checkout handler explicitly includes `subscription_data: { trial_period_days: 14 }` for **both monthly and annual onboarding**, regardless of product trial defaults. `Pricing.tsx` routes the trial CTA to onboarding. Non-onboarding `startCheckout` calls do not set this override, retaining provider defaults (annual Pro 7, Elite 0). These paths were verified with isolated handler tests; no live checkout was created and no annual trial behavior changed.
+Annual current offers now follow the owner's updated Dodo catalog (71.88/119.88); trials are preserved. `Onboarding.tsx` sends `onboarding: true`; the real checkout handler explicitly includes `subscription_data: { trial_period_days: 14 }` for **both monthly and annual onboarding**, regardless of product trial defaults. `Pricing.tsx` routes the trial CTA to onboarding. Non-onboarding `startCheckout` calls do not set this override, retaining provider defaults (annual Pro 7, Elite 0). These paths were verified with isolated handler tests; no live checkout was created and no annual trial behavior changed.
 
 ## Verification
 

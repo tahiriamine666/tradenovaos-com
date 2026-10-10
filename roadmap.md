@@ -1,4 +1,5 @@
 # Redesign roadmap
+- [ ] Update current annual references to Pro 71.88/Elite 119.88; verify authenticated runtime IDs/quotes, desktop/mobile annual UI, tests, separate typecheck and automatic build; no backend changes or publishing
 - [x] Update active monthly price copy, preserve annual offers/equivalents, audit stale references, run price/mapping/regression tests and desktop/mobile checks; automatic build OK; report in docs/pricing-update-verification.md
 - [x] Independently verify exact runtime monthly Dodo product IDs via authorized public quote fields; both expected IDs, current prices and monthly trials match
 - [x] Update legacy admin offer-price estimates via forward migration; separate tsgo exit 0, 44 tests pass, automatic build OK; verify unchanged annual onboarding 14-day override
