@@ -333,7 +333,7 @@ function Checklist({ daily, set, models, onModelsChange, readOnly }: { daily: Da
               {readOnly ? <span className="flex-1 text-sm text-foreground">{i.text}</span> :
                 <input className={`min-w-0 flex-1 bg-transparent text-sm outline-none transition-colors ${daily.checked[i.id] ? 'text-foreground/60' : 'text-foreground'}`} value={i.text} onChange={e => set({ checklist: items.map(x => x.id === i.id ? { ...x, text: e.target.value } : x) })} />}
               {!readOnly && (
-                <span className="flex items-center opacity-0 transition-opacity group-hover:opacity-100">
+                <span className="flex items-center">
                   <button type="button" disabled={items.indexOf(i) === 0} onClick={() => moveItem(i.id, -1)} className="p-1 text-muted-foreground hover:text-primary disabled:opacity-30" aria-label="Move item up"><ArrowUp className="h-3.5 w-3.5" /></button>
                   <button type="button" disabled={items.indexOf(i) === items.length - 1} onClick={() => moveItem(i.id, 1)} className="p-1 text-muted-foreground hover:text-primary disabled:opacity-30" aria-label="Move item down"><ArrowDown className="h-3.5 w-3.5" /></button>
                   <button type="button" onClick={() => set({ checklist: items.filter(x => x.id !== i.id) })} className="p-1 text-muted-foreground hover:text-primary" aria-label="Delete item"><Trash2 className="h-3.5 w-3.5" /></button>
