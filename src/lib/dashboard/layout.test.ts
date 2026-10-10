@@ -7,7 +7,7 @@ describe("dashboard layout", () => {
   it("expands old KPIs, keeps all widgets and permits hiding each card", () => {
     const l = normalizeLayout({ order: ["recent", "bogus", "kpis"], hidden: ["kpis", "today"] });
     expect(l.order.slice(0, 3)).toEqual(["recent", "pnl", "winrate"]);
-    expect(l.order).toHaveLength(11);
+    expect(l.order).toHaveLength(12);
     expect(l.hidden).toEqual(["today"]);
   });
   it("deduplicates hidden cards and drops unknown ids", () => {

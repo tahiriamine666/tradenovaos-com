@@ -110,7 +110,11 @@ Deno.serve(async (req) => {
       if (lookupError) throw lookupError;
       const effectivePlan = plan ?? previous?.plan;
       if (!effectivePlan) throw new Error("Unknown Dodo product; cannot resolve plan");
-      const { error: upErr } = await admin.from("billing_subscriptions").upsert({
+      const { error: upErr } = await admin.rpc("apply_dodo_welcome_billing_event", {
+        p_event_id: req.headers.get("webhook-id"),
+        p_user_id: userId,
+        p_status_only: false,
+        p_subscription: {
         user_id: userId,
         provider: "dodo",
         customer_id: customerId,
@@ -122,7 +126,8 @@ Deno.serve(async (req) => {
         renews_at: renewsAt,
         ends_at: endsAt,
         updated_at: new Date().toISOString(),
-      }, { onConflict: "user_id" });
+        },
+      });
       if (upErr) throw upErr;
 
     } else if (type === "payment.succeeded" || type === "payment.failed") {
@@ -135,10 +140,12 @@ Deno.serve(async (req) => {
           .maybeSingle();
 
         if (!existing?.user_id) throw new Error("Subscription event arrived before its subscription record");
-        const { error } = await admin.from("billing_subscriptions").update({
-          status,
-          updated_at: new Date().toISOString(),
-        }).eq("subscription_id", subscriptionId);
+        const { error } = await admin.rpc("apply_dodo_welcome_billing_event", {
+          p_event_id: req.headers.get("webhook-id"),
+          p_user_id: existing.user_id,
+          p_status_only: true,
+          p_subscription: { status, subscription_id: subscriptionId, updated_at: new Date().toISOString() },
+        });
         if (error) throw error;
       }
     }
@@ -151,3 +158,4 @@ Deno.serve(async (req) => {
     return new Response("handler_error", { status: 500, headers: corsHeaders });
   }
 });
+

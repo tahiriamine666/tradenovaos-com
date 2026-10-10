@@ -1,4 +1,4 @@
-export type WidgetId = "pnl" | "winrate" | "rr" | "trades" | "equity" | "today" | "trader" | "psych" | "recent" | "setups" | "account";
+export type WidgetId = "pnl" | "winrate" | "rr" | "trades" | "equity" | "today" | "trader" | "psych" | "recent" | "setups" | "account" | "calendar";
 
 export const WIDGETS: { id: WidgetId; label: string; span: string }[] = [
   { id: "account", label: "Account Balances", span: "col-span-2 lg:col-span-12" },
@@ -12,6 +12,7 @@ export const WIDGETS: { id: WidgetId; label: string; span: string }[] = [
   { id: "psych", label: "Psychology", span: "col-span-2 lg:col-span-6" },
   { id: "recent", label: "Recent Trades", span: "col-span-2 lg:col-span-6" },
   { id: "setups", label: "Best Setups", span: "col-span-2 lg:col-span-6" },
+  { id: "calendar", label: "Trading Calendar", span: "col-span-2 lg:col-span-12" },
 ];
 
 export interface DashboardLayout { order: WidgetId[]; hidden: WidgetId[] }
