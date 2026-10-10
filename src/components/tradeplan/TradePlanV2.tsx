@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { Database } from '@/integrations/supabase/types';
 import {
   ChevronLeft, ChevronRight, Plus, Trash2, Upload, Maximize2, X, Check, Loader2,
   GripVertical, ArrowUp, ArrowDown, Save, CalendarDays,
@@ -17,12 +18,12 @@ const robotSrc = import.meta.env.DEV ? `https://id-preview--0ee4a120-abbf-401b-9
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Impact = 'low' | 'medium' | 'high';
 interface NewsItem { id: string; title: string; date?: string; time: string; impact: Impact; notes: string }
-interface Rule { id: string; text: string; done: boolean }
+type Rule = { id: string; text: string; done: boolean };
 interface CheckItem { id: string; text: string }
 interface Weekly { bias: string; scenario: string; chart: string; news: NewsItem[]; mainIdea: string }
 interface Daily {
   bias: string; price: string; priceCustom: string; scenario: string;
-  before: string; after: string; news: NewsItem[];
+  before: string; after: string; news: NewsItem[]; newsShot: string;
   risk: { riskPct: string; maxLoss: string; maxTrades: string; rr: string };
   psychology: string[]; psychNotes: string;
   rules: Rule[]; mainIdea: string;
@@ -34,7 +35,7 @@ const uid = () => crypto.randomUUID();
 const EMPTY_WEEKLY: Weekly = { bias: '', scenario: '', chart: '', news: [], mainIdea: '' };
 const DEFAULT_CHECK = ['Weekly bias aligned', 'Daily bias confirmed', 'Liquidity identified', 'Key level reached', 'Confirmation present', 'Risk calculated', 'News checked', 'Psychology stable'];
 const emptyDaily = (): Daily => ({
-  bias: '', price: '', priceCustom: '', scenario: '', before: '', after: '', news: [],
+  bias: '', price: '', priceCustom: '', scenario: '', before: '', after: '', news: [], newsShot: '',
   risk: { riskPct: '', maxLoss: '', maxTrades: '', rr: '' },
   psychology: [], psychNotes: '', rules: [], mainIdea: '',
   checklist: DEFAULT_CHECK.map(text => ({ id: uid(), text })), checked: {}, modelId: '',
@@ -493,9 +494,9 @@ export default function TradePlanV2() {
   // Refs to flush pending edits to the date they belong to.
   const prevAi = useRef<Record<string, any>>({});
   const loadedScope = useRef('');
-  const pending = useRef<{ daily?: { date: string; pair: string; accountKey: string; data: Daily; ai: Record<string, any> }; weekly?: { week: string; data: Weekly }; defaults?: Rule[] }>({});
+  const pending = useRef<{ daily?: { date: string; pair: string; accountKey: string; data: Daily; ai: Record<string, any> }; weekly?: { week: string; data: Weekly }; defaults?: { id: string; text: string }[] }>({});
   const inFlight = useRef<Promise<boolean> | null>(null);
-  const ruleDefaultsRef = useRef<Rule[]>([]);
+  const ruleDefaultsRef = useRef<{ id: string; text: string }[]>([]);
   const checklistSave = useRef<(() => Promise<boolean>) | null>(null);
   const dailyRef = useRef(daily); dailyRef.current = daily;
   const weeklyRef = useRef(weekly); weeklyRef.current = weekly;
@@ -522,7 +523,8 @@ export default function TradePlanV2() {
     setState('saving');
     try {
       if (p.defaults) {
-        const { error } = await supabase.from('daily_plan_rules').upsert({ user_id: user.id, rules: p.defaults });
+        const row: Database['public']['Tables']['daily_plan_rules']['Insert'] = { user_id: user.id, rules: p.defaults };
+        const { error } = await supabase.from('daily_plan_rules').upsert(row);
         if (error) throw error;
         p.defaults = undefined;
       }
@@ -707,6 +709,7 @@ export default function TradePlanV2() {
                       <ImageSlot title="After" path={daily.after} onChange={p => setD({ after: p })} />
                     </div>
                     <Field title="News"><NewsEditor items={daily.news} onChange={n => setD({ news: n })} /></Field>
+                    <ImageSlot title="ForexFactory screenshot" path={daily.newsShot || ''} onChange={p => setD({ newsShot: p })} />
                     <Field title="Risk Management">
                       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                         {([['riskPct', 'Risk %', '1'], ['maxLoss', 'Max Daily Loss', '500'], ['maxTrades', 'Max Trades', '2'], ['rr', 'R:R Target', '1:3']] as const).map(([k, l, ph]) => (
@@ -744,7 +747,7 @@ export default function TradePlanV2() {
                       <Text v={daily.scenario} />
                     </Block>
                     {(daily.before || daily.after) && <Block title="Before / After Charts"><div className="grid gap-4 sm:grid-cols-2"><ImageSlot readOnly title="Before" path={daily.before} /><ImageSlot readOnly title="After" path={daily.after} /></div></Block>}
-                    <Block title="News"><NewsView items={daily.news} /></Block>
+                    <Block title="News"><NewsView items={daily.news} />{daily.newsShot && <div className="mt-3 max-w-xl"><ImageSlot readOnly title="ForexFactory screenshot" path={daily.newsShot} /></div>}</Block>
                     <Block title="Risk Management">
                       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                         {([['Risk %', daily.risk.riskPct], ['Max Daily Loss', daily.risk.maxLoss], ['Max Trades', daily.risk.maxTrades], ['R:R Target', daily.risk.rr]]).map(([l, v]) => (
