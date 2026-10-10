@@ -1,4 +1,5 @@
 # Redesign roadmap
+- [ ] Finish Dashboard local-time greeting and per-user saved reorder/show-hide layout; verify desktop/mobile and tests
 - [ ] Add versioned first-visit cookie consent, policy, reopening controls and verify persistence/accessibility without changing auth
 - [x] Weekly / Bi-Weekly Trading Review + sectioned Add Trade form with extended psychology
 - [x] Animate checklist robot with CSS; verified click-only progress/completion, no uncheck/reload celebration, reduced motion, offscreen pause and mobile framing using intercepted saves; automatic build OK
