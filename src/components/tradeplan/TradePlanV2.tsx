@@ -663,7 +663,7 @@ export default function TradePlanV2() {
                 <div className={`${card} space-y-6 p-5 sm:p-6`}>
                   <div><p className={label}>Weekly Outlook</p><p className="mt-1 text-sm text-foreground">{weekLabel}</p></div>
                   <Field title="Weekly Bias"><Chips options={BIASES} value={weekly.bias} onChange={v => setW({ bias: v })} /></Field>
-                  <Field title="Scenario"><Area value={weekly.scenario} onChange={v => setW({ scenario: v })} placeholder="Describe the main scenario expected for this week..." /></Field>
+                  <Field title="Where could price go and what is the big story?"><Area value={weekly.scenario} onChange={v => setW({ scenario: v })} placeholder="Write your weekly scenario..." /></Field>
                   <div className="max-w-xl"><ImageSlot title="Chart Screenshot" path={weekly.chart} onChange={p => setW({ chart: p })} /></div>
                   <Field title="News / Events"><NewsEditor withDate items={weekly.news} onChange={n => setW({ news: n })} /></Field>
                   <Field title="Main Idea"><Area value={weekly.mainIdea} onChange={v => setW({ mainIdea: v })} placeholder="What is the main idea for this trading week?" /></Field>
