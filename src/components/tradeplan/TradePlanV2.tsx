@@ -39,6 +39,10 @@ const emptyDaily = (): Daily => ({
   psychology: [], psychNotes: '', rules: [], mainIdea: '',
   checklist: DEFAULT_CHECK.map(text => ({ id: uid(), text })), checked: {}, modelId: '',
 });
+// Rules are a persistent per-user set: a new day starts with the saved rules (text only, unchecked);
+// editing a rule's text anywhere updates the saved set, while checked state stays per-day.
+const withRuleDefaults = (d: Daily, defaults: Rule[]): Daily =>
+  d.rules.length || !defaults.length ? d : { ...d, rules: defaults.map(r => ({ ...r, done: false })) };
 const BIASES = ['Bullish', 'Bearish', 'Neutral', 'Range'];
 const PRICES = ['Premium', 'Discount', 'Mid-Range', 'Custom'];
 const PSYCH = ['Calm', 'Focused', 'Confident', 'Neutral', 'Stressed', 'Fearful', 'FOMO', 'Revenge Trading'];
