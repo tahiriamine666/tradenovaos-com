@@ -756,6 +756,7 @@ export default function TradePlanV2() {
                       <Tag v={weekly.bias} />
                       <Text v={weekly.scenario} />
                       <div className="max-w-xl"><ImageSlot readOnly title="Weekly Chart" path={weekly.chart} /></div>
+                      {(weekly.before || weekly.after) && <div className="grid gap-4 sm:grid-cols-2"><ImageSlot readOnly title="Before" path={weekly.before} /><ImageSlot readOnly title="After" path={weekly.after} /></div>}
                       <NewsView items={weekly.news} />
                       {weekly.newsShot && <div className="max-w-xl"><ImageSlot readOnly title="News screenshot" path={weekly.newsShot} /></div>}
                       <div><p className="mb-1 text-xs text-muted-foreground">Main idea</p><Text v={weekly.mainIdea} /></div>
