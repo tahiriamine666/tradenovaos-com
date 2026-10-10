@@ -28,7 +28,7 @@ vi.mock('@/integrations/supabase/client', () => ({ supabase: { from: (table: str
 } } }));
 beforeEach(() => { fake.account = 'account-a'; fake.rows.clear(); fake.writes = []; fake.fail = false; localStorage.clear(); });
 afterEach(() => { cleanup(); });
-const ready = () => waitFor(() => expect(screen.getByPlaceholderText("What do I expect price to do today, and how will I react?")).toBeInTheDocument());
+const ready = () => waitFor(() => expect(screen.getByPlaceholderText('Write your daily scenario...')).toBeInTheDocument());
 const switchPair = async (name: string) => { fireEvent.click(screen.getByRole('button', { name })); await waitFor(() => expect(screen.getByRole('heading', {name: `Daily Plan — ${name}`})).toBeInTheDocument()); await ready(); };
 
 describe('Daily plan isolation and failure handling', () => {
@@ -57,7 +57,7 @@ describe('Daily plan isolation and failure handling', () => {
   });
   it('blocks pair switches on failed save and retries the same dirty snapshot', async () => {
     render(<TradePlanV2 />); await ready();
-    fireEvent.change(screen.getByPlaceholderText("What do I expect price to do today, and how will I react?"), {target:{value:'Retain this scenario'}});
+    fireEvent.change(screen.getByPlaceholderText('Write your daily scenario...'), {target:{value:'Retain this scenario'}});
     fake.fail = true; fireEvent.click(screen.getByRole('button', {name:'XAUUSD'}));
     await waitFor(() => expect(screen.getByText('Not saved')).toBeInTheDocument());
     expect(screen.getByRole('heading', {name:'Daily Plan — EURUSD'})).toBeInTheDocument();
