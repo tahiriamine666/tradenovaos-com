@@ -22,3 +22,6 @@ enabled = true
 client_id = "487964386891-tt5arcs8a6qm2tsfoh0238p26c1vrud6.apps.googleusercontent.com"
 secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_SECRET)"
 skip_nonce_check = false
+
+[functions.send-plan-welcome]
+verify_jwt = true

@@ -148,6 +148,13 @@
       "when": 1791590674174,
       "tag": "0020_admin_allowlist_add_second_admin",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1791630900000,
+      "tag": "0021_plan_welcome_emails",
+      "breakpoints": true
     }
   ]
 }
