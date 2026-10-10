@@ -446,9 +446,10 @@ function BestSetups({ trades }: { trades: Trade[] }) {
 interface Props {
   onNavigate: (id: string) => void;
   onAddTrade?: () => void;
+  calendar?: React.ReactNode;
 }
 
-export default function DashboardOverview({ onNavigate, onAddTrade }: Props) {
+export default function DashboardOverview({ onNavigate, onAddTrade, calendar }: Props) {
   const { user } = useAuth();
   const { profile } = useProfile();
   const dashboard = useDashboardLayout(user?.id);
@@ -617,6 +618,7 @@ export default function DashboardOverview({ onNavigate, onAddTrade }: Props) {
     psych: <PsychologyScoreCard onNavigate={onNavigate} />,
     recent: <RecentTrades trades={trades} onNavigate={onNavigate} />,
     setups: <BestSetups trades={trades} />,
+    calendar,
   };
 
   return (
