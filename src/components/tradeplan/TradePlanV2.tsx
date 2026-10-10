@@ -270,6 +270,11 @@ function Checklist({ daily, set, models, onModelsChange, readOnly }: { daily: Da
     if (from < 0 || to < 0 || from === to) return;
     const next = [...items]; const [m] = next.splice(from, 1); next.splice(to, 0, m); set({ checklist: next });
   };
+  const moveItem = (id: string, dir: -1 | 1) => {
+    const from = items.findIndex(i => i.id === id); const to = from + dir;
+    if (from < 0 || to < 0 || to >= items.length) return;
+    const next = [...items]; const [m] = next.splice(from, 1); next.splice(to, 0, m); set({ checklist: next });
+  };
   const saveModel = async () => {
     if (!user || !naming?.trim()) return;
     const { error } = await (supabase as any).from('checklist_models').insert({ user_id: user.id, name: naming.trim(), items: items.map(({ id, text }) => ({ id, text })) });
@@ -327,7 +332,13 @@ function Checklist({ daily, set, models, onModelsChange, readOnly }: { daily: Da
               }} />
               {readOnly ? <span className="flex-1 text-sm text-foreground">{i.text}</span> :
                 <input className={`min-w-0 flex-1 bg-transparent text-sm outline-none transition-colors ${daily.checked[i.id] ? 'text-foreground/60' : 'text-foreground'}`} value={i.text} onChange={e => set({ checklist: items.map(x => x.id === i.id ? { ...x, text: e.target.value } : x) })} />}
-              {!readOnly && <button type="button" onClick={() => set({ checklist: items.filter(x => x.id !== i.id) })} className="p-1 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-primary" aria-label="Delete item"><Trash2 className="h-3.5 w-3.5" /></button>}
+              {!readOnly && (
+                <span className="flex items-center opacity-0 transition-opacity group-hover:opacity-100">
+                  <button type="button" disabled={items.indexOf(i) === 0} onClick={() => moveItem(i.id, -1)} className="p-1 text-muted-foreground hover:text-primary disabled:opacity-30" aria-label="Move item up"><ArrowUp className="h-3.5 w-3.5" /></button>
+                  <button type="button" disabled={items.indexOf(i) === items.length - 1} onClick={() => moveItem(i.id, 1)} className="p-1 text-muted-foreground hover:text-primary disabled:opacity-30" aria-label="Move item down"><ArrowDown className="h-3.5 w-3.5" /></button>
+                  <button type="button" onClick={() => set({ checklist: items.filter(x => x.id !== i.id) })} className="p-1 text-muted-foreground hover:text-primary" aria-label="Delete item"><Trash2 className="h-3.5 w-3.5" /></button>
+                </span>
+              )}
             </div>
           ))}
           {!readOnly && (
