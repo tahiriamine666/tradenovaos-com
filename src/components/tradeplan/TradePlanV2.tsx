@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { Database } from '@/integrations/supabase/types';
 import {
   ChevronLeft, ChevronRight, Plus, Trash2, Upload, Maximize2, X, Check, Loader2,
   GripVertical, ArrowUp, ArrowDown, Save, CalendarDays,
@@ -495,7 +496,7 @@ export default function TradePlanV2() {
   const loadedScope = useRef('');
   const pending = useRef<{ daily?: { date: string; pair: string; accountKey: string; data: Daily; ai: Record<string, any> }; weekly?: { week: string; data: Weekly }; defaults?: Rule[] }>({});
   const inFlight = useRef<Promise<boolean> | null>(null);
-  const ruleDefaultsRef = useRef<Rule[]>([]);
+  const ruleDefaultsRef = useRef<{ id: string; text: string }[]>([]);
   const checklistSave = useRef<(() => Promise<boolean>) | null>(null);
   const dailyRef = useRef(daily); dailyRef.current = daily;
   const weeklyRef = useRef(weekly); weeklyRef.current = weekly;
