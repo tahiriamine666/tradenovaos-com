@@ -17,3 +17,4 @@ Dashboard layout: owner-protected workspace_layouts keyed user_id+page='dashboar
 Daily Plan rules persist per-user in daily_plan_rules: new days pre-fill the saved set unchecked, edits sync it; per-day checked state stays in trade_plans.
 Plan editor layout (Daily Plan / Weekly Outlook) saved once per user in workspace_layouts ('daily_plan'/'weekly_outlook', layout.order) with explicit Save/Cancel/Reset; drag & drop must reorder via CSS `order` on stable nodes — moving the dragged DOM node cancels HTML5 drag in Chromium.
 Open app view lives in the URL (?view=); AuthContext keeps the same user object across token refreshes.
+Monthly offer displays use integer cents and currency formatting from src/lib/pricing.ts; annual quotes and actual checkout charges remain Dodo-authoritative — prevents display drift without altering billing or entitlements.
