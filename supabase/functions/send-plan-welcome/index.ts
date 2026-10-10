@@ -4,11 +4,17 @@ import { deliverWelcomeBatch, workerAuthorized } from "../_shared/welcome-worker
 // Scheduler/service-role only. Ordinary authenticated users cannot invoke sends.
 Deno.serve(async (request) => {
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!workerAuthorized(request.headers.get("authorization"), serviceKey)) {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  if (request.method !== "POST") return new Response(null, { status: 405 });
   const url = Deno.env.get("SUPABASE_URL");
+  if (request.method !== "POST") return new Response(null, { status: 405 });
+  let authorized = workerAuthorized(request.headers.get("authorization"), serviceKey);
+  // Scheduler path: a single-use nonce minted inside the database by the cron job.
+  const nonce = request.headers.get("x-welcome-worker-nonce");
+  if (!authorized && nonce && url && serviceKey) {
+    const check = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
+    const { data, error } = await check.rpc("consume_welcome_worker_nonce", { p_token: nonce });
+    authorized = !error && data === true;
+  }
+  if (!authorized) return Response.json({ error: "Unauthorized" }, { status: 401 });
   if (!url || !serviceKey || !Deno.env.get("RESEND_API_KEY")) {
     // Do not claim jobs until configuration exists: preserve the retry window.
     return Response.json({ error: "Welcome email service not configured" }, { status: 503 });
