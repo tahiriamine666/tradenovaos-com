@@ -20,7 +20,7 @@ type Impact = 'low' | 'medium' | 'high';
 interface NewsItem { id: string; title: string; date?: string; time: string; impact: Impact; notes: string }
 type Rule = { id: string; text: string; done: boolean };
 interface CheckItem { id: string; text: string }
-interface Weekly { bias: string; scenario: string; chart: string; news: NewsItem[]; newsShot: string; mainIdea: string }
+interface Weekly { bias: string; scenario: string; chart: string; before: string; after: string; news: NewsItem[]; newsShot: string; mainIdea: string }
 interface Daily {
   bias: string; price: string; priceCustom: string; scenario: string;
   before: string; after: string; news: NewsItem[]; newsShot: string;
@@ -32,7 +32,7 @@ interface Daily {
 interface Model { id: string; name: string; items: CheckItem[] }
 
 const uid = () => crypto.randomUUID();
-const EMPTY_WEEKLY: Weekly = { bias: '', scenario: '', chart: '', news: [], newsShot: '', mainIdea: '' };
+const EMPTY_WEEKLY: Weekly = { bias: '', scenario: '', chart: '', before: '', after: '', news: [], newsShot: '', mainIdea: '' };
 const DEFAULT_CHECK = ['Weekly bias aligned', 'Daily bias confirmed', 'Liquidity identified', 'Key level reached', 'Confirmation present', 'Risk calculated', 'News checked', 'Psychology stable'];
 const emptyDaily = (): Daily => ({
   bias: '', price: '', priceCustom: '', scenario: '', before: '', after: '', news: [], newsShot: '',
@@ -704,6 +704,10 @@ export default function TradePlanV2() {
                   <Field title="Weekly Bias"><Chips options={BIASES} value={weekly.bias} onChange={v => setW({ bias: v })} /></Field>
                   <Field title="Where could price go and what is the big story?"><Area value={weekly.scenario} onChange={v => setW({ scenario: v })} placeholder="Write your weekly scenario..." /></Field>
                   <div className="max-w-xl"><ImageSlot title="Chart Screenshot" path={weekly.chart} onChange={p => setW({ chart: p })} /></div>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <ImageSlot title="Before" hint="Upload chart screenshot" path={weekly.before} onChange={p => setW({ before: p })} />
+                    <ImageSlot title="After" hint="Upload chart screenshot" path={weekly.after} onChange={p => setW({ after: p })} />
+                  </div>
                   <Field title="News / Events"><NewsBlock withDate items={weekly.news} onChange={n => setW({ news: n })} shotPath={weekly.newsShot || ''} onShot={p => setW({ newsShot: p })} /></Field>
                   <Field title="Main Idea"><Area value={weekly.mainIdea} onChange={v => setW({ mainIdea: v })} placeholder="What is the main idea for this trading week?" /></Field>
                 </div>
@@ -752,6 +756,7 @@ export default function TradePlanV2() {
                       <Tag v={weekly.bias} />
                       <Text v={weekly.scenario} />
                       <div className="max-w-xl"><ImageSlot readOnly title="Weekly Chart" path={weekly.chart} /></div>
+                      {(weekly.before || weekly.after) && <div className="grid gap-4 sm:grid-cols-2"><ImageSlot readOnly title="Before" path={weekly.before} /><ImageSlot readOnly title="After" path={weekly.after} /></div>}
                       <NewsView items={weekly.news} />
                       {weekly.newsShot && <div className="max-w-xl"><ImageSlot readOnly title="News screenshot" path={weekly.newsShot} /></div>}
                       <div><p className="mb-1 text-xs text-muted-foreground">Main idea</p><Text v={weekly.mainIdea} /></div>
