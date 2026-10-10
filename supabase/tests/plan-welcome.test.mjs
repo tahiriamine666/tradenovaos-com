@@ -175,6 +175,14 @@ test('internal users and legacy sync without a canonical activation send none', 
   await activate('elite'); await adminPlan('pro'); await deliver();
   assert.equal(sent.length, 0);
 });
+test('database name snapshot falls back through blank display name, full name and email', async () => {
+  await db.query('UPDATE profiles SET display_name=$1, full_name=$2 WHERE id=$3', [' \t\n ', 'Grace Hopper', uid]);
+  await activate('pro'); await deliver();
+  assert.equal(sent[0].payload.template.variables.USER_FIRST_NAME, 'Grace');
+  await db.query('UPDATE profiles SET full_name=$1 WHERE id=$2', ['\t ', uid]);
+  await activate('elite'); await deliver();
+  assert.equal(sent[1].payload.template.variables.USER_FIRST_NAME, 'trader');
+});
 test('provider failure leaves entitlement active and records only a safe error', async () => {
   await activate('pro');
   await deliver({ ...mocked, fetch: async () => new Response('private-provider-body', { status: 503 }) });
@@ -221,9 +229,10 @@ test('ordinary roles cannot read/write outbox, claim sends or bypass admin autho
     has_table_privilege('authenticated','public.plan_welcome_emails','INSERT') AS can_insert,
     has_function_privilege('authenticated','public.claim_plan_welcome_email()','EXECUTE') AS can_claim,
     has_function_privilege('anon','public.claim_plan_welcome_email()','EXECUTE') AS anon_claim,
+    has_function_privilege('authenticated','public.apply_dodo_welcome_billing_event(text,uuid,jsonb,boolean)','EXECUTE') AS user_billing_write,
     has_function_privilege('service_role','public.claim_plan_welcome_email()','EXECUTE') AS service_claim,
     (SELECT relrowsecurity FROM pg_class WHERE oid='public.plan_welcome_emails'::regclass) AS rls`);
-  assert.deepEqual(grants, { can_read: false, can_insert: false, can_claim: false, anon_claim: false, service_claim: true, rls: true });
+  assert.deepEqual(grants, { can_read: false, can_insert: false, can_claim: false, anon_claim: false, user_billing_write: false, service_claim: true, rls: true });
   await db.query("SELECT set_config('test.uid', $1, true)", [uid]);
   await db.exec('SAVEPOINT unauthorized');
   await assert.rejects(adminPlan('elite'), /Admin access required/);

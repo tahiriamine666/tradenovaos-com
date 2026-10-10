@@ -102,8 +102,8 @@ BEGIN
       AND COALESCE(current_setting('tradenova.welcome_suppress', true), '') <> 'true' THEN
       SELECT to_jsonb(p) INTO v_profile FROM public.profiles p WHERE p.id = v_uid;
       SELECT email INTO v_email FROM auth.users WHERE id = v_uid;
-      v_name := COALESCE(NULLIF(btrim(v_profile->>'display_name'), ''),
-                         NULLIF(btrim(v_profile->>'full_name'), ''));
+      v_name := COALESCE(NULLIF(btrim(regexp_replace(v_profile->>'display_name', '\s+', ' ', 'g')), ''),
+                         NULLIF(btrim(regexp_replace(v_profile->>'full_name', '\s+', ' ', 'g')), ''));
       v_name := CASE WHEN v_name IS NOT NULL THEN (regexp_split_to_array(v_name, '\s+'))[1]
                     ELSE COALESCE(NULLIF(split_part(v_email, '@', 1), ''), 'Trader') END;
       INSERT INTO public.plan_welcome_emails(user_id, plan, source, source_event_id, recipient, first_name, status, error)

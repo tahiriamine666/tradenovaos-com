@@ -148,10 +148,12 @@ admin authorization and strict grants. They do not prove concurrent throughput o
 the hosted database or real inbox delivery. Tests deliberately preserve and expose
 the existing nullable-row entitlement bug until its correction is approved.
 
-Local focused TypeScript/lint checks pass. Full `npm run build` and `npm run test`
+All 20 local PostgreSQL/helper tests and focused TypeScript/lint checks pass.
+Full `npm run build` and `npm run test`
 were attempted but this Windows environment denied esbuild child-process creation
 (`spawn EPERM`). Full lint reports existing unrelated errors; no new helper/worker
-lint errors were found. GitHub checks provide an independent clean-runner result.
+lint errors were found. The GitHub clean-runner checks passed the backend tests,
+existing frontend tests, build, focused lint/types and browser-bundle guard.
 
 Official API references: [Resend templates](https://resend.com/docs/dashboard/templates/introduction),
 [variables](https://resend.com/docs/dashboard/templates/template-variables),
