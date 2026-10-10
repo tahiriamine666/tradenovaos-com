@@ -3,6 +3,10 @@ project_id = "lyohknejsvhhtmglljae"
 [functions.dodo-webhook]
 verify_jwt = false
 
+# Server-only worker also checks the exact service-role bearer token in its handler.
+[functions.send-plan-welcome]
+verify_jwt = true
+
 [functions.sync-economic-events]
 verify_jwt = false
 
