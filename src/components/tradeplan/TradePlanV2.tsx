@@ -680,7 +680,7 @@ export default function TradePlanV2() {
                         {daily.price === 'Custom' && <input className={input} placeholder="Describe price location" value={daily.priceCustom} onChange={e => setD({ priceCustom: e.target.value })} />}
                       </Field>
                     </div>
-                    <Field title="Daily Scenario"><Area value={daily.scenario} onChange={v => setD({ scenario: v })} placeholder="What do I expect price to do today, and how will I react?" /></Field>
+                    <Field title="What do I expect price to do today, and how will I react?"><Area value={daily.scenario} onChange={v => setD({ scenario: v })} placeholder="Write your daily scenario..." /></Field>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <ImageSlot title="Before" path={daily.before} onChange={p => setD({ before: p })} />
                       <ImageSlot title="After" path={daily.after} onChange={p => setD({ after: p })} />
