@@ -7,6 +7,7 @@ import { useAccessState } from "@/hooks/useAccessState";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import robotAsset from "@/assets/tradenova-robot-full.jpg.asset.json";
+import { monthlyPlanAmount } from "@/lib/pricing";
 
 type Stage = "q1" | "q2" | "q3" | "setup" | "preview" | "plan" | "payment" | "confirming" | "success";
 
@@ -161,7 +162,10 @@ export default function Onboarding() {
     window.location.href = url;
   });
 
-  const priceFor = (p: "pro" | "elite") => prices[`${p}_${billing}`];
+  // Monthly offer copy is centralized; annual prices still come from Dodo unchanged.
+  const priceFor = (p: "pro" | "elite"): Price | undefined => billing === "monthly"
+    ? { amount: monthlyPlanAmount(p), currency: "USD" }
+    : prices[`${p}_${billing}`];
   const period = billing === "monthly" ? "month" : "year";
 
   if (authLoading || loading) return <div className="min-h-screen bg-background" />;

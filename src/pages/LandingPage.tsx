@@ -20,6 +20,7 @@ import MarketingFooter from '@/components/marketing/MarketingFooter';
 import BrokersStrip from '@/components/marketing/BrokersStrip';
 import SeoHead from '@/components/SeoHead';
 import BrandLogo from '@/components/BrandLogo';
+import { monthlyPlanPrice } from '@/lib/pricing';
 
 const EQUITY_DATA = [
   { day: 'Jan', value: 0 }, { day: 'Feb', value: 1240 }, { day: 'Mar', value: 890 },
@@ -401,7 +402,7 @@ function Hero({ onSignup }: { onSignup: () => void }) {
                 </div>
 
                 <div className="mt-3 rounded-md border border-primary/25 bg-gradient-to-br from-primary/15 to-background p-2.5">
-                  <p className="text-[10px] font-black text-foreground">Pro · $14/mo</p>
+                  <p className="text-[10px] font-black text-foreground">Pro · {monthlyPlanPrice('pro')}/mo</p>
                   <p className="text-[8px] text-muted-foreground mt-0.5 leading-tight">Journal, plans, analytics & NOVA AI</p>
                   <div className="mt-2 bg-primary text-foreground text-[9px] font-bold py-1.5 rounded-md text-center shadow-sm shadow-primary/30">Start 14-day free trial</div>
                 </div>
@@ -919,8 +920,8 @@ function Testimonials() {
 function Pricing({ onSignup }: { onSignup: () => void }) {
   const { ref, inView } = useReveal();
   const plans = [
-    {name:'Pro',   price:'$14', per:'/mo',desc:'For serious traders building consistency',features:['Trade Journal & Trade Logs','Trading Calendar & core analytics','Trade Plan, outlooks & checklists','Psychology Score','Economic Calendar','1 connected trading account','NOVA AI — 500 credits/mo'],cta:'Start 14-Day Free Trial',hi:false},
-    {name:'Elite', price:'$28', per:'/mo',desc:'For traders managing more accounts',badge:'MOST POWERFUL',features:['Everything in Pro','Unlimited connected trading accounts','NOVA AI — 1,000 credits/mo','Priority support'],cta:'Start 14-Day Free Trial',hi:true},
+    {name:'Pro',   price:monthlyPlanPrice('pro'), per:'/mo',desc:'For serious traders building consistency',features:['Trade Journal & Trade Logs','Trading Calendar & core analytics','Trade Plan, outlooks & checklists','Psychology Score','Economic Calendar','1 connected trading account','NOVA AI — 500 credits/mo'],cta:'Start 14-Day Free Trial',hi:false},
+    {name:'Elite', price:monthlyPlanPrice('elite'), per:'/mo',desc:'For traders managing more accounts',badge:'MOST POWERFUL',features:['Everything in Pro','Unlimited connected trading accounts','NOVA AI — 1,000 credits/mo','Priority support'],cta:'Start 14-Day Free Trial',hi:true},
   ];
   return (
     <section id="pricing" className="py-24 sm:py-32 relative" ref={ref}>
