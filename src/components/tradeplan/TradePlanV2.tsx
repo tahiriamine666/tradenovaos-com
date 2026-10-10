@@ -588,15 +588,18 @@ export default function TradePlanV2() {
     setLoading(true); setLoadError(false); setCreating(false);
     (async () => {
       if (!await saveAll()) { if (alive) { setLoadError(true); setLoading(false); } return; }
-      const [{ data: row, error: planError }, { data: wk, error: weeklyError }] = await Promise.all([
+      const [{ data: row, error: planError }, { data: wk, error: weeklyError }, { data: rd, error: rulesError }] = await Promise.all([
         supabase.from('trade_plans').select('*').eq('user_id', user.id).eq('account_key', accountKey).eq('plan_date', date).eq('pair', pair).maybeSingle(),
         supabase.from('trade_plan_checklists').select('data').eq('user_id', user.id).eq('account_key', 'all').eq('checklist_type', 'weekly_outlook').eq('pair', '').eq('period_date', week).maybeSingle(),
+        supabase.from('daily_plan_rules').select('rules').eq('user_id', user.id).maybeSingle(),
       ]);
       if (!alive) return;
-      if (planError || weeklyError) { setLoadError(true); setLoading(false); toast({ title: 'Could not load plan', description: (planError || weeklyError)?.message, variant: 'destructive' }); return; }
+      if (planError || weeklyError || rulesError) { setLoadError(true); setLoading(false); toast({ title: 'Could not load plan', description: (planError || weeklyError || rulesError)?.message, variant: 'destructive' }); return; }
+      const defaults: Rule[] = ((rd as any)?.rules as Rule[] | undefined) || [];
+      ruleDefaultsRef.current = defaults;
       const ai = ((row as any)?.ai_analysis || {}) as Record<string, any>;
       prevAi.current = ai; loadedScope.current = `${accountKey}|${date}|${pair}`;
-      setDaily(row ? (ai.daily_v2 ? normDaily(ai.daily_v2) : fromLegacy(row)) : emptyDaily());
+      setDaily(withRuleDefaults(row ? (ai.daily_v2 ? normDaily(ai.daily_v2) : fromLegacy(row)) : emptyDaily(), defaults));
       setDailyExists(!!row);
       setWeekly({ ...EMPTY_WEEKLY, ...((wk as any)?.data || {}) });
       setLoading(false); setState('idle');
@@ -607,6 +610,14 @@ export default function TradePlanV2() {
   const schedule = () => { setState('saving'); clearTimeout(timer.current); timer.current = setTimeout(flush, 1000); };
   const setD = (p: Partial<Daily>) => { if (loading || loadError || loadedScope.current !== `${accountKey}|${date}|${pair}`) return; const n = { ...dailyRef.current, ...p }; dailyRef.current = n; setDaily(n); pending.current.daily = { date, pair, accountKey, data: n, ai: { ...prevAi.current } }; schedule(); };
   const setW = (p: Partial<Weekly>) => { if (loading || loadError) return; const n = { ...weeklyRef.current, ...p }; weeklyRef.current = n; setWeekly(n); pending.current.weekly = { week, data: n }; schedule(); };
+  // Rule text edits update the user's persistent daily-rules set so they carry over to every future day.
+  const changeRules = (r: Rule[]) => {
+    setD({ rules: r });
+    const next = r.map(({ id, text }) => ({ id, text }));
+    const cur = ruleDefaultsRef.current;
+    const same = cur.length === next.length && cur.every((x, i) => x.id === next[i].id && x.text === next[i].text);
+    if (!same) { ruleDefaultsRef.current = next; pending.current.defaults = next; schedule(); }
+  };
 
   const choosePair = async (p: string) => { if (p === pair) return; if (await saveAll()) setPair(p); };
   const go = async (k: string) => { if (await saveAll()) { setDate(k); setCalOpen(false); } };
@@ -708,7 +719,7 @@ export default function TradePlanV2() {
                       <Chips multi options={PSYCH} value={daily.psychology} onChange={v => setD({ psychology: v })} />
                       <Area rows={2} value={daily.psychNotes} onChange={v => setD({ psychNotes: v })} placeholder="How do you feel before trading today?" />
                     </Field>
-                    <Field title="Rules"><RulesEditor rules={daily.rules} onChange={r => setD({ rules: r })} /></Field>
+                    <Field title="Rules"><RulesEditor rules={daily.rules} onChange={changeRules} /></Field>
                     <Field title="Main Idea"><Area value={daily.mainIdea} onChange={v => setD({ mainIdea: v })} placeholder="What is today's main trading idea?" /></Field>
                   </div>
 
