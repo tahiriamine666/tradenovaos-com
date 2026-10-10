@@ -703,7 +703,6 @@ export default function TradePlanV2() {
                   <div><p className={label}>Weekly Outlook</p><p className="mt-1 text-sm text-foreground">{weekLabel}</p></div>
                   <Field title="Weekly Bias"><Chips options={BIASES} value={weekly.bias} onChange={v => setW({ bias: v })} /></Field>
                   <Field title="Where could price go and what is the big story?"><Area value={weekly.scenario} onChange={v => setW({ scenario: v })} placeholder="Write your weekly scenario..." /></Field>
-                  <div className="max-w-xl"><ImageSlot title="Chart Screenshot" path={weekly.chart} onChange={p => setW({ chart: p })} /></div>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <ImageSlot title="Before" hint="Upload chart screenshot" path={weekly.before} onChange={p => setW({ before: p })} />
                     <ImageSlot title="After" hint="Upload chart screenshot" path={weekly.after} onChange={p => setW({ after: p })} />
