@@ -730,6 +730,75 @@ export default function TradePlanV2() {
 
   const calendar = <PlanCalendar selected={date} onSelect={go} savedDates={saved} />;
 
+  // Field sections in their saved order. Sections render from dailyOrder / weeklyOrder.
+  const weeklyNodes: Record<string, React.ReactNode> = {
+    bias: <Field title="Weekly Bias"><Chips options={BIASES} value={weekly.bias} onChange={v => setW({ bias: v })} /></Field>,
+    scenario: <Field title="Where could price go and what is the big story?"><Area value={weekly.scenario} onChange={v => setW({ scenario: v })} placeholder="Write your weekly scenario..." /></Field>,
+    charts: (
+      <div className="grid gap-4 sm:grid-cols-2">
+        <ImageSlot title="Before" hint="Upload chart screenshot" path={weekly.before} onChange={p => setW({ before: p })} />
+        <ImageSlot title="After" hint="Upload chart screenshot" path={weekly.after} onChange={p => setW({ after: p })} />
+      </div>
+    ),
+    news: <Field title="News / Events"><NewsBlock withDate items={weekly.news} onChange={n => setW({ news: n })} shotPath={weekly.newsShot || ''} onShot={p => setW({ newsShot: p })} /></Field>,
+    main_idea: <Field title="Main Idea"><Area value={weekly.mainIdea} onChange={v => setW({ mainIdea: v })} placeholder="What is the main idea for this trading week?" /></Field>,
+  };
+
+  const dailyNodes: Record<string, React.ReactNode> = {
+    bias_price: (
+      <div className="grid gap-6 md:grid-cols-2">
+        <Field title="Market Bias"><Chips options={BIASES} value={daily.bias} onChange={v => setD({ bias: v })} /></Field>
+        <Field title="Current Price">
+          <Chips options={PRICES} value={daily.price} onChange={v => setD({ price: v })} />
+          {daily.price === 'Custom' && <input className={input} placeholder="Describe price location" value={daily.priceCustom} onChange={e => setD({ priceCustom: e.target.value })} />}
+        </Field>
+      </div>
+    ),
+    scenario: <Field title="What do I expect price to do today, and how will I react?"><Area value={daily.scenario} onChange={v => setD({ scenario: v })} placeholder="Write your daily scenario..." /></Field>,
+    charts: (
+      <div className="grid gap-4 sm:grid-cols-2">
+        <ImageSlot title="Before" path={daily.before} onChange={p => setD({ before: p })} />
+        <ImageSlot title="After" path={daily.after} onChange={p => setD({ after: p })} />
+      </div>
+    ),
+    news: <Field title="News"><NewsBlock items={daily.news} onChange={n => setD({ news: n })} shotPath={daily.newsShot || ''} onShot={p => setD({ newsShot: p })} /></Field>,
+    risk: (
+      <Field title="Risk Management">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          {([['riskPct', 'Risk %', '1'], ['maxLoss', 'Max Daily Loss', '500'], ['maxTrades', 'Max Trades', '2'], ['rr', 'R:R Target', '1:3']] as const).map(([k, l, ph]) => (
+            <label key={k} className="space-y-1"><span className="text-xs text-muted-foreground">{l}</span>
+              <input className={input} placeholder={ph} value={daily.risk[k]} onChange={e => setD({ risk: { ...daily.risk, [k]: e.target.value } })} /></label>
+          ))}
+        </div>
+      </Field>
+    ),
+    psychology: (
+      <Field title="Psychology">
+        <Chips multi options={PSYCH} value={daily.psychology} onChange={v => setD({ psychology: v })} />
+        <Area rows={2} value={daily.psychNotes} onChange={v => setD({ psychNotes: v })} placeholder="How do you feel before trading today?" />
+      </Field>
+    ),
+    rules: <Field title="Rules"><RulesEditor rules={daily.rules} onChange={changeRules} /></Field>,
+    main_idea: <Field title="Main Idea"><Area value={daily.mainIdea} onChange={v => setD({ mainIdea: v })} placeholder="What is today's main trading idea?" /></Field>,
+  };
+
+  const layoutWrap = (id: string, node: React.ReactNode) => {
+    if (layoutEdit !== tab || loading || loadError) return <React.Fragment key={id}>{node}</React.Fragment>;
+    return (
+      <div key={id}
+        draggable
+        onDragStart={() => { layoutDrag.current = id; }}
+        onDragOver={e => { if (layoutDrag.current && layoutDrag.current !== id) { e.preventDefault(); reorderDraft(layoutDrag.current, id); } }}
+        onDragEnd={() => { layoutDrag.current = null; }}
+        className="rounded-2xl border border-dashed border-primary/40 bg-primary/[0.04] p-3">
+        <div className="mb-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.12em] text-primary">
+          <GripVertical className="h-4 w-4 cursor-grab" /> <span>Drag to move</span>
+        </div>
+        <div className="pointer-events-none select-none">{node}</div>
+      </div>
+    );
+  };
+
   return (
     <div className="mx-auto max-w-7xl space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
