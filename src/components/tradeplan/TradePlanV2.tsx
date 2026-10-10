@@ -22,7 +22,7 @@ interface CheckItem { id: string; text: string }
 interface Weekly { bias: string; scenario: string; chart: string; news: NewsItem[]; mainIdea: string }
 interface Daily {
   bias: string; price: string; priceCustom: string; scenario: string;
-  before: string; after: string; news: NewsItem[];
+  before: string; after: string; news: NewsItem[]; newsShot: string;
   risk: { riskPct: string; maxLoss: string; maxTrades: string; rr: string };
   psychology: string[]; psychNotes: string;
   rules: Rule[]; mainIdea: string;
@@ -34,7 +34,7 @@ const uid = () => crypto.randomUUID();
 const EMPTY_WEEKLY: Weekly = { bias: '', scenario: '', chart: '', news: [], mainIdea: '' };
 const DEFAULT_CHECK = ['Weekly bias aligned', 'Daily bias confirmed', 'Liquidity identified', 'Key level reached', 'Confirmation present', 'Risk calculated', 'News checked', 'Psychology stable'];
 const emptyDaily = (): Daily => ({
-  bias: '', price: '', priceCustom: '', scenario: '', before: '', after: '', news: [],
+  bias: '', price: '', priceCustom: '', scenario: '', before: '', after: '', news: [], newsShot: '',
   risk: { riskPct: '', maxLoss: '', maxTrades: '', rr: '' },
   psychology: [], psychNotes: '', rules: [], mainIdea: '',
   checklist: DEFAULT_CHECK.map(text => ({ id: uid(), text })), checked: {}, modelId: '',
@@ -707,6 +707,7 @@ export default function TradePlanV2() {
                       <ImageSlot title="After" path={daily.after} onChange={p => setD({ after: p })} />
                     </div>
                     <Field title="News"><NewsEditor items={daily.news} onChange={n => setD({ news: n })} /></Field>
+                    <ImageSlot title="ForexFactory screenshot" path={daily.newsShot || ''} onChange={p => setD({ newsShot: p })} />
                     <Field title="Risk Management">
                       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                         {([['riskPct', 'Risk %', '1'], ['maxLoss', 'Max Daily Loss', '500'], ['maxTrades', 'Max Trades', '2'], ['rr', 'R:R Target', '1:3']] as const).map(([k, l, ph]) => (
@@ -744,7 +745,7 @@ export default function TradePlanV2() {
                       <Text v={daily.scenario} />
                     </Block>
                     {(daily.before || daily.after) && <Block title="Before / After Charts"><div className="grid gap-4 sm:grid-cols-2"><ImageSlot readOnly title="Before" path={daily.before} /><ImageSlot readOnly title="After" path={daily.after} /></div></Block>}
-                    <Block title="News"><NewsView items={daily.news} /></Block>
+                    <Block title="News"><NewsView items={daily.news} />{daily.newsShot && <div className="mt-3 max-w-xl"><ImageSlot readOnly title="ForexFactory screenshot" path={daily.newsShot} /></div>}</Block>
                     <Block title="Risk Management">
                       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                         {([['Risk %', daily.risk.riskPct], ['Max Daily Loss', daily.risk.maxLoss], ['Max Trades', daily.risk.maxTrades], ['R:R Target', daily.risk.rr]]).map(([l, v]) => (
