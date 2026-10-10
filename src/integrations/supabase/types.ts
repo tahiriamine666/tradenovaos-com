@@ -2859,6 +2859,10 @@ export type Database = {
       }
       community_user_tier: { Args: never; Returns: string }
       consume_nova_credit: { Args: never; Returns: Json }
+      consume_welcome_worker_nonce: {
+        Args: { p_token: string }
+        Returns: boolean
+      }
       finish_plan_welcome_email: {
         Args: {
           p_error: string
