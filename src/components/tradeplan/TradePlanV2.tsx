@@ -782,10 +782,11 @@ export default function TradePlanV2() {
     main_idea: <Field title="Main Idea"><Area value={daily.mainIdea} onChange={v => setD({ mainIdea: v })} placeholder="What is today's main trading idea?" /></Field>,
   };
 
-  const layoutWrap = (id: string, node: React.ReactNode) => {
+  const layoutWrap = (id: string, node: React.ReactNode, index: number) => {
     if (layoutEdit !== tab || loading || loadError) return <React.Fragment key={id}>{node}</React.Fragment>;
     return (
       <div key={id}
+        style={{ order: index }}
         draggable
         onDragStart={() => { layoutDrag.current = id; }}
         onDragOver={e => { if (layoutDrag.current && layoutDrag.current !== id) { e.preventDefault(); reorderDraft(layoutDrag.current, id); } }}
