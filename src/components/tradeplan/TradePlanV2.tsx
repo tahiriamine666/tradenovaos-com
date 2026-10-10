@@ -183,6 +183,22 @@ function NewsEditor({ items, onChange, withDate }: { items: NewsItem[]; onChange
     </div>
   );
 }
+// News section: a ForexFactory screenshot is the primary input; manual event rows stay available behind a toggle.
+function NewsBlock({ items, onChange, withDate, shotPath, onShot }: { items: NewsItem[]; onChange: (n: NewsItem[]) => void; withDate?: boolean; shotPath: string; onShot: (p: string) => void }) {
+  const [manual, setManual] = useState(false);
+  return (
+    <div className="space-y-3">
+      <ImageSlot title="News screenshot (ForexFactory)" hint="Upload news screenshot" path={shotPath} onChange={onShot} />
+      {manual ? (
+        <NewsEditor items={items} onChange={onChange} withDate={withDate} />
+      ) : (
+        <button type="button" onClick={() => setManual(true)} className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:opacity-80">
+          <Plus className="h-3.5 w-3.5" /> {items.length ? `Edit events (${items.length})` : 'Add event manually'}
+        </button>
+      )}
+    </div>
+  );
+}
 function NewsView({ items }: { items: NewsItem[] }) {
   if (!items.length) return <p className="text-sm text-muted-foreground">No events.</p>;
   return (
