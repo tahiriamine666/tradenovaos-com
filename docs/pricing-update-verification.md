@@ -5,7 +5,7 @@ Publication is pending owner inspection. No publishing, checkout creation, charg
 ## Changed files
 
 - `src/lib/pricing.ts`: centralized monthly integer cents and annual provider-quote equivalents.
-- `src/lib/pricing.test.ts`: exact $5.99/$9.99 and $132→$11/$264→$22 checks.
+- `src/lib/pricing.test.ts`: exact $5.99/$9.99 and $71.88→$5.99/$119.88→$9.99 checks.
 - `src/pages/Pricing.tsx`: monthly plan prices.
 - `src/pages/LandingPage.tsx`: monthly navigation/pricing copy.
 - `src/pages/marketing/PublicPricingPage.tsx`: pricing SEO description.
@@ -31,16 +31,27 @@ Authenticated, read-only `action: "prices"` returned:
 |---|---:|---:|
 | Pro monthly | 5.99 | 14 |
 | Elite monthly | 9.99 | 14 |
-| Pro annual | 132 | 7 |
-| Elite annual | 264 | 0 |
+| Pro annual | 71.88 | 7 |
+| Elite annual | 119.88 | 0 |
 
-The deployed authenticated read-only response independently verified exact runtime monthly IDs: Pro `pdt_0NiAkpxz9gAN0Spuarqm5`, Elite `pdt_0NiAlZAx8DbY0elDOHsMG`, with USD 5.99/9.99 and 14-day product trials. Both match the owner's independently verified LIVE hosted checkouts. Annual runtime products returned Pro `pdt_0NiAmV62ykhrW7sAAVde7` (132), Elite `pdt_0NiAmBjsscYee7NKrWj7J` (264). No product references were changed. No API keys were retrieved or printed, and no checkout session was created.
+Fresh authenticated read-only quotes on 2026-10-10 verified Pro annual `pdt_0NiAmV62ykhrW7sAAVde7` = USD 71.88 and Elite annual `pdt_0NiAmBjsscYee7NKrWj7J` = USD 119.88. Monthly IDs and USD 5.99/9.99 with 14-day product trials remain unchanged. All four IDs match the owner's catalog. Invalid-token quote requests were rejected without prices. No product references were changed, no API keys were retrieved or printed, and no checkout session was created.
 
 Deployed `dodo-checkout` submitted source/settings SHA-256: `102baaa926452682a675c1d69af60c3ce6b80016cbcb807b78035af448875fcd`; runtime verification performed after deployment.
 
-Annual prices and trials were preserved. `Onboarding.tsx` sends `onboarding: true`; the real checkout handler explicitly includes `subscription_data: { trial_period_days: 14 }` for **both monthly and annual onboarding**, regardless of product trial defaults. `Pricing.tsx` routes the trial CTA to onboarding. Non-onboarding `startCheckout` calls do not set this override, retaining provider defaults (annual Pro 7, Elite 0). These paths were verified with isolated handler tests; no live checkout was created and no annual trial behavior changed.
+Annual current offers now follow the owner's updated Dodo catalog (71.88/119.88); trials are preserved. `Onboarding.tsx` sends `onboarding: true`; the real checkout handler explicitly includes `subscription_data: { trial_period_days: 14 }` for **both monthly and annual onboarding**, regardless of product trial defaults. `Pricing.tsx` routes the trial CTA to onboarding. Non-onboarding `startCheckout` calls do not set this override, retaining provider defaults (annual Pro 7, Elite 0). These paths were verified with isolated handler tests; no live checkout was created and no annual trial behavior changed.
 
 ## Verification
+
+### Annual update follow-up — 2026-10-10 22:20 UTC
+
+- Exact files changed for this annual update: `src/lib/pricing.test.ts`, `supabase/tests/checkout-pricing-response.test.mjs`, `docs/pricing-update-verification.md`, `roadmap.md`, and project pricing memory. No application, backend function, mapping, schema, webhook, outbox or scheduler changes were necessary: annual onboarding already reads authoritative Dodo quotes.
+- 46 tests passed: pricing (4), Dashboard layout (8), Daily/Weekly Plan (6), product mapping (2), quote/trial handler (5), legacy admin pricing (1), isolated welcome/billing regressions (20). Provider calls and real email delivery were never used by these tests.
+- Separate typecheck: `bunx -p @typescript/native-preview tsgo --noEmit`, exit **0**, no diagnostics; confirmed again after test changes. Automatic build **OK**, latest entry 2026-10-10T22:19:15Z; no manual build.
+- Real authenticated annual quotes and exact public IDs verified; desktop 1280px and mobile 390px annual onboarding show 71.88/119.88 and 5.99/9.99 equivalents. Screenshots checked after essential-only cookie consent; no horizontal overflow or page runtime errors. Access-state read alone was mocked to expose onboarding for the existing account; actual price quotes remained live. Trial/payment buttons were not clicked. A browser guard blocked all non-GET database calls except mocked access reads and allowed only the read-only pricing function action.
+- Active source/public/docs/email/test scan found no obsolete annual offer references or false savings claims; remaining numeric matches are unrelated SVG coordinates. Historical migrations and subscription amounts are retained.
+- Annual product defaults remain Pro 7 days / Elite 0 days; the existing explicit onboarding override remains 14 days for both. No charges, emails, provider edits, user mutations, subscriptions changes or publishing. Unrelated release blockers are not claimed resolved.
+
+### Previous monthly release checks
 
 - 18 frontend tests passed: pricing (4), Dashboard layout (8), Daily/Weekly Plan (6).
 - 6 focused synthetic backend tests passed: mapping (2), legacy admin pricing/history/auth (1), and actual checkout quote/trial handler (3); no real secrets or provider calls.

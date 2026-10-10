@@ -12,10 +12,10 @@ describe('Production monthly display pricing', () => {
     expect(monthlyPlanAmount('elite')).toBe(9.99);
     expect(monthlyPlanPrice('elite')).toBe('$9.99');
   });
-  it('keeps the $132 annual Pro quote equivalent to $11/month, not a discount', () => {
-    expect(annualMonthlyEquivalent(132)).toBe('$11.00');
+  it('displays the $71.88 annual Pro quote equivalent to $5.99/month', () => {
+    expect(annualMonthlyEquivalent(71.88)).toBe('$5.99');
   });
-  it('keeps the $264 annual Elite quote equivalent to $22/month, not a discount', () => {
-    expect(annualMonthlyEquivalent(264)).toBe('$22.00');
+  it('displays the $119.88 annual Elite quote equivalent to $9.99/month', () => {
+    expect(annualMonthlyEquivalent(119.88)).toBe('$9.99');
   });
 });
