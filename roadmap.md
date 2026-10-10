@@ -1,5 +1,6 @@
 # Redesign roadmap
 - [ ] Update monthly pricing across current code, audit stale references, verify plan tests and desktop/mobile; do not publish pending provider verification
+- [ ] Include owner-verified monthly provider prices, preserve confirmed annual offers and remove false savings claims; inspect safe checkout evidence, keep publication pending owner review
 - [ ] Finish Dashboard local-time greeting and per-user saved reorder/show-hide layout; verify desktop/mobile and tests
 - [ ] Add versioned first-visit cookie consent, policy, reopening controls and verify persistence/accessibility without changing auth
 - [x] Weekly / Bi-Weekly Trading Review + sectioned Add Trade form with extended psychology
