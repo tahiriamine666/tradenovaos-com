@@ -856,14 +856,7 @@ export default function TradePlanV2() {
               {tab === 'weekly' && (
                 <div className={`${card} space-y-6 p-5 sm:p-6`}>
                   <div><p className={label}>Weekly Outlook</p><p className="mt-1 text-sm text-foreground">{weekLabel}</p></div>
-                  <Field title="Weekly Bias"><Chips options={BIASES} value={weekly.bias} onChange={v => setW({ bias: v })} /></Field>
-                  <Field title="Where could price go and what is the big story?"><Area value={weekly.scenario} onChange={v => setW({ scenario: v })} placeholder="Write your weekly scenario..." /></Field>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <ImageSlot title="Before" hint="Upload chart screenshot" path={weekly.before} onChange={p => setW({ before: p })} />
-                    <ImageSlot title="After" hint="Upload chart screenshot" path={weekly.after} onChange={p => setW({ after: p })} />
-                  </div>
-                  <Field title="News / Events"><NewsBlock withDate items={weekly.news} onChange={n => setW({ news: n })} shotPath={weekly.newsShot || ''} onShot={p => setW({ newsShot: p })} /></Field>
-                  <Field title="Main Idea"><Area value={weekly.mainIdea} onChange={v => setW({ mainIdea: v })} placeholder="What is the main idea for this trading week?" /></Field>
+                  {weeklyOrder.map(id => layoutWrap(id, weeklyNodes[id]))}
                 </div>
               )}
 
