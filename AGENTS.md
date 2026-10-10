@@ -18,3 +18,5 @@ Daily Plan rules persist per-user in daily_plan_rules: new days pre-fill the sav
 Plan editor layout (Daily Plan / Weekly Outlook) saved once per user in workspace_layouts ('daily_plan'/'weekly_outlook', layout.order) with explicit Save/Cancel/Reset; drag & drop must reorder via CSS `order` on stable nodes — moving the dragged DOM node cancels HTML5 drag in Chromium.
 Open app view lives in the URL (?view=); AuthContext keeps the same user object across token refreshes.
 Monthly offer displays use integer cents and currency formatting from src/lib/pricing.ts; annual quotes and actual checkout charges remain Dodo-authoritative — prevents display drift without altering billing or entitlements.
+Legacy admin MRR fields are current-offer estimates, not historical revenue; update their definitions through additive migrations without writing subscriptions — preserves existing customer amounts.
+Authenticated Dodo quote responses whitelist public product identifiers and quote fields only; never return provider credentials — supports runtime catalog verification safely.
