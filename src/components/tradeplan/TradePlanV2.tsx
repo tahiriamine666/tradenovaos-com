@@ -863,35 +863,8 @@ export default function TradePlanV2() {
               {tab === 'daily' && (!showDaily ? empty : (
                 <>
                   <div className={`${card} space-y-6 p-5 sm:p-6`}>
-                    <div className="grid gap-6 md:grid-cols-2">
-                      <Field title="Market Bias"><Chips options={BIASES} value={daily.bias} onChange={v => setD({ bias: v })} /></Field>
-                      <Field title="Current Price">
-                        <Chips options={PRICES} value={daily.price} onChange={v => setD({ price: v })} />
-                        {daily.price === 'Custom' && <input className={input} placeholder="Describe price location" value={daily.priceCustom} onChange={e => setD({ priceCustom: e.target.value })} />}
-                      </Field>
-                    </div>
-                    <Field title="What do I expect price to do today, and how will I react?"><Area value={daily.scenario} onChange={v => setD({ scenario: v })} placeholder="Write your daily scenario..." /></Field>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <ImageSlot title="Before" path={daily.before} onChange={p => setD({ before: p })} />
-                      <ImageSlot title="After" path={daily.after} onChange={p => setD({ after: p })} />
-                    </div>
-                    <Field title="News"><NewsBlock items={daily.news} onChange={n => setD({ news: n })} shotPath={daily.newsShot || ''} onShot={p => setD({ newsShot: p })} /></Field>
-                    <Field title="Risk Management">
-                      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                        {([['riskPct', 'Risk %', '1'], ['maxLoss', 'Max Daily Loss', '500'], ['maxTrades', 'Max Trades', '2'], ['rr', 'R:R Target', '1:3']] as const).map(([k, l, ph]) => (
-                          <label key={k} className="space-y-1"><span className="text-xs text-muted-foreground">{l}</span>
-                            <input className={input} placeholder={ph} value={daily.risk[k]} onChange={e => setD({ risk: { ...daily.risk, [k]: e.target.value } })} /></label>
-                        ))}
-                      </div>
-                    </Field>
-                    <Field title="Psychology">
-                      <Chips multi options={PSYCH} value={daily.psychology} onChange={v => setD({ psychology: v })} />
-                      <Area rows={2} value={daily.psychNotes} onChange={v => setD({ psychNotes: v })} placeholder="How do you feel before trading today?" />
-                    </Field>
-                    <Field title="Rules"><RulesEditor rules={daily.rules} onChange={changeRules} /></Field>
-                    <Field title="Main Idea"><Area value={daily.mainIdea} onChange={v => setD({ mainIdea: v })} placeholder="What is today's main trading idea?" /></Field>
+                    {dailyOrder.map(id => layoutWrap(id, dailyNodes[id]))}
                   </div>
-
                 </>
               ))}
 
