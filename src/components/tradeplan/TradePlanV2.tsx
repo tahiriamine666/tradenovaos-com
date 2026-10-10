@@ -110,6 +110,7 @@ function ImageSlot({ title, path, onChange, readOnly, hint = 'Upload chart scree
   const ref = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [full, setFull] = useState(false);
+  const [ratio, setRatio] = useState<number | null>(null);
   const url = useSigned(path);
   const upload = async (f: File) => {
     if (!user || !onChange) return;
@@ -126,10 +127,13 @@ function ImageSlot({ title, path, onChange, readOnly, hint = 'Upload chart scree
   return (
     <div className="space-y-2">
       <p className={label}>{title}</p>
-      <div className="group relative aspect-video overflow-hidden rounded-xl border border-dashed border-border bg-background/50">
+      <div
+        className={`group relative overflow-hidden rounded-xl border border-dashed border-border bg-background/50 ${url && ratio ? '' : 'aspect-video'}`}
+        style={url && ratio ? { aspectRatio: String(ratio), maxHeight: '28rem' } : undefined}
+      >
         {url ? (
           <>
-            <img src={url} alt={title} className="h-full w-full object-contain" />
+            <img src={url} alt={title} onLoad={e => setRatio(e.currentTarget.naturalWidth / e.currentTarget.naturalHeight)} className="h-full w-full object-contain" />
             <div className="absolute inset-0 flex items-end justify-end gap-1.5 bg-gradient-to-t from-background/80 to-transparent p-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
               <button type="button" onClick={() => setFull(true)} className="rounded-lg bg-card/90 p-1.5 text-foreground hover:text-primary" aria-label="Preview"><Maximize2 className="h-3.5 w-3.5" /></button>
               {!readOnly && <>
