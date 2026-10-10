@@ -704,7 +704,7 @@ export default function TradePlanV2() {
                   <Field title="Weekly Bias"><Chips options={BIASES} value={weekly.bias} onChange={v => setW({ bias: v })} /></Field>
                   <Field title="Where could price go and what is the big story?"><Area value={weekly.scenario} onChange={v => setW({ scenario: v })} placeholder="Write your weekly scenario..." /></Field>
                   <div className="max-w-xl"><ImageSlot title="Chart Screenshot" path={weekly.chart} onChange={p => setW({ chart: p })} /></div>
-                  <Field title="News / Events"><NewsEditor withDate items={weekly.news} onChange={n => setW({ news: n })} /></Field>
+                  <Field title="News / Events"><NewsBlock withDate items={weekly.news} onChange={n => setW({ news: n })} shotPath={weekly.newsShot || ''} onShot={p => setW({ newsShot: p })} /></Field>
                   <Field title="Main Idea"><Area value={weekly.mainIdea} onChange={v => setW({ mainIdea: v })} placeholder="What is the main idea for this trading week?" /></Field>
                 </div>
               )}
@@ -724,8 +724,7 @@ export default function TradePlanV2() {
                       <ImageSlot title="Before" path={daily.before} onChange={p => setD({ before: p })} />
                       <ImageSlot title="After" path={daily.after} onChange={p => setD({ after: p })} />
                     </div>
-                    <Field title="News"><NewsEditor items={daily.news} onChange={n => setD({ news: n })} /></Field>
-                    <ImageSlot title="ForexFactory screenshot" path={daily.newsShot || ''} onChange={p => setD({ newsShot: p })} />
+                    <Field title="News"><NewsBlock items={daily.news} onChange={n => setD({ news: n })} shotPath={daily.newsShot || ''} onShot={p => setD({ newsShot: p })} /></Field>
                     <Field title="Risk Management">
                       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                         {([['riskPct', 'Risk %', '1'], ['maxLoss', 'Max Daily Loss', '500'], ['maxTrades', 'Max Trades', '2'], ['rr', 'R:R Target', '1:3']] as const).map(([k, l, ph]) => (
@@ -754,6 +753,7 @@ export default function TradePlanV2() {
                       <Text v={weekly.scenario} />
                       <div className="max-w-xl"><ImageSlot readOnly title="Weekly Chart" path={weekly.chart} /></div>
                       <NewsView items={weekly.news} />
+                      {weekly.newsShot && <div className="max-w-xl"><ImageSlot readOnly title="News screenshot" path={weekly.newsShot} /></div>}
                       <div><p className="mb-1 text-xs text-muted-foreground">Main idea</p><Text v={weekly.mainIdea} /></div>
                     </div>
                   </Block>
@@ -763,7 +763,7 @@ export default function TradePlanV2() {
                       <Text v={daily.scenario} />
                     </Block>
                     {(daily.before || daily.after) && <Block title="Before / After Charts"><div className="grid gap-4 sm:grid-cols-2"><ImageSlot readOnly title="Before" path={daily.before} /><ImageSlot readOnly title="After" path={daily.after} /></div></Block>}
-                    <Block title="News"><NewsView items={daily.news} />{daily.newsShot && <div className="mt-3 max-w-xl"><ImageSlot readOnly title="ForexFactory screenshot" path={daily.newsShot} /></div>}</Block>
+                    <Block title="News"><NewsView items={daily.news} />{daily.newsShot && <div className="mt-3 max-w-xl"><ImageSlot readOnly title="News screenshot" path={daily.newsShot} /></div>}</Block>
                     <Block title="Risk Management">
                       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                         {([['Risk %', daily.risk.riskPct], ['Max Daily Loss', daily.risk.maxLoss], ['Max Trades', daily.risk.maxTrades], ['R:R Target', daily.risk.rr]]).map(([l, v]) => (
