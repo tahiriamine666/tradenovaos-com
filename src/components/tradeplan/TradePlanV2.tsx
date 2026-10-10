@@ -831,10 +831,21 @@ export default function TradePlanV2() {
         </aside>
 
         <main className="min-w-0 space-y-5">
-          <div className="inline-flex rounded-xl border border-border bg-card p-1">
-            {([['weekly', 'Weekly Outlook'], ['daily', 'Daily Plan'], ['full', 'Full View']] as [Tab, string][]).map(([k, l]) => (
-              <button key={k} type="button" onClick={async () => { if (await saveAll()) setTab(k); }} aria-pressed={tab === k}
-                className={`rounded-lg px-3 py-2 text-[11px] font-bold uppercase tracking-[0.12em] transition-all duration-300 sm:px-4 ${tab === k ? 'bg-primary/15 text-primary shadow-[0_0_14px_hsl(var(--primary)/0.15)]' : 'text-muted-foreground hover:text-foreground'}`}>{l}</button>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="inline-flex rounded-xl border border-border bg-card p-1">
+              {([['weekly', 'Weekly Outlook'], ['daily', 'Daily Plan'], ['full', 'Full View']] as [Tab, string][]).map(([k, l]) => (
+                <button key={k} type="button" onClick={async () => { if (await saveAll()) { setLayoutEdit(null); setTab(k); } }} aria-pressed={tab === k}
+                  className={`rounded-lg px-3 py-2 text-[11px] font-bold uppercase tracking-[0.12em] transition-all duration-300 sm:px-4 ${tab === k ? 'bg-primary/15 text-primary shadow-[0_0_14px_hsl(var(--primary)/0.15)]' : 'text-muted-foreground hover:text-foreground'}`}>{l}</button>
+              ))}
+            </div>
+            {!loading && !loadError && (tab === 'daily' || tab === 'weekly') && showDaily && (layoutEdit === tab ? (
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={saveLayoutEdit} className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90"><Save className="h-3.5 w-3.5" /> Save Layout</button>
+                <button type="button" onClick={cancelLayoutEdit} className="rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground">Cancel</button>
+                <button type="button" onClick={resetLayoutDraft} className="rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground">Reset</button>
+              </div>
+            ) : (
+              <button type="button" onClick={() => startLayoutEdit(tab)} className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"><GripVertical className="h-3.5 w-3.5" /> Edit Layout</button>
             ))}
           </div>
 
