@@ -64,4 +64,32 @@ describe('Daily plan isolation and failure handling', () => {
     fake.fail = false; await switchPair('XAUUSD');
     expect([...fake.rows.values()].find(r => r.table === 'trade_plans')?.ai_analysis.daily_v2.scenario).toBe('Retain this scenario');
   });
+  it('carries daily rules over: prefills a new day from the saved set and syncs edits to it', async () => {
+    const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+    fake.rows.set('daily_plan_rules|user-one', { table: 'daily_plan_rules', user_id: 'user-one', rules: [{ id: 'r1', text: 'No revenge trading' }, { id: 'r2', text: 'Max 2 trades per day' }] });
+    render(<TradePlanV2 />); await ready();
+    expect(screen.getByDisplayValue('No revenge trading')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('Max 2 trades per day')).toBeInTheDocument();
+    // Editing a rule's text persists the new default set (without per-day checked state)
+    fireEvent.change(screen.getByDisplayValue('Max 2 trades per day'), { target: { value: 'Max 3 trades per day' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save Plan' }));
+    await waitFor(() => expect(fake.writes.some(w => w.table === 'daily_plan_rules')).toBe(true));
+    const savedDefaults = fake.writes.find(w => w.table === 'daily_plan_rules')!;
+    expect(savedDefaults.payload).toMatchObject({ user_id: 'user-one' });
+    expect(savedDefaults.payload.rules).toEqual([{ id: 'r1', text: 'No revenge trading' }, { id: 'r2', text: 'Max 3 trades per day' }]);
+    // Checking/unchecking a rule is day-only: it saves the day but never rewrites the default set
+    fireEvent.click(screen.getAllByRole('button', { name: 'Check item' })[0]);
+    await waitFor(() => expect(fake.writes.some(w => w.table === 'trade_plans' && w.payload.ai_analysis.daily_v2.rules.some((r: any) => r.text === 'No revenge trading' && r.done))).toBe(true));
+    expect(fake.writes.filter(w => w.table === 'daily_plan_rules')).toHaveLength(1);
+    expect(today()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+  it('keeps a saved day with its own rules intact instead of overwriting them with defaults', async () => {
+    const d = new Date();
+    const t = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    fake.rows.set('daily_plan_rules|user-one', { table: 'daily_plan_rules', user_id: 'user-one', rules: [{ id: 'r1', text: 'Default rule' }] });
+    fake.rows.set(`trade_plans|user-one|account-a|${t}|EURUSD|`, { table: 'trade_plans', user_id: 'user-one', account_key: 'account-a', plan_date: t, pair: 'EURUSD', ai_analysis: { daily_v2: { bias: 'Bullish', rules: [{ id: 'x1', text: 'Old saved rule', done: true }] } } });
+    render(<TradePlanV2 />); await ready();
+    expect(screen.getByDisplayValue('Old saved rule')).toBeInTheDocument();
+    expect(screen.queryByDisplayValue('Default rule')).not.toBeInTheDocument();
+  });
 });
