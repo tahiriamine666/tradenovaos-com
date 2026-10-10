@@ -649,6 +649,35 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_plan_rules: {
+        Row: {
+          created_at: string
+          rules: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          rules?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          rules?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_plan_rules_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       economic_calendar_preferences: {
         Row: {
           created_at: string
