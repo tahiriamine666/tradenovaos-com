@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { MONTHLY_PLAN_CENTS, monthlyPlanAmount, monthlyPlanPrice } from './pricing';
+import { MONTHLY_PLAN_CENTS, monthlyPlanAmount, monthlyPlanPrice, annualMonthlyEquivalent } from './pricing';
 
 describe('Production monthly display pricing', () => {
   it('prices Pro at exactly $5.99 without rounding away cents', () => {
@@ -11,5 +11,11 @@ describe('Production monthly display pricing', () => {
     expect(MONTHLY_PLAN_CENTS.elite).toBe(999);
     expect(monthlyPlanAmount('elite')).toBe(9.99);
     expect(monthlyPlanPrice('elite')).toBe('$9.99');
+  });
+  it('keeps the $132 annual Pro quote equivalent to $11/month, not a discount', () => {
+    expect(annualMonthlyEquivalent(132)).toBe('$11.00');
+  });
+  it('keeps the $264 annual Elite quote equivalent to $22/month, not a discount', () => {
+    expect(annualMonthlyEquivalent(264)).toBe('$22.00');
   });
 });

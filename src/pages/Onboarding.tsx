@@ -7,7 +7,7 @@ import { useAccessState } from "@/hooks/useAccessState";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import robotAsset from "@/assets/tradenova-robot-full.jpg.asset.json";
-import { monthlyPlanAmount } from "@/lib/pricing";
+import { monthlyPlanAmount, annualMonthlyEquivalent } from "@/lib/pricing";
 
 type Stage = "q1" | "q2" | "q3" | "setup" | "preview" | "plan" | "payment" | "confirming" | "success";
 
@@ -271,6 +271,9 @@ export default function Onboarding() {
               plan === p ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/40")}>
             <p className="font-heading text-lg font-semibold capitalize">{p}</p>
             <p className="mt-1 text-2xl font-bold">{fmt(priceFor(p)) ?? "—"}<span className="text-sm font-normal text-muted-foreground"> / {period}</span></p>
+             {billing === "yearly" && priceFor(p)?.amount != null && (
+               <p className="mt-1 text-xs text-muted-foreground">Equivalent to {annualMonthlyEquivalent(priceFor(p)?.amount ?? 0, priceFor(p)?.currency)} / month · Billed annually</p>
+             )}
             <p className="mt-1 text-xs text-primary">14-day free trial</p>
             <ul className="mt-4 space-y-1.5 text-sm text-muted-foreground">
               {PLAN_FEATURES[p].map((f) => <li key={f} className="flex gap-2"><Check className="mt-0.5 h-3.5 w-3.5 text-primary" />{f}</li>)}

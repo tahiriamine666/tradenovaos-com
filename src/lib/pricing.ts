@@ -12,3 +12,10 @@ export function monthlyPlanPrice(plan: PricedPlan): string {
     style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2,
   }).format(monthlyPlanAmount(plan));
 }
+
+/** Annual equivalents must be calculated from the provider quote, not monthly offers. */
+export function annualMonthlyEquivalent(amount: number, currency = 'USD'): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency', currency, minimumFractionDigits: 2, maximumFractionDigits: 2,
+  }).format(amount / 12);
+}
