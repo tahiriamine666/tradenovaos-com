@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
 import { beforeEach, afterEach, describe, it, expect, vi } from 'vitest';
-import TradePlanV2 from './TradePlanV2';
+import TradePlanV2, { normalizeLayoutOrder, DAILY_LAYOUT_DEFAULT, WEEKLY_LAYOUT_DEFAULT } from './TradePlanV2';
 
 const fake = vi.hoisted(() => ({ user: { id: 'user-one' }, account: 'account-a', rows: new Map<string, any>(), writes: [] as any[], fail: false }));
 vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => ({ user: fake.user }) }));
@@ -91,5 +91,34 @@ describe('Daily plan isolation and failure handling', () => {
     render(<TradePlanV2 />); await ready();
     expect(screen.getByDisplayValue('Old saved rule')).toBeInTheDocument();
     expect(screen.queryByDisplayValue('Default rule')).not.toBeInTheDocument();
+  });
+});
+
+describe('Editable field layout', () => {
+  it('normalizes a saved order: drops unknown ids, dedupes and appends missing defaults', () => {
+    expect(normalizeLayoutOrder(['risk', 'nope', 'bias_price', 'risk', 'scenario'], DAILY_LAYOUT_DEFAULT))
+      .toEqual(['risk', 'bias_price', 'scenario', 'charts', 'news', 'psychology', 'rules', 'main_idea']);
+    expect(normalizeLayoutOrder(null, WEEKLY_LAYOUT_DEFAULT)).toEqual(WEEKLY_LAYOUT_DEFAULT);
+    expect(normalizeLayoutOrder([99, { bad: true }], WEEKLY_LAYOUT_DEFAULT)).toEqual(WEEKLY_LAYOUT_DEFAULT);
+  });
+  it('applies the saved per-user layout to every pair and saves it to workspace_layouts', async () => {
+    const order = ['risk', 'bias_price', 'scenario', 'charts', 'news', 'psychology', 'rules', 'main_idea'];
+    fake.rows.set('workspace_layouts|user-one', { table: 'workspace_layouts', user_id: 'user-one', page: 'daily_plan', layout: { order } });
+    render(<TradePlanV2 />); await ready();
+    const checkOrder = () => {
+      const risk = screen.getByText('Risk Management');
+      const bias = screen.getByText('Market Bias');
+      expect(risk.compareDocumentPosition(bias) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    };
+    await waitFor(checkOrder);
+    await switchPair('XAUUSD');
+    await waitFor(checkOrder);
+    // Edit Layout saves explicitly to workspace_layouts (keyed user_id + page), never autosaved
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Layout' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save Layout' }));
+    await waitFor(() => expect(fake.writes.some(w => w.table === 'workspace_layouts')).toBe(true));
+    const saved = fake.writes.find(w => w.table === 'workspace_layouts')!;
+    expect(saved.payload).toMatchObject({ user_id: 'user-one', page: 'daily_plan' });
+    expect(saved.payload.layout.order).toEqual(order);
   });
 });

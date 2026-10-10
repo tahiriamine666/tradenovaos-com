@@ -48,6 +48,21 @@ const BIASES = ['Bullish', 'Bearish', 'Neutral', 'Range'];
 const PRICES = ['Premium', 'Discount', 'Mid-Range', 'Custom'];
 const PSYCH = ['Calm', 'Focused', 'Confident', 'Neutral', 'Stressed', 'Fearful', 'FOMO', 'Revenge Trading'];
 
+// Editable field layout for the plan editor. Saved once per user in workspace_layouts
+// (page daily_plan / weekly_outlook) so every day and every pair renders the same order.
+export const DAILY_LAYOUT_DEFAULT = ['bias_price', 'scenario', 'charts', 'news', 'risk', 'psychology', 'rules', 'main_idea'];
+export const WEEKLY_LAYOUT_DEFAULT = ['bias', 'scenario', 'charts', 'news', 'main_idea'];
+export function normalizeLayoutOrder(saved: unknown, fallback: string[]): string[] {
+  if (!Array.isArray(saved)) return [...fallback];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const id of saved) {
+    if (typeof id === 'string' && fallback.includes(id) && !seen.has(id)) { seen.add(id); out.push(id); }
+  }
+  for (const id of fallback) if (!seen.has(id)) out.push(id);
+  return out;
+}
+
 const pad = (n: number) => String(n).padStart(2, '0');
 const toKey = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 const fromKey = (k: string) => { const [y, m, d] = k.split('-').map(Number); return new Date(y, m - 1, d); };
@@ -522,6 +537,13 @@ export default function TradePlanV2() {
   const [state, setState] = useState<SaveState>('idle');
   const week = weekStartKey(date);
 
+  // Editable plan field layout (drag & drop with the mouse, saved once per user).
+  const [dailyOrder, setDailyOrder] = useState<string[]>(DAILY_LAYOUT_DEFAULT);
+  const [weeklyOrder, setWeeklyOrder] = useState<string[]>(WEEKLY_LAYOUT_DEFAULT);
+  const [layoutEdit, setLayoutEdit] = useState<Tab | null>(null);
+  const [layoutDraft, setLayoutDraft] = useState<string[]>([]);
+  const layoutDrag = useRef<string | null>(null);
+
   // Refs to flush pending edits to the date they belong to.
   const prevAi = useRef<Record<string, any>>({});
   const loadedScope = useRef('');
@@ -640,6 +662,22 @@ export default function TradePlanV2() {
     return () => { alive = false; };
   }, [user, date, week, pair, accountKey, retry]);
 
+  // Load the saved field layout once per user: the same order for every day and pair.
+  useEffect(() => {
+    if (!user) return;
+    let alive = true;
+    (async () => {
+      const [{ data: d1 }, { data: d2 }] = await Promise.all([
+        supabase.from('workspace_layouts').select('layout').eq('user_id', user.id).eq('page', 'daily_plan').maybeSingle(),
+        supabase.from('workspace_layouts').select('layout').eq('user_id', user.id).eq('page', 'weekly_outlook').maybeSingle(),
+      ]);
+      if (!alive) return;
+      if (d1?.layout) setDailyOrder(normalizeLayoutOrder((d1.layout as { order?: unknown }).order, DAILY_LAYOUT_DEFAULT));
+      if (d2?.layout) setWeeklyOrder(normalizeLayoutOrder((d2.layout as { order?: unknown }).order, WEEKLY_LAYOUT_DEFAULT));
+    })();
+    return () => { alive = false; };
+  }, [user, retry]);
+
   const schedule = () => { setState('saving'); clearTimeout(timer.current); timer.current = setTimeout(flush, 1000); };
   const setD = (p: Partial<Daily>) => { if (loading || loadError || loadedScope.current !== `${accountKey}|${date}|${pair}`) return; const n = { ...dailyRef.current, ...p }; dailyRef.current = n; setDaily(n); pending.current.daily = { date, pair, accountKey, data: n, ai: { ...prevAi.current } }; schedule(); };
   const setW = (p: Partial<Weekly>) => { if (loading || loadError) return; const n = { ...weeklyRef.current, ...p }; weeklyRef.current = n; setWeekly(n); pending.current.weekly = { week, data: n }; schedule(); };
@@ -650,6 +688,28 @@ export default function TradePlanV2() {
     const cur = ruleDefaultsRef.current;
     const same = cur.length === next.length && cur.every((x, i) => x.id === next[i].id && x.text === next[i].text);
     if (!same) { ruleDefaultsRef.current = next; pending.current.defaults = next; schedule(); }
+  };
+
+  // Edit Layout: drag sections up/down with the mouse; the order is saved once per user,
+  // so every day and every pair keeps the same layout. Cancel reverts, Reset restores defaults.
+  const startLayoutEdit = (t: Tab) => { setLayoutEdit(t); setLayoutDraft(t === 'daily' ? dailyOrder : weeklyOrder); };
+  const reorderDraft = (fromId: string, toId: string) => setLayoutDraft(prev => {
+    const arr = [...prev]; const from = arr.indexOf(fromId); const to = arr.indexOf(toId);
+    if (from < 0 || to < 0 || from === to) return prev;
+    arr.splice(from, 1); arr.splice(to, 0, fromId);
+    return arr;
+  });
+  const cancelLayoutEdit = () => { setLayoutEdit(null); layoutDrag.current = null; };
+  const resetLayoutDraft = () => setLayoutDraft(layoutEdit === 'daily' ? [...DAILY_LAYOUT_DEFAULT] : [...WEEKLY_LAYOUT_DEFAULT]);
+  const saveLayoutEdit = async () => {
+    if (!layoutEdit || !user) { cancelLayoutEdit(); return; }
+    const page = layoutEdit === 'daily' ? 'daily_plan' : 'weekly_outlook';
+    const clean = normalizeLayoutOrder(layoutDraft, layoutEdit === 'daily' ? DAILY_LAYOUT_DEFAULT : WEEKLY_LAYOUT_DEFAULT);
+    const { error } = await supabase.from('workspace_layouts').upsert({ user_id: user.id, page, layout: { order: clean } }, { onConflict: 'user_id,page' });
+    if (error) { toast({ title: 'Layout not saved', description: error.message, variant: 'destructive' }); return; }
+    if (layoutEdit === 'daily') setDailyOrder(clean); else setWeeklyOrder(clean);
+    toast({ title: 'Layout saved' });
+    setLayoutEdit(null);
   };
 
   const choosePair = async (p: string) => { if (p === pair) return; if (await saveAll()) setPair(p); };
@@ -669,6 +729,76 @@ export default function TradePlanV2() {
   );
 
   const calendar = <PlanCalendar selected={date} onSelect={go} savedDates={saved} />;
+
+  // Field sections in their saved order. Sections render from dailyOrder / weeklyOrder.
+  const weeklyNodes: Record<string, React.ReactNode> = {
+    bias: <Field title="Weekly Bias"><Chips options={BIASES} value={weekly.bias} onChange={v => setW({ bias: v })} /></Field>,
+    scenario: <Field title="Where could price go and what is the big story?"><Area value={weekly.scenario} onChange={v => setW({ scenario: v })} placeholder="Write your weekly scenario..." /></Field>,
+    charts: (
+      <div className="grid gap-4 sm:grid-cols-2">
+        <ImageSlot title="Before" hint="Upload chart screenshot" path={weekly.before} onChange={p => setW({ before: p })} />
+        <ImageSlot title="After" hint="Upload chart screenshot" path={weekly.after} onChange={p => setW({ after: p })} />
+      </div>
+    ),
+    news: <Field title="News / Events"><NewsBlock withDate items={weekly.news} onChange={n => setW({ news: n })} shotPath={weekly.newsShot || ''} onShot={p => setW({ newsShot: p })} /></Field>,
+    main_idea: <Field title="Main Idea"><Area value={weekly.mainIdea} onChange={v => setW({ mainIdea: v })} placeholder="What is the main idea for this trading week?" /></Field>,
+  };
+
+  const dailyNodes: Record<string, React.ReactNode> = {
+    bias_price: (
+      <div className="grid gap-6 md:grid-cols-2">
+        <Field title="Market Bias"><Chips options={BIASES} value={daily.bias} onChange={v => setD({ bias: v })} /></Field>
+        <Field title="Current Price">
+          <Chips options={PRICES} value={daily.price} onChange={v => setD({ price: v })} />
+          {daily.price === 'Custom' && <input className={input} placeholder="Describe price location" value={daily.priceCustom} onChange={e => setD({ priceCustom: e.target.value })} />}
+        </Field>
+      </div>
+    ),
+    scenario: <Field title="What do I expect price to do today, and how will I react?"><Area value={daily.scenario} onChange={v => setD({ scenario: v })} placeholder="Write your daily scenario..." /></Field>,
+    charts: (
+      <div className="grid gap-4 sm:grid-cols-2">
+        <ImageSlot title="Before" path={daily.before} onChange={p => setD({ before: p })} />
+        <ImageSlot title="After" path={daily.after} onChange={p => setD({ after: p })} />
+      </div>
+    ),
+    news: <Field title="News"><NewsBlock items={daily.news} onChange={n => setD({ news: n })} shotPath={daily.newsShot || ''} onShot={p => setD({ newsShot: p })} /></Field>,
+    risk: (
+      <Field title="Risk Management">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          {([['riskPct', 'Risk %', '1'], ['maxLoss', 'Max Daily Loss', '500'], ['maxTrades', 'Max Trades', '2'], ['rr', 'R:R Target', '1:3']] as const).map(([k, l, ph]) => (
+            <label key={k} className="space-y-1"><span className="text-xs text-muted-foreground">{l}</span>
+              <input className={input} placeholder={ph} value={daily.risk[k]} onChange={e => setD({ risk: { ...daily.risk, [k]: e.target.value } })} /></label>
+          ))}
+        </div>
+      </Field>
+    ),
+    psychology: (
+      <Field title="Psychology">
+        <Chips multi options={PSYCH} value={daily.psychology} onChange={v => setD({ psychology: v })} />
+        <Area rows={2} value={daily.psychNotes} onChange={v => setD({ psychNotes: v })} placeholder="How do you feel before trading today?" />
+      </Field>
+    ),
+    rules: <Field title="Rules"><RulesEditor rules={daily.rules} onChange={changeRules} /></Field>,
+    main_idea: <Field title="Main Idea"><Area value={daily.mainIdea} onChange={v => setD({ mainIdea: v })} placeholder="What is today's main trading idea?" /></Field>,
+  };
+
+  const layoutWrap = (id: string, node: React.ReactNode, index: number) => {
+    if (layoutEdit !== tab || loading || loadError) return <React.Fragment key={id}>{node}</React.Fragment>;
+    return (
+      <div key={id}
+        style={{ order: index }}
+        draggable
+        onDragStart={() => { layoutDrag.current = id; }}
+        onDragOver={e => { if (layoutDrag.current && layoutDrag.current !== id) { e.preventDefault(); reorderDraft(layoutDrag.current, id); } }}
+        onDragEnd={() => { layoutDrag.current = null; }}
+        className="rounded-2xl border border-dashed border-primary/40 bg-primary/[0.04] p-3">
+        <div className="mb-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.12em] text-primary">
+          <GripVertical className="h-4 w-4 cursor-grab" /> <span>Drag to move</span>
+        </div>
+        <div className="pointer-events-none select-none">{node}</div>
+      </div>
+    );
+  };
 
   return (
     <div className="mx-auto max-w-7xl space-y-5">
@@ -702,63 +832,40 @@ export default function TradePlanV2() {
         </aside>
 
         <main className="min-w-0 space-y-5">
-          <div className="inline-flex rounded-xl border border-border bg-card p-1">
-            {([['weekly', 'Weekly Outlook'], ['daily', 'Daily Plan'], ['full', 'Full View']] as [Tab, string][]).map(([k, l]) => (
-              <button key={k} type="button" onClick={async () => { if (await saveAll()) setTab(k); }} aria-pressed={tab === k}
-                className={`rounded-lg px-3 py-2 text-[11px] font-bold uppercase tracking-[0.12em] transition-all duration-300 sm:px-4 ${tab === k ? 'bg-primary/15 text-primary shadow-[0_0_14px_hsl(var(--primary)/0.15)]' : 'text-muted-foreground hover:text-foreground'}`}>{l}</button>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="inline-flex rounded-xl border border-border bg-card p-1">
+              {([['weekly', 'Weekly Outlook'], ['daily', 'Daily Plan'], ['full', 'Full View']] as [Tab, string][]).map(([k, l]) => (
+                <button key={k} type="button" onClick={async () => { if (await saveAll()) { setLayoutEdit(null); setTab(k); } }} aria-pressed={tab === k}
+                  className={`rounded-lg px-3 py-2 text-[11px] font-bold uppercase tracking-[0.12em] transition-all duration-300 sm:px-4 ${tab === k ? 'bg-primary/15 text-primary shadow-[0_0_14px_hsl(var(--primary)/0.15)]' : 'text-muted-foreground hover:text-foreground'}`}>{l}</button>
+              ))}
+            </div>
+            {!loading && !loadError && (tab === 'daily' || tab === 'weekly') && showDaily && (layoutEdit === tab ? (
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={saveLayoutEdit} className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90"><Save className="h-3.5 w-3.5" /> Save Layout</button>
+                <button type="button" onClick={cancelLayoutEdit} className="rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground">Cancel</button>
+                <button type="button" onClick={resetLayoutDraft} className="rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground">Reset</button>
+              </div>
+            ) : (
+              <button type="button" onClick={() => startLayoutEdit(tab)} className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"><GripVertical className="h-3.5 w-3.5" /> Edit Layout</button>
             ))}
           </div>
 
           {loadError ? <div className={`${card} p-6`} role="alert"><p>Plan unavailable or previous changes not saved.</p><button type="button" className="mt-3 text-primary underline" onClick={() => setRetry(n => n + 1)}>Retry</button></div> : loading ? (
             <div className={`${card} flex items-center justify-center py-20`}><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
           ) : (
-            <div key={`${tab}-${date}-${accountKey}-${pair}`} className="content-crossfade space-y-5">
+            <div key={`${tab}-${date}-${accountKey}-${pair}`} className="content-crossfade">
               {tab === 'weekly' && (
-                <div className={`${card} space-y-6 p-5 sm:p-6`}>
+                <div className={`${card} flex flex-col gap-6 p-5 sm:p-6`}>
                   <div><p className={label}>Weekly Outlook</p><p className="mt-1 text-sm text-foreground">{weekLabel}</p></div>
-                  <Field title="Weekly Bias"><Chips options={BIASES} value={weekly.bias} onChange={v => setW({ bias: v })} /></Field>
-                  <Field title="Where could price go and what is the big story?"><Area value={weekly.scenario} onChange={v => setW({ scenario: v })} placeholder="Write your weekly scenario..." /></Field>
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <ImageSlot title="Before" hint="Upload chart screenshot" path={weekly.before} onChange={p => setW({ before: p })} />
-                    <ImageSlot title="After" hint="Upload chart screenshot" path={weekly.after} onChange={p => setW({ after: p })} />
-                  </div>
-                  <Field title="News / Events"><NewsBlock withDate items={weekly.news} onChange={n => setW({ news: n })} shotPath={weekly.newsShot || ''} onShot={p => setW({ newsShot: p })} /></Field>
-                  <Field title="Main Idea"><Area value={weekly.mainIdea} onChange={v => setW({ mainIdea: v })} placeholder="What is the main idea for this trading week?" /></Field>
+                  {(layoutEdit === 'weekly' ? layoutDraft : weeklyOrder).map((id, i) => layoutWrap(id, weeklyNodes[id], i))}
                 </div>
               )}
 
               {tab === 'daily' && (!showDaily ? empty : (
                 <>
-                  <div className={`${card} space-y-6 p-5 sm:p-6`}>
-                    <div className="grid gap-6 md:grid-cols-2">
-                      <Field title="Market Bias"><Chips options={BIASES} value={daily.bias} onChange={v => setD({ bias: v })} /></Field>
-                      <Field title="Current Price">
-                        <Chips options={PRICES} value={daily.price} onChange={v => setD({ price: v })} />
-                        {daily.price === 'Custom' && <input className={input} placeholder="Describe price location" value={daily.priceCustom} onChange={e => setD({ priceCustom: e.target.value })} />}
-                      </Field>
-                    </div>
-                    <Field title="What do I expect price to do today, and how will I react?"><Area value={daily.scenario} onChange={v => setD({ scenario: v })} placeholder="Write your daily scenario..." /></Field>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <ImageSlot title="Before" path={daily.before} onChange={p => setD({ before: p })} />
-                      <ImageSlot title="After" path={daily.after} onChange={p => setD({ after: p })} />
-                    </div>
-                    <Field title="News"><NewsBlock items={daily.news} onChange={n => setD({ news: n })} shotPath={daily.newsShot || ''} onShot={p => setD({ newsShot: p })} /></Field>
-                    <Field title="Risk Management">
-                      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                        {([['riskPct', 'Risk %', '1'], ['maxLoss', 'Max Daily Loss', '500'], ['maxTrades', 'Max Trades', '2'], ['rr', 'R:R Target', '1:3']] as const).map(([k, l, ph]) => (
-                          <label key={k} className="space-y-1"><span className="text-xs text-muted-foreground">{l}</span>
-                            <input className={input} placeholder={ph} value={daily.risk[k]} onChange={e => setD({ risk: { ...daily.risk, [k]: e.target.value } })} /></label>
-                        ))}
-                      </div>
-                    </Field>
-                    <Field title="Psychology">
-                      <Chips multi options={PSYCH} value={daily.psychology} onChange={v => setD({ psychology: v })} />
-                      <Area rows={2} value={daily.psychNotes} onChange={v => setD({ psychNotes: v })} placeholder="How do you feel before trading today?" />
-                    </Field>
-                    <Field title="Rules"><RulesEditor rules={daily.rules} onChange={changeRules} /></Field>
-                    <Field title="Main Idea"><Area value={daily.mainIdea} onChange={v => setD({ mainIdea: v })} placeholder="What is today's main trading idea?" /></Field>
+                  <div className={`${card} flex flex-col gap-6 p-5 sm:p-6`}>
+                    {(layoutEdit === 'daily' ? layoutDraft : dailyOrder).map((id, i) => layoutWrap(id, dailyNodes[id], i))}
                   </div>
-
                 </>
               ))}
 
