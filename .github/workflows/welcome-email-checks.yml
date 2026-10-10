@@ -1,0 +1,32 @@
+name: Welcome Email Checks
+on:
+  pull_request:
+    paths:
+      - 'supabase/**'
+      - 'drizzle/migrations/0021_plan_welcome_emails.sql'
+      - 'scripts/register-welcome-migration.mjs'
+      - '.github/workflows/welcome-email-checks.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm ci --prefix supabase/tests
+      - run: npm test --prefix supabase/tests
+      - run: npx eslint supabase/functions/_shared/resend.ts supabase/functions/_shared/welcome-worker.ts supabase/functions/send-plan-welcome/index.ts
+      - run: npx tsc --noEmit --strict --allowImportingTsExtensions --module esnext --moduleResolution bundler --target es2022 --skipLibCheck supabase/functions/_shared/resend.ts supabase/functions/_shared/welcome-worker.ts
+      - run: npm test
+      - run: npm run build
+      - name: Ensure email implementation is absent from browser assets
+        run: |
+          if grep -R -E 'RESEND_API_KEY|api\.resend\.com/emails|plan-welcome/' dist/assets; then
+            exit 1
+          fi

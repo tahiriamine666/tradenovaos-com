@@ -1,5 +1,5 @@
 // Dodo Payments webhook handler.
-// Verifies Standard Webhooks HMAC and writes canonical billing state to public.subscriptions.
+// Verifies Standard Webhooks HMAC and writes canonical billing state to public.billing_subscriptions.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { mirrorStatus, planFromProductId, verifyStandardWebhook } from "../_shared/dodo.ts";
@@ -28,14 +28,14 @@ async function findUserId(opts: {
   }
 
   if (opts.subscriptionId) {
-    const { data } = await admin.from("subscriptions")
-      .select("user_id").eq("dodo_subscription_id", opts.subscriptionId).maybeSingle();
+    const { data } = await admin.from("billing_subscriptions")
+      .select("user_id").eq("subscription_id", opts.subscriptionId).maybeSingle();
     if (data?.user_id) return data.user_id;
   }
 
   if (opts.customerId) {
-    const { data } = await admin.from("subscriptions")
-      .select("user_id").eq("dodo_customer_id", opts.customerId).maybeSingle();
+    const { data } = await admin.from("billing_subscriptions")
+      .select("user_id").eq("customer_id", opts.customerId).maybeSingle();
     if (data?.user_id) return data.user_id;
   }
 
@@ -78,7 +78,6 @@ Deno.serve(async (req) => {
     if (type.startsWith("subscription.")) {
       const subscriptionId = String(data.subscription_id ?? data.id ?? "") || null;
       const customerId = String(data.customer?.customer_id ?? data.customer_id ?? "") || null;
-      const paymentId = String(data.payment_id ?? "") || null;
       const email: string | undefined = data.customer?.email ?? data.email;
       const productId = String(data.product_id ?? "") || null;
       const statusRaw = String(data.status ?? "");
@@ -89,7 +88,6 @@ Deno.serve(async (req) => {
 
       const planInfo = planFromProductId(productId);
       const plan = planInfo?.plan ?? null;
-      const billing = planInfo?.billing ?? null;
       const status = mirrorStatus(statusRaw);
 
       const userId = await findUserId({
@@ -101,74 +99,54 @@ Deno.serve(async (req) => {
 
       if (!userId) {
         console.error("dodo-webhook: no user match", { subscriptionId, customerId, email });
-        return new Response(JSON.stringify({ ok: true, note: "no_user_match" }), {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        return new Response(JSON.stringify({ ok: false, note: "no_user_match" }), {
+          status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
 
-      const { error: upErr } = await admin.from("subscriptions").upsert({
+      // Only write the canonical Dodo record. Manual overrides and historical billing remain separate.
+      const { data: previous, error: lookupError } = await admin.from("billing_subscriptions")
+        .select("plan,variant_id").eq("user_id", userId).maybeSingle();
+      if (lookupError) throw lookupError;
+      const effectivePlan = plan ?? previous?.plan;
+      if (!effectivePlan) throw new Error("Unknown Dodo product; cannot resolve plan");
+      const { error: upErr } = await admin.rpc("apply_dodo_welcome_billing_event", {
+        p_event_id: req.headers.get("webhook-id"),
+        p_user_id: userId,
+        p_status_only: false,
+        p_subscription: {
         user_id: userId,
-        billing_provider: "dodo",
-        dodo_customer_id: customerId,
-        dodo_subscription_id: subscriptionId,
-        dodo_payment_id: paymentId,
-        dodo_product_id: productId,
-        plan,
+        provider: "dodo",
+        customer_id: customerId,
+        subscription_id: subscriptionId,
+        variant_id: productId ?? previous?.variant_id,
+        plan: effectivePlan,
         status,
-        billing_interval: billing,
-        trial_end: trialEnd,
+        trial_ends_at: trialEnd,
         renews_at: renewsAt,
-        current_period_end: renewsAt,
         ends_at: endsAt,
         updated_at: new Date().toISOString(),
-      }, { onConflict: "user_id" });
+        },
+      });
       if (upErr) throw upErr;
-
-      const { data: prof } = await admin
-        .from("profiles").select("upgraded_manually").eq("id", userId).maybeSingle();
-      const manuallyUpgraded = Boolean(prof?.upgraded_manually);
-
-      if (!(manuallyUpgraded && ["inactive", "canceled"].includes(status))) {
-        const activePlan = plan && !["inactive", "canceled"].includes(status) ? plan : null;
-        const { error: profErr } = await admin.from("profiles").update({
-          subscription_status: status,
-          plan_type: activePlan,
-          subscription_plan: activePlan,
-          trial_ends_at: trialEnd,
-          current_period_end: renewsAt,
-          dodo_customer_id: customerId,
-          dodo_subscription_id: subscriptionId,
-          dodo_payment_id: paymentId,
-          dodo_product_id: productId,
-          upgraded_at: activePlan ? new Date().toISOString() : null,
-          updated_at: new Date().toISOString(),
-        }).eq("id", userId);
-        if (profErr) throw profErr;
-      }
 
     } else if (type === "payment.succeeded" || type === "payment.failed") {
       const subscriptionId = String(data.subscription_id ?? "");
-      const paymentId = String(data.payment_id ?? data.id ?? "") || null;
       if (subscriptionId) {
         const status = type === "payment.succeeded" ? "active" : "past_due";
-        const { data: existing } = await admin.from("subscriptions")
+        const { data: existing } = await admin.from("billing_subscriptions")
           .select("user_id,plan")
-          .eq("dodo_subscription_id", subscriptionId)
+          .eq("subscription_id", subscriptionId)
           .maybeSingle();
 
-        if (existing?.user_id) {
-          await admin.from("subscriptions").update({
-            status,
-            dodo_payment_id: paymentId,
-            updated_at: new Date().toISOString(),
-          }).eq("dodo_subscription_id", subscriptionId);
-
-          await admin.from("profiles").update({
-            subscription_status: status,
-            dodo_payment_id: paymentId,
-            updated_at: new Date().toISOString(),
-          }).eq("id", existing.user_id);
-        }
+        if (!existing?.user_id) throw new Error("Subscription event arrived before its subscription record");
+        const { error } = await admin.rpc("apply_dodo_welcome_billing_event", {
+          p_event_id: req.headers.get("webhook-id"),
+          p_user_id: existing.user_id,
+          p_status_only: true,
+          p_subscription: { status, subscription_id: subscriptionId, updated_at: new Date().toISOString() },
+        });
+        if (error) throw error;
       }
     }
 
