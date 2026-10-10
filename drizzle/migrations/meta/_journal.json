@@ -169,6 +169,13 @@
       "when": 1791659623868,
       "tag": "0023_daily_rules_defaults",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1791669997351,
+      "tag": "0024_legacy_admin_current_offer_prices",
+      "breakpoints": true
     }
   ]
 }

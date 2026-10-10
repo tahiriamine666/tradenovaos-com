@@ -56,6 +56,8 @@ Deno.serve(async (req) => {
           const j = await r.json().catch(() => null);
           const pr = j?.price ?? {};
           if (r.ok) out[`${pl}_${bi}`] = {
+            // Product identifiers are public catalog data, never API credentials.
+            product_id: id,
             amount: typeof pr.price === "number" ? pr.price / 100 : null,
             currency: pr.currency ?? "USD",
             trial_days: pr.trial_period_days ?? null,
