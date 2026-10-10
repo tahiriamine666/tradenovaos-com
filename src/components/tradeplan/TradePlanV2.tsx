@@ -18,7 +18,7 @@ const robotSrc = import.meta.env.DEV ? `https://id-preview--0ee4a120-abbf-401b-9
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Impact = 'low' | 'medium' | 'high';
 interface NewsItem { id: string; title: string; date?: string; time: string; impact: Impact; notes: string }
-interface Rule { id: string; text: string; done: boolean }
+type Rule = { id: string; text: string; done: boolean };
 interface CheckItem { id: string; text: string }
 interface Weekly { bias: string; scenario: string; chart: string; news: NewsItem[]; mainIdea: string }
 interface Daily {
@@ -494,7 +494,7 @@ export default function TradePlanV2() {
   // Refs to flush pending edits to the date they belong to.
   const prevAi = useRef<Record<string, any>>({});
   const loadedScope = useRef('');
-  const pending = useRef<{ daily?: { date: string; pair: string; accountKey: string; data: Daily; ai: Record<string, any> }; weekly?: { week: string; data: Weekly }; defaults?: Rule[] }>({});
+  const pending = useRef<{ daily?: { date: string; pair: string; accountKey: string; data: Daily; ai: Record<string, any> }; weekly?: { week: string; data: Weekly }; defaults?: { id: string; text: string }[] }>({});
   const inFlight = useRef<Promise<boolean> | null>(null);
   const ruleDefaultsRef = useRef<{ id: string; text: string }[]>([]);
   const checklistSave = useRef<(() => Promise<boolean>) | null>(null);
