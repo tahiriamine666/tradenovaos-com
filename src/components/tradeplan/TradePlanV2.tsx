@@ -493,8 +493,9 @@ export default function TradePlanV2() {
   // Refs to flush pending edits to the date they belong to.
   const prevAi = useRef<Record<string, any>>({});
   const loadedScope = useRef('');
-  const pending = useRef<{ daily?: { date: string; pair: string; accountKey: string; data: Daily; ai: Record<string, any> }; weekly?: { week: string; data: Weekly } }>({});
+  const pending = useRef<{ daily?: { date: string; pair: string; accountKey: string; data: Daily; ai: Record<string, any> }; weekly?: { week: string; data: Weekly }; defaults?: Rule[] }>({});
   const inFlight = useRef<Promise<boolean> | null>(null);
+  const ruleDefaultsRef = useRef<Rule[]>([]);
   const checklistSave = useRef<(() => Promise<boolean>) | null>(null);
   const dailyRef = useRef(daily); dailyRef.current = daily;
   const weeklyRef = useRef(weekly); weeklyRef.current = weekly;
@@ -516,10 +517,15 @@ export default function TradePlanV2() {
     if (inFlight.current) return inFlight.current;
     const run = async () => {
     clearTimeout(timer.current);
-    while (user && (pending.current.daily || pending.current.weekly)) {
+    while (user && (pending.current.daily || pending.current.weekly || pending.current.defaults)) {
     const p = pending.current; pending.current = {};
     setState('saving');
     try {
+      if (p.defaults) {
+        const { error } = await supabase.from('daily_plan_rules').upsert({ user_id: user.id, rules: p.defaults });
+        if (error) throw error;
+        p.defaults = undefined;
+      }
       if (p.daily) {
         const d = p.daily.data;
         const num = (v: string) => (v.trim() === '' || isNaN(Number(v)) ? null : Number(v));
@@ -568,7 +574,7 @@ export default function TradePlanV2() {
   const saveAll = async () => { const planOK = await flush(); const checklistOK = await checklistSave.current?.(); return planOK && checklistOK !== false; };
 
   useEffect(() => {
-    const warn = (e: BeforeUnloadEvent) => { if (pending.current.daily || pending.current.weekly || inFlight.current) { e.preventDefault(); e.returnValue = ''; } };
+    const warn = (e: BeforeUnloadEvent) => { if (pending.current.daily || pending.current.weekly || pending.current.defaults || inFlight.current) { e.preventDefault(); e.returnValue = ''; } };
     window.addEventListener('beforeunload', warn);
     const h = () => { void flush(); };
     window.addEventListener('pagehide', h);
