@@ -12,6 +12,8 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index.tsx";
 import Onboarding from "./pages/Onboarding.tsx";
 import RequireAccess from "@/components/RequireAccess";
+import ResetPassword from "./pages/ResetPassword";
+import Contact from "./pages/marketing/Contact";
 import Login from "./pages/Login.tsx";
 import Signup from "./pages/Signup.tsx";
 import LandingPage from "./pages/LandingPage.tsx";
@@ -66,6 +68,7 @@ const App = () => (
                 <Routes>
                   <Route path="/" element={<PublicOnly><LandingPage /></PublicOnly>} />
                   <Route path="/login" element={<PublicOnly><Login /></PublicOnly>} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/signup" element={<PublicOnly><Signup /></PublicOnly>} />
                   <Route
                     path="/app"
@@ -97,7 +100,7 @@ const App = () => (
                   <Route path="/compare/:slug" element={<MarketingPlaceholder group="compare" />} />
                   <Route path="/blog" element={<MarketingPlaceholder group="static" staticKey="blog" />} />
                   <Route path="/blog/fair-value-gaps-guide" element={<FairValueGapsGuide />} />
-                  <Route path="/contact" element={<MarketingPlaceholder group="static" staticKey="contact" />} />
+                  <Route path="/contact" element={<Contact />} />
                   <Route path="/careers" element={<MarketingPlaceholder group="static" staticKey="careers" />} />
                   <Route path="/privacy" element={<MarketingPlaceholder group="static" staticKey="privacy" />} />
                   <Route path="/terms" element={<MarketingPlaceholder group="static" staticKey="terms" />} />

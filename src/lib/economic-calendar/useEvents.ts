@@ -20,10 +20,10 @@ export function useEvents(filters: EventFilters) {
   const loadFromDb = useCallback(async () => {
     const { data, error } = await supabase
       .from("economic_events" as never)
-      .select("*")
-      .gte("event_time", fromISO)
-      .lte("event_time", toISO)
-      .order("event_time", { ascending: true });
+      .select("*, event_time:starts_at, title:event_name, country:country_code, affected_symbols:affected_pairs, external_id:source_id, source_provider:source")
+      .gte("starts_at", fromISO)
+      .lte("starts_at", toISO)
+      .order("starts_at", { ascending: true });
     if (error) setError(error.message);
     setEvents((data ?? []) as unknown as EconomicEvent[]);
   }, [fromISO, toISO]);

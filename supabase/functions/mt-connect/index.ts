@@ -1,6 +1,6 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { createAccount } from '../_shared/metaapi.ts';
+import { createAccount, updateAccount, redeployAccount } from '../_shared/metaapi.ts';
 import { admin, syncAccount, createStepLog } from '../_shared/mtSync.ts';
 
 Deno.serve(async (req) => {
@@ -10,8 +10,11 @@ Deno.serve(async (req) => {
     new Response(JSON.stringify(body), {
       status, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
+  if (req.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
 
   let log = createStepLog('unknown');
+  let ownedAccountId: string | null = null;
+  let ownerId: string | null = null;
 
   try {
     const authHeader = req.headers.get('Authorization') ?? '';
@@ -43,6 +46,10 @@ Deno.serve(async (req) => {
       log.push('db_saved', 'Account saved to database', 'error', { error: error?.message ?? 'Account not found' });
       return json({ error: 'Account not found', steps: log.steps }, 404);
     }
+    ownedAccountId=row.id; ownerId=user.id;
+    const { data: access, error: accessError } = await anon.rpc('get_user_plan_info');
+    if(accessError || !access?.is_active) return json({error:'An active subscription is required'},403);
+    if(!Deno.env.get('METAAPI_TOKEN')) return json({error:'Trading account sync is not configured yet.'},503);
     log.push('db_saved', 'Account saved to database', 'ok', { detail: row.account_name });
 
     await db.from('trading_accounts')
@@ -51,37 +58,41 @@ Deno.serve(async (req) => {
     let metaId: string | null = row.metaapi_account_id;
     if (!metaId) {
       const login = String(row.account_number ?? row.login ?? '');
-      const password = String((row.credentials as Record<string, string> | null)?.password ?? row.password ?? '');
+      const password = typeof body.investor_password === 'string' ? body.investor_password : '';
       const server = String(row.server ?? '');
       if (!login || !password || !server) {
         log.push('metaapi_account', 'MetaApi account created', 'error', { error: 'Login, investor password and server are required' });
         return json({ error: 'Login, investor password and server are required', steps: log.steps }, 400);
       }
       const created = await createAccount({
-        name: `${row.account_name} (${user.id.slice(0, 8)})`,
+        name: row.account_name,
+        transactionId: row.id.replaceAll('-', ''),
         login, password, server,
         platform: row.platform === 'mt4' ? 'mt4' : 'mt5',
       });
+      if(!created?.id) return json({error:'Provider is preparing this account. Retry with the same credentials shortly.'},503);
       metaId = created.id;
       console.log(`[mt-connect][${row.id}] provisioned MetaApi account ${metaId}`);
-      await db.from('trading_accounts')
-        .update({ metaapi_account_id: metaId }).eq('id', row.id);
+      const {error:linkError}=await db.from('trading_accounts').update({metaapi_account_id:metaId}).eq('id',row.id).eq('user_id',user.id);
+      if(linkError) throw new Error('Could not save the provider connection');
     }
 
+    if(row.metaapi_account_id && typeof body.investor_password==='string' && body.investor_password) {
+      await updateAccount(row.metaapi_account_id,{name:row.account_name,server:row.server,password:body.investor_password});
+      await redeployAccount(row.metaapi_account_id);
+    }
     const result = await syncAccount({ ...row, metaapi_account_id: metaId }, log);
     return json({ ok: true, ...result, steps: log.steps });
   } catch (e) {
-    const message = e instanceof Error ? e.message : 'Connection failed';
+    const message = 'Connection failed. Verify your investor credentials and try again.';
     console.error('mt-connect error', message);
     try {
-      const body = await req.clone().json().catch(() => ({}));
-      if (body?.account_id) {
+      if (ownedAccountId && ownerId) {
         await admin().from('trading_accounts')
           .update({ status: 'error', sync_error: message })
-          .eq('id', body.account_id);
+          .eq('id', ownedAccountId).eq('user_id', ownerId);
       }
     } catch { /* ignore */ }
     return json({ error: message, steps: log.steps }, 502);
   }
 });
-

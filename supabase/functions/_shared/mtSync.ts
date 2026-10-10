@@ -102,12 +102,12 @@ export async function syncAccount(row: AccountRow, log = createStepLog(row.id)) 
   const meta = await getAccount(metaId);
   const region: string = meta.region ?? 'new-york';
   if (meta.state !== 'DEPLOYED') {
-    await deployAccount(metaId).catch(() => {});
+    await deployAccount(metaId);
     log.push('deployed', 'Account deployed', 'pending', { detail: `state=${meta.state ?? 'UNKNOWN'} — deploying` });
   } else {
     log.push('deployed', 'Account deployed', 'ok', { detail: `region ${region}` });
   }
-  if (meta.connectionStatus !== 'CONNECTED' && meta.state !== 'DEPLOYED') {
+  if (meta.connectionStatus !== 'CONNECTED' || meta.state !== 'DEPLOYED') {
     log.push('connected', 'Connected to broker', 'pending', { detail: 'Waiting for broker connection' });
     await db.from('trading_accounts').update({
       status: 'connecting', sync_error: null,
@@ -124,13 +124,13 @@ export async function syncAccount(row: AccountRow, log = createStepLog(row.id)) 
   log.push('balance', 'Balance loaded', 'ok', { detail: `${info.balance ?? 0} ${info.currency ?? ''}`.trim() });
   log.push('equity', 'Equity loaded', 'ok', { detail: `${info.equity ?? info.balance ?? 0} ${info.currency ?? ''}`.trim() });
 
-  const open = await positions(metaId, region).catch(() => []);
+  const open = await positions(metaId, region);
 
   const to = new Date();
   const from = new Date(to.getTime() - 365 * 24 * 3600 * 1000);
   const deals: any[] = await historyDeals(metaId, region, from.toISOString(), to.toISOString()).catch((e) => {
-    log.push('history', 'Trade history loaded', 'error', { error: e instanceof Error ? e.message : 'History request failed' });
-    return [];
+    log.push('history', 'Trade history loaded', 'error', { error: 'History request failed' });
+    throw new Error('Trade history could not be loaded');
   });
 
   const closing = (deals ?? []).filter(d =>
@@ -153,7 +153,7 @@ export async function syncAccount(row: AccountRow, log = createStepLog(row.id)) 
       trade_date: String(d.time).slice(0, 10),
       exit_price: d.price ?? null,
       quantity: d.volume ?? null,
-      notes: null,
+
     };
   });
 
@@ -162,7 +162,7 @@ export async function syncAccount(row: AccountRow, log = createStepLog(row.id)) 
   for (let i = 0; i < tradeRows.length; i += 200) {
     const chunk = tradeRows.slice(i, i + 200);
     const { error } = await db.from('trades')
-      .upsert(chunk, { onConflict: 'trading_account_id,external_id' });
+      .upsert(chunk, { onConflict: 'trading_account_id,external_id', ignoreDuplicates: true });
     if (error) {
       storeError = error.message;
       console.error(`[mt-sync][${row.id}] trade upsert failed: ${error.message}`);
@@ -170,6 +170,7 @@ export async function syncAccount(row: AccountRow, log = createStepLog(row.id)) 
       imported += chunk.length;
     }
   }
+  if (storeError) throw new Error('Trade history could not be saved');
   const lastTradeAt = tradeRows.length
     ? tradeRows.map(t => t.trade_date).sort().at(-1)
     : null;

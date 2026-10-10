@@ -245,10 +245,15 @@ Deno.serve(async (req) => {
     let upserted = 0;
     const CHUNK = 500;
     for (let i = 0; i < rows.length; i += CHUNK) {
-      const chunk = rows.slice(i, i + CHUNK);
+      const chunk = rows.slice(i, i + CHUNK).map(r=>({
+          starts_at:r.event_time,event_date:r.event_time.slice(0,10),event_time:r.event_time.slice(11,19),timezone:'UTC',
+          country:r.country,country_code:r.country,currency:r.currency,event_name:r.title,category:r.category,impact:r.impact,
+          forecast:r.forecast,previous:r.previous,actual:r.actual,unit:r.unit,description:r.description,
+          volatility_score:r.volatility_score,affected_pairs:r.affected_symbols,source_id:r.external_id,source:r.source_provider
+        }));
       const { error, count } = await supabase
         .from('economic_events')
-        .upsert(chunk, { onConflict: 'external_id,source_provider', count: 'exact' });
+        .upsert(chunk, { onConflict: 'source_id,source', count: 'exact' });
       if (error) {
         return new Response(JSON.stringify({ error: 'Upsert failed', detail: error.message }), {
           status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },

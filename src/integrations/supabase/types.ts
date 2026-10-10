@@ -89,6 +89,71 @@ export type Database = {
           },
         ]
       }
+      billing_checkout_attempts: {
+        Row: {
+          billing: string
+          checkout_url: string | null
+          created_at: string
+          id: string
+          plan: string
+          session_id: string | null
+          status: string
+          subscription_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          billing: string
+          checkout_url?: string | null
+          created_at?: string
+          id?: string
+          plan: string
+          session_id?: string | null
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          billing?: string
+          checkout_url?: string | null
+          created_at?: string
+          id?: string
+          plan?: string
+          session_id?: string | null
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_checkout_attempts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      billing_webhook_events: {
+        Row: {
+          event_id: string
+          processed_at: string
+          subscription_id: string
+        }
+        Insert: {
+          event_id: string
+          processed_at?: string
+          subscription_id: string
+        }
+        Update: {
+          event_id?: string
+          processed_at?: string
+          subscription_id?: string
+        }
+        Relationships: []
+      }
       chat_conversations: {
         Row: {
           created_at: string | null
@@ -113,6 +178,84 @@ export type Database = {
         }
         Relationships: []
       }
+      checklist_models: {
+        Row: {
+          created_at: string
+          id: string
+          items: Json
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          items?: Json
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          items?: Json
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      economic_calendar_preferences: {
+        Row: {
+          created_at: string
+          default_filters: Json
+          preferred_view: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          default_filters?: Json
+          preferred_view?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          default_filters?: Json
+          preferred_view?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      economic_calendar_presets: {
+        Row: {
+          created_at: string
+          filters: Json
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          filters?: Json
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          filters?: Json
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       economic_events: {
         Row: {
           actual: string | null
@@ -132,6 +275,7 @@ export type Database = {
           previous: string | null
           source: string | null
           source_id: string | null
+          starts_at: string | null
           timezone: string | null
           unit: string | null
           updated_at: string
@@ -155,6 +299,7 @@ export type Database = {
           previous?: string | null
           source?: string | null
           source_id?: string | null
+          starts_at?: string | null
           timezone?: string | null
           unit?: string | null
           updated_at?: string
@@ -178,6 +323,7 @@ export type Database = {
           previous?: string | null
           source?: string | null
           source_id?: string | null
+          starts_at?: string | null
           timezone?: string | null
           unit?: string | null
           updated_at?: string
@@ -374,6 +520,33 @@ export type Database = {
         }
         Relationships: []
       }
+      nova_conversations: {
+        Row: {
+          created_at: string
+          id: string
+          preview: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          preview?: string | null
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          preview?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       nova_debug_logs: {
         Row: {
           conversation_id: string | null
@@ -401,6 +574,95 @@ export type Database = {
           meta?: Json | null
           stage?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      nova_messages: {
+        Row: {
+          content: string
+          conversation_id: string
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nova_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "nova_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nova_preferences: {
+        Row: {
+          created_at: string
+          custom_notes: string | null
+          main_session: string | null
+          markets: string[]
+          response_style: string
+          trading_style: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          custom_notes?: string | null
+          main_session?: string | null
+          markets?: string[]
+          response_style?: string
+          trading_style?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          custom_notes?: string | null
+          main_session?: string | null
+          markets?: string[]
+          response_style?: string
+          trading_style?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      nova_usage: {
+        Row: {
+          credits_used: number
+          period_start: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          credits_used?: number
+          period_start: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          credits_used?: number
+          period_start?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -798,6 +1060,7 @@ export type Database = {
           id: string
           plan: string | null
           price_id: string | null
+          provider_observed_at: string | null
           renews_at: string | null
           status: string | null
           trial_end: string | null
@@ -821,6 +1084,7 @@ export type Database = {
           id?: string
           plan?: string | null
           price_id?: string | null
+          provider_observed_at?: string | null
           renews_at?: string | null
           status?: string | null
           trial_end?: string | null
@@ -844,6 +1108,7 @@ export type Database = {
           id?: string
           plan?: string | null
           price_id?: string | null
+          provider_observed_at?: string | null
           renews_at?: string | null
           status?: string | null
           trial_end?: string | null
@@ -904,6 +1169,53 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "chat_conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      trade_plan_checklists: {
+        Row: {
+          account_id: string | null
+          account_key: string
+          checklist_type: string
+          created_at: string
+          data: Json
+          id: string
+          period_date: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_id?: string | null
+          account_key?: string
+          checklist_type: string
+          created_at?: string
+          data?: Json
+          id?: string
+          period_date: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string | null
+          account_key?: string
+          checklist_type?: string
+          created_at?: string
+          data?: Json
+          id?: string
+          period_date?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trade_plan_checklists_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "trading_accounts"
             referencedColumns: ["id"]
           },
         ]
@@ -1060,7 +1372,9 @@ export type Database = {
           account_id: string | null
           account_type: string | null
           ai_review: Json | null
+          before_screenshot_url: string | null
           created_at: string | null
+          daily_bias: string | null
           direction: string | null
           discipline_score: number | null
           duration_min: number | null
@@ -1068,6 +1382,7 @@ export type Database = {
           entry_price: number | null
           execution_score: number | null
           exit_price: number | null
+          external_id: string | null
           id: string
           is_starred: boolean | null
           market: string | null
@@ -1094,16 +1409,21 @@ export type Database = {
           symbol: string | null
           tags: string[] | null
           take_profit: number | null
+          timeframe: string | null
           trade_date: string
+          trading_account_id: string | null
           updated_at: string | null
           user_id: string
+          weekly_context: string | null
           win_loss: string | null
         }
         Insert: {
           account_id?: string | null
           account_type?: string | null
           ai_review?: Json | null
+          before_screenshot_url?: string | null
           created_at?: string | null
+          daily_bias?: string | null
           direction?: string | null
           discipline_score?: number | null
           duration_min?: number | null
@@ -1111,6 +1431,7 @@ export type Database = {
           entry_price?: number | null
           execution_score?: number | null
           exit_price?: number | null
+          external_id?: string | null
           id?: string
           is_starred?: boolean | null
           market?: string | null
@@ -1137,16 +1458,21 @@ export type Database = {
           symbol?: string | null
           tags?: string[] | null
           take_profit?: number | null
+          timeframe?: string | null
           trade_date?: string
+          trading_account_id?: string | null
           updated_at?: string | null
           user_id: string
+          weekly_context?: string | null
           win_loss?: string | null
         }
         Update: {
           account_id?: string | null
           account_type?: string | null
           ai_review?: Json | null
+          before_screenshot_url?: string | null
           created_at?: string | null
+          daily_bias?: string | null
           direction?: string | null
           discipline_score?: number | null
           duration_min?: number | null
@@ -1154,6 +1480,7 @@ export type Database = {
           entry_price?: number | null
           execution_score?: number | null
           exit_price?: number | null
+          external_id?: string | null
           id?: string
           is_starred?: boolean | null
           market?: string | null
@@ -1180,9 +1507,12 @@ export type Database = {
           symbol?: string | null
           tags?: string[] | null
           take_profit?: number | null
+          timeframe?: string | null
           trade_date?: string
+          trading_account_id?: string | null
           updated_at?: string | null
           user_id?: string
+          weekly_context?: string | null
           win_loss?: string | null
         }
         Relationships: [
@@ -1200,53 +1530,186 @@ export type Database = {
             referencedRelation: "playbooks"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "trades_trading_account_id_fkey"
+            columns: ["trading_account_id"]
+            isOneToOne: false
+            referencedRelation: "trading_accounts"
+            referencedColumns: ["id"]
+          },
         ]
       }
       trading_accounts: {
         Row: {
+          account_name: string
           account_number: string
           account_type: string | null
+          balance: number | null
           broker: string
+          challenge: Json
           created_at: string
           currency: string | null
+          equity: number | null
+          firm: string | null
+          free_margin: number | null
           id: string
           initial_balance: number | null
           is_active: boolean
+          is_default: boolean
+          last_connected_at: string | null
+          last_synced_at: string | null
+          login: string | null
+          margin: number | null
+          metaapi_account_id: string | null
+          metrics: Json
           nickname: string | null
           platform: string
           server: string | null
+          status: string
+          sync_error: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          account_name: string
           account_number: string
           account_type?: string | null
+          balance?: number | null
           broker: string
+          challenge?: Json
           created_at?: string
           currency?: string | null
+          equity?: number | null
+          firm?: string | null
+          free_margin?: number | null
           id?: string
           initial_balance?: number | null
           is_active?: boolean
+          is_default?: boolean
+          last_connected_at?: string | null
+          last_synced_at?: string | null
+          login?: string | null
+          margin?: number | null
+          metaapi_account_id?: string | null
+          metrics?: Json
           nickname?: string | null
           platform?: string
           server?: string | null
+          status?: string
+          sync_error?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          account_name?: string
           account_number?: string
           account_type?: string | null
+          balance?: number | null
           broker?: string
+          challenge?: Json
           created_at?: string
           currency?: string | null
+          equity?: number | null
+          firm?: string | null
+          free_margin?: number | null
           id?: string
           initial_balance?: number | null
           is_active?: boolean
+          is_default?: boolean
+          last_connected_at?: string | null
+          last_synced_at?: string | null
+          login?: string | null
+          margin?: number | null
+          metaapi_account_id?: string | null
+          metrics?: Json
           nickname?: string | null
           platform?: string
           server?: string | null
+          status?: string
+          sync_error?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_chart_preferences: {
+        Row: {
+          active_layout_id: string | null
+          auto_center_chart: boolean | null
+          background_color: string | null
+          bearish_color: string | null
+          border_color: string | null
+          bullish_color: string | null
+          chart_type: string | null
+          created_at: string
+          crosshair_color: string | null
+          default_speed: number | null
+          drawing_color: string | null
+          drawing_prefs: Json | null
+          favorite_symbols: Json | null
+          grid_color: string | null
+          preferred_symbol: string | null
+          preferred_theme: string | null
+          recent_symbols: Json | null
+          saved_layouts: Json | null
+          show_economic_events: boolean | null
+          show_execution_markers: boolean | null
+          show_trade_zones: boolean | null
+          updated_at: string
+          user_id: string
+          wick_color: string | null
+        }
+        Insert: {
+          active_layout_id?: string | null
+          auto_center_chart?: boolean | null
+          background_color?: string | null
+          bearish_color?: string | null
+          border_color?: string | null
+          bullish_color?: string | null
+          chart_type?: string | null
+          created_at?: string
+          crosshair_color?: string | null
+          default_speed?: number | null
+          drawing_color?: string | null
+          drawing_prefs?: Json | null
+          favorite_symbols?: Json | null
+          grid_color?: string | null
+          preferred_symbol?: string | null
+          preferred_theme?: string | null
+          recent_symbols?: Json | null
+          saved_layouts?: Json | null
+          show_economic_events?: boolean | null
+          show_execution_markers?: boolean | null
+          show_trade_zones?: boolean | null
+          updated_at?: string
+          user_id: string
+          wick_color?: string | null
+        }
+        Update: {
+          active_layout_id?: string | null
+          auto_center_chart?: boolean | null
+          background_color?: string | null
+          bearish_color?: string | null
+          border_color?: string | null
+          bullish_color?: string | null
+          chart_type?: string | null
+          created_at?: string
+          crosshair_color?: string | null
+          default_speed?: number | null
+          drawing_color?: string | null
+          drawing_prefs?: Json | null
+          favorite_symbols?: Json | null
+          grid_color?: string | null
+          preferred_symbol?: string | null
+          preferred_theme?: string | null
+          recent_symbols?: Json | null
+          saved_layouts?: Json | null
+          show_economic_events?: boolean | null
+          show_execution_markers?: boolean | null
+          show_trade_zones?: boolean | null
+          updated_at?: string
+          user_id?: string
+          wick_color?: string | null
         }
         Relationships: []
       }
@@ -1307,9 +1770,20 @@ export type Database = {
       }
     }
     Functions: {
+      apply_dodo_snapshot: {
+        Args: {
+          p_attempt_id?: string
+          p_event_id?: string
+          p_observed_at: string
+          p_snapshot: Json
+          p_user: string
+        }
+        Returns: Json
+      }
       check_feature_access:
         | { Args: { feature_name: string }; Returns: boolean }
         | { Args: { p_feature: string; p_user_id?: string }; Returns: boolean }
+      consume_nova_credit: { Args: never; Returns: Json }
       expire_trials: { Args: never; Returns: undefined }
       get_access_state: { Args: never; Returns: Json }
       get_active_users_now: { Args: never; Returns: Json }
@@ -1359,6 +1833,7 @@ export type Database = {
           trial_end: string
         }[]
       }
+      get_nova_usage: { Args: never; Returns: Json }
       get_user_plan_info:
         | { Args: never; Returns: Json }
         | { Args: { p_user_id?: string }; Returns: Json }

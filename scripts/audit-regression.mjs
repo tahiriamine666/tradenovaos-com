@@ -1,0 +1,31 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import ts from 'typescript';
+async function load(path) {
+  const source = await readFile(new URL('../' + path, import.meta.url), 'utf8');
+  const { outputText } = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.ES2022 } });
+  return import('data:text/javascript;base64,' + Buffer.from(outputText).toString('base64'));
+}
+const { formatMoney } = await load('src/lib/formatMoney.ts');
+assert.equal(formatMoney(-12.5), '-$12.50');
+assert.equal(formatMoney(0), '$0.00');
+assert.equal(formatMoney(12.5), '+$12.50');
+assert.equal(formatMoney(NaN), '—');
+const { collectPages } = await load('src/lib/pagination.ts');
+const rows = Array.from({ length: 1251 }, (_, i) => i);
+assert.deepEqual(await collectPages(async offset => ({ data: rows.slice(offset, offset + 100), error: null })), rows);
+await assert.rejects(collectPages(async () => ({ data: null, error: new Error('offline') })), /offline/);
+const { normalizeSubscription, ownsSubscription } = await load('supabase/functions/_shared/billingState.ts');
+const now = Date.parse('2026-10-04T00:00:00Z');
+const sub = { subscription_id: 'sub', customer: { customer_id: 'customer' }, product_id: 'product', status: 'active', created_at: '2026-10-01T00:00:00Z', trial_period_days: 14, next_billing_date: '2026-10-15T00:00:00Z', has_payment_method: true, metadata: { user_id: 'owner' } };
+const plan = { plan: 'pro', billing: 'monthly' };
+assert.equal(normalizeSubscription(sub, plan, now).status, 'trialing');
+assert.equal(normalizeSubscription({ ...sub, has_payment_method: false }, plan, now).status, 'inactive');
+assert.equal(normalizeSubscription(sub, plan, now + 30 * 86400000).status, 'inactive');
+assert.equal(normalizeSubscription({ ...sub, cancel_at_next_billing_date: true }, plan, now).cancel_at_period_end, true);
+assert.equal(normalizeSubscription({ ...sub, status: 'unexpected' }, plan, now).status, 'inactive');
+assert.equal(ownsSubscription(sub, 'owner', 'customer', 'sub'), true);
+assert.equal(ownsSubscription(sub, 'other', 'customer', 'sub'), false);
+assert.equal(ownsSubscription(sub, 'owner', 'wrong', 'sub'), false);
+assert.equal(ownsSubscription(sub, 'owner', 'customer', 'wrong'), false);
+console.log('Audit regressions passed: money, full-history pagination, billing ownership and expiry.');

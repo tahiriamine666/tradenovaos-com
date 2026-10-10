@@ -11,10 +11,10 @@ const Spinner = () => (
 /** Centralized gate for the main app: auth → onboarding → plan → billing → access. */
 export default function RequireAccess({ children }: { children: React.ReactNode }) {
   const { user, loading: authLoading } = useAuth();
-  const { state, loading } = useAccessState();
+  const { state, loading, error, refresh } = useAccessState();
   if (authLoading || (user && loading)) return <Spinner />;
   if (!user) return <Navigate to="/login" replace />;
-  if (!state) return <Spinner />;
+  if (!state) return <div className="min-h-screen flex flex-col items-center justify-center gap-4 p-6"><p role="alert">{error ?? 'We could not check your access.'}</p><button className="rounded bg-primary px-4 py-2 text-primary-foreground" onClick={() => void refresh()}>Try again</button></div>;
   if (state.internal || state.has_access) return <>{children}</>;
   if (!state.onboarding_completed) return <Navigate to="/onboarding" replace />;
   // Onboarding done but no active trial/subscription: billing step, or Billing if previously subscribed.

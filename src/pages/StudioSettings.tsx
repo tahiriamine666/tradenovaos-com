@@ -414,8 +414,8 @@ function ManageBillingButton() {
     (async () => {
       const [{ data: sub }, { data: prof }] = await Promise.all([
         supabase
-          .from('billing_subscriptions')
-          .select('subscription_id')
+          .from('subscriptions')
+          .select('dodo_subscription_id')
           .eq('user_id', user.id)
           .maybeSingle(),
         supabase
@@ -424,7 +424,7 @@ function ManageBillingButton() {
           .eq('id', user.id)
           .maybeSingle(),
       ]);
-      setHasSub(!!sub?.subscription_id);
+      setHasSub(!!sub?.dodo_subscription_id);
       setUpgradedManually(!!prof?.upgraded_manually);
       setLoading(false);
     })();
