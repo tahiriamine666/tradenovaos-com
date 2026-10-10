@@ -110,6 +110,7 @@ function ImageSlot({ title, path, onChange, readOnly, hint = 'Upload chart scree
   const ref = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [full, setFull] = useState(false);
+  const [ratio, setRatio] = useState<number | null>(null);
   const url = useSigned(path);
   const upload = async (f: File) => {
     if (!user || !onChange) return;
