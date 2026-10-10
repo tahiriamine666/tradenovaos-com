@@ -20,7 +20,7 @@ type Impact = 'low' | 'medium' | 'high';
 interface NewsItem { id: string; title: string; date?: string; time: string; impact: Impact; notes: string }
 type Rule = { id: string; text: string; done: boolean };
 interface CheckItem { id: string; text: string }
-interface Weekly { bias: string; scenario: string; chart: string; news: NewsItem[]; mainIdea: string }
+interface Weekly { bias: string; scenario: string; chart: string; news: NewsItem[]; newsShot: string; mainIdea: string }
 interface Daily {
   bias: string; price: string; priceCustom: string; scenario: string;
   before: string; after: string; news: NewsItem[]; newsShot: string;
@@ -32,7 +32,7 @@ interface Daily {
 interface Model { id: string; name: string; items: CheckItem[] }
 
 const uid = () => crypto.randomUUID();
-const EMPTY_WEEKLY: Weekly = { bias: '', scenario: '', chart: '', news: [], mainIdea: '' };
+const EMPTY_WEEKLY: Weekly = { bias: '', scenario: '', chart: '', news: [], newsShot: '', mainIdea: '' };
 const DEFAULT_CHECK = ['Weekly bias aligned', 'Daily bias confirmed', 'Liquidity identified', 'Key level reached', 'Confirmation present', 'Risk calculated', 'News checked', 'Psychology stable'];
 const emptyDaily = (): Daily => ({
   bias: '', price: '', priceCustom: '', scenario: '', before: '', after: '', news: [], newsShot: '',
@@ -105,7 +105,7 @@ function useSigned(path: string) {
   }, [path]);
   return url;
 }
-function ImageSlot({ title, path, onChange, readOnly }: { title: string; path: string; onChange?: (p: string) => void; readOnly?: boolean }) {
+function ImageSlot({ title, path, onChange, readOnly, hint = 'Upload chart screenshot' }: { title: string; path: string; onChange?: (p: string) => void; readOnly?: boolean; hint?: string }) {
   const { user } = useAuth();
   const ref = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
@@ -145,7 +145,7 @@ function ImageSlot({ title, path, onChange, readOnly }: { title: string; path: s
             onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) upload(f); }}
             className="flex h-full w-full flex-col items-center justify-center gap-2 text-muted-foreground transition-colors hover:text-primary">
             {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5" />}
-            <span className="text-xs">Upload chart screenshot</span>
+            <span className="text-xs">{hint}</span>
           </button>
         )}
       </div>
