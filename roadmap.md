@@ -1,7 +1,8 @@
 # Redesign roadmap
 - [x] Update active monthly price copy, preserve annual offers/equivalents, audit stale references, run price/mapping/regression tests and desktop/mobile checks; automatic build OK; report in docs/pricing-update-verification.md
-- [ ] Independently verify exact deployed Dodo product IDs (blocked: existing read-only prices response omits IDs; private configuration cannot be disclosed); publication pending owner inspection
-- [ ] Finish legacy admin offer-price estimates, separate typecheck, authorized runtime public product-ID verification and checkout trial-override audit; preserve records and keep publication pending
+- [x] Independently verify exact runtime monthly Dodo product IDs via authorized public quote fields; both expected IDs, current prices and monthly trials match
+- [x] Update legacy admin offer-price estimates via forward migration; separate tsgo exit 0, 44 tests pass, automatic build OK; verify unchanged annual onboarding 14-day override
+- [ ] Publish pricing release (blocked: owner approval/inspection pending; unrelated release blockers not addressed)
 - [ ] Finish Dashboard local-time greeting and per-user saved reorder/show-hide layout; verify desktop/mobile and tests
 - [ ] Add versioned first-visit cookie consent, policy, reopening controls and verify persistence/accessibility without changing auth
 - [x] Weekly / Bi-Weekly Trading Review + sectioned Add Trade form with extended psychology
