@@ -6,7 +6,7 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useActiveAccount } from "@/contexts/ActiveAccountContext";
-import { Plus, Upload, AlertCircle, Wallet } from "lucide-react";
+import { Plus, Upload, AlertCircle, Wallet, SlidersHorizontal } from "lucide-react";
 import { AreaChart, Area, CartesianGrid, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
 
 import { PageHeader } from "@/components/ui/page-header";
@@ -15,6 +15,11 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useProfile } from "@/hooks/useProfile";
+import { useDashboardLayout } from "@/hooks/useDashboardLayout";
+import { dashboardGreeting } from "@/lib/dashboard/greeting";
+import { WIDGETS, type WidgetId } from "@/lib/dashboard/layout";
+import DashboardLayoutEditor from "@/components/dashboard/DashboardLayoutEditor";
 import PsychologyScoreCard from "@/components/dashboard/PsychologyScoreCard";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -196,7 +201,7 @@ function TodayFocus({ plan, onNavigate }: { plan: TradePlan | null; onNavigate: 
     {
       label: "Main Setup",
       value: Array.isArray(plan?.setups_to_trade)
-        ? plan!.setups_to_trade[0] || "—"
+        ? plan?.setups_to_trade?.[0] || "—"
         : (plan?.setups_to_trade as string) || "—",
     },
     {
@@ -441,10 +446,27 @@ function BestSetups({ trades }: { trades: Trade[] }) {
 interface Props {
   onNavigate: (id: string) => void;
   onAddTrade?: () => void;
+  calendar?: React.ReactNode;
 }
 
-export default function DashboardOverview({ onNavigate, onAddTrade }: Props) {
+export default function DashboardOverview({ onNavigate, onAddTrade, calendar }: Props) {
   const { user } = useAuth();
+  const { profile } = useProfile();
+  const dashboard = useDashboardLayout(user?.id);
+  const [editingLayout, setEditingLayout] = useState(false);
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const update = () => setNow(new Date());
+    const timer = window.setInterval(update, 30_000);
+    window.addEventListener("focus", update);
+    document.addEventListener("visibilitychange", update);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("focus", update);
+      document.removeEventListener("visibilitychange", update);
+    };
+  }, []);
+  useEffect(() => { setEditingLayout(false); }, [user?.id]);
   const { activeAccount, activeAccountId, version } = useActiveAccount();
   const [trades, setTrades] = useState<Trade[]>([]);
   const [plan, setPlan] = useState<TradePlan | null>(null);
@@ -544,19 +566,86 @@ export default function DashboardOverview({ onNavigate, onAddTrade }: Props) {
       ].filter(Boolean)
     : null;
 
+  const widgets: Record<WidgetId, React.ReactNode> = {
+    pnl: (<MetricCard
+              label="Total P&L"
+              value={loading ? "—" : fmtMoney(m.totalPnl)}
+              hint={
+                loading
+                  ? ""
+                  : m.prevCount > 0
+                    ? `${m.pnlDelta >= 0 ? "+" : ""}${fmtMoney(m.pnlDelta, false)} vs prev 30d`
+                    : "Last 30 days"
+              }
+              spark={m.pnlSpark}
+              tone={m.totalPnl >= 0 ? "success" : "danger"}
+            />),
+    winrate: (<MetricCard
+              label="Win Rate"
+              value={loading ? "—" : `${m.winRate}%`}
+              hint={loading ? "" : `${m.wins}W · ${m.losses}L`}
+              tone={m.winRate >= 50 ? "success" : "neutral"}
+            />),
+    rr: (<MetricCard
+              label="Avg R:R"
+              value={loading ? "—" : m.avgRR != null ? `1:${m.avgRR.toFixed(2)}` : "—"}
+              hint={m.avgRR != null ? "From logged R:R" : "Log R:R per trade"}
+              tone="primary"
+            />),
+    trades: (<MetricCard label="Trades" value={loading ? "—" : `${m.tradesCount}`} hint="Total logged" tone="neutral" />),
+    account: (activeAccount && (activeAccount.balance != null || activeAccount.equity != null) && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {(
+            [
+              ["Balance", activeAccount.balance],
+              ["Equity", activeAccount.equity],
+              ["Free Margin", activeAccount.free_margin],
+              ["Margin Used", activeAccount.margin],
+            ] as [string, number | null | undefined][]
+          ).map(([label, val]) => (
+            <div key={label} className="tn-kpi-light tn-card-light rounded-xl border border-border bg-card px-4 py-3">
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</p>
+              <p className="text-base font-semibold text-foreground">
+                {val == null ? "—" : `$${Number(val).toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
+              </p>
+            </div>
+          ))}
+        </div>
+      )),
+    equity: <EquityCurve trades={trades} loading={loading} />,
+    today: <TodayFocus plan={plan} onNavigate={onNavigate} />,
+    trader: <TraderScoreCard trades={trades} />,
+    psych: <PsychologyScoreCard onNavigate={onNavigate} />,
+    recent: <RecentTrades trades={trades} onNavigate={onNavigate} />,
+    setups: <BestSetups trades={trades} />,
+    calendar,
+  };
+
   return (
     <div className="tn-page-light space-y-5">
       <PageHeader
-        title={new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" })}
-        description="Trading overview for your selected account and period"
+        title={dashboardGreeting(profile?.id === user?.id ? profile : null, now)}
+        description="Trading overview for your selected account and period."
         actions={
-          onAddTrade && (
+          <>
+            <Button variant="outline" size="sm" disabled={dashboard.loading || dashboard.error || !user} onClick={() => setEditingLayout(true)}>
+              <SlidersHorizontal className="mr-1.5 h-4 w-4" /> Edit Layout
+            </Button>
+          {onAddTrade && (
             <Button onClick={onAddTrade} size="sm" className="tn-btn-halo">
               <Plus className="mr-1.5 h-4 w-4" /> New Trade
             </Button>
-          )
+          )}
+          </>
         }
       />
+      {dashboard.error && <div role="alert" className="flex items-center gap-2 text-sm text-muted-foreground">
+        Could not load your saved layout.
+        <Button variant="ghost" size="sm" onClick={() => dashboard.reload()}>Retry</Button>
+      </div>}
+      {editingLayout && user && <DashboardLayoutEditor key={user.id} initial={dashboard.layout} onSave={dashboard.save} onClose={() => setEditingLayout(false)} />}
+      {!isEmpty && dashboard.loading && <Skeleton className="h-32 w-full" />}
+
 
       <div className="flex items-center gap-2 -mt-2 flex-wrap rounded-lg border border-border bg-card px-3 py-2">
         <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Account</span>
@@ -590,25 +679,7 @@ export default function DashboardOverview({ onNavigate, onAddTrade }: Props) {
         </span>
       </div>
 
-      {activeAccount && (activeAccount.balance != null || activeAccount.equity != null) && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {(
-            [
-              ["Balance", activeAccount.balance],
-              ["Equity", activeAccount.equity],
-              ["Free Margin", activeAccount.free_margin],
-              ["Margin Used", activeAccount.margin],
-            ] as [string, number | null | undefined][]
-          ).map(([label, val]) => (
-            <div key={label} className="tn-kpi-light tn-card-light rounded-xl border border-border bg-card px-4 py-3">
-              <p className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</p>
-              <p className="text-base font-semibold text-foreground">
-                {val == null ? "—" : `$${Number(val).toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
-              </p>
-            </div>
-          ))}
-        </div>
-      )}
+
 
       {error && (
         <div className="flex items-center gap-2 rounded-lg border border-danger/30 bg-danger/5 px-4 py-3 text-sm text-danger">
@@ -669,57 +740,13 @@ export default function DashboardOverview({ onNavigate, onAddTrade }: Props) {
           />
         )
       ) : (
-        <>
-          {/* Metric cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <MetricCard
-              label="Total P&L"
-              value={loading ? "—" : fmtMoney(m.totalPnl)}
-              hint={
-                loading
-                  ? ""
-                  : m.prevCount > 0
-                    ? `${m.pnlDelta >= 0 ? "+" : ""}${fmtMoney(m.pnlDelta, false)} vs prev 30d`
-                    : "Last 30 days"
-              }
-              spark={m.pnlSpark}
-              tone={m.totalPnl >= 0 ? "success" : "danger"}
-            />
-            <MetricCard
-              label="Win Rate"
-              value={loading ? "—" : `${m.winRate}%`}
-              hint={loading ? "" : `${m.wins}W · ${m.losses}L`}
-              tone={m.winRate >= 50 ? "success" : "neutral"}
-            />
-            <MetricCard
-              label="Avg R:R"
-              value={loading ? "—" : m.avgRR != null ? `1:${m.avgRR.toFixed(2)}` : "—"}
-              hint={m.avgRR != null ? "From logged R:R" : "Log R:R per trade"}
-              tone="primary"
-            />
-            <MetricCard label="Trades" value={loading ? "—" : `${m.tradesCount}`} hint="Total logged" tone="neutral" />
-          </div>
-
-          {/* Equity + Today Focus */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <div className="lg:col-span-2">
-              <EquityCurve trades={trades} loading={loading} />
-            </div>
-            <TodayFocus plan={plan} onNavigate={onNavigate} />
-          </div>
-
-          {/* Trader Score */}
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
-            <TraderScoreCard trades={trades} />
-            <PsychologyScoreCard onNavigate={onNavigate} />
-          </div>
-
-          {/* Recent Trades + Best Setups */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <RecentTrades trades={trades} onNavigate={onNavigate} />
-            <BestSetups trades={trades} />
-          </div>
-        </>
+        !dashboard.loading && <div className="grid grid-cols-2 lg:grid-cols-12 gap-4 items-start">
+          {dashboard.layout.order.filter(id => !dashboard.layout.hidden.includes(id)).map(id => {
+            if (id === "account" && !(activeAccount && (activeAccount.balance != null || activeAccount.equity != null))) return null;
+            const widget = WIDGETS.find(w => w.id === id);
+            return <div key={id} data-dashboard-widget={id} className={`min-w-0 ${widget?.span ?? ""}`}>{widgets[id]}</div>;
+          })}
+        </div>
       )}
     </div>
   );

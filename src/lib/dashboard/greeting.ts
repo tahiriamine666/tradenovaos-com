@@ -1,7 +1,5 @@
 export function greetingFor(hour: number): string {
-  if (hour >= 5 && hour < 12) return "Good Morning";
-  if (hour >= 12 && hour < 18) return "Good Afternoon";
-  return "Good Evening";
+  return hour < 12 ? "Good morning" : "Good evening";
 }
 
 export function hourInZone(date: Date, timeZone?: string | null): number {
@@ -22,7 +20,12 @@ export function validZone(tz?: string | null): string | undefined {
 
 export function greetingName(p: { display_name?: string | null; full_name?: string | null } | null): string {
   const d = p?.display_name?.trim();
-  if (d) return d;
+  if (d) return d.split(/\s+/)[0];
   const f = p?.full_name?.trim().split(/\s+/)[0];
-  return f || "Trader";
+  return f || "";
+}
+
+export function dashboardGreeting(profile: Parameters<typeof greetingName>[0], date = new Date()): string {
+  const name = greetingName(profile);
+  return `Welcome back${name ? `, ${name}` : ""} — ${greetingFor(date.getHours())}`;
 }

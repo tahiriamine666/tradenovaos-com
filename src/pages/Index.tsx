@@ -845,8 +845,7 @@ function TradingDashboardInner() {
         >
           {active === "dashboard" && (
             <>
-              <DashboardOverview onNavigate={setActive} onAddTrade={openNewTrade} />
-              <TradingCalendar dark={dark} />
+              <DashboardOverview onNavigate={setActive} onAddTrade={openNewTrade} calendar={<TradingCalendar dark={dark} />} />
             </>
           )}
 
