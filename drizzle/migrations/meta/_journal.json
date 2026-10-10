@@ -141,6 +141,13 @@
       "when": 1791499808829,
       "tag": "0019_restore_old_review_unique_for_compat",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1791590674174,
+      "tag": "0020_admin_allowlist_add_second_admin",
+      "breakpoints": true
     }
   ]
 }
