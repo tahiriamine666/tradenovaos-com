@@ -757,7 +757,7 @@ export default function TradePlanV2() {
       if (error) throw error;
       setSaved(s => { const n = new Set(s); n.delete(scope.date); return n; });
       if (loadedScope.current === `${scope.accountKey}|${scope.date}|${scope.pair}`) {
-        prevAi.current = {}; setDaily(withRuleDefaults(emptyDaily(), ruleDefaultsRef.current)); setDailyExists(false); setCreating(false);
+        prevAi.current = {}; setDaily(withRuleDefaults(emptyDaily(), ruleDefaultsRef.current as Rule[])); setDailyExists(false); setCreating(false);
       }
       setConfirmDelete(false);
       toast({ title: 'Daily Plan deleted', description: `${scope.pair} · ${longDate(scope.date)}` });
