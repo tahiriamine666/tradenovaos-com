@@ -6,7 +6,7 @@ const fake = vi.hoisted(() => ({ user: { id: 'user-one' }, account: 'account-a',
 vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => ({ user: fake.user }) }));
 vi.mock('@/contexts/ActiveAccountContext', () => ({ useActiveAccount: () => ({ activeAccountId: fake.account, activeAccount: { account_name: fake.account } }) }));
 vi.mock('@/hooks/use-toast', () => ({ toast: vi.fn() }));
-vi.mock('@/integrations/supabase/client', () => ({ supabase: { from: (table: string) => {
+vi.mock('@/integrations/supabase/client', () => ({ supabase: { storage: { from: () => ({ createSignedUrl: async (p: string) => ({ data: { signedUrl: `https://signed/${p}` }, error: null }) }) }, from: (table: string) => {
   const filters: Record<string, any> = {};
   let many = true;
   const query: any = {
