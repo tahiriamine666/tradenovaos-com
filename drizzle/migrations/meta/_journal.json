@@ -176,6 +176,13 @@
       "when": 1791669997351,
       "tag": "0024_legacy_admin_current_offer_prices",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1791680652235,
+      "tag": "0025_review_question_templates",
+      "breakpoints": true
     }
   ]
 }
