@@ -384,7 +384,7 @@ function PlanCalendar({ selected, onSelect, savedDates }: { selected: string; on
   const days = new Date(view.getFullYear(), view.getMonth() + 1, 0).getDate();
   const cells: (string | null)[] = [...Array(view.getDay()).fill(null), ...Array.from({ length: days }, (_, i) => toKey(new Date(view.getFullYear(), view.getMonth(), i + 1)))];
   return (
-    <div className={`${card} p-4`}>
+    <div className={`${card} w-full p-4`}>
       <div className="mb-3 flex items-center justify-between">
         <p className="flex items-center gap-2 text-sm font-semibold text-foreground"><CalendarDays className="h-4 w-4 text-primary" /> Calendar</p>
         <button type="button" onClick={() => onSelect(today)} className="rounded-lg border border-border px-2 py-1 text-[11px] font-semibold text-muted-foreground hover:border-primary/40 hover:text-primary">Today</button>
@@ -909,7 +909,7 @@ export default function TradePlanV2() {
             <ChevronRight className={`h-4 w-4 transition-transform duration-300 ${calOpen ? 'rotate-90' : ''}`} />
           </button>
           <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${calOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
-            <div className="overflow-hidden">{calOpen && <div className="mt-2 max-w-md">{calendar}</div>}</div>
+            <div className="overflow-hidden">{calOpen && <div className="mt-2 w-full">{calendar}</div>}</div>
           </div>
         </section>
 
