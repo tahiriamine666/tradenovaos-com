@@ -284,4 +284,18 @@ describe('Delete Daily Plan and calendar persistence', () => {
     expect(localStorage.getItem('tn-checklist-cal-open:user-one')).toBe('0');
     expect(bar).toHaveAttribute('aria-expanded', 'false');
   });
+  it('restores the stored date once the user is known and keeps users separate', async () => {
+    seed('EURUSD', '2026-10-12');
+    localStorage.setItem('tn-checklist-date:user-one', '2026-10-12');
+    localStorage.setItem('tn-checklist-date:user-two', '2026-10-05');
+    localStorage.setItem('tn-checklist-date:bad', 'not-a-date');
+    const real = fake.user; (fake as any).user = null;
+    const view = render(<TradePlanV2 />);
+    (fake as any).user = real; view.rerender(<TradePlanV2 />);
+    expect(await screen.findByText(/October 12, 2026/)).toBeInTheDocument();
+    for (const name of ['Weekly Outlook', 'Full View', 'Daily Plan']) fireEvent.click(screen.getByRole('button', { name }));
+    await waitFor(() => expect(screen.getByText(/October 12, 2026/)).toBeInTheDocument());
+    expect(localStorage.getItem('tn-checklist-date:user-one')).toBe('2026-10-12');
+    expect(localStorage.getItem('tn-checklist-date:user-two')).toBe('2026-10-05');
+  });
 });
