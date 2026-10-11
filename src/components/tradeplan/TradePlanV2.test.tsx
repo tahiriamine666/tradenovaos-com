@@ -298,4 +298,26 @@ describe('Delete Daily Plan and calendar persistence', () => {
     expect(localStorage.getItem('tn-checklist-date:user-one')).toBe('2026-10-12');
     expect(localStorage.getItem('tn-checklist-date:user-two')).toBe('2026-10-05');
   });
+  it('remembers the active tab per user, restores it after remount and falls back to Daily Plan', async () => {
+    seed('EURUSD', '2026-10-12');
+    localStorage.setItem('tn-checklist-date:user-one', '2026-10-12');
+    localStorage.setItem('tn-checklist-tab:user-two', 'full');
+    const view = render(<TradePlanV2 />); await ready();
+    fireEvent.click(screen.getByRole('button', { name: 'Weekly Outlook' }));
+    expect(localStorage.getItem('tn-checklist-tab:user-one')).toBe('weekly');
+    expect(screen.getByRole('button', { name: 'Weekly Outlook' })).toHaveAttribute('aria-pressed', 'true');
+    view.unmount();
+    render(<TradePlanV2 />);
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Weekly Outlook' })).toHaveAttribute('aria-pressed', 'true'));
+    expect(screen.getByText(/October 12, 2026/)).toBeInTheDocument();
+    cleanup();
+    (fake as any).user = { id: 'user-two' };
+    render(<TradePlanV2 />);
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Full View' })).toHaveAttribute('aria-pressed', 'true'));
+    expect(localStorage.getItem('tn-checklist-tab:user-one')).toBe('weekly');
+    cleanup();
+    (fake as any).user = { id: 'user-three' };
+    render(<TradePlanV2 />);
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Daily Plan' })).toHaveAttribute('aria-pressed', 'true'));
+  });
 });
