@@ -25,10 +25,9 @@ export function statusOf(score: number | null) {
   return "Needs improvement";
 }
 
-export function performanceScore(p: ReturnType<typeof performance>): CategoryScore {
+export function performanceScore(p: ReturnType<typeof performance>, rrRecorded: number): CategoryScore {
   const enough = p.resolved >= MIN_SAMPLE;
   const grossLossKnown = p.losses > 0;
-  const rrCount = p.avgRR == null ? 0 : p.total; // avgRR exists only when some rr recorded
   return finish("performance", "Trading Performance", "Profitability, win rate and reward relative to risk.", [
     { label: "Win rate", value: enough && p.winRate != null ? p.winRate : null, detail: enough ? `${p.wins} wins of ${p.resolved} resolved trades` : need(p.resolved) },
     {
@@ -38,8 +37,8 @@ export function performanceScore(p: ReturnType<typeof performance>): CategorySco
     },
     {
       label: "Average R:R (2.0 = full marks)",
-      value: enough && p.avgRR != null && rrCount >= MIN_SAMPLE ? clamp(p.avgRR * 50) : null,
-      detail: p.avgRR != null && enough ? `Average ${p.avgRR.toFixed(2)}R` : "R:R not recorded on enough trades",
+      value: enough && p.avgRR != null && rrRecorded >= MIN_SAMPLE ? clamp(p.avgRR * 50) : null,
+      detail: p.avgRR != null && rrRecorded >= MIN_SAMPLE ? `Average ${p.avgRR.toFixed(2)}R over ${rrRecorded} trade(s)` : need(rrRecorded),
     },
   ]);
 }

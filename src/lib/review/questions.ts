@@ -29,7 +29,7 @@ export function normalizeTemplate(raw: unknown): ReviewQuestion[] {
     seen.add(id);
     out.push({ id, text, active: (q as any).active !== false });
   }
-  return out.some((q) => q.active) || out.length ? out : DEFAULT_QUESTIONS.map((q) => ({ ...q }));
+  return out.length ? out : DEFAULT_QUESTIONS.map((q) => ({ ...q }));
 }
 
 export const activeQuestions = (t: ReviewQuestion[]) => t.filter((q) => q.active);
@@ -72,3 +72,11 @@ export function applyEdit(previous: ReviewQuestion[], editedActive: { id: string
 export function restoreDefaults(previous: ReviewQuestion[]): ReviewQuestion[] {
   return applyEdit(previous, DEFAULT_QUESTIONS);
 }
+
+/** Next Week Action Plan: four primary goals (existing keys kept; risk_goal is new). Other saved keys stay under "More limits". */
+export const PRIMARY_ACTIONS = [
+  ["primary_focus", "Main focus", "The one thing that matters most next week"],
+  ["rules_focus", "Execution improvement", "e.g. Wait for confirmation before entry"],
+  ["risk_goal", "Risk management goal", "e.g. Max 1% per trade, stop after 2 losses"],
+  ["psychology_focus", "Psychology goal", "e.g. No trades after a loss for 30 minutes"],
+] as const;
