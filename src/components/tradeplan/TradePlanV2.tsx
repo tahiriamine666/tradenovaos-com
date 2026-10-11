@@ -562,7 +562,9 @@ export default function TradePlanV2() {
   const [pairs, setPairs] = useState<string[]>(() => { try { return Array.from(new Set([...DEFAULT_PAIRS, ...JSON.parse(localStorage.getItem(pairsKey) || '[]')])); } catch { return DEFAULT_PAIRS; } });
   const setPair = (raw: string) => { const p = normalizePair(raw); setPairRaw(p); try { localStorage.setItem(pairKey, p); } catch { /* ignore */ } };
   const addPair = (p: string) => setPairs(prev => { const n = prev.includes(p) ? prev : [...prev, p]; try { localStorage.setItem(pairsKey, JSON.stringify(n.filter(x => !DEFAULT_PAIRS.includes(x)))); } catch { /* ignore */ } return n; });
-  const [tab, setTab] = useState<Tab>('daily');
+  const tabKey = `tn-checklist-tab:${user?.id ?? ''}`;
+  const [tab, setTabRaw] = useState<Tab>(() => { try { const t = localStorage.getItem(tabKey); return t === 'weekly' || t === 'full' ? t : 'daily'; } catch { return 'daily'; } });
+  const setTab = (t: Tab) => { setTabRaw(t); try { localStorage.setItem(tabKey, t); } catch { /* ignore */ } };
   const [calOpen, setCalOpenRaw] = useState(() => { try { return localStorage.getItem(calKey) === '1'; } catch { return false; } });
   const setCalOpen = (f: (o: boolean) => boolean) => setCalOpenRaw(o => { const n = f(o); try { localStorage.setItem(calKey, n ? '1' : '0'); } catch { /* ignore */ } return n; });
   const [confirmDelete, setConfirmDelete] = useState(false);
