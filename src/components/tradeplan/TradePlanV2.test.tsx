@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
 import { beforeEach, afterEach, describe, it, expect, vi } from 'vitest';
-import TradePlanV2, { normalizePair, normalizeLayoutOrder, DAILY_LAYOUT_DEFAULT, WEEKLY_LAYOUT_DEFAULT } from './TradePlanV2';
+import TradePlanV2, { normalizePair, normalizeLayoutOrder, FULL_LAYOUT_DEFAULT, DAILY_LAYOUT_DEFAULT, WEEKLY_LAYOUT_DEFAULT } from './TradePlanV2';
 
 const fake = vi.hoisted(() => ({ user: { id: 'user-one' }, account: 'account-a', rows: new Map<string, any>(), writes: [] as any[], fail: false }));
 vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => ({ user: fake.user }) }));
@@ -198,5 +198,47 @@ describe('Weekly Outlook pair scoping', () => {
     expect(['BTC story', 'racing edit']).toContain(weeklyRows().find(r => r.pair === 'BTCUSD')!.data.scenario);
     expect(weeklyRows().some(r => r.pair === 'XAUUSD' && r.data.scenario)).toBe(false);
     expect(weeklyRows().some(r => r.pair === '')).toBe(false);
+  });
+});
+
+describe('Edit Layout on every pair and tab', () => {
+  const tabBtn = (n: string) => fireEvent.click(screen.getByRole('button', { name: n }));
+  it('offers Edit Layout with Save/Cancel/Reset on EURUSD, XAUUSD and a custom pair in all tabs', async () => {
+    render(<TradePlanV2 />); await ready();
+    const check = async () => {
+      for (const t of ['Weekly Outlook', 'Daily Plan', 'Full View']) {
+        tabBtn(t);
+        await waitFor(() => expect(screen.getByRole('button', { name: 'Edit Layout' })).toBeInTheDocument());
+        fireEvent.click(screen.getByRole('button', { name: 'Edit Layout' }));
+        expect(screen.getByRole('button', { name: 'Save Layout' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Reset' })).toBeInTheDocument();
+        fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+      }
+      tabBtn('Daily Plan'); await ready();
+    };
+    await check();
+    await switchPair('XAUUSD'); await check();
+    fireEvent.change(screen.getByLabelText('Custom pair'), { target: { value: 'ger40' } });
+    fireEvent.keyDown(screen.getByLabelText('Custom pair'), { key: 'Enter' });
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Daily Plan — GER40' })).toBeInTheDocument());
+    await ready(); await check();
+    expect(fake.writes.filter(w => w.table === 'trade_plans')).toHaveLength(0);
+  }, 20000);
+  it('persists Full View order under page full_view and Reset restores the defaults', async () => {
+    const order = ['main_idea', 'weekly', 'daily', 'charts', 'news', 'risk', 'psychology', 'rules'];
+    fake.rows.set('workspace_layouts|user-one|full', { table: 'workspace_layouts', user_id: 'user-one', page: 'full_view', layout: { order } });
+    render(<TradePlanV2 />); await ready();
+    tabBtn('Full View');
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Edit Layout' })).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Layout' }));
+    const pos = () => { const items = [...document.querySelectorAll('[draggable="true"]')] as HTMLElement[]; return items.map(i => Number(i.style.order)); };
+    await waitFor(() => expect(pos()).toHaveLength(8));
+    fireEvent.click(screen.getByRole('button', { name: 'Save Layout' }));
+    await waitFor(() => expect(fake.writes.some(w => w.table === 'workspace_layouts')).toBe(true));
+    expect(fake.writes.at(-1)!.payload).toMatchObject({ user_id: 'user-one', page: 'full_view', layout: { order } });
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Layout' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save Layout' }));
+    await waitFor(() => expect(fake.writes.at(-1)!.payload.layout.order).toEqual(FULL_LAYOUT_DEFAULT));
   });
 });
