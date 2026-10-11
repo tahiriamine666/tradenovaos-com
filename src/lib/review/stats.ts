@@ -538,9 +538,15 @@ export const LEGACY_MAP: Record<string, string> = {
   overall_notes: "learned",
 };
 const filled = (v: unknown) => v != null && String(v).trim() !== "";
-export function completion(answers: Record<string, unknown>, action: Record<string, unknown>) {
-  const total = QUESTIONS.length + ACTION_FIELDS.length;
-  const done =
-    QUESTIONS.filter(([k]) => filled(answers[k])).length + ACTION_FIELDS.filter(([k]) => filled(action[k])).length;
+/** Completion over the given question ids and action keys (defaults: the original 14 + 10 fields). */
+export function completion(
+  answers: Record<string, unknown>,
+  action: Record<string, unknown>,
+  questionIds: readonly string[] = QUESTIONS.map(([k]) => k),
+  actionKeys: readonly string[] = ACTION_FIELDS.map(([k]) => k),
+) {
+  const total = questionIds.length + actionKeys.length;
+  if (!total) return 0;
+  const done = questionIds.filter((k) => filled(answers[k])).length + actionKeys.filter((k) => filled(action[k])).length;
   return Math.round((done / total) * 100);
 }

@@ -1995,6 +1995,35 @@ export type Database = {
         }
         Relationships: []
       }
+      review_question_templates: {
+        Row: {
+          created_at: string
+          questions: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          questions?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          questions?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_question_templates_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subscription_overrides: {
         Row: {
           admin_id: string
