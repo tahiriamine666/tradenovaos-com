@@ -21,6 +21,8 @@ import { PageHeader } from '@/components/ui/page-header';
 import { EmptyState } from '@/components/ui/empty-state';
 import { MetricCard } from '@/components/ui/metric-card';
 import { cn } from '@/lib/utils';
+import FullTradeModal from '@/components/AddTradeModal';
+import { TradeLogDetailModal } from '@/components/journal/TradeLogDetailModal';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 async function getSignedUrl(path: string): Promise<string | null> {
@@ -972,7 +974,11 @@ export default function TradeVault() {
     }
   };
 
-  const openEdit = (t: Trade) => { setEditTrade(t); setModalOpen(true); setViewTrade(null); };
+  // Edits always use the complete trade form; after saving, the details modal reopens with fresh data.
+  const [fullEdit, setFullEdit] = useState<{ id: string } | null>(null);
+  const [returnToId, setReturnToId] = useState<string | null>(null);
+  const [detailRefresh, setDetailRefresh] = useState(0);
+  const openEdit = (t: { id: string }) => { setReturnToId(viewTrade?.id === t.id ? t.id : null); setFullEdit({ id: t.id }); setViewTrade(null); };
 
   const stats = useMemo(() => {
     const wins = trades.filter(t => (t.result ?? 0) > 0);
@@ -1076,18 +1082,24 @@ export default function TradeVault() {
         playbooks={playbooks}
       />
 
-      {viewTrade && (
-        <TradeDetails
-          trade={viewTrade}
-          onClose={() => setViewTrade(null)}
-          onEdit={openEdit}
-          onDuplicate={handleDuplicate}
-          onDelete={handleDelete}
-          onAIReview={handleAIReview}
-          playbooks={playbooks}
-          reviewing={reviewingId === viewTrade.id}
-        />
-      )}
+      <FullTradeModal
+        open={!!fullEdit}
+        editTrade={fullEdit}
+        onGoToPlaybooks={() => {}}
+        onClose={() => { setFullEdit(null); if (returnToId) { setViewTrade(trades.find(x => x.id === returnToId) ?? null); setReturnToId(null); } }}
+        onSaved={() => { load(); setDetailRefresh(n => n + 1); }}
+      />
+
+      <TradeLogDetailModal
+        tradeId={viewTrade?.id ?? null}
+        refreshKey={detailRefresh}
+        onClose={() => setViewTrade(null)}
+        onEdit={openEdit}
+        onDuplicate={(t) => { handleDuplicate(t as Trade); setViewTrade(null); }}
+        onDelete={(t) => { handleDelete(t as Trade); setViewTrade(null); }}
+        onAIReview={(t) => { handleAIReview(t as Trade).then(() => setDetailRefresh(n => n + 1)); }}
+        reviewing={!!viewTrade && reviewingId === viewTrade.id}
+      />
     </div>
   );
 }
