@@ -189,12 +189,14 @@ describe('Weekly Outlook pair scoping', () => {
     await waitFor(() => area());
     fireEvent.change(area(), { target: { value: 'BTC story' } });
     fireEvent.click(screen.getByRole('button', { name: 'XAUUSD' }));
-    // Typing during the switch (before XAUUSD loads) must not land on either pair
+    // Typing while the switch is in flight belongs to the still-visible BTCUSD scope, never XAUUSD
     const maybe = screen.queryByPlaceholderText('Write your weekly scenario...');
     if (maybe) fireEvent.change(maybe, { target: { value: 'racing edit' } });
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Daily Plan — XAUUSD' })).toBeInTheDocument());
     await waitFor(() => area());
-    expect(weeklyRows().find(r => r.pair === 'BTCUSD')!.data.scenario).toBe('BTC story');
-    expect(weeklyRows().some(r => r.data.scenario === 'racing edit')).toBe(false);
+    await waitFor(() => expect(area().value).toBe(''));
+    expect(['BTC story', 'racing edit']).toContain(weeklyRows().find(r => r.pair === 'BTCUSD')!.data.scenario);
+    expect(weeklyRows().some(r => r.pair === 'XAUUSD' && r.data.scenario)).toBe(false);
+    expect(weeklyRows().some(r => r.pair === '')).toBe(false);
   });
 });
