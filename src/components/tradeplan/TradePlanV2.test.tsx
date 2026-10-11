@@ -128,7 +128,7 @@ describe('Editable field layout', () => {
 describe('Weekly Outlook pair scoping', () => {
   const wk = () => { const d = new Date(); const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
   const area = () => screen.getByPlaceholderText('Write your weekly scenario...') as HTMLTextAreaElement;
-  const openWeekly = async () => { await ready(); fireEvent.click(screen.getByRole('button', { name: 'Weekly Outlook' })); await waitFor(() => area()); };
+  const openWeekly = async () => { const btn = await screen.findByRole('button', { name: 'Weekly Outlook' }); if (btn.getAttribute('aria-pressed') !== 'true') fireEvent.click(btn); await waitFor(() => area()); };
   const toPair = async (name: string) => { fireEvent.click(screen.getByRole('button', { name })); await waitFor(() => expect(screen.getByRole('heading', { name: `Daily Plan — ${name}` })).toBeInTheDocument()); await waitFor(() => area()); };
   const weeklyRows = () => [...fake.rows.values()].filter(r => r.table === 'trade_plan_checklists' && r.checklist_type === 'weekly_outlook');
   const seed = (account: string, pair: string, period: string, data: any) => fake.rows.set(`trade_plan_checklists|user-one|${account}|${period}|${pair}|weekly_outlook`, { table: 'trade_plan_checklists', user_id: 'user-one', account_key: account, pair, checklist_type: 'weekly_outlook', period_date: period, data });
