@@ -52,6 +52,9 @@ const PSYCH = ['Calm', 'Focused', 'Confident', 'Neutral', 'Stressed', 'Fearful',
 // (page daily_plan / weekly_outlook) so every day and every pair renders the same order.
 export const DAILY_LAYOUT_DEFAULT = ['bias_price', 'scenario', 'charts', 'news', 'risk', 'psychology', 'rules', 'main_idea'];
 export const WEEKLY_LAYOUT_DEFAULT = ['bias', 'scenario', 'charts', 'news', 'main_idea'];
+export const FULL_LAYOUT_DEFAULT = ['weekly', 'daily', 'charts', 'news', 'risk', 'psychology', 'rules', 'main_idea'];
+const LAYOUT_DEFAULTS: Record<Tab, string[]> = { daily: DAILY_LAYOUT_DEFAULT, weekly: WEEKLY_LAYOUT_DEFAULT, full: FULL_LAYOUT_DEFAULT };
+const LAYOUT_PAGES: Record<Tab, string> = { daily: 'daily_plan', weekly: 'weekly_outlook', full: 'full_view' };
 export function normalizeLayoutOrder(saved: unknown, fallback: string[]): string[] {
   if (!Array.isArray(saved)) return [...fallback];
   const seen = new Set<string>();
@@ -553,6 +556,8 @@ export default function TradePlanV2() {
   // Editable plan field layout (drag & drop with the mouse, saved once per user).
   const [dailyOrder, setDailyOrder] = useState<string[]>(DAILY_LAYOUT_DEFAULT);
   const [weeklyOrder, setWeeklyOrder] = useState<string[]>(WEEKLY_LAYOUT_DEFAULT);
+  const [fullOrder, setFullOrder] = useState<string[]>(FULL_LAYOUT_DEFAULT);
+  const orders: Record<Tab, string[]> = { daily: dailyOrder, weekly: weeklyOrder, full: fullOrder };
   const [layoutEdit, setLayoutEdit] = useState<Tab | null>(null);
   const [layoutDraft, setLayoutDraft] = useState<string[]>([]);
   const layoutDrag = useRef<string | null>(null);
@@ -680,13 +685,15 @@ export default function TradePlanV2() {
     if (!user) return;
     let alive = true;
     (async () => {
-      const [{ data: d1 }, { data: d2 }] = await Promise.all([
+      const [{ data: d1 }, { data: d2 }, { data: d3 }] = await Promise.all([
         supabase.from('workspace_layouts').select('layout').eq('user_id', user.id).eq('page', 'daily_plan').maybeSingle(),
         supabase.from('workspace_layouts').select('layout').eq('user_id', user.id).eq('page', 'weekly_outlook').maybeSingle(),
+        supabase.from('workspace_layouts').select('layout').eq('user_id', user.id).eq('page', 'full_view').maybeSingle(),
       ]);
       if (!alive) return;
       if (d1?.layout) setDailyOrder(normalizeLayoutOrder((d1.layout as { order?: unknown }).order, DAILY_LAYOUT_DEFAULT));
       if (d2?.layout) setWeeklyOrder(normalizeLayoutOrder((d2.layout as { order?: unknown }).order, WEEKLY_LAYOUT_DEFAULT));
+      if (d3?.layout) setFullOrder(normalizeLayoutOrder((d3.layout as { order?: unknown }).order, FULL_LAYOUT_DEFAULT));
     })();
     return () => { alive = false; };
   }, [user, retry]);
@@ -705,7 +712,7 @@ export default function TradePlanV2() {
 
   // Edit Layout: drag sections up/down with the mouse; the order is saved once per user,
   // so every day and every pair keeps the same layout. Cancel reverts, Reset restores defaults.
-  const startLayoutEdit = (t: Tab) => { setLayoutEdit(t); setLayoutDraft(t === 'daily' ? dailyOrder : weeklyOrder); };
+  const startLayoutEdit = (t: Tab) => { setLayoutEdit(t); setLayoutDraft([...orders[t]]); };
   const reorderDraft = (fromId: string, toId: string) => setLayoutDraft(prev => {
     const arr = [...prev]; const from = arr.indexOf(fromId); const to = arr.indexOf(toId);
     if (from < 0 || to < 0 || from === to) return prev;
@@ -713,14 +720,14 @@ export default function TradePlanV2() {
     return arr;
   });
   const cancelLayoutEdit = () => { setLayoutEdit(null); layoutDrag.current = null; };
-  const resetLayoutDraft = () => setLayoutDraft(layoutEdit === 'daily' ? [...DAILY_LAYOUT_DEFAULT] : [...WEEKLY_LAYOUT_DEFAULT]);
+  const resetLayoutDraft = () => { if (layoutEdit) setLayoutDraft([...LAYOUT_DEFAULTS[layoutEdit]]); };
   const saveLayoutEdit = async () => {
     if (!layoutEdit || !user) { cancelLayoutEdit(); return; }
-    const page = layoutEdit === 'daily' ? 'daily_plan' : 'weekly_outlook';
-    const clean = normalizeLayoutOrder(layoutDraft, layoutEdit === 'daily' ? DAILY_LAYOUT_DEFAULT : WEEKLY_LAYOUT_DEFAULT);
+    const page = LAYOUT_PAGES[layoutEdit];
+    const clean = normalizeLayoutOrder(layoutDraft, LAYOUT_DEFAULTS[layoutEdit]);
     const { error } = await supabase.from('workspace_layouts').upsert({ user_id: user.id, page, layout: { order: clean } }, { onConflict: 'user_id,page' });
     if (error) { toast({ title: 'Layout not saved', description: error.message, variant: 'destructive' }); return; }
-    if (layoutEdit === 'daily') setDailyOrder(clean); else setWeeklyOrder(clean);
+    if (layoutEdit === 'daily') setDailyOrder(clean); else if (layoutEdit === 'weekly') setWeeklyOrder(clean); else setFullOrder(clean);
     toast({ title: 'Layout saved' });
     setLayoutEdit(null);
   };
@@ -852,7 +859,7 @@ export default function TradePlanV2() {
                   className={`rounded-lg px-3 py-2 text-[11px] font-bold uppercase tracking-[0.12em] transition-all duration-300 sm:px-4 ${tab === k ? 'bg-primary/15 text-primary shadow-[0_0_14px_hsl(var(--primary)/0.15)]' : 'text-muted-foreground hover:text-foreground'}`}>{l}</button>
               ))}
             </div>
-            {!loading && !loadError && (tab === 'daily' || tab === 'weekly') && showDaily && (layoutEdit === tab ? (
+            {!loading && !loadError && (layoutEdit === tab ? (
               <div className="flex items-center gap-2">
                 <button type="button" onClick={saveLayoutEdit} className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90"><Save className="h-3.5 w-3.5" /> Save Layout</button>
                 <button type="button" onClick={cancelLayoutEdit} className="rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground">Cancel</button>
@@ -874,7 +881,7 @@ export default function TradePlanV2() {
                 </div>
               )}
 
-              {tab === 'daily' && (!showDaily ? empty : (
+              {tab === 'daily' && (!showDaily && layoutEdit !== 'daily' ? empty : (
                 <>
                   <div className={`${card} flex flex-col gap-6 p-5 sm:p-6`}>
                     {(layoutEdit === 'daily' ? layoutDraft : dailyOrder).map((id, i) => layoutWrap(id, dailyNodes[id], i))}
@@ -882,10 +889,12 @@ export default function TradePlanV2() {
                 </>
               ))}
 
-              {tab === 'full' && (
-                <div className={`${card} space-y-5 p-5 sm:p-8`}>
-                  <h2 className="font-heading text-xl font-semibold text-foreground">{longDate(date)}</h2>
-                  <Block title={`Weekly Context · ${weekLabel}`}>
+              {tab === 'full' && (() => {
+                // Full View sections share one per-user order (workspace_layouts page 'full_view').
+                const none = <Block title="Daily Plan"><p className="text-sm text-muted-foreground">No plan saved for this day</p></Block>;
+                const d = (n: React.ReactNode) => (dailyExists ? n : null);
+                const fullNodes: Record<string, React.ReactNode> = {
+                  weekly: <Block title={`Weekly Context · ${weekLabel}`}>
                     <div className="space-y-4">
                       <Tag v={weekly.bias} />
                       <Text v={weekly.scenario} />
@@ -895,30 +904,37 @@ export default function TradePlanV2() {
                       {weekly.newsShot && <div className="max-w-xl"><ImageSlot readOnly title="News screenshot" path={weekly.newsShot} /></div>}
                       <div><p className="mb-1 text-xs text-muted-foreground">Main idea</p><Text v={weekly.mainIdea} /></div>
                     </div>
-                  </Block>
-                  {!dailyExists ? <Block title="Daily Plan"><p className="text-sm text-muted-foreground">No plan saved for this day</p></Block> : <>
-                    <Block title="Daily Plan">
+                  </Block>,
+                  daily: dailyExists ? <Block title="Daily Plan">
                       <div className="flex flex-wrap gap-2"><Tag v={daily.bias} /><Tag v={daily.price === 'Custom' ? daily.priceCustom || 'Custom' : daily.price} /></div>
                       <Text v={daily.scenario} />
-                    </Block>
-                    {(daily.before || daily.after) && <Block title="Before / After Charts"><div className="grid gap-4 sm:grid-cols-2"><ImageSlot readOnly title="Before" path={daily.before} /><ImageSlot readOnly title="After" path={daily.after} /></div></Block>}
-                    <Block title="News"><NewsView items={daily.news} />{daily.newsShot && <div className="mt-3 max-w-xl"><ImageSlot readOnly title="News screenshot" path={daily.newsShot} /></div>}</Block>
-                    <Block title="Risk Management">
+                    </Block> : none,
+                  charts: d({(daily.before || daily.after) && <Block title="Before / After Charts"><div className="grid gap-4 sm:grid-cols-2"><ImageSlot readOnly title="Before" path={daily.before} /><ImageSlot readOnly title="After" path={daily.after} /></div></Block>}),
+                  news: d(<Block title="News"><NewsView items={daily.news} />{daily.newsShot && <div className="mt-3 max-w-xl"><ImageSlot readOnly title="News screenshot" path={daily.newsShot} /></div>}</Block>),
+                  risk: d(<Block title="Risk Management">
                       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                         {([['Risk %', daily.risk.riskPct], ['Max Daily Loss', daily.risk.maxLoss], ['Max Trades', daily.risk.maxTrades], ['R:R Target', daily.risk.rr]]).map(([l, v]) => (
                           <div key={l} className="rounded-xl border border-border bg-background/40 px-3 py-2"><p className="text-[11px] text-muted-foreground">{l}</p><p className="text-sm font-semibold text-foreground">{v || '—'}</p></div>
                         ))}
                       </div>
-                    </Block>
-                    <Block title="Psychology"><div className="flex flex-wrap gap-2">{daily.psychology.length ? daily.psychology.map(p => <Tag key={p} v={p} />) : <Tag v="" />}</div><Text v={daily.psychNotes} /></Block>
-                    <Block title="Rules">
+                    </Block>),
+                  psychology: d(<Block title="Psychology"><div className="flex flex-wrap gap-2">{daily.psychology.length ? daily.psychology.map(p => <Tag key={p} v={p} />) : <Tag v="" />}</div><Text v={daily.psychNotes} /></Block>),
+                  rules: d(<Block title="Rules">
                       {daily.rules.length ? daily.rules.map(r => <div key={r.id} className="flex items-center gap-2 text-sm text-foreground"><Box disabled checked={r.done} />{r.text}</div>) : <p className="text-sm text-muted-foreground">—</p>}
-                    </Block>
-                    <Block title="Main Idea"><Text v={daily.mainIdea} /></Block>
-
-                  </>}
-                </div>
-              )}
+                    </Block>),
+                  main_idea: d(<Block title="Main Idea"><Text v={daily.mainIdea} /></Block>),
+                };
+                const list = (layoutEdit === 'full' ? layoutDraft : fullOrder).map((id, i) => {
+                  const node = fullNodes[id] ?? (layoutEdit === 'full' ? <Block title={id.replace('_', ' ')}><p className="text-sm text-muted-foreground">No plan saved for this day</p></Block> : null);
+                  return node ? layoutWrap(id, layoutEdit === 'full' ? node : <div key={id} style={{ order: i }}>{node}</div>, i) : null;
+                });
+                return (
+                  <div className={`${card} flex flex-col gap-5 p-5 sm:p-8`}>
+                    <h2 className="font-heading text-xl font-semibold text-foreground">{longDate(date)}</h2>
+                    {list}
+                  </div>
+                );
+              })()}
             </div>
           )}
           <div className={loading || loadError || tab === 'weekly' || !showDaily ? 'hidden' : ''}>
