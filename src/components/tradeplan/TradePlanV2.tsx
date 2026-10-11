@@ -398,7 +398,7 @@ function PlanCalendar({ selected, onSelect, savedDates }: { selected: string; on
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => <span key={d} className="py-1 text-[10px] font-semibold text-muted-foreground">{d}</span>)}
         {cells.map((k, i) => k ? (
           <button key={k} type="button" onClick={() => onSelect(k)} aria-pressed={k === selected}
-            className={`relative aspect-square rounded-lg text-xs transition-all duration-300 ${k === selected ? 'bg-primary text-primary-foreground shadow-[0_0_16px_hsl(var(--primary)/0.45)]' : k === today ? 'border border-primary/60 text-primary' : 'text-foreground/80 hover:bg-foreground/[0.06]'}`}>
+            className={`relative mx-auto aspect-square w-full max-w-11 rounded-lg text-xs transition-all duration-300 ${k === selected ? 'bg-primary text-primary-foreground shadow-[0_0_16px_hsl(var(--primary)/0.45)]' : k === today ? 'border border-primary/60 text-primary' : 'text-foreground/80 hover:bg-foreground/[0.06]'}`}>
             {Number(k.slice(8))}
             {savedDates.has(k) && <span className={`absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full ${k === selected ? 'bg-primary-foreground' : 'bg-primary'}`} />}
           </button>
