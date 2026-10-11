@@ -147,15 +147,6 @@ export function TradeDetailDialog({ trade: listTrade, open, onOpenChange }: { tr
             <Stat label="Outcome" value={trade.outcome || (isWin ? 'Win' : isLoss ? 'Loss' : 'BE')} tone={isWin ? 'up' : isLoss ? 'down' : undefined} />
           </div>
 
-          {/* Market context */}
-          <Section icon={LineChart} title="Market Context">
-            <ul className="space-y-1.5">
-              <Bullet><span className="font-medium text-foreground">Weekly context:</span> {trade.weekly}</Bullet>
-              <Bullet><span className="font-medium text-foreground">Daily bias:</span> {trade.daily}</Bullet>
-              {trade.session && <Bullet><span className="font-medium text-foreground">Session:</span> {trade.session}</Bullet>}
-            </ul>
-          </Section>
-
           {/* Setup & confluences */}
           <Section icon={Crosshair} title="Setup & Confluences">
             {trade.setup ? (
@@ -165,15 +156,6 @@ export function TradeDetailDialog({ trade: listTrade, open, onOpenChange }: { tr
             ) : (
               <p className="text-sm text-muted-foreground">No setup details recorded for this trade.</p>
             )}
-          </Section>
-
-          {/* Risk & execution */}
-          <Section icon={Gauge} title="Risk & Execution">
-            <ul className="space-y-1.5">
-              <Bullet><span className="font-medium text-foreground">Direction:</span> {long ? 'Long (buy)' : trade.side ? 'Short (sell)' : '—'}</Bullet>
-              <Bullet><span className="font-medium text-foreground">Risk-to-reward:</span> {trade.rr ? `1:${Number(trade.rr).toFixed(1)}` : '—'}</Bullet>
-              <Bullet><span className="font-medium text-foreground">Result:</span> {pnl > 0 ? '+' : ''}{pnl.toLocaleString()}</Bullet>
-            </ul>
           </Section>
 
           {tradeDetailSections(trade).filter(sec => sec.title !== 'Trade Details').map(sec => (
