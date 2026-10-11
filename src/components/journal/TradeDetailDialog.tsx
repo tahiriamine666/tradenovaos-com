@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { ArrowDownRight, ArrowUpRight, Brain, CalendarDays, Clock, Crosshair, Gauge, ImageIcon, Layers, LineChart, Maximize2, StickyNote, Tags, ZoomIn, ZoomOut } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
-import { hasPsychology } from '@/components/journal/PsychologyFields';
+import { effectivePlanStatus } from '@/components/journal/PsychologyFields';
 
 export type DetailTrade = {
   id: string;
@@ -25,6 +26,25 @@ export type DetailTrade = {
   weekly: string;
   daily: string;
 };
+
+const NR = 'Not recorded';
+const txt = (v: unknown) => (v == null || (typeof v === 'string' && !v.trim()) ? NR : String(v));
+const yn = (v: unknown) => (v === true ? 'Yes' : v === false ? 'No' : NR);
+const num = (v: unknown) => (v == null || v === '' || isNaN(Number(v)) ? NR : String(Number(v)));
+const score = (v: unknown) => (v == null ? NR : `${Number(v)}/10`);
+const list = (v: unknown) => (Array.isArray(v) && v.length ? v.join(', ') : NR);
+
+/** Every persisted, user-entered trade field grouped as shown in the detail view (absent values read "Not recorded"). */
+export function tradeDetailSections(t: Record<string, any>): { title: string; rows: [string, string][] }[] {
+  const plan = effectivePlanStatus({ plan_status: t.plan_status ?? null, followed_plan: t.followed_plan ?? null });
+  return [
+    { title: 'Trade Details', rows: [['Pair', txt(t.pair)], ['Direction', t.side === 'long' ? 'Long (buy)' : t.side === 'short' ? 'Short (sell)' : txt(t.side)], ['Outcome', txt(t.outcome)], ['Result', num(t.result)], ['Date', txt(t.trade_date)], ['Session', txt(t.session)], ['Timeframe', txt(t.timeframe)]] },
+    { title: 'Planning', rows: [['Weekly context', txt(t.weekly_context)], ['Daily bias', txt(t.daily_bias)], ['Setup', txt(t.setup)], ['Planned trade', yn(t.planned_trade)], ['Checklist completed', yn(t.checklist_completed)], ['Entry reason', txt(t.entry_reason)]] },
+    { title: 'Risk', rows: [['Entry price', num(t.entry_price)], ['Stop loss', num(t.stop_loss)], ['Take profit', num(t.take_profit)], ['Risk amount', num(t.risk_amount)], ['Risk %', num(t.risk_percent)], ['R:R', num(t.rr)], ['Late entry', yn(t.late_entry)], ['Early exit', yn(t.early_exit)], ['Moved stop', yn(t.moved_stop)]] },
+    { title: 'Psychology', rows: [['Emotion before', txt(t.emotion_before)], ['Emotion after', txt(t.emotion_after)], ['Confidence', score(t.confidence_score)], ['Discipline', score(t.discipline_score)], ['Execution', score(t.execution_score)], ['Stress', score(t.stress_score)], ['Patience', score(t.patience_score)], ['Followed plan', plan === 'yes' ? 'Yes' : plan === 'no' ? 'No' : plan === 'partial' ? 'Partially' : NR], ['Impulsive entry', yn(t.impulsive_entry)], ['FOMO', yn(t.fomo)], ['Revenge trade', yn(t.revenge_trade)], ['Hesitation', yn(t.hesitation)], ['Overconfidence', yn(t.overconfidence)], ['Psychology note', txt(t.psychology_note)]] },
+    { title: 'Review', rows: [['Exit reason', txt(t.exit_reason)], ['Mistakes', list(t.mistakes)], ['Rule violations', list(t.rule_violations)]] },
+  ];
+}
 
 function Stat({ label, value, tone }: { label: string; value: string; tone?: 'up' | 'down' }) {
   return (
@@ -56,7 +76,18 @@ function Bullet({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function TradeDetailDialog({ trade, open, onOpenChange }: { trade: DetailTrade | null; open: boolean; onOpenChange: (open: boolean) => void }) {
+export function TradeDetailDialog({ trade: listTrade, open, onOpenChange }: { trade: DetailTrade | null; open: boolean; onOpenChange: (open: boolean) => void }) {
+  const { user } = useAuth();
+  // List rows are partial projections: load the complete own-user row by id; ignore results for a previous id.
+  const [full, setFull] = useState<Record<string, any> | null>(null);
+  useEffect(() => {
+    setFull(null);
+    if (!open || !listTrade?.id || !user) return;
+    let active = true;
+    supabase.from('trades').select('*').eq('id', listTrade.id).eq('user_id', user.id).maybeSingle().then(({ data }) => { if (active && data) setFull(data); });
+    return () => { active = false; };
+  }, [listTrade?.id, open, user]);
+  const trade = (listTrade && full && full.id === listTrade.id ? { ...listTrade, ...full } : listTrade) as (DetailTrade & Record<string, any>) | null;
   const [lightbox, setLightbox] = useState<'before' | 'after' | null>(null);
   const [zoom, setZoom] = useState(false);
   const [chartUrls, setChartUrls] = useState<{ before: string | null; after: string | null }>({ before: null, after: null });
@@ -116,15 +147,6 @@ export function TradeDetailDialog({ trade, open, onOpenChange }: { trade: Detail
             <Stat label="Outcome" value={trade.outcome || (isWin ? 'Win' : isLoss ? 'Loss' : 'BE')} tone={isWin ? 'up' : isLoss ? 'down' : undefined} />
           </div>
 
-          {/* Market context */}
-          <Section icon={LineChart} title="Market Context">
-            <ul className="space-y-1.5">
-              <Bullet><span className="font-medium text-foreground">Weekly context:</span> {trade.weekly}</Bullet>
-              <Bullet><span className="font-medium text-foreground">Daily bias:</span> {trade.daily}</Bullet>
-              {trade.session && <Bullet><span className="font-medium text-foreground">Session:</span> {trade.session}</Bullet>}
-            </ul>
-          </Section>
-
           {/* Setup & confluences */}
           <Section icon={Crosshair} title="Setup & Confluences">
             {trade.setup ? (
@@ -136,30 +158,18 @@ export function TradeDetailDialog({ trade, open, onOpenChange }: { trade: Detail
             )}
           </Section>
 
-          {/* Risk & execution */}
-          <Section icon={Gauge} title="Risk & Execution">
-            <ul className="space-y-1.5">
-              <Bullet><span className="font-medium text-foreground">Direction:</span> {long ? 'Long (buy)' : trade.side ? 'Short (sell)' : '—'}</Bullet>
-              <Bullet><span className="font-medium text-foreground">Risk-to-reward:</span> {trade.rr ? `1:${Number(trade.rr).toFixed(1)}` : '—'}</Bullet>
-              <Bullet><span className="font-medium text-foreground">Result:</span> {pnl > 0 ? '+' : ''}{pnl.toLocaleString()}</Bullet>
-            </ul>
-          </Section>
-
-          {hasPsychology(trade as any) && (() => { const p = trade as any; return (
-            <Section icon={Brain} title="Psychology">
-              <ul className="space-y-1.5">
-                {p.emotion_before && <Bullet><span className="font-medium text-foreground">Emotion before:</span> {p.emotion_before}</Bullet>}
-                {p.emotion_after && <Bullet><span className="font-medium text-foreground">Emotion after:</span> {p.emotion_after}</Bullet>}
-                {p.confidence_score != null && <Bullet><span className="font-medium text-foreground">Confidence:</span> {p.confidence_score}/10</Bullet>}
-                {p.discipline_score != null && <Bullet><span className="font-medium text-foreground">Discipline:</span> {p.discipline_score}/10</Bullet>}
-                {p.execution_score != null && <Bullet><span className="font-medium text-foreground">Execution:</span> {p.execution_score}/10</Bullet>}
-                {p.stress_score != null && <Bullet><span className="font-medium text-foreground">Stress:</span> {p.stress_score}/10</Bullet>}
-                {p.followed_plan != null && <Bullet><span className="font-medium text-foreground">Followed plan:</span> {p.followed_plan ? 'Yes' : 'No'}</Bullet>}
-                {p.impulsive_entry != null && <Bullet><span className="font-medium text-foreground">Impulsive entry:</span> {p.impulsive_entry ? 'Yes' : 'No'}</Bullet>}
-                {p.psychology_note && <Bullet>{p.psychology_note}</Bullet>}
-              </ul>
+          {tradeDetailSections(trade).filter(sec => sec.title !== 'Trade Details').map(sec => (
+            <Section key={sec.title} icon={sec.title === 'Psychology' ? Brain : sec.title === 'Risk' ? Gauge : sec.title === 'Planning' ? LineChart : StickyNote} title={sec.title}>
+              <dl className="grid gap-x-4 gap-y-1.5 sm:grid-cols-2">
+                {sec.rows.map(([k, v]) => (
+                  <div key={k} className="flex min-w-0 items-baseline gap-2 text-sm">
+                    <dt className="shrink-0 font-medium text-foreground">{k}:</dt>
+                    <dd className={cn('min-w-0 break-words', v === NR ? 'text-muted-foreground/60' : 'text-muted-foreground')}>{v}</dd>
+                  </div>
+                ))}
+              </dl>
             </Section>
-          ); })()}
+          ))}
 
           {/* Notes */}
           <Section icon={StickyNote} title="Journal Notes">
