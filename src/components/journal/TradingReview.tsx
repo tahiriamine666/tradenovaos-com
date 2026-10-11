@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
-import { AlertCircle, CheckCircle2, History, Loader2, Play, Save } from "lucide-react";
+import { AlertCircle, ArrowDown, ArrowUp, CheckCircle2, ChevronDown, History, Loader2, Pencil, Play, Plus, RotateCcw, Save, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useActiveAccount } from "@/contexts/ActiveAccountContext";
@@ -13,6 +13,18 @@ const robotSrc = import.meta.env.DEV
   ? `https://id-preview--0ee4a120-abbf-401b-9623-1114b47e7fda.lovable.app${robotAsset.url}`
   : robotAsset.url;
 import { fetchAll } from "@/lib/review/fetchAll";
+import {
+  DEFAULT_QUESTIONS,
+  PRIMARY_ACTIONS,
+  activeQuestions,
+  applyEdit,
+  newQuestionId,
+  normalizeTemplate,
+  otherAnswers,
+  restoreDefaults,
+  type ReviewQuestion,
+} from "@/lib/review/questions";
+import { executionScore, overallScore, performanceScore, planningScore, psychologyScore, statusOf, type CategoryScore } from "@/lib/review/scores";
 import { getReviewQueue, type Draft, type SaveFn, type SaveState } from "@/lib/review/saveQueue";
 import {
   ACTION_FIELDS,
@@ -92,9 +104,10 @@ function toServerRow(r: any): ServerRow {
 
 /** Optimistic-revision update; the row id and base revision are captured by the queue per review. */
 export const makeSaver =
-  (userId: string): SaveFn =>
+  (userId: string, keys?: () => { questions: string[]; actions: string[] }): SaveFn =>
   async (id, base, d) => {
-    const pct = completion(d.answers, d.action_plan);
+    const k = keys?.();
+    const pct = k ? completion(d.answers, d.action_plan, k.questions, k.actions) : completion(d.answers, d.action_plan);
     const { data, error } = await supabase
       .from("trading_reviews")
       .update({
@@ -123,7 +136,7 @@ export const makeSaver =
 
 export function TradingReview({ type = "weekly" }: { type?: PeriodType }) {
   const { user } = useAuth();
-  const { activeAccountId, version } = useActiveAccount();
+  const { activeAccountId, activeAccount, version } = useActiveAccount();
   const accountKey = activeAccountId ?? "all";
   const [preset, setPreset] = useState<Preset>(PRESETS[type][0].id);
   const [customStart, setCustomStart] = useState("");
@@ -154,8 +167,40 @@ export function TradingReview({ type = "weekly" }: { type?: PeriodType }) {
   const [navBlocked, setNavBlocked] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
 
+  // ── Per-user question template (stable ids; removed questions stay inactive for history)
+  const [template, setTemplate] = useState<ReviewQuestion[]>(() => DEFAULT_QUESTIONS.map((q) => ({ ...q })));
+  const [templateError, setTemplateError] = useState(false);
+  const keysRef = useRef({ questions: DEFAULT_QUESTIONS.map((q) => q.id), actions: PRIMARY_ACTIONS.map(([k]) => k) as string[] });
+  keysRef.current = { questions: activeQuestions(template).map((q) => q.id), actions: PRIMARY_ACTIONS.map(([k]) => k) };
+  useEffect(() => {
+    if (!user) return;
+    let alive = true;
+    supabase
+      .from("review_question_templates")
+      .select("questions")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (!alive) return;
+        setTemplateError(!!error);
+        if (!error) setTemplate(normalizeTemplate(data?.questions));
+      });
+    return () => {
+      alive = false;
+    };
+  }, [user]);
+  const saveTemplate = async (next: ReviewQuestion[]) => {
+    if (!user) return false;
+    const { error } = await supabase
+      .from("review_question_templates")
+      .upsert({ user_id: user.id, questions: next as any }, { onConflict: "user_id" });
+    if (error) return false;
+    setTemplate(next);
+    return true;
+  };
+
   // ── Per-review-id save queue (module-level per user, so drafts survive tab/account switches)
-  const queue = useMemo(() => (user ? getReviewQueue(user.id, makeSaver(user.id)) : null), [user]);
+  const queue = useMemo(() => (user ? getReviewQueue(user.id, makeSaver(user.id, () => keysRef.current)) : null), [user]);
   useSyncExternalStore(
     useCallback((cb) => queue?.subscribe(cb) ?? (() => {}), [queue]),
     () =>
@@ -496,15 +541,50 @@ export function TradingReview({ type = "weekly" }: { type?: PeriodType }) {
   }, [source]);
 
   const row = entry ? { ...entry.draft, ratings: entry.draft.ratings } : null;
-  const pct = row ? completion(row.answers, row.action_plan) : 0;
+  const active = activeQuestions(template);
+  const pct = row ? completion(row.answers, row.action_plan, keysRef.current.questions, keysRef.current.actions) : 0;
   const legacyEntries = row ? Object.entries(legacy).filter(([, v]) => v && String(v).trim()) : [];
+  const others = row ? otherAnswers(row.answers, template) : [];
+  const primaryKeys = new Set<string>(PRIMARY_ACTIONS.map(([k]) => k));
   const fmtRange = period
     ? `${new Date(period.start + "T12:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric" })} – ${new Date(period.end + "T12:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}`
     : "";
+  const scores = useMemo<{ cats: CategoryScore[]; overall: number | null } | null>(() => {
+    if (!stats || !source) return null;
+    const rrRecorded = source.trades.filter((t) => t.rr != null && !isNaN(Number(t.rr))).length;
+    const days = new Set(source.trades.map((t) => t.trade_date)).size;
+    const cats = [performanceScore(stats.p, rrRecorded), executionScore(stats.e), psychologyScore(stats.psy), planningScore(stats.plan, stats.p.total, days)];
+    return { cats, overall: overallScore(cats) };
+  }, [stats, source]);
+  const LABEL = type === "weekly" ? "Weekly" : "Bi-weekly";
 
   return (
-    <div className="feature-reveal space-y-4 pb-24 lg:pb-0">
-      <div className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-card p-3">
+    <div className="feature-reveal space-y-6 pb-24 lg:pb-0">
+      {/* Header */}
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0 space-y-1">
+          <h2 className="font-heading text-2xl font-semibold text-foreground">{LABEL} Review</h2>
+          <p className="text-sm text-muted-foreground">
+            <span className="font-mono text-foreground">{period ? fmtRange : "Pick dates"}</span> ·{" "}
+            {activeAccount?.account_name || "All accounts"}
+            {row && (
+              <>
+                {" "}· <span className={cn(entry?.meta.status === "complete" ? "text-primary" : "")}>{entry?.meta.status === "complete" ? "Complete" : `Draft · ${pct}%`}</span>
+              </>
+            )}
+          </p>
+        </div>
+        {row && (
+          <div className="flex items-center gap-3">
+            <SaveBadge state={save} onReload={reloadAfterConflict} onRetry={saveNow} />
+            <Button onClick={saveNow} disabled={save === "saving"} className="tn-btn-halo gap-2">
+              <Save className="h-4 w-4" />
+              {save === "saving" ? "Saving…" : "Save Review"}
+            </Button>
+          </div>
+        )}
+      </header>
+      <div className="flex flex-wrap items-center gap-2">
         <div className="flex flex-wrap rounded-md border border-border p-0.5" role="group" aria-label="Review period">
           {PRESETS[type].map((p) => (
             <button
@@ -545,7 +625,6 @@ export function TradingReview({ type = "weekly" }: { type?: PeriodType }) {
             )}
           </div>
         )}
-        <span className="ml-auto font-mono text-xs text-foreground">{period ? fmtRange : "Pick dates"}</span>
       </div>
 
       {(navBlocked || otherUnsaved > 0) && (
@@ -571,17 +650,60 @@ export function TradingReview({ type = "weekly" }: { type?: PeriodType }) {
           </Button>
         </div>
       )}
-      <div className="grid gap-4 lg:grid-cols-[1fr_260px]">
-        <div className="min-w-0 space-y-4">
+      <div className="grid gap-6 lg:grid-cols-[1fr_260px]">
+        <div className="min-w-0 space-y-6">
           {!period ? (
             <Empty text="Choose a valid date range to review." />
           ) : (
             <>
-              {sourceError ? (
-                <ErrorBox text="Could not load trades and plans for this period." onRetry={loadSource} />
-              ) : !stats ? (
-                <Skeleton className="h-64 w-full" />
-              ) : (
+              {/* Section A — Weekly Overview */}
+              <section aria-labelledby="overview-h" className="space-y-4">
+                <h3 id="overview-h" className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{LABEL} Overview</h3>
+                {sourceError ? (
+                  <ErrorBox text="Could not load trades and plans for this period." onRetry={loadSource} />
+                ) : !stats || !scores ? (
+                  <Skeleton className="h-48 w-full" />
+                ) : (
+                  <>
+                    <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 sm:flex-row sm:items-center tn-card-light">
+                      <ScoreRing value={scores.overall} size={92} />
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Overall {LABEL} Score</p>
+                        <p className="mt-1 text-sm text-foreground">
+                          {scores.overall == null
+                            ? "Shown once all four categories have enough recorded data."
+                            : `${statusOf(scores.overall)} — average of the four category scores.`}
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">{stats.p.total} trade(s) in this period.</p>
+                      </div>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                      {scores.cats.map((c) => (
+                        <ScoreCard key={c.key} cat={c} />
+                      ))}
+                    </div>
+                    {stats.ins.length > 0 && (
+                      <ul className="space-y-1.5 text-sm text-foreground" aria-label="Insights">
+                        {stats.ins.map((i) => (
+                          <li key={i} className="flex gap-2">
+                            <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
+                            {i}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </>
+                )}
+              </section>
+
+              {/* Section B — Detailed Analytics */}
+              {stats && (
+                <details className="group rounded-2xl border border-border bg-card">
+                  <summary className="flex cursor-pointer list-none items-center justify-between px-5 py-4 text-sm font-semibold text-foreground">
+                    Detailed Analytics
+                    <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-300 group-open:rotate-180" />
+                  </summary>
+                  <div className="border-t border-border p-4">
                 <div className="grid gap-4 xl:grid-cols-2">
                   <Group title="Performance">
                     {stats.p.total === 0 ? (
@@ -841,6 +963,8 @@ export function TradingReview({ type = "weekly" }: { type?: PeriodType }) {
                     )}
                   </Group>
                 </div>
+                  </div>
+                </details>
               )}
 
               {reviewState === "loading" ? (
@@ -864,18 +988,106 @@ export function TradingReview({ type = "weekly" }: { type?: PeriodType }) {
                 </div>
               ) : (
                 <>
-                  <div className="flex flex-wrap items-center gap-3 rounded-md border border-border bg-card p-3">
-                    <div className="flex min-w-[160px] flex-1 items-center gap-2">
-                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
-                        <div
-                          className="h-full rounded-full bg-primary transition-[width] duration-300"
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                      <span className="font-mono text-xs text-foreground">{pct}%</span>
+                  {/* Section C — Reflection */}
+                  <section aria-labelledby="reflection-h" className="space-y-4 rounded-2xl border border-border bg-card p-5">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <h3 id="reflection-h" className="text-sm font-semibold text-foreground">{LABEL} Reflection</h3>
+                      <QuestionEditor template={template} onSave={saveTemplate} />
                     </div>
-                    <SaveBadge state={save} onReload={reloadAfterConflict} onRetry={saveNow} />
-                  </div>
+                    {templateError && <p className="text-xs text-muted-foreground">Your custom questions could not be loaded; showing the defaults.</p>}
+                    {active.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">No active questions. Use Edit Questions to add some.</p>
+                    ) : (
+                      <div className="space-y-5">
+                        {active.map((q, i) => (
+                          <div key={q.id}>
+                            <label htmlFor={`rq-${q.id}`} className="mb-2 block text-sm font-medium text-foreground">
+                              <span className="mr-2 font-mono text-xs text-primary">{String(i + 1).padStart(2, "0")}</span>
+                              {q.text}
+                            </label>
+                            <textarea
+                              id={`rq-${q.id}`}
+                              value={row.answers[q.id] ?? ""}
+                              rows={3}
+                              placeholder="Optional"
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                edit((r) => ({ ...r, answers: { ...r.answers, [q.id]: v } }));
+                              }}
+                              className="w-full resize-y rounded-xl border border-border bg-background px-4 py-3 text-sm leading-relaxed text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {(others.length > 0 || legacyEntries.length > 0) && (
+                      <details className="rounded-xl border border-border bg-background/40 text-sm">
+                        <summary className="cursor-pointer px-4 py-3 text-xs font-semibold text-primary">
+                          Other saved answers ({others.length + legacyEntries.length})
+                        </summary>
+                        <dl className="grid gap-3 border-t border-border px-4 py-3 md:grid-cols-2">
+                          {others.map((o) => (
+                            <div key={o.id}>
+                              <dt className="text-xs text-muted-foreground">{o.label}</dt>
+                              <dd className="whitespace-pre-wrap text-foreground">{o.value}</dd>
+                            </div>
+                          ))}
+                          {legacyEntries.map(([k, v]) => (
+                            <div key={`legacy-${k}`}>
+                              <dt className="text-xs text-muted-foreground">{k.replace(/_/g, " ")} (earlier review)</dt>
+                              <dd className="whitespace-pre-wrap text-foreground">{v}</dd>
+                            </div>
+                          ))}
+                        </dl>
+                      </details>
+                    )}
+                  </section>
+
+                  {/* Section D — Next Week Action Plan */}
+                  <section aria-labelledby="action-h" className="space-y-4 rounded-2xl border border-border bg-card p-5">
+                    <h3 id="action-h" className="text-sm font-semibold text-foreground">Next {type === "weekly" ? "Week" : "Period"} Action Plan</h3>
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {PRIMARY_ACTIONS.map(([k, l, ph]) => (
+                        <label key={k} className="block">
+                          <span className="mb-1.5 block text-xs font-medium text-muted-foreground">{l}</span>
+                          <input
+                            value={row.action_plan[k] ?? ""}
+                            placeholder={ph}
+                            onChange={(e) => {
+                              const v = e.target.value;
+                              edit((r) => ({ ...r, action_plan: { ...r.action_plan, [k]: v } }));
+                            }}
+                            className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                          />
+                        </label>
+                      ))}
+                    </div>
+                    <details className="text-sm">
+                      <summary className="cursor-pointer text-xs font-semibold text-primary">More limits &amp; focus</summary>
+                      <div className="mt-3 grid gap-3 md:grid-cols-2">
+                        {ACTION_FIELDS.filter(([k]) => !primaryKeys.has(k)).map(([k, l, t]) => (
+                          <label key={k} className="block">
+                            <span className="mb-1.5 block text-xs font-medium text-muted-foreground">{l}</span>
+                            <input
+                              type={t}
+                              min={t === "number" ? 0 : undefined}
+                              step="any"
+                              value={row.action_plan[k] ?? ""}
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                edit((r) => ({ ...r, action_plan: { ...r.action_plan, [k]: v } }));
+                              }}
+                              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+                            />
+                          </label>
+                        ))}
+                      </div>
+                    </details>
+                  </section>
+
+                  <details className="rounded-2xl border border-border bg-card">
+                    <summary className="cursor-pointer px-5 py-4 text-sm font-semibold text-foreground">Self ratings (optional)</summary>
+                    <div className="border-t border-border p-4">
                   <Group title="Process ratings (1–10)">
                     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                       {RATINGS.map(([k, l]) => (
@@ -908,72 +1120,15 @@ export function TradingReview({ type = "weekly" }: { type?: PeriodType }) {
                       ))}
                     </div>
                   </Group>
-                  <Group title="Reflection">
-                    <div className="grid gap-3 md:grid-cols-2">
-                      {QUESTIONS.map(([k, q], i) => (
-                        <label key={k} className="block">
-                          <span className="mb-1.5 block text-xs font-medium text-muted-foreground">
-                            {i + 1}. {q}
-                          </span>
-                          <textarea
-                            value={row.answers[k] ?? ""}
-                            rows={2}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              edit((r) => ({ ...r, answers: { ...r.answers, [k]: v } }));
-                            }}
-                            className="w-full resize-y rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-                          />
-                        </label>
-                      ))}
                     </div>
-                  </Group>
-                  <Group title="Next week action plan">
-                    <div className="grid gap-3 md:grid-cols-2">
-                      {ACTION_FIELDS.map(([k, l, t]) => (
-                        <label key={k} className="block">
-                          <span className="mb-1.5 block text-xs font-medium text-muted-foreground">{l}</span>
-                          <input
-                            type={t}
-                            min={t === "number" ? 0 : undefined}
-                            step="any"
-                            value={row.action_plan[k] ?? ""}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              edit((r) => ({ ...r, action_plan: { ...r.action_plan, [k]: v } }));
-                            }}
-                            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
-                          />
-                        </label>
-                      ))}
-                    </div>
-                  </Group>
-                  {legacyEntries.length > 0 && (
-                    <Group title="Earlier answers (read-only)">
-                      <dl className="grid gap-2 text-sm md:grid-cols-2">
-                        {legacyEntries.map(([k, v]) => (
-                          <div key={k}>
-                            <dt className="text-xs text-muted-foreground">
-                              {k.replace(/_/g, " ")} → {QUESTIONS.find(([q]) => q === LEGACY_MAP[k])?.[1]}
-                            </dt>
-                            <dd className="whitespace-pre-wrap text-foreground">{v}</dd>
-                          </div>
-                        ))}
-                      </dl>
-                    </Group>
-                  )}
-                  <div className="sticky bottom-20 flex justify-end lg:bottom-3">
-                    <Button onClick={saveNow} disabled={save === "saving"} className="tn-btn-halo gap-2">
-                      <Save className="h-4 w-4" />
-                      {save === "saving" ? "Saving…" : "Save review"}
-                    </Button>
-                  </div>
+                  </details>
                 </>
               )}
             </>
           )}
         </div>
 
+        {/* Section E — Review History */}
         <aside className="space-y-4">
           <div className="hidden justify-center lg:flex">
             <RobotMark />
@@ -1031,6 +1186,115 @@ export function TradingReview({ type = "weekly" }: { type?: PeriodType }) {
       <div className="flex justify-center lg:hidden">
         <RobotMark small />
       </div>
+    </div>
+  );
+}
+
+function ScoreRing({ value, size = 64 }: { value: number | null; size?: number }) {
+  const r = (size - 10) / 2, c = 2 * Math.PI * r;
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label={value == null ? "Not enough data" : `${value} out of 100`} className="shrink-0">
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" strokeWidth={6} className="stroke-muted" />
+      {value != null && (
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" strokeWidth={6} strokeLinecap="round" className="stroke-primary"
+          strokeDasharray={`${(value / 100) * c} ${c}`} transform={`rotate(-90 ${size / 2} ${size / 2})`} style={{ transition: "stroke-dasharray 0.6s ease" }} />
+      )}
+      <text x="50%" y="50%" textAnchor="middle" dominantBaseline="central" className={value == null ? "fill-muted-foreground" : "fill-foreground"} fontSize={value == null ? size * 0.16 : size * 0.28} fontWeight={700}>
+        {value == null ? "—" : value}
+      </text>
+    </svg>
+  );
+}
+
+function ScoreCard({ cat }: { cat: CategoryScore }) {
+  return (
+    <div className="flex flex-col rounded-2xl border border-border bg-card p-4 tn-card-light" data-testid={`score-${cat.key}`}>
+      <div className="flex items-center gap-3">
+        <ScoreRing value={cat.score} size={60} />
+        <div className="min-w-0">
+          <p className="text-sm font-semibold text-foreground">{cat.title}</p>
+          <p className={cn("text-xs", cat.score == null ? "text-muted-foreground" : cat.score >= 60 ? "text-primary" : "text-muted-foreground")}>{statusOf(cat.score)}</p>
+        </div>
+      </div>
+      <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{cat.summary}</p>
+      <details className="mt-2 text-xs">
+        <summary className="cursor-pointer text-primary">How it's calculated</summary>
+        <ul className="mt-2 space-y-1.5">
+          {cat.components.map((c) => (
+            <li key={c.label} className="flex justify-between gap-2">
+              <span className="text-muted-foreground">
+                {c.label}
+                <span className="block text-[11px] text-muted-foreground/70">{c.detail}</span>
+              </span>
+              <span className="shrink-0 font-mono text-foreground">{c.value == null ? "n/a" : Math.round(c.value)}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-2 text-[11px] text-muted-foreground/70">Average of the components with at least 3 recorded trades; n/a components are excluded, never counted as 0.</p>
+      </details>
+    </div>
+  );
+}
+
+function QuestionEditor({ template, onSave }: { template: ReviewQuestion[]; onSave: (t: ReviewQuestion[]) => Promise<boolean> }) {
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState<{ id: string; text: string }[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState(false);
+  const begin = () => {
+    setDraft(activeQuestions(template).map(({ id, text }) => ({ id, text })));
+    setErr(false);
+    setOpen(true);
+  };
+  const move = (i: number, d: number) =>
+    setDraft((x) => {
+      const j = i + d;
+      if (j < 0 || j >= x.length) return x;
+      const n = [...x];
+      [n[i], n[j]] = [n[j], n[i]];
+      return n;
+    });
+  const save = async (next: ReviewQuestion[]) => {
+    setBusy(true);
+    const ok = await onSave(next);
+    setBusy(false);
+    setErr(!ok);
+    if (ok) setOpen(false);
+  };
+  if (!open)
+    return (
+      <Button variant="outline" size="sm" onClick={begin} className="gap-1.5">
+        <Pencil className="h-3.5 w-3.5" /> Edit Questions
+      </Button>
+    );
+  return (
+    <div className="w-full space-y-3 rounded-xl border border-dashed border-primary/40 bg-primary/[0.04] p-4" role="group" aria-label="Edit questions">
+      {draft.map((q, i) => (
+        <div key={q.id} className="flex items-center gap-2">
+          <input
+            aria-label={`Question ${i + 1}`}
+            value={q.text}
+            onChange={(e) => {
+              const v = e.target.value;
+              setDraft((x) => x.map((y) => (y.id === q.id ? { ...y, text: v } : y)));
+            }}
+            className="min-w-0 flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+          />
+          <button type="button" aria-label={`Move question ${i + 1} up`} disabled={i === 0} onClick={() => move(i, -1)} className="rounded p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-30"><ArrowUp className="h-3.5 w-3.5" /></button>
+          <button type="button" aria-label={`Move question ${i + 1} down`} disabled={i === draft.length - 1} onClick={() => move(i, 1)} className="rounded p-1.5 text-muted-foreground hover:text-foreground disabled:opacity-30"><ArrowDown className="h-3.5 w-3.5" /></button>
+          <button type="button" aria-label={`Remove question ${i + 1}`} onClick={() => setDraft((x) => x.filter((y) => y.id !== q.id))} className="rounded p-1.5 text-muted-foreground hover:text-foreground"><Trash2 className="h-3.5 w-3.5" /></button>
+        </div>
+      ))}
+      <div className="flex flex-wrap items-center gap-2">
+        <Button type="button" variant="ghost" size="sm" className="gap-1.5" onClick={() => setDraft((x) => [...x, { id: newQuestionId(), text: "" }])}><Plus className="h-3.5 w-3.5" /> Add Question</Button>
+        <Button type="button" variant="ghost" size="sm" className="gap-1.5" disabled={busy} onClick={() => setDraft(activeQuestions(restoreDefaults(template)).map(({ id, text }) => ({ id, text })))}><RotateCcw className="h-3.5 w-3.5" /> Restore Defaults</Button>
+        <div className="ml-auto flex gap-2">
+          <Button type="button" variant="outline" size="sm" onClick={() => setOpen(false)} disabled={busy}>Cancel</Button>
+          <Button type="button" size="sm" onClick={() => void save(applyEdit(template, draft))} disabled={busy}>{busy ? "Saving…" : "Save Questions"}</Button>
+        </div>
+      </div>
+      {err && <p role="alert" className="text-xs text-foreground">Questions not saved. Please try again.</p>}
+      <p className="text-[11px] text-muted-foreground">Removing or rewording a question never deletes saved answers; earlier answers stay under "Other saved answers".</p>
     </div>
   );
 }
