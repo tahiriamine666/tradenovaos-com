@@ -613,7 +613,7 @@ export default function AddTradeModal({
               </div>
             </div>
             </Section>
-            <Section title="Planning">
+            <Section title="Planning" defaultOpen={!!editTrade}>
             {/* Weekly context + Daily bias */}
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -663,7 +663,7 @@ export default function AddTradeModal({
             </div>
             <div><label className="text-xs font-medium text-muted-foreground block mb-1.5" htmlFor="f-rv">Rule violations (comma separated)</label><Input id="f-rv" value={form.rule_violations} onChange={e => set('rule_violations', e.target.value)} placeholder="No confirmation, Traded news" className="rounded-lg" /></div>
             </Section>
-            <Section title="Risk">
+            <Section title="Risk" defaultOpen={!!editTrade}>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               <div><label className="text-xs font-medium text-muted-foreground block mb-1.5" htmlFor="f-entry_price">Entry</label><Input id="f-entry_price" type="number" step="any" value={form.entry_price} onChange={e => set('entry_price', e.target.value)} placeholder="1.0850" className="rounded-lg" /></div>
               <div><label className="text-xs font-medium text-muted-foreground block mb-1.5" htmlFor="f-stop_loss">Stop loss</label><Input id="f-stop_loss" type="number" step="any" value={form.stop_loss} onChange={e => set('stop_loss', e.target.value)} placeholder="1.0820" className="rounded-lg" /></div>
@@ -672,10 +672,10 @@ export default function AddTradeModal({
               <div><label className="text-xs font-medium text-muted-foreground block mb-1.5" htmlFor="f-risk_percent">Risk per trade (%)</label><Input id="f-risk_percent" type="number" step="any" value={form.risk_percent} onChange={e => set('risk_percent', e.target.value)} placeholder="1" className="rounded-lg" /></div>
             </div>
             </Section>
-            <Section title="Psychology">
+            <Section title="Psychology" defaultOpen={!!editTrade}>
               <PsychologyFields key={`${editTrade?.id ?? 'new'}-${open}-${full ? 1 : 0}`} value={psy} onChange={setPsy} collapsible={false} />
             </Section>
-            <Section title="Review / Notes">
+            <Section title="Review / Notes" defaultOpen={!!editTrade}>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div><label className="text-xs font-medium text-muted-foreground block mb-1.5" htmlFor="f-er">Entry reason</label><Textarea id="f-er" value={form.entry_reason} onChange={e => set('entry_reason', e.target.value)} rows={2} className="text-sm resize-none rounded-lg" /></div>
               <div><label className="text-xs font-medium text-muted-foreground block mb-1.5" htmlFor="f-xr">Exit reason</label><Textarea id="f-xr" value={form.exit_reason} onChange={e => set('exit_reason', e.target.value)} rows={2} className="text-sm resize-none rounded-lg" /></div>
@@ -698,7 +698,7 @@ export default function AddTradeModal({
               />
             </div>
             </Section>
-            <Section title="Screenshots">
+            <Section title="Screenshots" defaultOpen={!!editTrade}>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label className="text-xs font-medium text-muted-foreground block mb-1.5">Before screenshot</label>
