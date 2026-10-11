@@ -870,9 +870,10 @@ export default function TradePlanV2() {
     <div className="mx-auto max-w-7xl space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-heading text-2xl font-semibold text-foreground">Daily Plan — {pair}</h1>
+          <p className={label}>Trading Plan</p>
+          <h1 className="mt-1 font-heading text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">Daily Plan — {pair}</h1>
           <div className="mt-2"><PairPicker pair={pair} onChange={choosePair} pairs={pairs} onAdd={addPair} /></div>
-          <p className="mt-1 text-sm text-muted-foreground">{longDate(date)} · {activeAccount?.account_name || 'All Accounts / historical unassigned plans'}</p>
+          <p className="mt-2 text-xs tracking-wide text-muted-foreground">{longDate(date)} · {activeAccount?.account_name || 'All Accounts / historical unassigned plans'}</p>
         </div>
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1.5 text-xs text-muted-foreground" aria-live="polite">
@@ -881,7 +882,7 @@ export default function TradePlanV2() {
             {state === 'error' && <span className="text-destructive">Not saved</span>}
           </span>
           <button type="button" onClick={() => { if (loading || loadError || loadedScope.current !== `${accountKey}|${date}|${pair}`) return; if (tab === 'daily' && showDaily) pending.current.daily = { date, pair, accountKey, data: daily, ai: { ...prevAi.current } }; if (tab === 'weekly') pending.current.weekly = { week, pair, accountKey, data: weekly }; void saveAll(); }}
-            className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-[0_0_20px_hsl(var(--primary)/0.25)] transition-opacity hover:opacity-90"><Save className="h-4 w-4" /> Save Plan</button>
+            className="flex items-center gap-1.5 rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98]"><Save className="h-4 w-4" /> Save Plan</button>
           {dailyExists && !loading && !loadError && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -942,7 +943,7 @@ export default function TradePlanV2() {
           ) : (
             <div key={`${tab}-${date}-${accountKey}-${pair}`} className="content-crossfade">
               {tab === 'weekly' && (
-                <div className={`${card} flex flex-col gap-6 p-5 sm:p-6`}>
+                <div className={`${card} flex flex-col gap-6 p-5 sm:p-8`}>
                   <div><p className={label}>Weekly Outlook</p><p className="mt-1 text-sm text-foreground">{weekLabel}</p></div>
                   {(layoutEdit === 'weekly' ? layoutDraft : weeklyOrder).map((id, i) => layoutWrap(id, weeklyNodes[id], i))}
                 </div>
@@ -950,7 +951,7 @@ export default function TradePlanV2() {
 
               {tab === 'daily' && (!showDaily && layoutEdit !== 'daily' ? empty : (
                 <>
-                  <div className={`${card} flex flex-col gap-6 p-5 sm:p-6`}>
+                  <div className={`${card} flex flex-col gap-6 p-5 sm:p-8`}>
                     {(layoutEdit === 'daily' ? layoutDraft : dailyOrder).map((id, i) => layoutWrap(id, dailyNodes[id], i))}
                   </div>
                 </>
