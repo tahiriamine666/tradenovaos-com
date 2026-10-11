@@ -925,7 +925,7 @@ export default function TradePlanV2() {
                   main_idea: d(<Block title="Main Idea"><Text v={daily.mainIdea} /></Block>),
                 };
                 const list = (layoutEdit === 'full' ? layoutDraft : fullOrder).map((id, i) => {
-                  const node = fullNodes[id] ?? (layoutEdit === 'full' ? <Block title={id.replace('_', ' ')}><p className="text-sm text-muted-foreground">No plan saved for this day</p></Block> : null);
+                  const node = fullNodes[id] || (layoutEdit === 'full' ? <Block title={id.replace('_', ' ')}><p className="text-sm text-muted-foreground">No plan saved for this day</p></Block> : null);
                   return node ? layoutWrap(id, layoutEdit === 'full' ? node : <div key={id} style={{ order: i }}>{node}</div>, i) : null;
                 });
                 return (
