@@ -2,13 +2,15 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Database } from '@/integrations/supabase/types';
 import {
   ChevronLeft, ChevronRight, Plus, Trash2, Upload, Maximize2, X, Check, Loader2,
-  GripVertical, ArrowUp, ArrowDown, Save, CalendarDays,
+  GripVertical, ArrowUp, ArrowDown, Save, CalendarDays, MoreVertical,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useActiveAccount } from '@/contexts/ActiveAccountContext';
 import { toast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import robotAsset from '@/assets/tradenova-robot-full.jpg.asset.json';
 import { ChecklistRobot, type RobotReaction } from './ChecklistRobot';
@@ -532,7 +534,11 @@ export default function TradePlanV2() {
   const { activeAccountId, activeAccount } = useActiveAccount();
   const accountKey = activeAccountId ?? 'all';
   const today = toKey(new Date());
-  const [date, setDate] = useState(today);
+  // Selected date and calendar open state persist per user (date stored as a local YYYY-MM-DD key, never a Date, to avoid timezone shifts).
+  const dateKey = `tn-checklist-date:${user?.id ?? ''}`;
+  const calKey = `tn-checklist-cal-open:${user?.id ?? ''}`;
+  const [date, setDateRaw] = useState(() => { try { const v = localStorage.getItem(dateKey); return v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : today; } catch { return today; } });
+  const setDate = (k: string) => { setDateRaw(k); try { localStorage.setItem(dateKey, k); } catch { /* ignore */ } };
   const pairKey = `tn-checklist-pair:${user?.id ?? ''}`;
   const pairsKey = `tn-checklist-pairs:${user?.id ?? ''}`;
   const [pair, setPairRaw] = useState(() => { try { return normalizePair(localStorage.getItem(pairKey)); } catch { return 'EURUSD'; } });
@@ -540,7 +546,10 @@ export default function TradePlanV2() {
   const setPair = (raw: string) => { const p = normalizePair(raw); setPairRaw(p); try { localStorage.setItem(pairKey, p); } catch { /* ignore */ } };
   const addPair = (p: string) => setPairs(prev => { const n = prev.includes(p) ? prev : [...prev, p]; try { localStorage.setItem(pairsKey, JSON.stringify(n.filter(x => !DEFAULT_PAIRS.includes(x)))); } catch { /* ignore */ } return n; });
   const [tab, setTab] = useState<Tab>('daily');
-  const [calOpen, setCalOpen] = useState(false);
+  const [calOpen, setCalOpenRaw] = useState(() => { try { return localStorage.getItem(calKey) === '1'; } catch { return false; } });
+  const setCalOpen = (f: (o: boolean) => boolean) => setCalOpenRaw(o => { const n = f(o); try { localStorage.setItem(calKey, n ? '1' : '0'); } catch { /* ignore */ } return n; });
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [retry, setRetry] = useState(0);
@@ -733,7 +742,29 @@ export default function TradePlanV2() {
   };
 
   const choosePair = async (p: string) => { if (p === pair) return; if (await saveAll()) setPair(p); };
-  const go = async (k: string) => { if (await saveAll()) { setDate(k); setCalOpen(false); } };
+  const go = async (k: string) => { if (await saveAll()) setDate(k); };
+
+  // Delete only the selected Daily Plan row (user + account_key + date + pair); outlooks and checklists are separate rows.
+  const deletePlan = async () => {
+    if (!user || deleting) return;
+    const scope = { date, pair, accountKey };
+    setDeleting(true);
+    try {
+      const pd = pending.current.daily;
+      if (pd && pd.date === scope.date && pd.pair === scope.pair && pd.accountKey === scope.accountKey) pending.current.daily = undefined;
+      if (!await saveAll()) throw new Error('Pending changes could not be saved');
+      const { error } = await supabase.from('trade_plans').delete().eq('user_id', user.id).eq('account_key', scope.accountKey).eq('plan_date', scope.date).eq('pair', scope.pair);
+      if (error) throw error;
+      setSaved(s => { const n = new Set(s); n.delete(scope.date); return n; });
+      if (loadedScope.current === `${scope.accountKey}|${scope.date}|${scope.pair}`) {
+        prevAi.current = {}; setDaily(withRuleDefaults(emptyDaily(), ruleDefaultsRef.current)); setDailyExists(false); setCreating(false);
+      }
+      setConfirmDelete(false);
+      toast({ title: 'Daily Plan deleted', description: `${scope.pair} · ${longDate(scope.date)}` });
+    } catch (e: any) {
+      toast({ title: 'Could not delete plan', description: e?.message ?? 'Your plan was not changed.', variant: 'destructive' });
+    } finally { setDeleting(false); }
+  };
   const showDaily = dailyExists || creating || date === today;
 
   const weekLabel = useMemo(() => {
@@ -836,20 +867,41 @@ export default function TradePlanV2() {
           </span>
           <button type="button" onClick={() => { if (loading || loadError || loadedScope.current !== `${accountKey}|${date}|${pair}`) return; if (tab === 'daily' && showDaily) pending.current.daily = { date, pair, accountKey, data: daily, ai: { ...prevAi.current } }; if (tab === 'weekly') pending.current.weekly = { week, pair, accountKey, data: weekly }; void saveAll(); }}
             className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-[0_0_20px_hsl(var(--primary)/0.25)] transition-opacity hover:opacity-90"><Save className="h-4 w-4" /> Save Plan</button>
+          {dailyExists && !loading && !loadError && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button type="button" aria-label="More plan actions" className="rounded-xl border border-border bg-card p-2 text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"><MoreVertical className="h-4 w-4" /></button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={() => setConfirmDelete(true)} className="gap-2 text-destructive focus:text-destructive"><Trash2 className="h-4 w-4" /> Delete Daily Plan</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
+        <AlertDialog open={confirmDelete} onOpenChange={o => { if (!deleting) setConfirmDelete(o); }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Daily Plan?</AlertDialogTitle>
+              <AlertDialogDescription>Are you sure you want to delete your {pair} Daily Plan for {fromKey(date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}? This action cannot be undone.</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+              <AlertDialogAction disabled={deleting} onClick={e => { e.preventDefault(); void deletePlan(); }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{deleting ? 'Deleting…' : 'Delete Plan'}</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[300px_1fr]">
-        <aside className="lg:sticky lg:top-4 lg:self-start">
-          <div className="hidden lg:block">{calendar}</div>
-          <div className="lg:hidden">
-            <button type="button" onClick={() => setCalOpen(o => !o)} className={`${card} flex w-full items-center justify-between px-4 py-3 text-sm font-semibold text-foreground`}>
-              <span className="flex items-center gap-2"><CalendarDays className="h-4 w-4 text-primary" /> Calendar</span>
-              <ChevronRight className={`h-4 w-4 transition-transform duration-300 ${calOpen ? 'rotate-90' : ''}`} />
-            </button>
-            {calOpen && <div className="mt-2 animate-fade-in">{calendar}</div>}
+      <div className="space-y-5">
+        <section aria-label="Calendar">
+          <button type="button" onClick={() => setCalOpen(o => !o)} aria-expanded={calOpen} className={`${card} flex w-full items-center justify-between px-4 py-3 text-sm font-semibold text-foreground`}>
+            <span className="flex items-center gap-2"><CalendarDays className="h-4 w-4 text-primary" /> Calendar</span>
+            <ChevronRight className={`h-4 w-4 transition-transform duration-300 ${calOpen ? 'rotate-90' : ''}`} />
+          </button>
+          <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${calOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+            <div className="overflow-hidden">{calOpen && <div className="mt-2 max-w-md">{calendar}</div>}</div>
           </div>
-        </aside>
+        </section>
 
         <main className="min-w-0 space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
