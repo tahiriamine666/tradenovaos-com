@@ -50,7 +50,7 @@ describe('Trade Logs detail', () => {
     render(<TradeLogDetailModal tradeId="t1" onClose={() => {}} onEdit={() => {}} />);
     expect(await screen.findByText('EURUSD — LONG')).toBeTruthy();
     expect(screen.getByText('LOSS · -$25.00')).toBeTruthy();
-    await waitFor(() => expect(screen.getByText('FTMO 100k')).toBeTruthy());
+    await waitFor(() => expect(screen.getAllByText('FTMO 100k').length).toBeGreaterThan(0));
     fireEvent.mouseDown(screen.getByRole('tab', { name: 'Screenshots' }));
     expect((await screen.findByAltText('EURUSD before trade')).getAttribute('src')).toBe('https://signed/u1/before.png');
     expect(screen.getByAltText('EURUSD after trade').getAttribute('src')).toBe('https://signed/u1/after.png');
