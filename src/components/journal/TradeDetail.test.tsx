@@ -2,7 +2,8 @@ import { render, screen, waitFor, cleanup, fireEvent } from '@testing-library/re
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const fake = vi.hoisted(() => ({ rows: new Map<string, any>(), updates: [] as any[], delay: new Map<string, Promise<void>>() }));
-vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => ({ user: { id: 'u1' } }) }));
+const authUser = vi.hoisted(() => ({ id: 'u1' }));
+vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => ({ user: authUser }) }));
 vi.mock('@/contexts/ActiveAccountContext', () => ({ useActiveAccount: () => ({ activeAccountId: 'acc-1' }) }));
 vi.mock('@/hooks/use-toast', () => ({ toast: vi.fn() }));
 vi.mock('@/integrations/supabase/client', () => ({ supabase: {
