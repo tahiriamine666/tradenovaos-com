@@ -298,7 +298,7 @@ export default function AddTradeModal({
   }, [editTrade?.id, open, user]);
 
   useEffect(() => {
-    const t = editTrade ? full : null;
+    const t = editTrade && full && full.id === editTrade.id ? full : null;
     if (t) {
       const s = (v: unknown) => (v == null ? '' : String(v));
       setForm({
@@ -360,7 +360,7 @@ export default function AddTradeModal({
 
   // Save
   const handleSave = async () => {
-    if (!user || (editTrade && !full)) return;
+    if (!user || (editTrade && (!full || full.id !== editTrade.id))) return;
     if (!validate()) return;
     setSaving(true);
 
