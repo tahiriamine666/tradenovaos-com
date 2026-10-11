@@ -88,21 +88,26 @@ function fromLegacy(row: any): Daily {
 const normDaily = (v: any): Daily => ({ ...emptyDaily(), ...v, risk: { ...emptyDaily().risk, ...(v?.risk || {}) } });
 
 // ── Small UI primitives ───────────────────────────────────────────────────────
-const card = 'rounded-2xl border border-border bg-card';
-const label = 'text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground';
-const input = 'w-full rounded-xl border border-border bg-background/60 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none transition-[border-color,box-shadow] duration-300 focus:border-primary/50 focus:shadow-[0_0_0_3px_hsl(var(--primary)/0.12)]';
+const card = 'rounded-2xl border border-border/60 bg-card shadow-[0_1px_0_hsl(var(--foreground)/0.03)_inset,0_12px_32px_-20px_hsl(var(--background))]';
+const label = 'text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground';
+const input = 'w-full rounded-xl border border-border/60 bg-background/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none transition-[border-color,box-shadow] duration-300 hover:border-border focus:border-primary/50 focus:shadow-[0_0_0_3px_hsl(var(--primary)/0.10)]';
 
 function Field({ title, children }: { title: string; children: React.ReactNode }) {
-  return <div className="space-y-2"><p className={label}>{title}</p>{children}</div>;
+  return (
+    <section className="space-y-3 border-t border-border/40 pt-6 first:border-0 first:pt-0">
+      <h3 className="text-sm font-medium tracking-tight text-foreground">{title}</h3>
+      {children}
+    </section>
+  );
 }
 function Chips({ options, value, onChange, multi, disabled }: { options: string[]; value: string | string[]; onChange: (v: any) => void; multi?: boolean; disabled?: boolean }) {
   const sel = (o: string) => (multi ? (value as string[]).includes(o) : value === o);
   return (
     <div className="flex flex-wrap gap-2">
       {options.map(o => (
-        <button key={o} type="button" disabled={disabled}
+        <button key={o} type="button" disabled={disabled} aria-pressed={sel(o)}
           onClick={() => multi ? onChange(sel(o) ? (value as string[]).filter(x => x !== o) : [...(value as string[]), o]) : onChange(sel(o) ? '' : o)}
-          className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-all duration-300 ${sel(o) ? 'border-primary/60 bg-primary/10 text-primary shadow-[0_0_14px_hsl(var(--primary)/0.18)]' : 'border-border text-muted-foreground hover:text-foreground hover:border-foreground/20'}`}>
+          className={`rounded-full border px-4 py-1.5 text-xs font-medium transition-all duration-300 ${sel(o) ? 'border-primary/60 bg-primary/10 text-primary' : 'border-border/60 text-muted-foreground hover:border-foreground/25 hover:text-foreground'}`}>
           {o}
         </button>
       ))}
@@ -398,7 +403,7 @@ function PlanCalendar({ selected, onSelect, savedDates }: { selected: string; on
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => <span key={d} className="py-1 text-[10px] font-semibold text-muted-foreground">{d}</span>)}
         {cells.map((k, i) => k ? (
           <button key={k} type="button" onClick={() => onSelect(k)} aria-pressed={k === selected}
-            className={`relative mx-auto aspect-square w-full max-w-11 rounded-lg text-xs transition-all duration-300 ${k === selected ? 'bg-primary text-primary-foreground shadow-[0_0_16px_hsl(var(--primary)/0.45)]' : k === today ? 'border border-primary/60 text-primary' : 'text-foreground/80 hover:bg-foreground/[0.06]'}`}>
+            className={`relative mx-auto aspect-square w-full max-w-11 rounded-full text-xs tabular-nums transition-all duration-300 ${k === selected ? 'bg-primary/15 font-semibold text-primary ring-1 ring-primary/60' : k === today ? 'ring-1 ring-foreground/25 text-foreground' : 'text-foreground/75 hover:bg-foreground/[0.05] hover:text-foreground'}`}>
             {Number(k.slice(8))}
             {savedDates.has(k) && <span className={`absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full ${k === selected ? 'bg-primary-foreground' : 'bg-primary'}`} />}
           </button>
@@ -852,9 +857,9 @@ export default function TradePlanV2() {
         onDragStart={() => { layoutDrag.current = id; }}
         onDragOver={e => { if (layoutDrag.current && layoutDrag.current !== id) { e.preventDefault(); reorderDraft(layoutDrag.current, id); } }}
         onDragEnd={() => { layoutDrag.current = null; }}
-        className="rounded-2xl border border-dashed border-primary/40 bg-primary/[0.04] p-3">
-        <div className="mb-3 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.12em] text-primary">
-          <GripVertical className="h-4 w-4 cursor-grab" /> <span>Drag to move</span>
+        className="cursor-grab rounded-2xl border border-dashed border-primary/30 bg-primary/[0.03] p-4 transition-all duration-200 hover:border-primary/60 hover:bg-primary/[0.06] active:cursor-grabbing active:scale-[0.995] active:opacity-80">
+        <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary/90">
+          <GripVertical className="h-4 w-4" /> <span>Drag to move</span>
         </div>
         <div className="pointer-events-none select-none">{node}</div>
       </div>
@@ -915,10 +920,10 @@ export default function TradePlanV2() {
 
         <main className="min-w-0 space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="inline-flex rounded-xl border border-border bg-card p-1">
+            <div className="inline-flex max-w-full overflow-x-auto rounded-full border border-border/60 bg-card/60 p-1">
               {([['weekly', 'Weekly Outlook'], ['daily', 'Daily Plan'], ['full', 'Full View']] as [Tab, string][]).map(([k, l]) => (
                 <button key={k} type="button" onClick={async () => { if (await saveAll()) { setLayoutEdit(null); setTab(k); } }} aria-pressed={tab === k}
-                  className={`rounded-lg px-3 py-2 text-[11px] font-bold uppercase tracking-[0.12em] transition-all duration-300 sm:px-4 ${tab === k ? 'bg-primary/15 text-primary shadow-[0_0_14px_hsl(var(--primary)/0.15)]' : 'text-muted-foreground hover:text-foreground'}`}>{l}</button>
+                  className={`whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-medium tracking-wide transition-all duration-300 sm:px-5 ${tab === k ? 'bg-foreground/[0.07] text-foreground ring-1 ring-primary/50' : 'text-muted-foreground hover:text-foreground'}`}>{l}</button>
               ))}
             </div>
             {!loading && !loadError && (layoutEdit === tab ? (
