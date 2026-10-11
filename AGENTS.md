@@ -21,3 +21,5 @@ Open app view lives in the URL (?view=); AuthContext keeps the same user object 
 Monthly offer displays use integer cents and currency formatting from src/lib/pricing.ts; annual quotes and actual checkout charges remain Dodo-authoritative — prevents display drift without altering billing or entitlements.
 Legacy admin MRR fields are current-offer estimates, not historical revenue; update their definitions through additive migrations without writing subscriptions — preserves existing customer amounts.
 Authenticated Dodo quote responses whitelist public product identifiers and quote fields only; never return provider credentials — supports runtime catalog verification safely.
+Review questions: per-user template in review_question_templates ([{id,text,active}]); answers keyed by stable id, removed questions kept inactive and old answers shown read-only — wording/order edits never move or erase answers.
+Weekly scorecard scores are pure functions in src/lib/review/scores.ts built on stats.ts outputs; components need ≥3 recorded samples, missing → null ("Not enough data"), overall only when all four exist — missing data is never scored as poor.
