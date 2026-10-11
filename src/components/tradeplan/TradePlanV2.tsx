@@ -552,6 +552,8 @@ export default function TradePlanV2() {
       const valid = v && /^\d{4}-\d{2}-\d{2}$/.test(v) && toKey(fromKey(v)) === v;
       setDateRaw(valid ? v! : toKey(new Date()));
       setCalOpenRaw(localStorage.getItem(`tn-checklist-cal-open:${user.id}`) === '1');
+      const t = localStorage.getItem(`tn-checklist-tab:${user.id}`);
+      setTab(t === 'weekly' || t === 'full' ? t : 'daily');
     } catch { /* ignore */ }
   }, [user?.id]);
   const pairKey = `tn-checklist-pair:${user?.id ?? ''}`;
