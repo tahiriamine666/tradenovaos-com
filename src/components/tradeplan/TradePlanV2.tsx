@@ -490,6 +490,9 @@ function PairChecklist({ date, pair, legacy, readOnly, models, onModelsChange, s
   return <div className="space-y-2"><p className="text-xs text-muted-foreground" aria-live="polite">{saveState === 'saving' ? 'Saving checklist…' : saveState === 'saved' ? 'Checklist saved' : saveState === 'error' ? 'Checklist not saved' : ''}</p><Checklist readOnly={readOnly} daily={{ ...emptyDaily(), ...ck }} set={set} models={models} onModelsChange={onModelsChange} /></div>;
 }
 
+// One normalization for every supported and custom symbol; blank falls back to EURUSD so no write ever uses pair ''.
+export const normalizePair = (p: string | null | undefined) => (p || '').trim().toUpperCase().replace(/[^A-Z0-9.]/g, '') || 'EURUSD';
+
 function PairPicker({ pair, onChange, pairs, onAdd }: { pair: string; onChange: (p: string) => void; pairs: string[]; onAdd: (p: string) => void }) {
   const [custom, setCustom] = useState('');
   const add = () => { const v = custom.trim().toUpperCase().replace(/[^A-Z0-9.]/g, ''); if (v) { onAdd(v); onChange(v); setCustom(''); } };
@@ -507,6 +510,16 @@ function PairPicker({ pair, onChange, pairs, onAdd }: { pair: string; onChange: 
 
 const Tag = ({ v }: { v: string }) => v ? <span className="inline-block rounded-lg border border-primary/40 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">{v}</span> : <span className="text-sm text-muted-foreground">—</span>;
 
+// Weekly Outlook is scoped by user + account_key + week + normalized pair. Legacy pair-less rows
+// (account 'all', pair '') are shown read-through under EURUSD only when no scoped row exists;
+// the first edit writes a new scoped row and never rewrites the legacy one.
+async function loadWeekly(userId: string, accountKey: string, pair: string, week: string) {
+  const base = () => supabase.from('trade_plan_checklists').select('data').eq('user_id', userId).eq('checklist_type', 'weekly_outlook').eq('period_date', week);
+  const scoped = await base().eq('account_key', accountKey).eq('pair', pair).maybeSingle();
+  if (scoped.error || scoped.data || pair !== 'EURUSD') return scoped;
+  return base().eq('account_key', 'all').eq('pair', '').maybeSingle();
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 type Tab = 'weekly' | 'daily' | 'full';
 type SaveState = 'idle' | 'saving' | 'saved' | 'error';
@@ -519,9 +532,9 @@ export default function TradePlanV2() {
   const [date, setDate] = useState(today);
   const pairKey = `tn-checklist-pair:${user?.id ?? ''}`;
   const pairsKey = `tn-checklist-pairs:${user?.id ?? ''}`;
-  const [pair, setPairRaw] = useState(() => { try { return localStorage.getItem(pairKey) || 'EURUSD'; } catch { return 'EURUSD'; } });
+  const [pair, setPairRaw] = useState(() => { try { return normalizePair(localStorage.getItem(pairKey)); } catch { return 'EURUSD'; } });
   const [pairs, setPairs] = useState<string[]>(() => { try { return Array.from(new Set([...DEFAULT_PAIRS, ...JSON.parse(localStorage.getItem(pairsKey) || '[]')])); } catch { return DEFAULT_PAIRS; } });
-  const setPair = (p: string) => { setPairRaw(p); try { localStorage.setItem(pairKey, p); } catch { /* ignore */ } };
+  const setPair = (raw: string) => { const p = normalizePair(raw); setPairRaw(p); try { localStorage.setItem(pairKey, p); } catch { /* ignore */ } };
   const addPair = (p: string) => setPairs(prev => { const n = prev.includes(p) ? prev : [...prev, p]; try { localStorage.setItem(pairsKey, JSON.stringify(n.filter(x => !DEFAULT_PAIRS.includes(x)))); } catch { /* ignore */ } return n; });
   const [tab, setTab] = useState<Tab>('daily');
   const [calOpen, setCalOpen] = useState(false);
@@ -547,7 +560,7 @@ export default function TradePlanV2() {
   // Refs to flush pending edits to the date they belong to.
   const prevAi = useRef<Record<string, any>>({});
   const loadedScope = useRef('');
-  const pending = useRef<{ daily?: { date: string; pair: string; accountKey: string; data: Daily; ai: Record<string, any> }; weekly?: { week: string; data: Weekly }; defaults?: { id: string; text: string }[] }>({});
+  const pending = useRef<{ daily?: { date: string; pair: string; accountKey: string; data: Daily; ai: Record<string, any> }; weekly?: { week: string; pair: string; accountKey: string; data: Weekly }; defaults?: { id: string; text: string }[] }>({});
   const inFlight = useRef<Promise<boolean> | null>(null);
   const ruleDefaultsRef = useRef<{ id: string; text: string }[]>([]);
   const checklistSave = useRef<(() => Promise<boolean>) | null>(null);
@@ -604,7 +617,7 @@ export default function TradePlanV2() {
         const w = p.weekly.data;
         const filled = [w.bias, w.scenario, w.chart, w.mainIdea].filter(Boolean).length + (w.news.length ? 1 : 0);
         const { error } = await supabase.from('trade_plan_checklists').upsert({
-          user_id: user.id, account_key: 'all', account_id: null, pair: '', checklist_type: 'weekly_outlook', period_date: p.weekly.week,
+          user_id: user.id, account_key: p.weekly.accountKey, account_id: p.weekly.accountKey === 'all' ? null : p.weekly.accountKey, pair: p.weekly.pair, checklist_type: 'weekly_outlook', period_date: p.weekly.week,
           data: w as any, status: filled === 0 ? 'empty' : filled === 5 ? 'complete' : 'partial',
         }, { onConflict: 'user_id,account_key,checklist_type,period_date,pair' });
         if (error) throw error;
@@ -645,7 +658,7 @@ export default function TradePlanV2() {
       if (!await saveAll()) { if (alive) { setLoadError(true); setLoading(false); } return; }
       const [{ data: row, error: planError }, { data: wk, error: weeklyError }, { data: rd, error: rulesError }] = await Promise.all([
         supabase.from('trade_plans').select('*').eq('user_id', user.id).eq('account_key', accountKey).eq('plan_date', date).eq('pair', pair).maybeSingle(),
-        supabase.from('trade_plan_checklists').select('data').eq('user_id', user.id).eq('account_key', 'all').eq('checklist_type', 'weekly_outlook').eq('pair', '').eq('period_date', week).maybeSingle(),
+        loadWeekly(user.id, accountKey, pair, week),
         supabase.from('daily_plan_rules').select('rules').eq('user_id', user.id).maybeSingle(),
       ]);
       if (!alive) return;
@@ -680,7 +693,7 @@ export default function TradePlanV2() {
 
   const schedule = () => { setState('saving'); clearTimeout(timer.current); timer.current = setTimeout(flush, 1000); };
   const setD = (p: Partial<Daily>) => { if (loading || loadError || loadedScope.current !== `${accountKey}|${date}|${pair}`) return; const n = { ...dailyRef.current, ...p }; dailyRef.current = n; setDaily(n); pending.current.daily = { date, pair, accountKey, data: n, ai: { ...prevAi.current } }; schedule(); };
-  const setW = (p: Partial<Weekly>) => { if (loading || loadError) return; const n = { ...weeklyRef.current, ...p }; weeklyRef.current = n; setWeekly(n); pending.current.weekly = { week, data: n }; schedule(); };
+  const setW = (p: Partial<Weekly>) => { if (loading || loadError || loadedScope.current !== `${accountKey}|${date}|${pair}`) return; const n = { ...weeklyRef.current, ...p }; weeklyRef.current = n; setWeekly(n); pending.current.weekly = { week, pair, accountKey, data: n }; schedule(); };
   // Rule text edits update the user's persistent daily-rules set so they carry over to every future day.
   const changeRules = (r: Rule[]) => {
     setD({ rules: r });
@@ -814,7 +827,7 @@ export default function TradePlanV2() {
             {state === 'saved' && <><Check className="h-3 w-3 text-primary" /> Saved</>}
             {state === 'error' && <span className="text-destructive">Not saved</span>}
           </span>
-          <button type="button" onClick={() => { if (loading || loadError || loadedScope.current !== `${accountKey}|${date}|${pair}`) return; if (tab === 'daily' && showDaily) pending.current.daily = { date, pair, accountKey, data: daily, ai: { ...prevAi.current } }; if (tab === 'weekly') pending.current.weekly = { week, data: weekly }; void saveAll(); }}
+          <button type="button" onClick={() => { if (loading || loadError || loadedScope.current !== `${accountKey}|${date}|${pair}`) return; if (tab === 'daily' && showDaily) pending.current.daily = { date, pair, accountKey, data: daily, ai: { ...prevAi.current } }; if (tab === 'weekly') pending.current.weekly = { week, pair, accountKey, data: weekly }; void saveAll(); }}
             className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-[0_0_20px_hsl(var(--primary)/0.25)] transition-opacity hover:opacity-90"><Save className="h-4 w-4" /> Save Plan</button>
         </div>
       </div>

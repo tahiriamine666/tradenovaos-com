@@ -8,7 +8,8 @@ Economic Calendar: defaults in `economic_calendar_preferences`, presets in `econ
 Access decided server-side by `get_access_state` RPC, enforced by RequireAccess on /app; never gate on client flags.
 Reviews live in `trading_reviews` (one row per user+account_key+period_type+period_start(+period_end), upserted only on Save with optimistic `revision` checks; created only via explicit "Start review"); stats are pure functions in src/lib/review/stats.ts returning null for unknown data.
 Trade psychology ratings 1–10 on the trade row (form shows 1–5, stored = ui×2; psych_discipline_score deprecated); `plan_status` (yes/no/partial) supplements `followed_plan` without rewriting the boolean.
-Daily plans: one `trade_plans` row per user+account_key+plan_date+pair; account_key 'all' preserves unassigned plans. Serialized saves retain failed snapshots and flush before scope switches; weekly outlooks stay pair-less.
+Daily plans: one `trade_plans` row per user+account_key+plan_date+pair; account_key 'all' preserves unassigned plans. Serialized saves retain failed snapshots and flush before scope switches.
+Weekly Outlook: one `trade_plan_checklists` row per user+account_key+'weekly_outlook'+week period_date+normalizePair(pair), never pair ''; legacy pair-less rows (account 'all', pair '') are read-through under EURUSD only when no scoped row exists and are never rewritten — prevents one pair's outlook leaking into all pairs.
 Admin plan changes only via admin_set_plan/admin_remove_override RPCs; resolution lives in plan_info_for; audited; never touch Dodo billing rows.
 Keep UI/chart accents in shared semantic CSS tokens; legacy Tailwind palette aliases resolve to tokens, so views cannot drift apart.
 Checklist robot reactions only from explicit unchecked-to-checked clicks, with isolated CSS animation framing.
