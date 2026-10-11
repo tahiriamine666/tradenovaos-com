@@ -19,6 +19,8 @@ import LandingPage from "./pages/LandingPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import SupportedBrokersPage from "./pages/SupportedBrokersPage.tsx";
 import Pricing from "./pages/Pricing.tsx";
+import SeoHead from "@/components/SeoHead";
+import { monthlyPlanPrice } from "@/lib/pricing";
 import MarketingPlaceholder from "./pages/marketing/MarketingPlaceholder.tsx";
 import { FeaturePage, SolutionPage, BlogPage, HelpCenterPage } from "./pages/marketing/MarketingPages.tsx";
 import FairValueGapsGuide from "./pages/blog/FairValueGapsGuide.tsx";
@@ -92,7 +94,7 @@ const App = () => (
 
 
                   {/* Public marketing routes */}
-                  <Route path="/pricing" element={<Pricing />} />
+                  <Route path="/pricing" element={<><SeoHead path="/pricing" title="Pricing — TradeNova OS plans for every trader" description={`Compare TradeNova Pro (${monthlyPlanPrice('pro')}/mo) and Elite (${monthlyPlanPrice('elite')}/mo). Start a 14-day free trial — journal, trade plans, analytics, psychology score and NOVA AI.`} /><Pricing /></>} />
                   <Route path="/supported-brokers" element={<SupportedBrokersPage />} />
                   <Route path="/features/:feature" element={<FeaturePage />} />
                   <Route path="/solutions/:solution" element={<SolutionPage />} />
