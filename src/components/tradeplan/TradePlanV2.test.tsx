@@ -304,8 +304,8 @@ describe('Delete Daily Plan and calendar persistence', () => {
     localStorage.setItem('tn-checklist-tab:user-two', 'full');
     const view = render(<TradePlanV2 />); await ready();
     fireEvent.click(screen.getByRole('button', { name: 'Weekly Outlook' }));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Weekly Outlook' })).toHaveAttribute('aria-pressed', 'true'));
     expect(localStorage.getItem('tn-checklist-tab:user-one')).toBe('weekly');
-    expect(screen.getByRole('button', { name: 'Weekly Outlook' })).toHaveAttribute('aria-pressed', 'true');
     view.unmount();
     render(<TradePlanV2 />);
     await waitFor(() => expect(screen.getByRole('button', { name: 'Weekly Outlook' })).toHaveAttribute('aria-pressed', 'true'));
