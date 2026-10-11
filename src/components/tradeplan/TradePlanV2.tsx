@@ -909,7 +909,7 @@ export default function TradePlanV2() {
                       <div className="flex flex-wrap gap-2"><Tag v={daily.bias} /><Tag v={daily.price === 'Custom' ? daily.priceCustom || 'Custom' : daily.price} /></div>
                       <Text v={daily.scenario} />
                     </Block> : none,
-                  charts: d({(daily.before || daily.after) && <Block title="Before / After Charts"><div className="grid gap-4 sm:grid-cols-2"><ImageSlot readOnly title="Before" path={daily.before} /><ImageSlot readOnly title="After" path={daily.after} /></div></Block>}),
+                  charts: d((daily.before || daily.after) && <Block title="Before / After Charts"><div className="grid gap-4 sm:grid-cols-2"><ImageSlot readOnly title="Before" path={daily.before} /><ImageSlot readOnly title="After" path={daily.after} /></div></Block>),
                   news: d(<Block title="News"><NewsView items={daily.news} />{daily.newsShot && <div className="mt-3 max-w-xl"><ImageSlot readOnly title="News screenshot" path={daily.newsShot} /></div>}</Block>),
                   risk: d(<Block title="Risk Management">
                       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
