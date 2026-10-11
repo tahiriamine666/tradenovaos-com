@@ -8,13 +8,15 @@ vi.mock('@/contexts/ActiveAccountContext', () => ({ useActiveAccount: () => ({ a
 vi.mock('@/hooks/use-toast', () => ({ toast: vi.fn() }));
 vi.mock('@/integrations/supabase/client', () => ({ supabase: { storage: { from: () => ({ createSignedUrl: async (p: string) => ({ data: { signedUrl: `https://signed/${p}` }, error: null }) }) }, from: (table: string) => {
   const filters: Record<string, any> = {};
-  let many = true;
+  let many = true; let del = false;
   const query: any = {
+    delete: () => { del = true; return query; },
     select: () => query, eq: (k: string, v: any) => { filters[k] = v; return query; },
     order: () => query, limit: () => query,
     maybeSingle: () => { many = false; return query; },
     then: (resolve: any, reject: any) => {
       const matches = [...fake.rows.values()].filter(r => r.table === table && Object.entries(filters).every(([k,v]) => r[k] === v));
+      if (del) { for (const [k, r] of [...fake.rows.entries()]) if (matches.includes(r)) fake.rows.delete(k); fake.writes.push({ table, deleted: { ...filters } }); return Promise.resolve({ error: null }).then(resolve, reject); }
       return Promise.resolve({ data: many ? matches : matches[0] ?? null, error: null }).then(resolve, reject);
     },
     upsert: async (payload: any, options: any) => {
@@ -240,5 +242,46 @@ describe('Edit Layout on every pair and tab', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
     fireEvent.click(screen.getByRole('button', { name: 'Save Layout' }));
     await waitFor(() => expect(fake.writes.at(-1)!.payload.layout.order).toEqual(FULL_LAYOUT_DEFAULT));
+  });
+});
+
+describe('Delete Daily Plan and calendar persistence', () => {
+  const k = () => { const d = new Date(); const p = (n: number) => String(n).padStart(2, '0'); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; };
+  const seed = (pair: string, date: string, account = 'account-a') => fake.rows.set(`trade_plans|user-one|${account}|${date}|${pair}|`, { table: 'trade_plans', user_id: 'user-one', account_key: account, plan_date: date, pair, ai_analysis: { daily_v2: { scenario: `${pair} ${date} ${account}` } } });
+  const openDelete = async () => {
+    const trigger = await screen.findByRole('button', { name: 'More plan actions' });
+    fireEvent.pointerDown(trigger, { button: 0, pointerType: 'mouse' }); fireEvent.keyDown(trigger, { key: 'Enter' });
+    fireEvent.click(await screen.findByRole('menuitem', { name: /Delete Daily Plan/ }));
+  };
+  it('cancel keeps the plan; confirm deletes only the selected user/account/date/pair row', async () => {
+    const t = k();
+    seed('EURUSD', t); seed('XAUUSD', t); seed('EURUSD', '2020-01-06'); seed('EURUSD', t, 'account-b');
+    fake.rows.set('weekly', { table: 'trade_plan_checklists', user_id: 'user-one', account_key: 'account-a', checklist_type: 'weekly_outlook', pair: 'EURUSD', data: { bias: 'Bullish' } });
+    render(<TradePlanV2 />); await ready();
+    await openDelete();
+    expect(await screen.findByText(/delete your EURUSD Daily Plan for/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+    expect(fake.rows.size).toBe(5);
+    await openDelete();
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete Plan' }));
+    await waitFor(() => expect(fake.rows.size).toBe(4));
+    const del = fake.writes.find(w => w.deleted);
+    expect(del.deleted).toEqual({ user_id: 'user-one', account_key: 'account-a', plan_date: t, pair: 'EURUSD' });
+    expect(fake.rows.has(`trade_plans|user-one|account-a|${t}|XAUUSD|`)).toBe(true);
+    expect(fake.rows.has('trade_plans|user-one|account-a|2020-01-06|EURUSD|')).toBe(true);
+    expect(fake.rows.has(`trade_plans|user-one|account-b|${t}|EURUSD|`)).toBe(true);
+    expect(fake.rows.has('weekly')).toBe(true);
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'More plan actions' })).toBeNull());
+  });
+  it('remembers selected date and calendar open state', async () => {
+    seed('EURUSD', '2020-01-06');
+    localStorage.setItem('tn-checklist-date:user-one', '2020-01-06'); localStorage.setItem('tn-checklist-cal-open:user-one', '1');
+    render(<TradePlanV2 />);
+    expect(await screen.findByText(/January 6, 2020/)).toBeInTheDocument();
+    const bar = screen.getByRole('button', { name: /^Calendar$/ });
+    expect(bar).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.click(bar);
+    expect(localStorage.getItem('tn-checklist-cal-open:user-one')).toBe('0');
+    expect(bar).toHaveAttribute('aria-expanded', 'false');
   });
 });
