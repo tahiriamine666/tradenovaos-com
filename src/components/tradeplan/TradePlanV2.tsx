@@ -539,6 +539,16 @@ export default function TradePlanV2() {
   const calKey = `tn-checklist-cal-open:${user?.id ?? ''}`;
   const [date, setDateRaw] = useState(() => { try { const v = localStorage.getItem(dateKey); return v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : today; } catch { return today; } });
   const setDate = (k: string) => { setDateRaw(k); try { localStorage.setItem(dateKey, k); } catch { /* ignore */ } };
+  // The signed-in user can arrive after the first render; restore that user's stored date (and open state) once it is known.
+  useEffect(() => {
+    if (!user?.id) return;
+    try {
+      const v = localStorage.getItem(`tn-checklist-date:${user.id}`);
+      const valid = v && /^\d{4}-\d{2}-\d{2}$/.test(v) && toKey(fromKey(v)) === v;
+      setDateRaw(valid ? v! : toKey(new Date()));
+      setCalOpenRaw(localStorage.getItem(`tn-checklist-cal-open:${user.id}`) === '1');
+    } catch { /* ignore */ }
+  }, [user?.id]);
   const pairKey = `tn-checklist-pair:${user?.id ?? ''}`;
   const pairsKey = `tn-checklist-pairs:${user?.id ?? ''}`;
   const [pair, setPairRaw] = useState(() => { try { return normalizePair(localStorage.getItem(pairKey)); } catch { return 'EURUSD'; } });
