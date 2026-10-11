@@ -105,12 +105,15 @@ export class ReviewSaveQueue {
     if (e.status === "conflict") return false;
     if (!e.dirty) return e.status !== "error";
     // Assign the lock before notifying subscribers or calling the transport.
+    // The first snapshot is taken synchronously, so an edit made right after flush() is saved by a follow-up.
+    let first: { gen: number; snapshot: Draft } | null = { gen: e.gen, snapshot: e.draft };
     const run = Promise.resolve()
       .then(async () => {
         while (e.dirty) {
-          const gen = e.gen,
-            snapshot = e.draft,
+          const gen = first ? first.gen : e.gen,
+            snapshot = first ? first.snapshot : e.draft,
             base = e.revision;
+          first = null;
           e.status = "saving";
           e.message = undefined;
           this.notify();
