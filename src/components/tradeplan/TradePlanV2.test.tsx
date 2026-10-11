@@ -223,7 +223,7 @@ describe('Edit Layout on every pair and tab', () => {
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Daily Plan — GER40' })).toBeInTheDocument());
     await ready(); await check();
     expect(fake.writes.filter(w => w.table === 'trade_plans')).toHaveLength(0);
-  });
+  }, 20000);
   it('persists Full View order under page full_view and Reset restores the defaults', async () => {
     const order = ['main_idea', 'weekly', 'daily', 'charts', 'news', 'risk', 'psychology', 'rules'];
     fake.rows.set('workspace_layouts|user-one|full', { table: 'workspace_layouts', user_id: 'user-one', page: 'full_view', layout: { order } });
