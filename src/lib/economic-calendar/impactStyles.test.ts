@@ -64,12 +64,12 @@ describe("Economic Calendar impact colors", () => {
 
   it("keeps impact components off the legacy state colors", () => {
     for (const f of ["ImpactBadge.tsx", "EventsTimelineView.tsx", "EventsCalendarView.tsx", "FiltersBar.tsx"]) {
-      expect(readSrc(`../components/economic/${f}`), f).not.toMatch(/\b(bg|text|border)-(danger|warning|success)\b/);
+      expect(readSrc(`../../components/economic/${f}`), f).not.toMatch(/\b(bg|text|border)-(danger|warning|success)\b/);
     }
   });
 
   it("routes holiday events to the white holiday color in rows and the details drawer", () => {
-    expect(readSrc("../components/economic/EventsListView.tsx")).toContain("bucket={impactBucket(e)}");
-    expect(readSrc("../components/economic/EventDetailsDrawer.tsx")).toContain("bucket={impactBucket(event)}");
+    expect(readSrc("../../components/economic/EventsListView.tsx")).toContain("bucket={impactBucket(e)}");
+    expect(readSrc("../../components/economic/EventDetailsDrawer.tsx")).toContain("bucket={impactBucket(event)}");
   });
 });
