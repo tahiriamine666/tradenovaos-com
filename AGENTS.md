@@ -1,4 +1,5 @@
 Trade `screenshot_url` stays the after-trade image; before-trade image goes in `before_screenshot_url`, so historical charts survive without migration.
+Public educational articles use one blog catalog for listing, route registration and Article metadata; the FVG guide retains its dedicated view, so only existing substantive posts are advertised.
 One keyed motion boundary for signed-in navigation; shared CSS reveals for repeated trade items.
 Outlook checklists live in `trade_plan_checklists` (upserted per user+account_key+type+period_date; pair_checklists add +pair, '' for non-pair; legacy untagged shown under EURUSD until edited), never in the trade plan row.
 Plan history edits existing user-owned daily `trade_plans` rows by date; dated outlooks stay separate, legacy embedded outlooks shown read-only when no dated row exists.
