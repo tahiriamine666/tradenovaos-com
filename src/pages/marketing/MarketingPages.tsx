@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   BookOpen, BarChart3, PlayCircle, Sparkles, Brain,
   Target, Calendar, Upload, ArrowRight, Check, ArrowLeft,
@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import MarketingNavbar from '@/components/MarketingNavbar';
 import SeoHead from '@/components/SeoHead';
+import { BLOG_ARTICLES, articlePath } from '@/pages/blog/articles';
 
 const ease: any = [0.22, 1, 0.36, 1];
 
@@ -30,7 +31,7 @@ const FEATURE_DATA: Record<string, {
   'edge-analytics': {
     icon: BarChart3, color: 'text-primary', bg: 'bg-primary/10',
     title: 'Analytics',
-    subtitle: 'Know where your edge lives — and where it breaks.',
+    subtitle: 'Review recorded outcomes by setup and direction.',
     description: 'See win rate, profit factor, average win and loss, R:R and cumulative P&L, plus performance by setup and direction, all calculated from your own trades.',
     benefits: ['Win rate and profit factor', 'Cumulative P&L curve', 'Performance by setup and direction', 'Average R:R', 'Best and worst trades', 'Per trading account'],
     cta: 'Start your 14-day free trial',
@@ -38,7 +39,7 @@ const FEATURE_DATA: Record<string, {
   'mind-journal': {
     icon: Brain, color: 'text-primary', bg: 'bg-primary/10',
     title: 'Psychology Tracking',
-    subtitle: 'Your psychology is your biggest edge — or your biggest leak.',
+    subtitle: 'Record emotions and discipline alongside your trades.',
     description: 'Log emotions, mistakes and discipline on every trade. The Psychology Score turns your discipline ratings into a daily score so you can see how your mindset moves with your results.',
     benefits: ['Emotion and mistake logging', 'Daily Psychology Score', 'Psych view in the Trading Calendar', 'Excellent / Moderate / Challenging days', 'Journal entries per day', 'Mood from your confidence ratings'],
     cta: 'Start your 14-day free trial',
@@ -93,8 +94,8 @@ export function FeaturePage() {
     <div className="min-h-screen bg-background text-foreground">
       <SeoHead
         path={`/features/${feature}`}
-        title={`${data.title} — TradeNova OS`}
-        description={data.subtitle}
+        title={`${data.title === 'Trade Journal' ? 'Trading Journal with Notes & Chart Screenshots' : data.title === 'Psychology Tracking' ? 'Trading Psychology Tracking & Discipline Ratings' : data.title === 'Analytics' ? 'Trading Analytics from Your Recorded Trades' : data.title} — TradeNova OS`}
+        description={data.description}
       />
       <MarketingNavbar onLogin={() => navigate('/login')} onSignup={() => navigate('/signup')} />
       <div className="max-w-4xl mx-auto px-5 sm:px-8 pt-32 pb-24">
@@ -131,6 +132,13 @@ export function FeaturePage() {
               View pricing
             </button>
           </div>
+          <nav aria-label="Related reading" className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm text-primary">
+            <Link to="/">TradeNova OS</Link>
+            <Link to="/features/trade-journal">Trade Journal</Link>
+            <Link to="/features/mind-journal">Psychology Tracking</Link>
+            <Link to="/blog/weekly-trading-journal-review">Weekly journal review checklist</Link>
+            <Link to="/blog/stop-revenge-trading-after-loss">Post-loss psychology checklist</Link>
+          </nav>
         </motion.div>
       </div>
     </div>
@@ -240,22 +248,13 @@ export function SolutionPage() {
 // ─────────────────────────────────────────────────────────────────────────────
 export function BlogPage() {
   const navigate = useNavigate();
-  const posts = [
-    { title: 'Fair Value Gaps (FVG): How to identify and trade them', tag: 'Price Action', date: 'June 20, 2026', read: '9 min', href: '/blog/fair-value-gaps-guide' },
-    { title: 'How to calculate your trading edge', tag: 'Analytics', date: 'May 10, 2026', read: '8 min' },
-    { title: 'The psychology of losing trades', tag: 'Psychology', date: 'May 7, 2026', read: '6 min' },
-    { title: 'Why most traders fail: the journaling gap', tag: 'Journaling', date: 'May 4, 2026', read: '5 min' },
-    { title: 'How to pass a prop firm challenge', tag: 'Prop Firms', date: 'Apr 28, 2026', read: '10 min' },
-    { title: 'Building a trading playbook from scratch', tag: 'Playbooks', date: 'Apr 22, 2026', read: '7 min' },
-    { title: 'Using AI to analyze your trades', tag: 'AI', date: 'Apr 15, 2026', read: '9 min' },
-  ] as Array<{ title: string; tag: string; date: string; read: string; href?: string }>;
+  const posts = BLOG_ARTICLES;
   return (
     <div className="min-h-screen bg-background text-foreground">
       <SeoHead
         path="/resources/blog"
-        title="Trading insights & strategies — TradeNova Blog"
-        description="Practical articles to help you improve your trading edge, psychology, and performance. Journaling, analytics, prop firms, and AI-powered review."
-        type="article"
+        title="Trading Journal Reviews & Psychology Guides — TradeNova Blog"
+        description="Educational guides to weekly trading journal reviews, post-loss psychology and Fair Value Gaps, with practical examples and clear risk limitations."
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "Blog",
@@ -264,7 +263,9 @@ export function BlogPage() {
           "blogPost": posts.map(p => ({
             "@type": "BlogPosting",
             "headline": p.title,
-            "datePublished": p.date,
+             "datePublished": p.published,
+             "dateModified": p.modified,
+             "url": `https://tradenovaos.com${articlePath(p)}`,
           })),
         }}
       />
@@ -275,21 +276,22 @@ export function BlogPage() {
             <span className="text-xs font-semibold text-primary">TradeNova Blog</span>
           </div>
           <h1 className="text-4xl sm:text-6xl font-black mb-4 tracking-tight">Trading insights & strategies</h1>
-          <p className="text-muted-foreground text-lg mb-14 max-w-xl">Practical articles to help you improve your trading edge, psychology, and performance.</p>
+          <p className="text-muted-foreground text-lg mb-14 max-w-xl">Practical guides to recording trades, reviewing decisions and understanding risk. Educational content, not investment advice.</p>
           <div className="space-y-4">
             {posts.map((p, i) => (
               <motion.div key={p.title} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
-                onClick={() => p.href && navigate(p.href)}
-                className="group flex items-center justify-between p-5 rounded-2xl border border-border bg-background hover:border-border hover:bg-muted cursor-pointer transition-all">
+                >
+                <Link to={articlePath(p)} className="group flex items-center justify-between p-5 rounded-2xl border border-border bg-background hover:border-border hover:bg-muted cursor-pointer transition-all">
                 <div>
                   <div className="flex items-center gap-3 mb-1.5">
                     <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{p.tag}</span>
-                    <span className="text-[11px] text-foreground">{p.date}</span>
+                    <time dateTime={p.published} className="text-[11px] text-foreground">{new Date(`${p.published}T12:00:00Z`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}</time>
                     <span className="text-[11px] text-foreground">{p.read} read</span>
                   </div>
                   <p className="text-base font-bold text-foreground group-hover:text-primary transition-colors">{p.title}</p>
                 </div>
                 <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0 ml-4" />
+                </Link>
               </motion.div>
             ))}
           </div>

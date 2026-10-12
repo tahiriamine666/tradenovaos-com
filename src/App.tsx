@@ -24,6 +24,8 @@ import { monthlyPlanPrice } from "@/lib/pricing";
 import MarketingPlaceholder from "./pages/marketing/MarketingPlaceholder.tsx";
 import { FeaturePage, SolutionPage, BlogPage, HelpCenterPage } from "./pages/marketing/MarketingPages.tsx";
 import FairValueGapsGuide from "./pages/blog/FairValueGapsGuide.tsx";
+import EducationalArticle from "./pages/blog/EducationalArticle";
+import { BLOG_ARTICLES, articlePath } from "./pages/blog/articles";
 import BillingSuccess from "./pages/BillingSuccess.tsx";
 import BillingCancel from "./pages/BillingCancel.tsx";
 import Billing from "./pages/Billing.tsx";
@@ -106,6 +108,9 @@ const App = () => (
                   <Route path="/compare/:slug" element={<MarketingPlaceholder group="compare" />} />
                   <Route path="/blog" element={<MarketingPlaceholder group="static" staticKey="blog" />} />
                   <Route path="/blog/fair-value-gaps-guide" element={<FairValueGapsGuide />} />
+                  {BLOG_ARTICLES.filter(article => article.body).map(article => (
+                    <Route key={article.slug} path={articlePath(article)} element={<EducationalArticle slug={article.slug} />} />
+                  ))}
                   <Route path="/contact" element={<MarketingPlaceholder group="static" staticKey="contact" />} />
                   <Route path="/careers" element={<MarketingPlaceholder group="static" staticKey="careers" />} />
                   <Route path="/privacy" element={<MarketingPlaceholder group="static" staticKey="privacy" />} />

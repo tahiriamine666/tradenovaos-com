@@ -7,11 +7,11 @@ import BrandLogo from '@/components/BrandLogo';
 type Item = { label: string; to: string; desc?: string };
 
 const PRODUCTS: Item[] = [
-  { label: 'Trade Journal', to: '/products/trade-journal', desc: 'Log trades with context and charts' },
-  { label: 'Analytics', to: '/products/edge-analytics', desc: 'Find what makes you profitable' },
-  { label: 'Trade Plan', to: '/products/playbook-lab', desc: 'Outlooks, rules & checklists' },
-  { label: 'Psychology', to: '/products/mind-journal', desc: 'Discipline & Psychology Score' },
-  { label: 'NOVA AI', to: '/products/ai-insights', desc: 'AI answers from your own data' },
+  { label: 'Trade Journal', to: '/features/trade-journal', desc: 'Log trades with context and charts' },
+  { label: 'Analytics', to: '/features/edge-analytics', desc: 'Review your recorded trade results' },
+  { label: 'Trade Plan', to: '/features/playbook-lab', desc: 'Outlooks, rules & checklists' },
+  { label: 'Psychology', to: '/features/mind-journal', desc: 'Discipline & Psychology Score' },
+  { label: 'NOVA AI', to: '/features/ai-insights', desc: 'AI answers from your own data' },
 ];
 
 const SOLUTIONS: Item[] = [
@@ -24,9 +24,9 @@ const SOLUTIONS: Item[] = [
 ];
 
 const RESOURCES: Item[] = [
-  { label: 'Blog', to: '/blog', desc: 'Articles & trading insights' },
-  { label: 'Trading Psychology', to: '/resources/psychology', desc: 'Master the mental game' },
-  { label: 'Risk Management', to: '/resources/risk-management', desc: 'Protect your capital' },
+  { label: 'Blog', to: '/resources/blog', desc: 'Articles & trading insights' },
+  { label: 'Trading Psychology', to: '/blog/stop-revenge-trading-after-loss', desc: 'A post-loss process checklist' },
+  { label: 'Weekly Journal Review', to: '/blog/weekly-trading-journal-review', desc: 'Review evidence and rule adherence' },
   { label: 'Help Center', to: '/help', desc: 'Guides & documentation' },
   { label: 'Contact Support', to: '/contact', desc: 'Talk to our team' },
 ];

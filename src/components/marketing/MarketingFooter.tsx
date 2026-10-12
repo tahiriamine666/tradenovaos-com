@@ -9,8 +9,8 @@ const COLS: { title: string; links: { label: string; to: string; external?: bool
     title: 'Platform',
     links: [
       { label: 'Log In', to: '/login' },
-      { label: 'Features', to: '/#features' },
-      { label: 'Solutions', to: '/solutions/forex' },
+      { label: 'Trade Journal', to: '/features/trade-journal' },
+      { label: 'Trade Plan', to: '/features/playbook-lab' },
       { label: 'Pricing', to: '/pricing' },
       { label: 'Supported Brokers', to: '/supported-brokers' },
       { label: 'Start Free', to: '/signup' },
@@ -31,7 +31,7 @@ const COLS: { title: string; links: { label: string; to: string; external?: bool
     links: [
       { label: 'Contact Us', to: '/contact' },
       { label: 'Careers', to: '/careers' },
-      { label: 'Blog', to: '/blog' },
+      { label: 'Blog', to: '/resources/blog' },
       { label: 'Privacy Policy', to: '/privacy' },
       { label: 'Cookie Policy', to: '/cookies' },
       { label: 'Terms & Conditions', to: '/terms' },
@@ -58,15 +58,15 @@ export default function MarketingFooter() {
         <div className="rounded-lg border border-border bg-gradient-to-br from-primary/15 via-white/[0.02] to-primary/10 p-10 sm:p-14 flex flex-col sm:flex-row items-center justify-between gap-6">
           <div>
             <h3 className="text-2xl sm:text-3xl font-black tracking-tight">
-              Start building your <span className="text-primary">trading edge today.</span>
+              Start documenting your <span className="text-primary">trading decisions.</span>
             </h3>
-            <p className="text-muted-foreground text-sm mt-2">Free forever plan · No credit card required</p>
+            <p className="text-muted-foreground text-sm mt-2">14-day trial · Payment method required</p>
           </div>
           <button
             onClick={() => nav('/signup')}
             className="group inline-flex items-center gap-2.5 bg-primary hover:bg-primary text-foreground px-7 py-3.5 rounded-md font-black text-sm transition-all hover:shadow-2xl hover:shadow-primary/30 hover:-translate-y-0.5 whitespace-nowrap"
           >
-            Start Free <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            Start Trial <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
       </div>
