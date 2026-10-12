@@ -1,6 +1,9 @@
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 import type { EconomicEvent } from "@/lib/economic-calendar/types";
+import { impactBucket } from "@/lib/economic-calendar/eventTypes";
+import { IMPACT_DOT } from "@/lib/economic-calendar/impactStyles";
+
 
 interface Props {
   events: EconomicEvent[];
@@ -32,7 +35,7 @@ export function EventsTimelineView({ events, day, onSelect, selectedId }: Props)
             const t = new Date(e.event_time);
             const pct = ((t.getHours() * 60 + t.getMinutes()) / (24 * 60)) * 100;
             const isSel = e.id === selectedId;
-            const color = e.impact === "high" ? "bg-danger" : e.impact === "medium" ? "bg-warning" : "bg-success";
+            const color = IMPACT_DOT[impactBucket(e)];
             return (
               <button
                 key={e.id}

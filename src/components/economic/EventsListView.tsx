@@ -3,7 +3,9 @@ import { Bookmark, BookmarkCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CountryFlag } from "./CountryFlag";
 import { ImpactDots } from "./ImpactBadge";
+import { impactBucket } from "@/lib/economic-calendar/eventTypes";
 import type { EconomicEvent } from "@/lib/economic-calendar/types";
+
 
 interface Props {
   events: EconomicEvent[];
@@ -84,7 +86,7 @@ export function EventsListView({ events, selectedId, onSelect, bookmarkIds, onBo
                 <CountryFlag code={e.country} className="text-lg" />
                 <span className="font-medium text-foreground">{e.currency}</span>
                 <span className="truncate text-foreground">{e.title}</span>
-                <ImpactDots impact={e.impact} />
+                <ImpactDots impact={e.impact} bucket={impactBucket(e)} />
                 <span className="text-right tabular-nums text-muted-foreground">{e.forecast ?? "—"}</span>
                 <span className="text-right tabular-nums text-muted-foreground">{e.previous ?? "—"}</span>
                 <span className={cn("text-right tabular-nums", e.actual ? "font-semibold text-foreground" : "text-muted-foreground")}>{e.actual ?? "—"}</span>

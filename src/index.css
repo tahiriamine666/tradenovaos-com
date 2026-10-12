@@ -49,6 +49,20 @@
     --danger: 0 0% 65%;
     --danger-foreground: 0 0% 1%;
 
+    /* Economic Calendar impact levels, ForexFactory-aligned (owner request 2026-10-12):
+       High #EF4444, Medium #F97316, Low #EAB308, Holiday / Non-Economic #FFFFFF.
+       These tokens are used ONLY by the Economic Calendar impact UI; the rest of the app
+      keeps the strict black / white / electric-blue palette. */
+    --impact-high: 0 84.2365% 60.1961%;
+    --impact-high-foreground: 0 0% 100%;
+    --impact-medium: 24.5815 94.9791% 53.1373%;
+    --impact-medium-foreground: 0 0% 100%;
+    --impact-low: 45.3982 93.3884% 47.451%;
+    --impact-low-foreground: 0 0% 100%;
+    --impact-holiday: 0 0% 100%;
+    --impact-holiday-foreground: 0 0% 1%;
+
+
     --blue-glow: var(--primary);
     --electric-blue: var(--primary);
     --ice-blue: 0 0% 98%;

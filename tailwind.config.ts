@@ -90,6 +90,14 @@ export default {
           DEFAULT: "hsl(var(--danger))",
           foreground: "hsl(var(--danger-foreground))",
         },
+        // Economic Calendar impact levels only (ForexFactory-aligned); see src/index.css.
+        impact: {
+          high: { DEFAULT: "hsl(var(--impact-high))", foreground: "hsl(var(--impact-high-foreground))" },
+          medium: { DEFAULT: "hsl(var(--impact-medium))", foreground: "hsl(var(--impact-medium-foreground))" },
+          low: { DEFAULT: "hsl(var(--impact-low))", foreground: "hsl(var(--impact-low-foreground))" },
+          holiday: { DEFAULT: "hsl(var(--impact-holiday))", foreground: "hsl(var(--impact-holiday-foreground))" },
+        },
+
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
