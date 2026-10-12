@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fmpProvider } from "./providers/fmp";
 import type { EconomicEvent, EventFilters } from "./types";
 import { resolveRange } from "./range";
+import { matchesFilters } from "./eventTypes";
 
 export function useEvents(filters: EventFilters) {
   const [events, setEvents] = useState<EconomicEvent[]>([]);
@@ -77,15 +78,7 @@ export function useEvents(filters: EventFilters) {
   }, [sync, loadFromDb]);
 
   const filtered = useMemo(() => {
-    const q = filters.search.trim().toLowerCase();
-    return events.filter((e) => {
-      if (filters.countries.length && !filters.countries.includes(e.country)) return false;
-      if (filters.currencies.length && !filters.currencies.includes(e.currency)) return false;
-      if (filters.impacts.length && !filters.impacts.includes(e.impact)) return false;
-      if (filters.categories.length && !filters.categories.includes(e.category ?? "Other")) return false;
-      if (q && !(e.title.toLowerCase().includes(q) || e.currency.toLowerCase().includes(q) || e.country.toLowerCase().includes(q))) return false;
-      return true;
-    });
+    return events.filter((e) => matchesFilters(e, filters));
   }, [events, filters]);
 
   return { events: filtered, allEvents: events, from, to, loading, syncing, error, refetch };
