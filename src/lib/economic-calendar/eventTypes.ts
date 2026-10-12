@@ -27,7 +27,7 @@ export function impactBucket(e: Pick<EconomicEvent, "title" | "impact">): Filter
 
 const RULES: [EventType, RegExp][] = [
   ["Speeches", /speaks|speech|testif|press conference|hearing|remarks/i],
-  ["Central Bank", /rate decision|interest rate|fomc|monetary policy|policy rate|cash rate|refi rate|minutes|rate statement|central bank|\b(ecb|boe|boj|rba|rbnz|snb|boc|pboc|fed)\b/i],
+  ["Central Bank", /rate decision|interest rate|funds rate|bank rate|official cash|fomc|monetary policy|policy rate|cash rate|refi rate|minutes|rate statement|central bank|\b(ecb|boe|boj|rba|rbnz|snb|boc|pboc|fed)\b/i],
   ["Bonds", /bond|auction|t-bill|treasury|gilt|bund|\bbtp\b|\boat\b|yield/i],
   ["Inflation", /cpi|ppi|inflation|price index|prices|pce|deflator|hicp/i],
   ["Employment", /non-farm|nfp|employment|unemployment|payroll|jobless|jobs|claims|earnings|wage|\badp\b|labor|labour|claimant/i],
