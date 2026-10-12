@@ -59,6 +59,7 @@ export default function MarketingPlaceholder({ group, staticKey }: Props) {
         path={pathname}
         title={`${entry.title} — TradeNova OS`}
         description={entry.description}
+        noindex
       />
       <MarketingPageShell eyebrow={entry.eyebrow ?? 'Coming soon'} title={entry.title} description={entry.description} />
     </>
