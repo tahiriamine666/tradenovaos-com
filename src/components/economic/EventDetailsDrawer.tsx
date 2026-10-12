@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CountryFlag } from "./CountryFlag";
 import { ImpactBadge } from "./ImpactBadge";
+import { impactBucket } from "@/lib/economic-calendar/eventTypes";
+
 import { AiInsightCard } from "./AiInsightCard";
 import { SymbolChart } from "./SymbolChart";
 import type { EconomicEvent } from "@/lib/economic-calendar/types";
@@ -37,7 +39,7 @@ export function EventDetailsDrawer({ event, onClose, bookmarked, onBookmark, onS
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium text-muted-foreground">{event.currency}</span>
-                    <ImpactBadge impact={event.impact} />
+                    <ImpactBadge impact={event.impact} bucket={impactBucket(event)} />
                   </div>
                   <h2 className="mt-1 font-heading text-xl font-semibold text-foreground">{event.title}</h2>
                   <p className="mt-0.5 text-xs text-muted-foreground">

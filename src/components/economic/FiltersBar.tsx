@@ -9,6 +9,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { toast } from "@/hooks/use-toast";
 import type { EventFilters, FilterImpact } from "@/lib/economic-calendar/types";
 import { EVENT_TYPES, FILTER_IMPACTS, PANEL_CURRENCIES } from "@/lib/economic-calendar/eventTypes";
+import { IMPACT_DOT } from "@/lib/economic-calendar/impactStyles";
+
 import { DEFAULT_FILTERS, PRESETS, fromKey, rangeLabel, resolveRange, shiftRange, stepLabel, toKey } from "@/lib/economic-calendar/range";
 import type { FilterPreset } from "@/lib/economic-calendar/usePreferences";
 import { cn } from "@/lib/utils";
@@ -134,9 +136,8 @@ function RangePicker({ range, onChange }: { range: EventFilters["range"]; onChan
 // ── Advanced filters panel (draft → Apply) ────────────────────────────────────
 const ALL_IMPACTS = FILTER_IMPACTS.map((i) => i.id);
 const ALL_TYPES = [...EVENT_TYPES] as string[];
-const IMPACT_SWATCH: Record<FilterImpact, string> = {
-  high: "bg-primary", medium: "bg-primary/60", low: "bg-primary/30", holiday: "bg-muted-foreground/50",
-};
+const IMPACT_SWATCH: Record<FilterImpact, string> = IMPACT_DOT;
+
 const expand = <T extends string>(v: T[], all: T[]) => (v.length ? v : [...all]);
 const collapse = <T extends string>(v: T[], all: T[]) => (all.every((x) => v.includes(x)) ? [] : v);
 
