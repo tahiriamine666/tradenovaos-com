@@ -109,7 +109,7 @@ const App = () => (
                   <Route path="/blog" element={<MarketingPlaceholder group="static" staticKey="blog" />} />
                   <Route path="/blog/fair-value-gaps-guide" element={<FairValueGapsGuide />} />
                   {BLOG_ARTICLES.filter(article => article.body).map(article => (
-                    <Route key={article.slug} path={articlePath(article)} element={<EducationalArticle />} />
+                    <Route key={article.slug} path={articlePath(article)} element={<EducationalArticle slug={article.slug} />} />
                   ))}
                   <Route path="/contact" element={<MarketingPlaceholder group="static" staticKey="contact" />} />
                   <Route path="/careers" element={<MarketingPlaceholder group="static" staticKey="careers" />} />

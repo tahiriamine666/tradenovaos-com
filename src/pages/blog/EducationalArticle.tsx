@@ -1,4 +1,4 @@
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import { ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -7,8 +7,7 @@ import SeoHead from '@/components/SeoHead';
 import { Button } from '@/components/ui/button';
 import { BLOG_ARTICLES, articleJsonLd, articlePath } from './articles';
 
-export default function EducationalArticle() {
-  const { slug } = useParams();
+export default function EducationalArticle({ slug }: { slug: string }) {
   const navigate = useNavigate();
   const article = BLOG_ARTICLES.find(item => item.slug === slug && item.body);
   if (!article) return null;
