@@ -12,6 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import { Activity, RefreshCw, PlugZap, Loader2, CheckCircle2, XCircle, CircleDashed } from 'lucide-react';
 import type { TradingAccountRecord } from '@/lib/platforms/types';
+import { readFunctionResult, friendlyConnectError } from '@/lib/platforms/functionResult';
 import ConnectionDiagnostics, { initialSteps, mergeSteps, type DiagStep } from './ConnectionDiagnostics';
 
 type Status = TradingAccountRecord['status'];
@@ -74,13 +75,13 @@ export default function ConnectionStatusSection() {
     const fn = mode === 'reconnect' || !a.metaapi_account_id ? 'mt-connect' : 'mt-sync';
     const { data, error } = await supabase.functions.invoke(fn, { body: { account_id: a.id } });
 
-    const payload = (data ?? {}) as {
-      steps?: DiagStep[]; error?: string;
+    const payload = await readFunctionResult<{
+      steps?: DiagStep[];
       results?: { account_id: string; steps?: DiagStep[]; error?: string }[];
-    };
+    }>(data, error);
     const result = payload.results?.find(r => r.account_id === a.id);
     const serverSteps = result?.steps ?? payload.steps;
-    const failure = result?.error ?? payload.error ?? error?.message ?? null;
+    const failure = friendlyConnectError(result?.error ?? payload.error ?? (error ? 'Connection failed' : null));
 
     setSteps(mergeSteps(serverSteps, true, failure ?? undefined));
     setDiagError(failure);

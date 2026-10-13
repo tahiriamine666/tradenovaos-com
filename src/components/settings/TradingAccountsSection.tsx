@@ -26,6 +26,7 @@ import {
   CheckCircle2, XCircle, CircleDashed, ArrowLeft, RefreshCw, Search, ShieldCheck,
 } from 'lucide-react';
 import type { TradingAccountRecord } from '@/lib/platforms/types';
+import { readFunctionResult, friendlyConnectError } from '@/lib/platforms/functionResult';
 import ConnectionDiagnostics, { initialSteps, mergeSteps, type DiagStep } from './ConnectionDiagnostics';
 import {
   providersFor, suggestServers, findProvider, formatAccountSize,
@@ -232,8 +233,8 @@ export default function TradingAccountsSection() {
     });
     setSyncingId(null);
 
-    const diagRes = (res ?? {}) as { steps?: DiagStep[]; error?: string; status?: string };
-    const failure = diagRes.error ?? fnErr?.message ?? null;
+    const diagRes = await readFunctionResult<{ steps?: DiagStep[]; status?: string }>(res, fnErr);
+    const failure = friendlyConnectError(diagRes.error ?? (fnErr ? 'Connection failed' : null));
     setDiagSteps(mergeSteps(diagRes.steps, true, failure ?? undefined));
 
     setDiagError(failure);
