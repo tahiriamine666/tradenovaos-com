@@ -23,6 +23,10 @@ for (const value of [undefined, '', 'false', 'TRUE', '1', ' true ']) {
   assert.equal(feature.mtAutoSyncEnabled(), false);
 }
 flag = 'true'; assert.equal(feature.mtAutoSyncEnabled(), true);
+const originalGet = env.get;
+env.get = () => { throw new Error('Environment unavailable'); };
+assert.equal(feature.mtAutoSyncEnabled(), false);
+env.get = originalGet;
 flag = undefined;
 for (const endpoint of ['mt-connect', 'mt-sync']) {
   load(`supabase/functions/${endpoint}/index.ts`, {
