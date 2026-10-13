@@ -54,7 +54,8 @@ Deno.serve(async (req) => {
     let metaId: string | null = row.metaapi_account_id;
     if (!metaId) {
       const login = String(row.account_number ?? row.login ?? '');
-      const password = String((row.credentials as Record<string, string> | null)?.password ?? row.password ?? '');
+      const { data: secret } = await db.rpc('get_trading_account_password', { p_account_id: row.id });
+      const password = typeof secret === 'string' ? secret : '';
       const server = String(row.server ?? '');
       if (!login || !password || !server) {
         log.push('metaapi_account', 'MetaApi account created', 'error', { error: 'Login, investor password and server are required' });
