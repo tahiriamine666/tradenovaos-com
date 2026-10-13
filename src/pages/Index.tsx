@@ -30,6 +30,7 @@ import DashboardOverview from "@/components/DashboardOverview";
 import { getTradeDateDay } from "@/lib/dateUtils";
 import DayDetailsDialog from "@/components/calendar/DayDetailsDialog";
 import TradingReportDialog, { type ReportPeriod } from "@/components/calendar/TradingReportDialog";
+import { weeklyReportAnchor } from "@/lib/calendar/weekSelection";
 import {
   BarChart3,
   BookOpen,
@@ -360,6 +361,7 @@ function TradingCalendar({ dark }: { dark: boolean }) {
   const [loading, setLoading] = useState(true);
   const [reportPeriod, setReportPeriod] = useState<ReportPeriod | null>(null);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  const [selectedWeekStart, setSelectedWeekStart] = useState<number | null>(null);
   const [detailDate, setDetailDate] = useState<Date | null>(null);
   const [journalDays, setJournalDays] = useState<Set<number>>(new Set());
 
@@ -491,7 +493,7 @@ function TradingCalendar({ dark }: { dark: boolean }) {
                 >
                   Daily
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => setReportPeriod("weekly")}>
+                <Button size="sm" variant="outline" onClick={() => { setSelectedWeekStart(null); setReportPeriod("weekly"); }}>
                   Weekly
                 </Button>
                 <Button size="sm" variant="outline" onClick={() => setReportPeriod("monthly")}>
@@ -585,10 +587,18 @@ function TradingCalendar({ dark }: { dark: boolean }) {
                           </div>
                         );
                       })}
-                      <div
+                      <button
+                        type="button"
+                        aria-pressed={selectedWeekStart === week.start}
+                        aria-label={`Open weekly report for ${monthShort} ${week.start}-${week.end}`}
+                        onClick={() => {
+                          setSelectedWeekStart(week.start);
+                          setReportPeriod("weekly");
+                        }}
                         className={cx(
-                          "rounded-lg border p-2 min-h-[86px] text-[10px] flex flex-col justify-center gap-0.5",
+                          "rounded-lg border p-2 min-h-[86px] text-[10px] flex flex-col justify-center gap-0.5 text-left cursor-pointer tn-lift focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
                           week.trades ? "border-primary/30 bg-primary/10" : "border-border bg-muted/10",
+                          selectedWeekStart === week.start && "ring-1 ring-primary/60",
                         )}
                       >
                         <p className="font-semibold text-foreground text-[11px]">
@@ -617,7 +627,7 @@ function TradingCalendar({ dark }: { dark: boolean }) {
                         ) : (
                           <p className="text-muted-foreground/60">No trades</p>
                         )}
-                      </div>
+                      </button>
                     </div>
                   );
                 })}
@@ -703,7 +713,9 @@ function TradingCalendar({ dark }: { dark: boolean }) {
         anchor={
           reportPeriod === "daily"
             ? new Date(year, month, selectedDay ?? 1)
-            : new Date(year, month, Math.min(new Date().getDate(), daysInMonth))
+            : reportPeriod === "weekly"
+              ? weeklyReportAnchor(year, month, selectedWeekStart)
+              : new Date(year, month, Math.min(new Date().getDate(), daysInMonth))
         }
         onClose={() => setReportPeriod(null)}
       />
