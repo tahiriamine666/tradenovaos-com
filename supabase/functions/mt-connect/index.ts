@@ -84,7 +84,9 @@ Deno.serve(async (req) => {
           .eq('id', ownedAccountId).eq('user_id', ownerId);
       }
     } catch { /* ignore */ }
-    return json({ error: message, steps: log.steps }, 502);
+    // Provider failures are an expected outcome, not a crash: return them as a handled result
+    // so the connection window shows the reason instead of an app-level error.
+    return json({ ok: false, error: message, steps: log.steps }, 200);
   }
 });
 
