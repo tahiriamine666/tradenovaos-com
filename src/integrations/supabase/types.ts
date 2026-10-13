@@ -2452,6 +2452,30 @@ export type Database = {
           },
         ]
       }
+      trading_account_secrets: {
+        Row: {
+          account_id: string
+          ciphertext: string
+          key_version: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          ciphertext: string
+          key_version?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          ciphertext?: string
+          key_version?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       trading_accounts: {
         Row: {
           account_name: string
@@ -2948,6 +2972,10 @@ export type Database = {
       }
       get_my_profile: { Args: never; Returns: Json }
       get_nova_usage: { Args: never; Returns: Json }
+      get_trading_account_password: {
+        Args: { p_account_id: string }
+        Returns: string
+      }
       get_user_plan_info: { Args: never; Returns: Json }
       has_internal_access: { Args: { _uid: string }; Returns: boolean }
       is_admin:
