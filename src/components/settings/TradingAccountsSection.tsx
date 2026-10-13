@@ -232,8 +232,8 @@ export default function TradingAccountsSection() {
     });
     setSyncingId(null);
 
-    const diagRes = (res ?? {}) as { steps?: DiagStep[]; error?: string; status?: string };
-    const failure = diagRes.error ?? fnErr?.message ?? null;
+    const diagRes = await readFunctionResult<{ steps?: DiagStep[]; status?: string }>(res, fnErr);
+    const failure = friendlyConnectError(diagRes.error ?? (fnErr ? 'Connection failed' : null));
     setDiagSteps(mergeSteps(diagRes.steps, true, failure ?? undefined));
 
     setDiagError(failure);
