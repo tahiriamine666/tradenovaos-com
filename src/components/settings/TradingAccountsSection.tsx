@@ -26,6 +26,7 @@ import {
   CheckCircle2, XCircle, CircleDashed, ArrowLeft, RefreshCw, Search, ShieldCheck,
 } from 'lucide-react';
 import type { TradingAccountRecord } from '@/lib/platforms/types';
+import { readFunctionResult, friendlyConnectError } from '@/lib/platforms/functionResult';
 import ConnectionDiagnostics, { initialSteps, mergeSteps, type DiagStep } from './ConnectionDiagnostics';
 import {
   providersFor, suggestServers, findProvider, formatAccountSize,

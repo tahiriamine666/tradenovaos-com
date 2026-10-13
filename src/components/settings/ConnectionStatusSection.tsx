@@ -12,6 +12,7 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import { Activity, RefreshCw, PlugZap, Loader2, CheckCircle2, XCircle, CircleDashed } from 'lucide-react';
 import type { TradingAccountRecord } from '@/lib/platforms/types';
+import { readFunctionResult, friendlyConnectError } from '@/lib/platforms/functionResult';
 import ConnectionDiagnostics, { initialSteps, mergeSteps, type DiagStep } from './ConnectionDiagnostics';
 
 type Status = TradingAccountRecord['status'];
