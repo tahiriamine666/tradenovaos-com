@@ -1,3 +1,4 @@
+import { assertMtAutoSyncEnabled } from './mtFeature.ts';
 // Thin MetaApi REST wrapper shared by the MT connect / sync functions.
 
 export const PROVISIONING = 'https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade.ai';
@@ -11,6 +12,7 @@ export function token(): string {
 }
 
 async function req(url: string, init: RequestInit = {}) {
+  assertMtAutoSyncEnabled();
   const res = await fetch(url, {
     ...init,
     headers: {
@@ -39,6 +41,7 @@ export interface ProvisionInput {
 }
 
 export async function createAccount(input: ProvisionInput): Promise<{ id: string }> {
+  assertMtAutoSyncEnabled();
   return await req(`${PROVISIONING}/users/current/accounts`, {
     method: 'POST',
     body: JSON.stringify({

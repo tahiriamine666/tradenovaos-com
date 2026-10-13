@@ -1,3 +1,4 @@
+import { assertMtAutoSyncEnabled } from './mtFeature.ts';
 // Pull live account state + trade history from MetaApi into the database.
 
 import { createClient } from 'npm:@supabase/supabase-js@2';
@@ -91,6 +92,7 @@ export function createStepLog(accountId: string) {
 }
 
 export async function syncAccount(row: AccountRow, log = createStepLog(row.id)) {
+  assertMtAutoSyncEnabled();
   const db = admin();
   const metaId = row.metaapi_account_id;
   if (!metaId) {
