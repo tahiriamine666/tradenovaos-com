@@ -1,9 +1,12 @@
+import { mtAutoSyncLockdown } from '../_shared/mtFeature.ts';
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { admin, syncAccount, createStepLog } from '../_shared/mtSync.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  const disabled = mtAutoSyncLockdown(corsHeaders);
+  if (disabled) return disabled;
 
   const json = (body: unknown, status = 200) =>
     new Response(JSON.stringify(body), {

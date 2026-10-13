@@ -12,8 +12,8 @@ import { Badge } from '@/components/ui/badge';
 import { Save, User, TrendingUp, Globe, Shield, AlertCircle, CheckCircle2, CreditCard, ExternalLink, Loader2, LogOut } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { openCustomerPortal } from '@/lib/dodo';
-import TradingAccountsSection from '@/components/settings/TradingAccountsSection';
-import ConnectionStatusSection from '@/components/settings/ConnectionStatusSection';
+import MtAutoSyncComingSoon from '@/components/settings/MtAutoSyncComingSoon';
+
 import ProfileEditDialog, { PROFILE_UPDATED_EVENT, emitProfileUpdated } from '@/components/settings/ProfileEditDialog';
 import { Pencil } from 'lucide-react';
 import { CookieSettingsButton } from '@/components/CookieConsent';
@@ -285,8 +285,8 @@ export default function StudioSettings() {
       </Section>
 
       {/* Trading accounts */}
-      <TradingAccountsSection />
-      <ConnectionStatusSection />
+      <MtAutoSyncComingSoon />
+
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Trading preferences */}
