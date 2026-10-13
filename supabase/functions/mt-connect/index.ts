@@ -42,8 +42,9 @@ Deno.serve(async (req) => {
       .eq('user_id', user.id)
       .maybeSingle();
     if (error || !row) {
-      log.push('db_saved', 'Account saved to database', 'error', { error: error?.message ?? 'Account not found' });
-      return json({ error: 'Account not found', steps: log.steps }, 404);
+      const msg = error ? 'Could not load this account. Please try again.' : 'This account no longer exists — it may have been deleted. Refresh and add it again.';
+      log.push('db_saved', 'Account saved to database', 'error', { error: msg });
+      return json({ ok: false, error: msg, steps: log.steps }, 200);
     }
     ownedAccountId = row.id; ownerId = user.id;
     log.push('db_saved', 'Account saved to database', 'ok', { detail: row.account_name });
