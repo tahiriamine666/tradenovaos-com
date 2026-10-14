@@ -1,3 +1,4 @@
+import type { DodoSubscription } from '../_shared/dodoTypes.ts';
 // On-demand Dodo sync for the signed-in user.
 // Canonical billing state is public.subscriptions; profiles only mirrors access fields.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
@@ -40,7 +41,7 @@ Deno.serve(async (req) => {
     }
 
     const userId = claims.claims.sub as string;
-    const email = (claims.claims as any).email as string | undefined;
+    const email = claims.claims.email as string | undefined;
     if (!email) {
       return new Response(JSON.stringify({ ok: false, reason: "no_email" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -70,7 +71,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const items = (json?.items ?? json?.data ?? []) as any[];
+    const items = (json?.items ?? json?.data ?? []) as DodoSubscription[];
     items.sort((a, b) => new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime());
     const sub = items[0];
     if (!sub) {

@@ -29,24 +29,24 @@ const NAV_ITEMS = [
     label: 'Solutions',
     dropdown: [
       { icon: TrendingUp,  label: 'Forex Traders',       desc: 'Optimize your forex edge with data',          path: '/solutions/forex-traders',       color: 'text-primary' },
-      { icon: BarChart3,   label: 'Futures Traders',     desc: 'Track and improve futures performance',       path: '/solutions/futures-traders',     color: 'text-blue-600' },
-      { icon: Building2,   label: 'Prop Firm Traders',   desc: 'Pass challenges and manage funded accounts',  path: '/solutions/prop-firm-traders',   color: 'text-amber-600' },
-      { icon: Globe,       label: 'Crypto Traders',      desc: 'Journal crypto trades across all exchanges',  path: '/solutions/crypto-traders',      color: 'text-emerald-600' },
-      { icon: Users,       label: 'Trading Communities', desc: 'Tools for trading educators and groups',      path: '/solutions/trading-communities', color: 'text-pink-600' },
+      { icon: BarChart3,   label: 'Futures Traders',     desc: 'Track and improve futures performance',       path: '/solutions/futures-traders',     color: 'text-primary' },
+      { icon: Building2,   label: 'Prop Firm Traders',   desc: 'Pass challenges and manage funded accounts',  path: '/solutions/prop-firm-traders',   color: 'text-muted-foreground' },
+      { icon: Globe,       label: 'Crypto Traders',      desc: 'Journal crypto trades across all exchanges',  path: '/solutions/crypto-traders',      color: 'text-primary' },
+      { icon: Users,       label: 'Trading Communities', desc: 'Tools for trading educators and groups',      path: '/solutions/trading-communities', color: 'text-primary' },
     ],
   },
   {
     label: 'Resources',
     dropdown: [
       { icon: FileText,   label: 'Blog',          desc: 'Trading insights, tips, and strategies',  path: '/resources/blog',        color: 'text-primary' },
-      { icon: HelpCircle, label: 'Help Center',   desc: 'Guides, tutorials, and documentation',    path: '/resources/help-center', color: 'text-blue-600' },
+      { icon: HelpCircle, label: 'Help Center',   desc: 'Guides, tutorials, and documentation',    path: '/resources/help-center', color: 'text-primary' },
     ],
   },
   { label: 'Supported Brokers', path: '/supported-brokers' },
   { label: 'Pricing',           path: '/pricing' },
 ];
 
-const ease: any = [0.22, 1, 0.36, 1];
+const ease: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 // ─── Dropdown panel ───────────────────────────────────────────────────────────
 function DropdownPanel({
@@ -62,7 +62,7 @@ function DropdownPanel({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: -8, scale: 0.97 }}
       transition={{ duration: 0.18, ease }}
-      className={`absolute top-full left-1/2 -translate-x-1/2 mt-2 w-max min-w-[280px] rounded-md border border-border bg-popover/95 backdrop-blur-xl shadow-2xl shadow-black/60 overflow-hidden z-50`}
+      className={`absolute top-full left-1/2 -translate-x-1/2 mt-2 w-max min-w-[280px] rounded-md border border-border bg-popover/95 backdrop-blur-xl shadow-2xl shadow-background/60 overflow-hidden z-50`}
     >
       <div className={`p-2 grid ${cols} gap-0.5`}>
         {items.map(item => {
@@ -204,7 +204,7 @@ export default function MarketingNavbar({ onLogin, onSignup }: MarketingNavbarPr
               Log in
             </button>
             <button onClick={onSignup}
-              className="text-sm bg-primary hover:bg-primary text-white px-5 py-2.5 rounded-md font-bold transition-all hover:shadow-lg hover:shadow-primary/25 hover:-translate-y-px">
+              className="text-sm bg-primary hover:bg-primary text-foreground px-5 py-2.5 rounded-md font-bold transition-all hover:shadow-lg hover:shadow-primary/25 hover:-translate-y-px">
               Start Free
             </button>
           </div>
@@ -285,7 +285,7 @@ export default function MarketingNavbar({ onLogin, onSignup }: MarketingNavbarPr
                   Log in
                 </button>
                 <button onClick={() => { onSignup(); setMobileOpen(false); }}
-                  className="flex-1 text-sm bg-primary text-white py-3 rounded-md font-bold hover:bg-primary transition-colors">
+                  className="flex-1 text-sm bg-primary text-foreground py-3 rounded-md font-bold hover:bg-primary transition-colors">
                   Start Free
                 </button>
               </div>

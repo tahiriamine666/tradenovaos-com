@@ -19,7 +19,7 @@ Rules:
 - Use markdown: short paragraphs, bullet points, bold key numbers.
 - Respect the trader's preferred response style (concise = under ~150 words; detailed = thorough but structured).`;
 
-function summarize(trades: any[]) {
+function summarize(trades: { result?: number | string | null; rr?: number | string | null }[]) {
   const n = trades.length;
   if (!n) return { trades: 0 };
   const wins = trades.filter(t => Number(t.result) > 0);
@@ -50,15 +50,16 @@ Deno.serve(async (req) => {
   if (!apiKey) return json({ error: "AI is not configured." }, 500);
 
   const body = await req.json().catch(() => ({}));
-  const history = (Array.isArray(body?.messages) ? body.messages : [])
-    .filter((m: any) => (m?.role === "user" || m?.role === "assistant") && typeof m.content === "string")
-    .slice(-20).map((m: any) => ({ role: m.role, content: m.content.slice(0, 6000) }));
+  const messages: unknown[] = Array.isArray(body?.messages) ? body.messages : [];
+  const history = messages
+    .filter((m): m is { role: "user" | "assistant"; content: string } => !!m && typeof m === "object" && "role" in m && (m.role === "user" || m.role === "assistant") && "content" in m && typeof m.content === "string")
+    .slice(-20).map((m) => ({ role: m.role, content: m.content.slice(0, 6000) }));
   if (!history.length) return json({ error: "No message" }, 400);
 
   // Server-side NOVA credit metering (1 credit per message, per billing period).
   const { data: credit, error: crErr } = await sb.rpc("consume_nova_credit");
   if (crErr) return json({ error: "Could not verify NOVA credits." }, 500);
-  if (!(credit as any)?.allowed) {
+  if (!(credit as { allowed?: boolean } | null)?.allowed) {
     return json({ error: "You've used your NOVA credits for this billing period.", code: "nova_credits_exhausted", usage: credit }, 402);
   }
 
@@ -74,7 +75,7 @@ Deno.serve(async (req) => {
     sb.from("profiles").select("display_name,full_name").eq("id", uid).maybeSingle(),
   ]);
   const trades = tr.data || [];
-  const plans = (pl.data || []).map((p: any) => ({ ...p, ai_analysis: p.ai_analysis?.daily_v2 ?? p.ai_analysis?.framework ?? null }));
+  const plans = (pl.data || []).map((p) => ({ ...p, ai_analysis: p.ai_analysis?.daily_v2 ?? p.ai_analysis?.framework ?? null }));
   const data = {
     today: new Date().toISOString().slice(0, 10),
     trader: pr.data?.display_name || pr.data?.full_name || null,
@@ -95,7 +96,7 @@ Deno.serve(async (req) => {
       stream: true, store: false,
       reasoning: { effort: "low" },
       instructions: `${SYSTEM}\n\nDATA (JSON, newest first):\n${dataStr}`,
-      input: history.map((m: any) => ({ role: m.role, content: m.content })),
+      input: history.map((m) => ({ role: m.role, content: m.content })),
     }),
   });
 

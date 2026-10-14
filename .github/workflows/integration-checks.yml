@@ -1,0 +1,55 @@
+name: Integration release checks
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit -p tsconfig.app.json
+      - run: npx tsc --noEmit -p tsconfig.node.json
+      - run: npm test
+      - run: npm run build
+      - name: Backend regression tests (isolated, no live database)
+        run: |
+          npm ci --prefix supabase/tests
+          for test in supabase/tests/*.test.mjs; do node --experimental-strip-types "$test"; done
+      - name: Dependency security report
+        run: npm audit --json > dependency-audit.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integration-security-report
+          path: dependency-audit.json
+          if-no-files-found: ignore
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: ESLint (preserve failing status and summarize)
+        run: |
+          status=0
+          npm run lint -- --format json --output-file eslint-report.json || status=$?
+          node -e "const a=require('./eslint-report.json'); console.log(JSON.stringify({errors:a.reduce((s,x)=>s+x.errorCount,0),warnings:a.reduce((s,x)=>s+x.warningCount,0),rules:a.flatMap(x=>x.messages).reduce((o,x)=>(o[x.ruleId]=(o[x.ruleId]||0)+1,o),{})}));"
+          exit "$status"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integration-eslint-report
+          path: eslint-report.json

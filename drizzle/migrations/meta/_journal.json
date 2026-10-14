@@ -71,6 +71,132 @@
       "when": 1791020023168,
       "tag": "0009_plan_entitlements_nova_credits",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791072364146,
+      "tag": "0010_tighten_retired_community_and_avatar_policies",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791159997813,
+      "tag": "0011_trade_psychology_and_reviews",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791245510233,
+      "tag": "0012_pair_specific_checklists",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1791331627455,
+      "tag": "0013_psychology_scores_ten_point",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1791471872313,
+      "tag": "0014_trade_plans_per_pair",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1791472478957,
+      "tag": "0015_trade_plans_emotion_nullable",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1791473773577,
+      "tag": "0016_admin_panel_overrides_audit",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791475828028,
+      "tag": "0017_scope_daily_plans_by_account",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791498055311,
+      "tag": "0018_trading_review_v2_and_trade_fields",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1791499808829,
+      "tag": "0019_restore_old_review_unique_for_compat",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1791590674174,
+      "tag": "0020_admin_allowlist_add_second_admin",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1791630900000,
+      "tag": "0021_plan_welcome_emails",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1791650653520,
+      "tag": "0022_welcome_worker_scheduler_auth",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1791659623868,
+      "tag": "0023_daily_rules_defaults",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1791669997351,
+      "tag": "0024_legacy_admin_current_offer_prices",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1791680652235,
+      "tag": "0025_review_question_templates",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1791917369006,
+      "tag": "0026_migration",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1791979200000,
+      "tag": "0027_atomic_nova_credits",
+      "breakpoints": true
     }
   ]
 }

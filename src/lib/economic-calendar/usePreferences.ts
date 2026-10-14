@@ -1,3 +1,4 @@
+import type { Json } from '@/integrations/supabase/types';
 // Server-side Economic Calendar preferences (default filters + view) and named presets, scoped to auth.uid() via RLS.
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,7 +18,7 @@ export function useCalendarPreferences() {
   const loadPresets = useCallback(async () => {
     if (!user) return;
     const { data } = await supabase.from("economic_calendar_presets").select("id,name,filters").eq("user_id", user.id).order("created_at");
-    setPresets((data ?? []).map((p: any) => ({ id: p.id, name: p.name, filters: normalizeFilters(p.filters) })));
+    setPresets((data ?? []).map((p) => ({ id: p.id, name: p.name, filters: normalizeFilters(p.filters) })));
   }, [user]);
 
   useEffect(() => {
@@ -27,7 +28,7 @@ export function useCalendarPreferences() {
       const { data } = await supabase.from("economic_calendar_preferences").select("default_filters,preferred_view").eq("user_id", user.id).maybeSingle();
       if (!alive) return;
       if (data) {
-        const df = data.default_filters as any;
+        const df = data.default_filters;
         setDefaults(df && Object.keys(df).length ? normalizeFilters(df) : null);
         const v = data.preferred_view;
         setView(v === "calendar" || v === "timeline" ? v : "list");
@@ -41,7 +42,7 @@ export function useCalendarPreferences() {
   const saveDefault = async (f: EventFilters) => {
     if (!user) return { error: "Not signed in" };
     const { search: _s, ...rest } = f;
-    const { error } = await supabase.from("economic_calendar_preferences").upsert({ user_id: user.id, default_filters: rest as any }, { onConflict: "user_id" });
+    const { error } = await supabase.from("economic_calendar_preferences").upsert({ user_id: user.id, default_filters: rest as unknown as Json }, { onConflict: "user_id" });
     if (!error) setDefaults({ ...f, search: "" });
     return { error: error?.message };
   };
@@ -55,14 +56,14 @@ export function useCalendarPreferences() {
   const createPreset = async (name: string, f: EventFilters) => {
     if (!user) return { error: "Not signed in" };
     const { search: _s, ...rest } = f;
-    const { error } = await supabase.from("economic_calendar_presets").insert({ user_id: user.id, name, filters: rest as any });
+    const { error } = await supabase.from("economic_calendar_presets").insert({ user_id: user.id, name, filters: rest as unknown as Json });
     if (!error) await loadPresets();
     return { error: error?.message };
   };
   const updatePreset = async (id: string, patch: { name?: string; filters?: EventFilters }) => {
-    const body: any = {};
+    const body: { name?: string; filters?: Json } = {};
     if (patch.name) body.name = patch.name;
-    if (patch.filters) { const { search: _s, ...rest } = patch.filters; body.filters = rest; }
+    if (patch.filters) { const { search: _s, ...rest } = patch.filters; body.filters = rest as unknown as Json; }
     const { error } = await supabase.from("economic_calendar_presets").update(body).eq("id", id);
     if (!error) await loadPresets();
     return { error: error?.message };

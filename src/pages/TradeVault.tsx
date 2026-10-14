@@ -1,3 +1,5 @@
+import type { TradeInput, JsonObject } from '@/lib/dataTypes';
+import { errorMessage } from '@/lib/dataTypes';
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -5,11 +7,10 @@ import { useActiveAccount } from '@/contexts/ActiveAccountContext';
 import {
   Plus, Search, TrendingUp, TrendingDown, Minus, Check, X, Edit, Trash2, Copy, Upload,
   ChevronLeft, ChevronRight, BarChart3, CalendarDays, AlertCircle, Sparkles, RefreshCw,
-  Target, RotateCcw, SlidersHorizontal, BookOpen, Maximize2, ImageIcon,
+  RotateCcw, SlidersHorizontal, BookOpen, Maximize2, ImageIcon,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -21,6 +22,8 @@ import { PageHeader } from '@/components/ui/page-header';
 import { EmptyState } from '@/components/ui/empty-state';
 import { MetricCard } from '@/components/ui/metric-card';
 import { cn } from '@/lib/utils';
+import FullTradeModal from '@/components/AddTradeModal';
+import { TradeLogDetailModal } from '@/components/journal/TradeLogDetailModal';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 async function getSignedUrl(path: string): Promise<string | null> {
@@ -57,7 +60,7 @@ interface Trade {
   mistakes: string[]; screenshot_url: string | null;
   playbook_id: string | null; discipline_score: number | null;
   execution_score: number | null; emotion: string | null;
-  account_type: string; ai_review: Record<string, any>;
+  account_type: string; ai_review: JsonObject;
   is_starred: boolean; tags: string[]; created_at: string; updated_at: string;
 }
 
@@ -323,7 +326,7 @@ function AddTradeModal({ open, onClose, onSaved, editTrade, playbooks }: {
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const fileRef = useRef<HTMLInputElement>(null);
-  const set = (k: keyof FormData, v: any) => setForm(f => ({ ...f, [k]: v }));
+  const set = <K extends keyof FormData,>(k: K, v: FormData[K]) => setForm(f => ({ ...f, [k]: v }));
 
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
@@ -331,9 +334,9 @@ function AddTradeModal({ open, onClose, onSaved, editTrade, playbooks }: {
     if (open) {
       setStep(1); setErrors({});
       setForm(editTrade ? {
-        pair: editTrade.pair, side: (editTrade.side as any) ?? 'long',
+        pair: editTrade.pair, side: (editTrade.side as FormData['side']) ?? 'long',
         trade_date: editTrade.trade_date, session: editTrade.session ?? '',
-        outcome: (editTrade.outcome as any) ?? 'win',
+        outcome: (editTrade.outcome as FormData['outcome']) ?? 'win',
         result: editTrade.result?.toString() ?? '', rr: editTrade.rr?.toString() ?? '',
         entry_price: editTrade.entry_price?.toString() ?? '',
         exit_price: editTrade.exit_price?.toString() ?? '',
@@ -380,7 +383,7 @@ function AddTradeModal({ open, onClose, onSaved, editTrade, playbooks }: {
         discipline_score: form.discipline_score, execution_score: form.execution_score,
         trading_account_id: activeAccountId || null,
         updated_at: new Date().toISOString(),
-      } as any;
+      } as TradeInput;
       if (editTrade) {
         const { error } = await supabase.from('trades').update(payload).eq('id', editTrade.id);
         if (error) throw error;
@@ -395,8 +398,8 @@ function AddTradeModal({ open, onClose, onSaved, editTrade, playbooks }: {
         setStep(1); setErrors({});
         onSaved();
       } else { onSaved(); onClose(); }
-    } catch (e: any) {
-      toast({ title: 'Error', description: e.message, variant: 'destructive' });
+    } catch (e: unknown) {
+      toast({ title: 'Error', description: errorMessage(e), variant: 'destructive' });
     } finally { setSaving(false); }
   };
 
@@ -534,7 +537,7 @@ function AddTradeModal({ open, onClose, onSaved, editTrade, playbooks }: {
                 ] as const).map(f => (
                   <div key={f.key} className="space-y-2">
                     <Label>{f.label}</Label>
-                    <Input type="number" value={(form as any)[f.key]} onChange={e => set(f.key as any, e.target.value)}
+                    <Input type="number" value={form[f.key as keyof FormData]} onChange={e => set(f.key as keyof FormData, e.target.value)}
                       placeholder={f.placeholder} />
                   </div>
                 ))}
@@ -679,265 +682,6 @@ function AddTradeModal({ open, onClose, onSaved, editTrade, playbooks }: {
   );
 }
 
-// ── Trade Drawer (Sheet) ──────────────────────────────────────────────────────
-function TradeDetails({ trade, onClose, onEdit, onDuplicate, onDelete, onAIReview, playbooks, reviewing }: {
-  trade: Trade; onClose: () => void; onEdit: (t: Trade) => void;
-  onDuplicate: (t: Trade) => void; onDelete: (t: Trade) => void;
-  onAIReview: (t: Trade) => Promise<void>;
-  playbooks: { id: string; title: string; entry_rules?: string }[];
-  reviewing: boolean;
-}) {
-  const isWin = (trade.result ?? 0) > 0;
-  const isLoss = (trade.result ?? 0) < 0;
-  const ai = trade.ai_review as any ?? {};
-  const linkedPb = playbooks.find(p => p.id === trade.playbook_id);
-  const [screenshotUrl, setScreenshotUrl] = useState<string | null>(null);
-  const [zoomOpen, setZoomOpen] = useState(false);
-
-  useEffect(() => {
-    if (!trade.screenshot_url) { setScreenshotUrl(null); return; }
-    getSignedUrl(trade.screenshot_url).then(setScreenshotUrl);
-  }, [trade.screenshot_url]);
-
-  return (
-    <Sheet open onOpenChange={(o) => !o && onClose()}>
-      <SheetContent className="w-full sm:max-w-md p-0 flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className="px-5 pt-5 pb-4 border-b border-border">
-          <div className="flex items-center justify-between gap-2 mb-3">
-            <div className="flex items-center gap-1.5">
-              <Badge variant="outline" className={cn('gap-1 font-medium border',
-                isWin && 'border-success/30 bg-success/10 text-success',
-                isLoss && 'border-danger/30 bg-danger/10 text-danger',
-                !isWin && !isLoss && 'border-border text-muted-foreground')}>
-                {isWin ? <TrendingUp className="h-3 w-3" /> : isLoss ? <TrendingDown className="h-3 w-3" /> : <Minus className="h-3 w-3" />}
-                {isWin ? 'Win' : isLoss ? 'Loss' : 'BE'}
-              </Badge>
-              <Badge variant="outline" className="capitalize">{trade.side}</Badge>
-            </div>
-            <Button variant="ghost" size="sm" onClick={() => onEdit(trade)} className="h-8 gap-1">
-              <Edit className="h-3.5 w-3.5" /> Edit
-            </Button>
-          </div>
-          <div className="flex items-baseline justify-between">
-            <div>
-              <h2 className="text-xl font-semibold text-foreground tracking-tight">{trade.pair}</h2>
-              <p className="text-xs text-muted-foreground mt-0.5">{fmtDate(trade.trade_date)}</p>
-            </div>
-            <p className={cn('text-2xl font-semibold font-mono tracking-tight', pnlColor(trade.result ?? 0))}>
-              {fmtMoney(trade.result ?? 0)}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex-1 overflow-y-auto">
-          {/* Metrics grid */}
-          <div className="px-5 pt-4 pb-3 grid grid-cols-3 gap-2">
-            {[
-              { label: 'Entry', value: trade.entry_price ? Number(trade.entry_price).toLocaleString() : '—' },
-              { label: 'Exit', value: trade.exit_price ? Number(trade.exit_price).toLocaleString() : '—' },
-              { label: 'R:R', value: trade.rr ? `1:${Number(trade.rr).toFixed(1)}` : '—' },
-              { label: 'Session', value: trade.session || '—' },
-              { label: 'Setup', value: trade.setup || '—' },
-              { label: 'Discipline', value: trade.discipline_score ? `${trade.discipline_score}/10` : '—' },
-            ].map(s => (
-              <div key={s.label} className="rounded-md border border-border bg-card px-2.5 py-2">
-                <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">{s.label}</p>
-                <p className="text-sm font-medium text-foreground truncate mt-0.5">{s.value}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Screenshot */}
-          <div className="px-5 pb-3">
-            {screenshotUrl ? (
-              <button onClick={() => setZoomOpen(true)}
-                className="relative w-full rounded-md overflow-hidden border border-border group">
-                <img src={screenshotUrl} alt="Trade entry chart screenshot" className="w-full object-cover max-h-[220px]" />
-                <div className="absolute inset-0 bg-background/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-background/95 border border-border text-xs font-medium">
-                    <Maximize2 className="h-3.5 w-3.5" /> View full size
-                  </div>
-                </div>
-              </button>
-            ) : (
-              <div className="rounded-md border border-dashed border-border bg-muted/30 p-5 flex flex-col items-center gap-2 text-center">
-                <Upload className="h-5 w-5 text-muted-foreground" />
-                <p className="text-xs text-muted-foreground">No screenshot uploaded</p>
-                <Button variant="outline" size="sm" onClick={() => onEdit(trade)}>Add screenshot</Button>
-              </div>
-            )}
-          </div>
-
-          {/* Tabs */}
-          <div className="px-5 pb-24">
-            <Tabs defaultValue="notes" className="w-full">
-              <TabsList className="grid grid-cols-4 w-full">
-                <TabsTrigger value="notes">Notes</TabsTrigger>
-                <TabsTrigger value="mistakes">Mistakes</TabsTrigger>
-                <TabsTrigger value="ai">AI</TabsTrigger>
-                <TabsTrigger value="playbook">Playbook</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="notes" className="pt-3">
-                {trade.notes ? (
-                  <div className="rounded-md border border-border bg-card p-4">
-                    <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">{trade.notes}</p>
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <p className="text-sm text-muted-foreground">No notes for this trade</p>
-                    <Button variant="link" size="sm" onClick={() => onEdit(trade)}>Add notes</Button>
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="mistakes" className="pt-3 space-y-2">
-                {(trade.mistakes ?? []).length > 0 ? (
-                  (trade.mistakes ?? []).map(m => (
-                    <div key={m} className="flex items-center gap-2.5 px-3 py-2 rounded-md border border-danger/20 bg-danger/5">
-                      <AlertCircle className="h-4 w-4 text-danger flex-shrink-0" />
-                      <p className="text-sm text-foreground">{m}</p>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-8">
-                    <Check className="h-6 w-6 text-success mx-auto mb-2" />
-                    <p className="text-sm text-success font-medium">Clean execution</p>
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="ai" className="pt-3">
-                {ai?.verdict ? (
-                  <div className="space-y-3">
-                    <div className={cn('rounded-md border px-4 py-3 flex items-center gap-3',
-                      ai.verdict === 'Good trade' && 'border-success/25 bg-success/5',
-                      ai.verdict === 'Poor trade' && 'border-danger/25 bg-danger/5',
-                      ai.verdict === 'Average trade' && 'border-border bg-muted/30',
-                    )}>
-                      <Sparkles className={cn('h-4 w-4',
-                        ai.verdict === 'Good trade' && 'text-success',
-                        ai.verdict === 'Poor trade' && 'text-danger',
-                        ai.verdict === 'Average trade' && 'text-muted-foreground',
-                      )} />
-                      <div className="flex-1">
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">AI Verdict</p>
-                        <p className={cn('text-sm font-semibold',
-                          ai.verdict === 'Good trade' && 'text-success',
-                          ai.verdict === 'Poor trade' && 'text-danger',
-                        )}>{ai.verdict}</p>
-                      </div>
-                      {ai.discipline_score != null && (
-                        <div className="text-right">
-                          <p className="text-[10px] text-muted-foreground">Score</p>
-                          <p className="text-lg font-semibold text-foreground">{ai.discipline_score}</p>
-                        </div>
-                      )}
-                    </div>
-                    {ai.what_went_well && (
-                      <div className="rounded-md border border-success/20 bg-success/5 p-3">
-                        <p className="text-[10px] font-semibold text-success uppercase tracking-wider mb-1">What went well</p>
-                        <p className="text-sm text-foreground/80">{ai.what_went_well}</p>
-                      </div>
-                    )}
-                    {ai.what_went_wrong && (
-                      <div className="rounded-md border border-danger/20 bg-danger/5 p-3">
-                        <p className="text-[10px] font-semibold text-danger uppercase tracking-wider mb-1">What went wrong</p>
-                        <p className="text-sm text-foreground/80">{ai.what_went_wrong}</p>
-                      </div>
-                    )}
-                    {ai.rule_broken && (
-                      <div className="rounded-md border border-border bg-muted/30 p-3">
-                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Rule broken</p>
-                        <p className="text-sm text-foreground/80">{ai.rule_broken}</p>
-                      </div>
-                    )}
-                    {ai.improvement && (
-                      <div className="rounded-md border border-primary/20 bg-primary/5 p-3">
-                        <p className="text-[10px] font-semibold text-primary uppercase tracking-wider mb-1">Action item</p>
-                        <p className="text-sm text-foreground/80">{ai.improvement}</p>
-                      </div>
-                    )}
-                    <Button variant="outline" size="sm" onClick={() => onAIReview(trade)} disabled={reviewing} className="w-full gap-2">
-                      <RefreshCw className={cn('h-3.5 w-3.5', reviewing && 'animate-spin')} /> Re-analyze
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <Sparkles className="h-6 w-6 text-primary mx-auto mb-2" />
-                    <p className="text-sm font-medium text-foreground">AI Trade Review</p>
-                    <p className="text-xs text-muted-foreground mt-1 mb-4">Get instant feedback on this trade</p>
-                    <Button onClick={() => onAIReview(trade)} disabled={reviewing} size="sm" className="gap-2">
-                      <Sparkles className={cn('h-3.5 w-3.5', reviewing && 'animate-spin')} />
-                      {reviewing ? 'Analyzing…' : 'Analyze trade'}
-                    </Button>
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="playbook" className="pt-3">
-                {linkedPb ? (
-                  <div className="space-y-3">
-                    <div className="rounded-md border border-primary/20 bg-primary/5 p-3">
-                      <p className="text-[10px] text-primary uppercase tracking-wider font-semibold mb-1">Linked Playbook</p>
-                      <p className="text-sm font-semibold text-foreground">{linkedPb.title}</p>
-                      {trade.setup && <p className="text-xs text-muted-foreground mt-0.5">{trade.setup}</p>}
-                    </div>
-                    {linkedPb.entry_rules && (
-                      <div className="rounded-md border border-border bg-card p-3">
-                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">Entry Rules</p>
-                        <p className="text-sm text-foreground/80 whitespace-pre-wrap">{linkedPb.entry_rules}</p>
-                      </div>
-                    )}
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="rounded-md border border-success/20 bg-success/5 p-3 text-center">
-                        <p className="text-[10px] font-semibold text-success uppercase tracking-wider mb-1">Rules followed</p>
-                        <p className="text-xl font-semibold text-success">{Math.max(0, 5 - (trade.mistakes?.length ?? 0))}</p>
-                      </div>
-                      <div className="rounded-md border border-danger/20 bg-danger/5 p-3 text-center">
-                        <p className="text-[10px] font-semibold text-danger uppercase tracking-wider mb-1">Rules broken</p>
-                        <p className="text-xl font-semibold text-danger">{trade.mistakes?.length ?? 0}</p>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <Target className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
-                    <p className="text-sm text-muted-foreground">No playbook linked</p>
-                    <Button variant="link" size="sm" onClick={() => onEdit(trade)}>Link a playbook</Button>
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
-          </div>
-        </div>
-
-        {/* Bottom actions */}
-        <div className="px-5 py-3 border-t border-border bg-background flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => { onDuplicate(trade); onClose(); }} className="flex-1 gap-1.5">
-            <Copy className="h-3.5 w-3.5" /> Duplicate
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => onAIReview(trade)} disabled={reviewing} className="flex-1 gap-1.5 text-primary">
-            <Sparkles className={cn('h-3.5 w-3.5', reviewing && 'animate-spin')} /> AI
-          </Button>
-          <Button variant="outline" size="sm" onClick={() => { onDelete(trade); onClose(); }}
-            className="text-danger border-danger/30 hover:bg-danger/10">
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-
-        {/* Zoom dialog */}
-        <Dialog open={zoomOpen} onOpenChange={setZoomOpen}>
-          <DialogContent className="max-w-5xl p-2">
-            {screenshotUrl && <img src={screenshotUrl} alt="Full size trade chart screenshot" className="w-full h-auto rounded" />}
-          </DialogContent>
-        </Dialog>
-      </SheetContent>
-    </Sheet>
-  );
-}
-
 // ── Main page ─────────────────────────────────────────────────────────────────
 export default function TradeVault() {
   const { user } = useAuth();
@@ -955,7 +699,7 @@ export default function TradeVault() {
   const load = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    let tq: any = supabase.from('trades').select('*').eq('user_id', user.id)
+    let tq = supabase.from('trades').select('*').eq('user_id', user.id)
       .order('trade_date', { ascending: false }).order('created_at', { ascending: false });
     if (activeAccountId) tq = tq.eq('trading_account_id', activeAccountId);
     const [tr, pb] = await Promise.all([
@@ -1000,14 +744,18 @@ export default function TradeVault() {
       setTrades(p => p.map(t => t.id === trade.id ? { ...t, ai_review: review } : t));
       if (viewTrade?.id === trade.id) setViewTrade(p => p ? { ...p, ai_review: review } : p);
       toast({ title: 'AI review ready' });
-    } catch (e: any) {
-      toast({ title: 'AI review failed', description: e.message, variant: 'destructive' });
+    } catch (e: unknown) {
+      toast({ title: 'AI review failed', description: errorMessage(e), variant: 'destructive' });
     } finally {
       setReviewingId(null);
     }
   };
 
-  const openEdit = (t: Trade) => { setEditTrade(t); setModalOpen(true); setViewTrade(null); };
+  // Edits always use the complete trade form; after saving, the details modal reopens with fresh data.
+  const [fullEdit, setFullEdit] = useState<{ id: string } | null>(null);
+  const [returnToId, setReturnToId] = useState<string | null>(null);
+  const [detailRefresh, setDetailRefresh] = useState(0);
+  const openEdit = (t: { id: string }) => { setReturnToId(viewTrade?.id === t.id ? t.id : null); setFullEdit({ id: t.id }); setViewTrade(null); };
 
   const stats = useMemo(() => {
     const wins = trades.filter(t => (t.result ?? 0) > 0);
@@ -1111,18 +859,24 @@ export default function TradeVault() {
         playbooks={playbooks}
       />
 
-      {viewTrade && (
-        <TradeDetails
-          trade={viewTrade}
-          onClose={() => setViewTrade(null)}
-          onEdit={openEdit}
-          onDuplicate={handleDuplicate}
-          onDelete={handleDelete}
-          onAIReview={handleAIReview}
-          playbooks={playbooks}
-          reviewing={reviewingId === viewTrade.id}
-        />
-      )}
+      <FullTradeModal
+        open={!!fullEdit}
+        editTrade={fullEdit}
+        onGoToPlaybooks={() => {}}
+        onClose={() => { setFullEdit(null); if (returnToId) { setViewTrade(trades.find(x => x.id === returnToId) ?? null); setReturnToId(null); } }}
+        onSaved={() => { load(); setDetailRefresh(n => n + 1); }}
+      />
+
+      <TradeLogDetailModal
+        tradeId={viewTrade?.id ?? null}
+        refreshKey={detailRefresh}
+        onClose={() => setViewTrade(null)}
+        onEdit={openEdit}
+        onDuplicate={(t) => { handleDuplicate(t as Trade); setViewTrade(null); }}
+        onDelete={(t) => { handleDelete(t as Trade); setViewTrade(null); }}
+        onAIReview={(t) => { handleAIReview(t as Trade).then(() => setDetailRefresh(n => n + 1)); }}
+        reviewing={!!viewTrade && reviewingId === viewTrade.id}
+      />
     </div>
   );
 }

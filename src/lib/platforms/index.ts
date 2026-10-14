@@ -113,7 +113,7 @@ export function toFormValues(adapter: PlatformAdapter, record: Partial<TradingAc
     if (f.mappedTo === 'account_number') v[f.key] = record.account_number ?? record.login ?? '';
     else if (f.mappedTo === 'server') v[f.key] = record.server ?? '';
     else if (f.mappedTo === 'broker') v[f.key] = record.broker ?? '';
-    else v[f.key] = String((record.credentials as any)?.[f.key] ?? '');
+    else v[f.key] = String((record.credentials)?.[f.key] ?? '');
   }
   return v;
 }

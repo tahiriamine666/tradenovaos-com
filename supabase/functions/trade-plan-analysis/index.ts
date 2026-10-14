@@ -39,9 +39,9 @@ Deno.serve(async (req) => {
     }
 
     const { data: planInfo, error: planErr } = await supabase.rpc('get_user_plan_info');
-    const info = planInfo as any;
+    const info = planInfo as { is_pro?: boolean; is_elite?: boolean; plan?: string; status?: string; source?: string };
     console.log('[trade-plan-analysis] entitlement', JSON.stringify({
-      user: (claimsData.claims as any)?.sub,
+      user: claimsData.claims?.sub,
       err: planErr?.message ?? null,
       plan: info?.plan, status: info?.status, source: info?.source,
       is_pro: info?.is_pro, is_elite: info?.is_elite,
@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const doneCount = (plan.checklist ?? []).filter((i: any) => i.done).length;
+    const doneCount = (plan.checklist ?? []).filter((i: { done?: boolean }) => i.done).length;
     const totalCount = (plan.checklist ?? []).length;
 
     const userPrompt = `You are a professional trading coach reviewing a trader's daily plan. Analyze this plan and respond with ONLY a JSON object (no markdown, no backticks):
@@ -130,7 +130,7 @@ Trader's Plan:
     const data = await res.json();
     const text: string = data?.choices?.[0]?.message?.content ?? '{}';
     const clean = text.replace(/```json|```/g, '').trim();
-    let parsed: any;
+    let parsed: unknown;
     try {
       parsed = JSON.parse(clean);
     } catch {

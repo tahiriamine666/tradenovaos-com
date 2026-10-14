@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   BookOpen, BarChart3, PlayCircle, Sparkles, Brain,
   Target, Calendar, Upload, ArrowRight, Check, ArrowLeft,
@@ -11,8 +11,9 @@ import {
 } from 'lucide-react';
 import MarketingNavbar from '@/components/MarketingNavbar';
 import SeoHead from '@/components/SeoHead';
+import { BLOG_ARTICLES, articlePath } from '@/pages/blog/articles';
 
-const ease: any = [0.22, 1, 0.36, 1];
+const ease: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 const FEATURE_DATA: Record<string, {
   icon: React.ElementType; color: string; bg: string;
@@ -30,7 +31,7 @@ const FEATURE_DATA: Record<string, {
   'edge-analytics': {
     icon: BarChart3, color: 'text-primary', bg: 'bg-primary/10',
     title: 'Analytics',
-    subtitle: 'Know where your edge lives — and where it breaks.',
+    subtitle: 'Review recorded outcomes by setup and direction.',
     description: 'See win rate, profit factor, average win and loss, R:R and cumulative P&L, plus performance by setup and direction, all calculated from your own trades.',
     benefits: ['Win rate and profit factor', 'Cumulative P&L curve', 'Performance by setup and direction', 'Average R:R', 'Best and worst trades', 'Per trading account'],
     cta: 'Start your 14-day free trial',
@@ -38,7 +39,7 @@ const FEATURE_DATA: Record<string, {
   'mind-journal': {
     icon: Brain, color: 'text-primary', bg: 'bg-primary/10',
     title: 'Psychology Tracking',
-    subtitle: 'Your psychology is your biggest edge — or your biggest leak.',
+    subtitle: 'Record emotions and discipline alongside your trades.',
     description: 'Log emotions, mistakes and discipline on every trade. The Psychology Score turns your discipline ratings into a daily score so you can see how your mindset moves with your results.',
     benefits: ['Emotion and mistake logging', 'Daily Psychology Score', 'Psych view in the Trading Calendar', 'Excellent / Moderate / Challenging days', 'Journal entries per day', 'Mood from your confidence ratings'],
     cta: 'Start your 14-day free trial',
@@ -76,10 +77,10 @@ export function FeaturePage() {
 
   if (!data) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <p className="text-slate-600 text-lg mb-4">Feature not found</p>
-          <button onClick={() => navigate('/')} className="text-violet-600 hover:text-violet-700 flex items-center gap-2 mx-auto">
+          <p className="text-muted-foreground text-lg mb-4">Feature not found</p>
+          <button onClick={() => navigate('/')} className="text-primary hover:text-primary flex items-center gap-2 mx-auto">
             <ArrowLeft className="h-4 w-4" /> Back to home
           </button>
         </div>
@@ -90,47 +91,54 @@ export function FeaturePage() {
   const Icon = data.icon;
 
   return (
-    <div className="min-h-screen bg-white text-slate-900">
+    <div className="min-h-screen bg-background text-foreground">
       <SeoHead
         path={`/features/${feature}`}
-        title={`${data.title} — TradeNova OS`}
-        description={data.subtitle}
+        title={`${data.title === 'Trade Journal' ? 'Trading Journal with Notes & Chart Screenshots' : data.title === 'Psychology Tracking' ? 'Trading Psychology Tracking & Discipline Ratings' : data.title === 'Analytics' ? 'Trading Analytics from Your Recorded Trades' : data.title} — TradeNova OS`}
+        description={data.description}
       />
       <MarketingNavbar onLogin={() => navigate('/login')} onSignup={() => navigate('/signup')} />
       <div className="max-w-4xl mx-auto px-5 sm:px-8 pt-32 pb-24">
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease }}>
-          <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-slate-500 hover:text-slate-900 text-sm mb-10 transition-colors">
+          <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-muted-foreground hover:text-foreground text-sm mb-10 transition-colors">
             <ArrowLeft className="h-4 w-4" /> Back
           </button>
 
-          <div className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl ${data.bg} border border-slate-200 mb-6`}>
+          <div className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl ${data.bg} border border-border mb-6`}>
             <Icon className={`h-7 w-7 ${data.color}`} />
           </div>
 
-          <h1 className="text-4xl sm:text-6xl font-black text-slate-900 mb-4 tracking-tight">{data.title}</h1>
-          <p className="text-xl text-slate-600 mb-8 leading-relaxed max-w-2xl">{data.subtitle}</p>
-          <p className="text-slate-600 leading-relaxed mb-12 max-w-2xl">{data.description}</p>
+          <h1 className="text-4xl sm:text-6xl font-black text-foreground mb-4 tracking-tight">{data.title}</h1>
+          <p className="text-xl text-muted-foreground mb-8 leading-relaxed max-w-2xl">{data.subtitle}</p>
+          <p className="text-muted-foreground leading-relaxed mb-12 max-w-2xl">{data.description}</p>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-12">
             {data.benefits.map((b, i) => (
               <motion.div key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 + i * 0.05 }}
-                className="flex items-center gap-3 p-4 rounded-2xl border border-slate-200 bg-white">
-                <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" />
-                <span className="text-sm text-slate-700">{b}</span>
+                className="flex items-center gap-3 p-4 rounded-2xl border border-border bg-background">
+                <Check className="h-4 w-4 text-primary flex-shrink-0" />
+                <span className="text-sm text-foreground">{b}</span>
               </motion.div>
             ))}
           </div>
 
           <div className="flex gap-4">
             <button onClick={() => navigate('/signup')}
-              className="group flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-8 py-4 rounded-2xl font-black text-sm transition-all hover:shadow-xl hover:shadow-violet-500/25 hover:-translate-y-0.5">
+              className="group flex items-center gap-2 bg-primary hover:bg-primary text-foreground px-8 py-4 rounded-2xl font-black text-sm transition-all hover:shadow-xl hover:shadow-primary/25 hover:-translate-y-0.5">
               {data.cta} <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </button>
             <button onClick={() => navigate('/pricing')}
-              className="px-6 py-4 rounded-2xl border border-slate-200 text-slate-600 hover:text-slate-900 hover:border-slate-300 text-sm font-semibold transition-all hover:bg-slate-50">
+              className="px-6 py-4 rounded-2xl border border-border text-muted-foreground hover:text-foreground hover:border-border text-sm font-semibold transition-all hover:bg-muted">
               View pricing
             </button>
           </div>
+          <nav aria-label="Related reading" className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-sm text-primary">
+            <Link to="/">TradeNova OS</Link>
+            <Link to="/features/trade-journal">Trade Journal</Link>
+            <Link to="/features/mind-journal">Psychology Tracking</Link>
+            <Link to="/blog/weekly-trading-journal-review">Weekly journal review checklist</Link>
+            <Link to="/blog/stop-revenge-trading-after-loss">Post-loss psychology checklist</Link>
+          </nav>
         </motion.div>
       </div>
     </div>
@@ -142,35 +150,35 @@ export function FeaturePage() {
 // ─────────────────────────────────────────────────────────────────────────────
 const SOLUTION_DATA: Record<string, { title: string; subtitle: string; description: string; benefits: string[]; icon: React.ElementType; color: string; bg: string }> = {
   'forex-traders': {
-    icon: BarChart3, color: 'text-violet-600', bg: 'bg-violet-500/10',
+    icon: BarChart3, color: 'text-primary', bg: 'bg-primary/10',
     title: 'TradeNova for Forex Traders',
     subtitle: 'Build a consistent forex edge with data-driven journaling.',
     description: 'Forex trading demands discipline and precision. TradeNova gives forex traders the tools to track every pip, identify their best currency pairs, and optimize session performance across London, New York, and Asia sessions.',
     benefits: ['Track performance per currency pair', 'Session-based analytics (London/NY/Asia)', 'Pip and dollar tracking', 'News event correlation', 'Multi-currency account support', 'Broker-agnostic CSV import'],
   },
   'futures-traders': {
-    icon: TrendingUp, color: 'text-blue-600', bg: 'bg-blue-500/10',
+    icon: TrendingUp, color: 'text-primary', bg: 'bg-primary/10',
     title: 'TradeNova for Futures Traders',
     subtitle: 'Track NQ, ES, CL, and more with precision.',
     description: 'Futures trading requires rigorous discipline around position sizing and daily loss limits. TradeNova helps futures traders stay within their rules, track contract performance, and build consistency across sessions.',
     benefits: ['Contract-level performance tracking', 'Daily loss limit enforcement', 'Session P&L breakdown', 'Setup-specific win rates', 'Tick and dollar value tracking', 'Drawdown monitoring'],
   },
   'prop-firm-traders': {
-    icon: Building2, color: 'text-amber-600', bg: 'bg-amber-500/10',
+    icon: Building2, color: 'text-muted-foreground', bg: 'bg-muted/10',
     title: 'TradeNova for Prop Firm Traders',
     subtitle: 'Pass challenges. Manage funded accounts. Scale.',
     description: 'Prop firm traders live and die by their rules. TradeNova helps you track your daily drawdown limits, maintain consistency, and document your edge for evaluation reviews. Pass more challenges with data.',
     benefits: ['Daily drawdown limit tracking', 'Challenge rule compliance alerts', 'Consistency score calculation', 'Risk management enforcement', 'Trade review documentation', 'Challenge pass rate analytics'],
   },
   'crypto-traders': {
-    icon: Globe, color: 'text-emerald-600', bg: 'bg-emerald-500/10',
+    icon: Globe, color: 'text-primary', bg: 'bg-primary/10',
     title: 'TradeNova for Crypto Traders',
     subtitle: 'Journal crypto trades across every exchange.',
     description: 'Crypto markets never close and opportunities move fast. TradeNova helps crypto traders build discipline in a 24/7 market — tracking performance across spot, futures, and DeFi with complete trade history.',
     benefits: ['Multi-exchange trade tracking', 'Spot and futures support', 'Crypto-native pair formatting', 'USD and BTC denomination', 'After-hours performance tracking', 'Volatility session analysis'],
   },
   'trading-communities': {
-    icon: Users, color: 'text-pink-600', bg: 'bg-pink-500/10',
+    icon: Users, color: 'text-primary', bg: 'bg-primary/10',
     title: 'TradeNova for Trading Communities',
     subtitle: 'Empower your community with professional trading tools.',
     description: 'Trading educators and community leaders can use TradeNova to share their trading methodology, track member performance, and build accountability systems that help traders improve faster.',
@@ -185,10 +193,10 @@ export function SolutionPage() {
 
   if (!data) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <p className="text-slate-600 mb-4">Solution not found</p>
-          <button onClick={() => navigate('/')} className="text-violet-600 flex items-center gap-2 mx-auto">
+          <p className="text-muted-foreground mb-4">Solution not found</p>
+          <button onClick={() => navigate('/')} className="text-primary flex items-center gap-2 mx-auto">
             <ArrowLeft className="h-4 w-4" /> Back to home
           </button>
         </div>
@@ -198,7 +206,7 @@ export function SolutionPage() {
 
   const Icon = data.icon;
   return (
-    <div className="min-h-screen bg-white text-slate-900">
+    <div className="min-h-screen bg-background text-foreground">
       <SeoHead
         path={`/solutions/${solution}`}
         title={`${data.title} — TradeNova OS`}
@@ -207,26 +215,26 @@ export function SolutionPage() {
       <MarketingNavbar onLogin={() => navigate('/login')} onSignup={() => navigate('/signup')} />
       <div className="max-w-4xl mx-auto px-5 sm:px-8 pt-32 pb-24">
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, ease }}>
-          <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-slate-500 hover:text-slate-900 text-sm mb-10 transition-colors">
+          <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-muted-foreground hover:text-foreground text-sm mb-10 transition-colors">
             <ArrowLeft className="h-4 w-4" /> Back
           </button>
-          <div className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl ${data.bg} border border-slate-200 mb-6`}>
+          <div className={`inline-flex items-center justify-center w-14 h-14 rounded-2xl ${data.bg} border border-border mb-6`}>
             <Icon className={`h-7 w-7 ${data.color}`} />
           </div>
-          <h1 className="text-4xl sm:text-6xl font-black text-slate-900 mb-4 tracking-tight">{data.title}</h1>
-          <p className="text-xl text-slate-600 mb-8 leading-relaxed max-w-2xl">{data.subtitle}</p>
-          <p className="text-slate-600 leading-relaxed mb-12 max-w-2xl">{data.description}</p>
+          <h1 className="text-4xl sm:text-6xl font-black text-foreground mb-4 tracking-tight">{data.title}</h1>
+          <p className="text-xl text-muted-foreground mb-8 leading-relaxed max-w-2xl">{data.subtitle}</p>
+          <p className="text-muted-foreground leading-relaxed mb-12 max-w-2xl">{data.description}</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-12">
             {data.benefits.map((b, i) => (
               <motion.div key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 + i * 0.05 }}
-                className="flex items-center gap-3 p-4 rounded-2xl border border-slate-200 bg-white">
-                <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" />
-                <span className="text-sm text-slate-700">{b}</span>
+                className="flex items-center gap-3 p-4 rounded-2xl border border-border bg-background">
+                <Check className="h-4 w-4 text-primary flex-shrink-0" />
+                <span className="text-sm text-foreground">{b}</span>
               </motion.div>
             ))}
           </div>
           <button onClick={() => navigate('/signup')}
-            className="group flex items-center gap-2 bg-violet-600 hover:bg-violet-500 text-white px-8 py-4 rounded-2xl font-black text-sm transition-all hover:shadow-xl hover:shadow-violet-500/25 hover:-translate-y-0.5">
+            className="group flex items-center gap-2 bg-primary hover:bg-primary text-foreground px-8 py-4 rounded-2xl font-black text-sm transition-all hover:shadow-xl hover:shadow-primary/25 hover:-translate-y-0.5">
             Start Free — No credit card <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </button>
         </motion.div>
@@ -240,22 +248,13 @@ export function SolutionPage() {
 // ─────────────────────────────────────────────────────────────────────────────
 export function BlogPage() {
   const navigate = useNavigate();
-  const posts = [
-    { title: 'Fair Value Gaps (FVG): How to identify and trade them', tag: 'Price Action', date: 'June 20, 2026', read: '9 min', href: '/blog/fair-value-gaps-guide' },
-    { title: 'How to calculate your trading edge', tag: 'Analytics', date: 'May 10, 2026', read: '8 min' },
-    { title: 'The psychology of losing trades', tag: 'Psychology', date: 'May 7, 2026', read: '6 min' },
-    { title: 'Why most traders fail: the journaling gap', tag: 'Journaling', date: 'May 4, 2026', read: '5 min' },
-    { title: 'How to pass a prop firm challenge', tag: 'Prop Firms', date: 'Apr 28, 2026', read: '10 min' },
-    { title: 'Building a trading playbook from scratch', tag: 'Playbooks', date: 'Apr 22, 2026', read: '7 min' },
-    { title: 'Using AI to analyze your trades', tag: 'AI', date: 'Apr 15, 2026', read: '9 min' },
-  ] as Array<{ title: string; tag: string; date: string; read: string; href?: string }>;
+  const posts = BLOG_ARTICLES;
   return (
-    <div className="min-h-screen bg-white text-slate-900">
+    <div className="min-h-screen bg-background text-foreground">
       <SeoHead
         path="/resources/blog"
-        title="Trading insights & strategies — TradeNova Blog"
-        description="Practical articles to help you improve your trading edge, psychology, and performance. Journaling, analytics, prop firms, and AI-powered review."
-        type="article"
+        title="Trading Journal Reviews & Psychology Guides — TradeNova Blog"
+        description="Educational guides to weekly trading journal reviews, post-loss psychology and Fair Value Gaps, with practical examples and clear risk limitations."
         jsonLd={{
           "@context": "https://schema.org",
           "@type": "Blog",
@@ -264,32 +263,35 @@ export function BlogPage() {
           "blogPost": posts.map(p => ({
             "@type": "BlogPosting",
             "headline": p.title,
-            "datePublished": p.date,
+             "datePublished": p.published,
+             "dateModified": p.modified,
+             "url": `https://tradenovaos.com${articlePath(p)}`,
           })),
         }}
       />
       <MarketingNavbar onLogin={() => navigate('/login')} onSignup={() => navigate('/signup')} />
       <div className="max-w-4xl mx-auto px-5 sm:px-8 pt-32 pb-24">
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-          <div className="inline-flex items-center gap-2 bg-violet-500/10 border border-violet-500/20 rounded-full px-4 py-1.5 mb-6">
-            <span className="text-xs font-semibold text-violet-700">TradeNova Blog</span>
+          <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-1.5 mb-6">
+            <span className="text-xs font-semibold text-primary">TradeNova Blog</span>
           </div>
           <h1 className="text-4xl sm:text-6xl font-black mb-4 tracking-tight">Trading insights & strategies</h1>
-          <p className="text-slate-600 text-lg mb-14 max-w-xl">Practical articles to help you improve your trading edge, psychology, and performance.</p>
+          <p className="text-muted-foreground text-lg mb-14 max-w-xl">Practical guides to recording trades, reviewing decisions and understanding risk. Educational content, not investment advice.</p>
           <div className="space-y-4">
             {posts.map((p, i) => (
               <motion.div key={p.title} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
-                onClick={() => p.href && navigate(p.href)}
-                className="group flex items-center justify-between p-5 rounded-2xl border border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 cursor-pointer transition-all">
+                >
+                <Link to={articlePath(p)} className="group flex items-center justify-between p-5 rounded-2xl border border-border bg-background hover:border-border hover:bg-muted cursor-pointer transition-all">
                 <div>
                   <div className="flex items-center gap-3 mb-1.5">
-                    <span className="text-[10px] font-bold text-violet-600 bg-violet-500/10 px-2 py-0.5 rounded-full">{p.tag}</span>
-                    <span className="text-[11px] text-slate-700">{p.date}</span>
-                    <span className="text-[11px] text-slate-700">{p.read} read</span>
+                    <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">{p.tag}</span>
+                    <time dateTime={p.published} className="text-[11px] text-foreground">{new Date(`${p.published}T12:00:00Z`).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}</time>
+                    <span className="text-[11px] text-foreground">{p.read} read</span>
                   </div>
-                  <p className="text-base font-bold text-slate-900 group-hover:text-violet-700 transition-colors">{p.title}</p>
+                  <p className="text-base font-bold text-foreground group-hover:text-primary transition-colors">{p.title}</p>
                 </div>
-                <ArrowRight className="h-4 w-4 text-slate-500 group-hover:text-violet-600 transition-colors flex-shrink-0 ml-4" />
+                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0 ml-4" />
+                </Link>
               </motion.div>
             ))}
           </div>
@@ -310,7 +312,7 @@ export function HelpCenterPage() {
     { title: 'NOVA AI',         desc: 'How NOVA answers from your data, and how credits work.',               icon: Sparkles },
   ];
   return (
-    <div className="min-h-screen bg-white text-slate-900">
+    <div className="min-h-screen bg-background text-foreground">
       <SeoHead
         path="/resources/help-center"
         title="Help Center — TradeNova OS guides & tutorials"
@@ -320,26 +322,26 @@ export function HelpCenterPage() {
       <div className="max-w-4xl mx-auto px-5 sm:px-8 pt-32 pb-24">
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           <h1 className="text-4xl sm:text-6xl font-black mb-4 tracking-tight">Help Center</h1>
-          <p className="text-slate-600 text-lg mb-14">Find answers, guides, and tutorials for TradeNova.</p>
+          <p className="text-muted-foreground text-lg mb-14">Find answers, guides, and tutorials for TradeNova.</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {topics.map((t, i) => {
               const Icon = t.icon;
               return (
                 <motion.div key={t.title} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
-                  className="group p-5 rounded-2xl border border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 cursor-pointer transition-all">
-                  <div className="w-9 h-9 rounded-xl bg-violet-500/10 border border-violet-500/20 flex items-center justify-center mb-3">
-                    <Icon className="h-4.5 w-4.5 text-violet-600 h-[18px] w-[18px]" />
+                  className="group p-5 rounded-2xl border border-border bg-background hover:border-border hover:bg-muted cursor-pointer transition-all">
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-3">
+                    <Icon className="h-4.5 w-4.5 text-primary h-[18px] w-[18px]" />
                   </div>
-                  <p className="text-sm font-bold text-slate-900 mb-1 group-hover:text-violet-700 transition-colors">{t.title}</p>
-                  <p className="text-xs text-slate-500 leading-relaxed">{t.desc}</p>
+                  <p className="text-sm font-bold text-foreground mb-1 group-hover:text-primary transition-colors">{t.title}</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{t.desc}</p>
                 </motion.div>
               );
             })}
           </div>
-          <div className="mt-10 p-6 rounded-2xl border border-violet-500/20 bg-violet-500/5 text-center">
-            <p className="text-sm font-semibold text-slate-900 mb-1">Still need help?</p>
-            <p className="text-xs text-slate-600 mb-4">Our support team replies within a few hours.</p>
-            <button onClick={() => navigate('/signup')} className="text-sm bg-violet-600 hover:bg-violet-500 text-white px-6 py-2.5 rounded-xl font-bold transition-colors">
+          <div className="mt-10 p-6 rounded-2xl border border-primary/20 bg-primary/5 text-center">
+            <p className="text-sm font-semibold text-foreground mb-1">Still need help?</p>
+            <p className="text-xs text-muted-foreground mb-4">Our support team replies within a few hours.</p>
+            <button onClick={() => navigate('/signup')} className="text-sm bg-primary hover:bg-primary text-foreground px-6 py-2.5 rounded-xl font-bold transition-colors">
               Contact Support
             </button>
           </div>
@@ -375,28 +377,28 @@ export function SupportedBrokersPage() {
   ];
   const cats = [...new Set(brokers.map(b => b.cat))];
   return (
-    <div className="min-h-screen bg-white text-slate-900">
+    <div className="min-h-screen bg-background text-foreground">
       <MarketingNavbar onLogin={() => navigate('/login')} onSignup={() => navigate('/signup')} />
       <div className="max-w-4xl mx-auto px-5 sm:px-8 pt-32 pb-24">
         <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           <h1 className="text-4xl sm:text-6xl font-black mb-4 tracking-tight">Supported Brokers</h1>
-          <p className="text-slate-600 text-lg mb-14 max-w-xl">Import your trade history from any of these platforms — or use our universal CSV importer for anything else.</p>
+          <p className="text-muted-foreground text-lg mb-14 max-w-xl">Import your trade history from any of these platforms — or use our universal CSV importer for anything else.</p>
           {cats.map(cat => (
             <div key={cat} className="mb-8">
-              <p className="text-xs font-black text-slate-500 uppercase tracking-widest mb-3">{cat}</p>
+              <p className="text-xs font-black text-muted-foreground uppercase tracking-widest mb-3">{cat}</p>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 {brokers.filter(b => b.cat === cat).map(b => (
-                  <div key={b.name} className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 bg-white">
-                    <Check className="h-4 w-4 text-emerald-600 flex-shrink-0" />
-                    <span className="text-sm text-slate-700 font-medium">{b.name}</span>
+                  <div key={b.name} className="flex items-center gap-3 p-3 rounded-xl border border-border bg-background">
+                    <Check className="h-4 w-4 text-primary flex-shrink-0" />
+                    <span className="text-sm text-foreground font-medium">{b.name}</span>
                   </div>
                 ))}
               </div>
             </div>
           ))}
-          <div className="mt-6 p-5 rounded-2xl border border-violet-500/20 bg-violet-500/5">
-            <p className="text-sm font-semibold text-slate-900 mb-1">Don't see your broker?</p>
-            <p className="text-xs text-slate-600">If your broker exports a CSV, TradeNova can import it. Our smart column mapper handles any format.</p>
+          <div className="mt-6 p-5 rounded-2xl border border-primary/20 bg-primary/5">
+            <p className="text-sm font-semibold text-foreground mb-1">Don't see your broker?</p>
+            <p className="text-xs text-muted-foreground">If your broker exports a CSV, TradeNova can import it. Our smart column mapper handles any format.</p>
           </div>
         </motion.div>
       </div>

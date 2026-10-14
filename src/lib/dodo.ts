@@ -16,7 +16,7 @@ export type CheckoutArgs = {
 export async function createCheckoutUrl(args: CheckoutArgs): Promise<string> {
   const { data, error } = await supabase.functions.invoke("dodo-checkout", { body: args });
   if (error) throw new Error(error.message ?? "Checkout failed");
-  const url = (data as any)?.url as string | undefined;
+  const url = (data)?.url as string | undefined;
   if (!url) throw new Error("Checkout URL missing");
   return url;
 }
@@ -30,9 +30,9 @@ export async function startCheckout(plan: DodoPlan, billing: DodoBilling = "mont
 export async function openCustomerPortal(): Promise<void> {
   const { data, error } = await supabase.functions.invoke("dodo-portal", { method: "POST" });
   if (error) throw new Error(error.message ?? "Could not open billing portal");
-  const url = (data as any)?.url as string | undefined;
+  const url = (data)?.url as string | undefined;
   if (!url) throw new Error("Portal URL not available yet");
-  window.open(url, "_blank", "noopener,noreferrer");
+  window.location.assign(url);
 }
 
 export async function syncSubscription(): Promise<void> {

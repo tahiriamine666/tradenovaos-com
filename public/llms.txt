@@ -7,7 +7,7 @@ TradeNova OS combines a trade journal, playbook lab, replay studio, AI insights,
 ## Pages
 
 - [Home](/): Product overview, features, and how TradeNova OS helps traders improve.
-- [Pricing](/pricing): Plans and pricing for Free, Pro, and Elite tiers with a 7-day free trial.
+- [Pricing](/pricing): Pro ($5.99/month) and Elite ($9.99/month), with a 14-day free trial. Pro includes 1 trading account and 500 NOVA credits/month; Elite includes unlimited trading accounts and 1,000 NOVA credits/month.
 - [Supported Brokers](/supported-brokers): Broker integrations and CSV import compatibility.
 - [Blog](/resources/blog): Trading psychology, journaling tactics, and strategy breakdowns.
 - [Help Center](/resources/help-center): Guides for getting started, importing trades, and using AI features.

@@ -1,6 +1,8 @@
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 import type { EconomicEvent } from "@/lib/economic-calendar/types";
+import { IMPACT_CHIP } from "@/lib/economic-calendar/impactStyles";
+
 
 interface Props {
   events: EconomicEvent[];
@@ -61,9 +63,10 @@ export function EventsCalendarView({ events, monthAnchor, onSelectDay, selectedD
             >
               <div className="text-xs font-medium text-foreground">{d.getDate()}</div>
               <div className="mt-1 flex flex-wrap gap-1">
-                {hi > 0 && <span className="rounded bg-danger/10 px-1.5 text-[10px] font-semibold text-danger">{hi} H</span>}
-                {md > 0 && <span className="rounded bg-warning/10 px-1.5 text-[10px] font-semibold text-warning">{md} M</span>}
-                {lo > 0 && <span className="rounded bg-success/10 px-1.5 text-[10px] font-semibold text-success">{lo} L</span>}
+                {hi > 0 && <span className={cn("rounded px-1.5 text-[10px] font-semibold", IMPACT_CHIP.high)}>{hi} H</span>}
+                {md > 0 && <span className={cn("rounded px-1.5 text-[10px] font-semibold", IMPACT_CHIP.medium)}>{md} M</span>}
+                {lo > 0 && <span className={cn("rounded px-1.5 text-[10px] font-semibold", IMPACT_CHIP.low)}>{lo} L</span>}
+
               </div>
             </button>
           );

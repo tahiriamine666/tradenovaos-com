@@ -71,8 +71,8 @@ export default function BillingSuccess() {
 
         {phase === "confirmed" && (
           <>
-            <div className="mx-auto w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center">
-              <CheckCircle2 className="w-8 h-8 text-emerald-500" />
+            <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+              <CheckCircle2 className="w-8 h-8 text-primary" />
             </div>
             <div className="space-y-2">
               <h1 className="text-2xl font-bold font-heading text-foreground">You're all set 🎉</h1>
@@ -93,8 +93,8 @@ export default function BillingSuccess() {
 
         {phase === "timeout" && (
           <>
-            <div className="mx-auto w-16 h-16 rounded-full bg-amber-500/10 flex items-center justify-center">
-              <AlertCircle className="w-8 h-8 text-amber-500" />
+            <div className="mx-auto w-16 h-16 rounded-full bg-muted/10 flex items-center justify-center">
+              <AlertCircle className="w-8 h-8 text-muted-foreground" />
             </div>
             <div className="space-y-2">
               <h1 className="text-2xl font-bold font-heading text-foreground">Payment received</h1>

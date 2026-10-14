@@ -1,4 +1,6 @@
 import type { Config } from "tailwindcss";
+import animate from "tailwindcss-animate";
+import typography from "@tailwindcss/typography";
 
 export default {
   darkMode: ["class"],
@@ -18,66 +20,25 @@ export default {
         body: ["Manrope", "system-ui", "sans-serif"],
       },
       colors: {
-        emerald: {
-          50: "hsl(var(--ice-blue))", 100: "hsl(var(--ice-blue))", 200: "hsl(var(--blue-glow))",
-          300: "hsl(var(--blue-glow))", 400: "hsl(var(--primary))", 500: "hsl(var(--primary))",
-          600: "hsl(var(--electric-blue))", 700: "hsl(var(--electric-blue))", 800: "hsl(var(--accent))", 900: "hsl(var(--accent))",
-        },
-        green: {
-          50: "hsl(var(--ice-blue))", 100: "hsl(var(--ice-blue))", 200: "hsl(var(--blue-glow))",
-          300: "hsl(var(--blue-glow))", 400: "hsl(var(--primary))", 500: "hsl(var(--primary))",
-          600: "hsl(var(--electric-blue))", 700: "hsl(var(--electric-blue))", 800: "hsl(var(--accent))", 900: "hsl(var(--accent))",
-        },
-        red: {
-          50: "hsl(var(--ice-blue))", 100: "hsl(var(--ice-blue))", 200: "hsl(var(--blue-glow))",
-          300: "hsl(var(--blue-glow))", 400: "hsl(var(--primary))", 500: "hsl(var(--primary))",
-          600: "hsl(var(--electric-blue))", 700: "hsl(var(--electric-blue))", 800: "hsl(var(--accent))", 900: "hsl(var(--accent))",
-        },
-        orange: {
-          50: "hsl(var(--ice-blue))", 100: "hsl(var(--ice-blue))", 200: "hsl(var(--blue-glow))",
-          300: "hsl(var(--blue-glow))", 400: "hsl(var(--primary))", 500: "hsl(var(--primary))",
-          600: "hsl(var(--electric-blue))", 700: "hsl(var(--electric-blue))", 800: "hsl(var(--accent))", 900: "hsl(var(--accent))",
-        },
-        amber: {
-          50: "hsl(var(--ice-blue))", 100: "hsl(var(--ice-blue))", 200: "hsl(var(--blue-glow))",
-          300: "hsl(var(--blue-glow))", 400: "hsl(var(--primary))", 500: "hsl(var(--primary))",
-          600: "hsl(var(--electric-blue))", 700: "hsl(var(--electric-blue))", 800: "hsl(var(--accent))", 900: "hsl(var(--accent))",
-        },
-        yellow: {
-          50: "hsl(var(--ice-blue))", 100: "hsl(var(--ice-blue))", 200: "hsl(var(--blue-glow))",
-          300: "hsl(var(--blue-glow))", 400: "hsl(var(--primary))", 500: "hsl(var(--primary))",
-          600: "hsl(var(--electric-blue))", 700: "hsl(var(--electric-blue))", 800: "hsl(var(--accent))", 900: "hsl(var(--accent))",
-        },
-        violet: {
-          50: "hsl(var(--ice-blue))", 100: "hsl(var(--ice-blue))", 200: "hsl(var(--blue-glow))",
-          300: "hsl(var(--blue-glow))", 400: "hsl(var(--primary))", 500: "hsl(var(--primary))",
-          600: "hsl(var(--electric-blue))", 700: "hsl(var(--electric-blue))", 800: "hsl(var(--accent))", 900: "hsl(var(--accent))",
-        },
-        purple: {
-          50: "hsl(var(--ice-blue))", 100: "hsl(var(--ice-blue))", 200: "hsl(var(--blue-glow))",
-          300: "hsl(var(--blue-glow))", 400: "hsl(var(--primary))", 500: "hsl(var(--primary))",
-          600: "hsl(var(--electric-blue))", 700: "hsl(var(--electric-blue))", 800: "hsl(var(--accent))", 900: "hsl(var(--accent))",
-        },
-        pink: {
-          50: "hsl(var(--ice-blue))", 100: "hsl(var(--ice-blue))", 200: "hsl(var(--blue-glow))",
-          300: "hsl(var(--blue-glow))", 400: "hsl(var(--primary))", 500: "hsl(var(--primary))",
-          600: "hsl(var(--electric-blue))", 700: "hsl(var(--electric-blue))", 800: "hsl(var(--accent))", 900: "hsl(var(--accent))",
-        },
-        cyan: {
-          50: "hsl(var(--ice-blue))", 100: "hsl(var(--ice-blue))", 200: "hsl(var(--blue-glow))",
-          300: "hsl(var(--blue-glow))", 400: "hsl(var(--primary))", 500: "hsl(var(--primary))",
-          600: "hsl(var(--electric-blue))", 700: "hsl(var(--electric-blue))", 800: "hsl(var(--accent))", 900: "hsl(var(--accent))",
-        },
-        teal: {
-          50: "hsl(var(--ice-blue))", 100: "hsl(var(--ice-blue))", 200: "hsl(var(--blue-glow))",
-          300: "hsl(var(--blue-glow))", 400: "hsl(var(--primary))", 500: "hsl(var(--primary))",
-          600: "hsl(var(--electric-blue))", 700: "hsl(var(--electric-blue))", 800: "hsl(var(--accent))", 900: "hsl(var(--accent))",
-        },
-        indigo: {
-          50: "hsl(var(--ice-blue))", 100: "hsl(var(--ice-blue))", 200: "hsl(var(--blue-glow))",
-          300: "hsl(var(--blue-glow))", 400: "hsl(var(--primary))", 500: "hsl(var(--primary))",
-          600: "hsl(var(--electric-blue))", 700: "hsl(var(--electric-blue))", 800: "hsl(var(--accent))", 900: "hsl(var(--accent))",
-        },
+        // Legacy palette aliases resolve to semantic tokens, never independent hues.
+        ...Object.fromEntries(
+          ["blue", "cyan", "sky", "teal", "emerald", "green", "violet", "purple", "pink", "indigo"].map((name) => [name, {
+            50: "hsl(var(--foreground))", 100: "hsl(var(--foreground))",
+            200: "hsl(var(--primary))", 300: "hsl(var(--primary))",
+            400: "hsl(var(--primary))", 500: "hsl(var(--primary))",
+            600: "hsl(var(--primary))", 700: "hsl(var(--primary))",
+            800: "hsl(var(--accent))", 900: "hsl(var(--accent))", 950: "hsl(var(--background))",
+          }]),
+        ),
+        ...Object.fromEntries(
+          ["red", "orange", "amber", "yellow", "rose", "lime", "fuchsia"].map((name) => [name, {
+            50: "hsl(var(--foreground))", 100: "hsl(var(--foreground))",
+            200: "hsl(var(--muted-foreground))", 300: "hsl(var(--muted-foreground))",
+            400: "hsl(var(--muted-foreground))", 500: "hsl(var(--muted-foreground))",
+            600: "hsl(var(--muted-foreground))", 700: "hsl(var(--muted-foreground))",
+            800: "hsl(var(--muted))", 900: "hsl(var(--muted))", 950: "hsl(var(--background))",
+          }]),
+        ),
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -85,6 +46,7 @@ export default {
         foreground: "hsl(var(--foreground))",
         primary: {
           DEFAULT: "hsl(var(--primary))",
+          hover: "hsl(var(--primary-hover))",
           foreground: "hsl(var(--primary-foreground))",
         },
         secondary: {
@@ -130,6 +92,14 @@ export default {
           DEFAULT: "hsl(var(--danger))",
           foreground: "hsl(var(--danger-foreground))",
         },
+        // Economic Calendar impact levels only (ForexFactory-aligned); see src/index.css.
+        impact: {
+          high: { DEFAULT: "hsl(var(--impact-high))", foreground: "hsl(var(--impact-high-foreground))" },
+          medium: { DEFAULT: "hsl(var(--impact-medium))", foreground: "hsl(var(--impact-medium-foreground))" },
+          low: { DEFAULT: "hsl(var(--impact-low))", foreground: "hsl(var(--impact-low-foreground))" },
+          holiday: { DEFAULT: "hsl(var(--impact-holiday))", foreground: "hsl(var(--impact-holiday-foreground))" },
+        },
+
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -140,6 +110,18 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+      },
+      typography: {
+        DEFAULT: { css: {
+          "--tw-prose-body": "hsl(var(--muted-foreground))",
+          "--tw-prose-headings": "hsl(var(--foreground))",
+          "--tw-prose-links": "hsl(var(--primary))",
+          "--tw-prose-bold": "hsl(var(--foreground))",
+          "--tw-prose-invert-body": "hsl(var(--muted-foreground))",
+          "--tw-prose-invert-headings": "hsl(var(--foreground))",
+          "--tw-prose-invert-links": "hsl(var(--primary))",
+          "--tw-prose-invert-bold": "hsl(var(--foreground))",
+        } },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -162,5 +144,5 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
+  plugins: [animate, typography],
 } satisfies Config;

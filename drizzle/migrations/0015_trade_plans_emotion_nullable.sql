@@ -1,0 +1,1 @@
+ALTER TABLE public.trade_plans ALTER COLUMN emotion DROP NOT NULL;

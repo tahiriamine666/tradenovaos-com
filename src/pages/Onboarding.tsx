@@ -1,3 +1,4 @@
+import { errorMessage } from '@/lib/dataTypes';
 import { useEffect, useMemo, useState } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { Check, Loader2, Lock, ShieldCheck } from "lucide-react";
@@ -7,6 +8,7 @@ import { useAccessState } from "@/hooks/useAccessState";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import robotAsset from "@/assets/tradenova-robot-full.jpg.asset.json";
+import { monthlyPlanAmount, annualMonthlyEquivalent } from "@/lib/pricing";
 
 type Stage = "q1" | "q2" | "q3" | "setup" | "preview" | "plan" | "payment" | "confirming" | "success";
 
@@ -100,16 +102,16 @@ export default function Onboarding() {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from("onboarding_profiles").select("market_types, experience_level, main_trading_problem").eq("user_id", user.id).maybeSingle()
+    supabase.from("profiles").select("market_types, experience_level:trading_experience, main_trading_problem").eq("id", user.id).maybeSingle()
       .then(({ data }) => {
         if (!data) return;
-        setMarkets((data as any).market_types ?? []);
-        setExperience((data as any).experience_level ?? null);
-        const pr = (data as any).main_trading_problem as string | null;
+        setMarkets((data).market_types ?? []);
+        setExperience((data).experience_level ?? null);
+        const pr = (data).main_trading_problem as string | null;
         if (pr) { if (PROBLEMS.includes(pr)) setProblem(pr); else { setProblem("Other"); setOther(pr); } }
       });
     supabase.functions.invoke("dodo-checkout", { body: { action: "prices" } })
-      .then(({ data }) => setPrices(((data as any)?.prices ?? {}) as Record<string, Price>));
+      .then(({ data }) => setPrices(((data)?.prices ?? {}) as Record<string, Price>));
   }, [user]);
 
   // Setup transition: real save already happened; short sequential ticks (~1.8s total).
@@ -139,7 +141,7 @@ export default function Onboarding() {
   }, [stage, refresh]);
 
   const save = async (patch: Partial<{ step: number; markets: string[]; experience: string; problem: string; completed: boolean; plan: string; billing: string }>) => {
-    const { error } = await (supabase.rpc as any)("save_onboarding", {
+    const { error } = await (supabase.rpc)("save_onboarding", {
       p_step: patch.step ?? null, p_market_types: patch.markets ?? null, p_experience: patch.experience ?? null,
       p_problem: patch.problem ?? null, p_completed: patch.completed ?? null, p_plan: patch.plan ?? null, p_billing: patch.billing ?? null,
     });
@@ -148,7 +150,7 @@ export default function Onboarding() {
 
   const next = async (fn: () => Promise<void>) => {
     setBusy(true); setError(null);
-    try { await fn(); } catch (e: any) { setError(e?.message ?? "Something went wrong. Please try again."); }
+    try { await fn(); } catch (e: unknown) { setError(errorMessage(e) ?? "Something went wrong. Please try again."); }
     finally { setBusy(false); }
   };
 
@@ -156,12 +158,15 @@ export default function Onboarding() {
     await save({ plan, billing });
     const { data, error } = await supabase.functions.invoke("dodo-checkout", { body: { plan, billing, onboarding: true } });
     if (error) throw new Error("Checkout could not be started. Please try again.");
-    const url = (data as any)?.url;
+    const url = (data)?.url;
     if (!url) throw new Error("Checkout could not be started. Please try again.");
     window.location.href = url;
   });
 
-  const priceFor = (p: "pro" | "elite") => prices[`${p}_${billing}`];
+  // Monthly offer copy is centralized; annual prices still come from Dodo unchanged.
+  const priceFor = (p: "pro" | "elite"): Price | undefined => billing === "monthly"
+    ? { amount: monthlyPlanAmount(p), currency: "USD" }
+    : prices[`${p}_${billing}`];
   const period = billing === "monthly" ? "month" : "year";
 
   if (authLoading || loading) return <div className="min-h-screen bg-background" />;
@@ -267,6 +272,9 @@ export default function Onboarding() {
               plan === p ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/40")}>
             <p className="font-heading text-lg font-semibold capitalize">{p}</p>
             <p className="mt-1 text-2xl font-bold">{fmt(priceFor(p)) ?? "—"}<span className="text-sm font-normal text-muted-foreground"> / {period}</span></p>
+             {billing === "yearly" && priceFor(p)?.amount != null && (
+               <p className="mt-1 text-xs text-muted-foreground">Equivalent to {annualMonthlyEquivalent(priceFor(p)?.amount ?? 0, priceFor(p)?.currency)} / month · Billed annually</p>
+             )}
             <p className="mt-1 text-xs text-primary">14-day free trial</p>
             <ul className="mt-4 space-y-1.5 text-sm text-muted-foreground">
               {PLAN_FEATURES[p].map((f) => <li key={f} className="flex gap-2"><Check className="mt-0.5 h-3.5 w-3.5 text-primary" />{f}</li>)}

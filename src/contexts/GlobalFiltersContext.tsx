@@ -106,7 +106,7 @@ export function GlobalFiltersProvider({ children }: { children: React.ReactNode 
       .then(({ data }) => {
         const setups = new Set<string>();
         const pairs = new Set<string>();
-        (data ?? []).forEach((t: any) => {
+        (data ?? []).forEach((t) => {
           if (t.setup && String(t.setup).trim()) setups.add(String(t.setup).trim());
           if (t.pair && String(t.pair).trim()) pairs.add(String(t.pair).trim());
         });

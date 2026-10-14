@@ -1,3 +1,4 @@
+import { errorMessage } from '@/lib/dataTypes';
 // src/components/UserAvatar.tsx
 import React, { useRef, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -73,9 +74,9 @@ export default function UserAvatar({ url, displayName, email, size = 'md', edita
       setPreview(final);
       onUpdated?.(final);
       toast({ title: 'Profile photo updated!' });
-    } catch (err: any) {
+    } catch (err: unknown) {
       setPreview(null);
-      toast({ title: 'Upload failed', description: err.message, variant: 'destructive' });
+      toast({ title: 'Upload failed', description: errorMessage(err), variant: 'destructive' });
     } finally {
       setUploading(false);
       if (inputRef.current) inputRef.current.value = '';

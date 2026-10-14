@@ -16,15 +16,52 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://tradenovaos.com/blog</loc>
-    <changefreq>weekly</changefreq>
+    <loc>https://tradenovaos.com/blog/fair-value-gaps-guide</loc>
+    <lastmod>2026-10-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://tradenovaos.com/blog/weekly-trading-journal-review</loc>
+    <lastmod>2026-10-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://tradenovaos.com/blog/stop-revenge-trading-after-loss</loc>
+    <lastmod>2026-10-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://tradenovaos.com/features/trade-journal</loc>
+    <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://tradenovaos.com/blog/fair-value-gaps-guide</loc>
-    <lastmod>2026-06-20</lastmod>
+    <loc>https://tradenovaos.com/features/edge-analytics</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://tradenovaos.com/features/mind-journal</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://tradenovaos.com/features/playbook-lab</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://tradenovaos.com/features/ai-insights</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://tradenovaos.com/features/trading-calendar</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://tradenovaos.com/resources/blog</loc>
@@ -32,33 +69,13 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://tradenovaos.com/cookies</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
     <loc>https://tradenovaos.com/resources/help-center</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://tradenovaos.com/help</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://tradenovaos.com/contact</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
-  <url>
-    <loc>https://tradenovaos.com/careers</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.4</priority>
-  </url>
-  <url>
-    <loc>https://tradenovaos.com/privacy</loc>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
-  </url>
-  <url>
-    <loc>https://tradenovaos.com/terms</loc>
-    <changefreq>yearly</changefreq>
-    <priority>0.3</priority>
   </url>
 </urlset>

@@ -1,3 +1,4 @@
+import type { Json } from '@/integrations/supabase/types';
 import * as React from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -54,14 +55,14 @@ export const DEFAULT_PREFS: ChartPreferences = {
   preferred_symbol: "NAS100",
   preferred_theme: "dark",
   chart_type: "candles",
-  bullish_color: "#22c55e",
-  bearish_color: "#ef4444",
-  wick_color: "#9ca3af",
-  border_color: "#9ca3af",
-  crosshair_color: "#a78bfa",
-  background_color: "#0b0f17",
-  grid_color: "#1f2937",
-  drawing_color: "#a78bfa",
+  bullish_color: "hsl(var(--primary))",
+  bearish_color: "hsl(var(--muted-foreground))",
+  wick_color: "hsl(var(--muted-foreground))",
+  border_color: "hsl(var(--muted-foreground))",
+  crosshair_color: "hsl(var(--primary))",
+  background_color: "hsl(var(--background))",
+  grid_color: "hsl(var(--border))",
+  drawing_color: "hsl(var(--primary))",
   default_speed: 1,
   show_execution_markers: true,
   show_trade_zones: true,
@@ -77,7 +78,7 @@ export const DEFAULT_PREFS: ChartPreferences = {
     fvg_boxes: true,
     order_blocks: true,
     text_notes: true,
-    line_color: "#a78bfa",
+    line_color: "hsl(var(--primary))",
     line_thickness: 2,
   },
 };
@@ -101,14 +102,14 @@ export function useChartPreferences() {
         .maybeSingle();
       if (cancelled) return;
       if (data) {
-        const d = data as any;
+        const d = data;
         setPrefs({
           ...DEFAULT_PREFS,
           ...d,
           favorite_symbols: (d.favorite_symbols as string[]) ?? DEFAULT_PREFS.favorite_symbols,
           recent_symbols: (d.recent_symbols as string[]) ?? [],
           saved_layouts: (d.saved_layouts as unknown as SavedLayout[]) ?? [],
-          drawing_prefs: (d.drawing_prefs as any) ?? DEFAULT_PREFS.drawing_prefs,
+          drawing_prefs: (d.drawing_prefs as unknown as ChartPreferences["drawing_prefs"]) ?? DEFAULT_PREFS.drawing_prefs,
         } as ChartPreferences);
       }
       setLoading(false);
@@ -127,10 +128,10 @@ export function useChartPreferences() {
         {
           user_id: user.id,
           ...next,
-          favorite_symbols: next.favorite_symbols as any,
-          recent_symbols: next.recent_symbols as any,
-          saved_layouts: next.saved_layouts as any,
-          drawing_prefs: next.drawing_prefs as any,
+          favorite_symbols: next.favorite_symbols as unknown as Json,
+          recent_symbols: next.recent_symbols as unknown as Json,
+          saved_layouts: next.saved_layouts as unknown as Json,
+          drawing_prefs: next.drawing_prefs as unknown as Json,
         },
         { onConflict: "user_id" },
       );

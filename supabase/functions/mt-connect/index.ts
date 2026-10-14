@@ -1,10 +1,13 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { mtDisabledResponse } from '../_shared/mtFeature.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { createAccount } from '../_shared/metaapi.ts';
 import { admin, syncAccount, createStepLog } from '../_shared/mtSync.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  const disabled = mtDisabledResponse(corsHeaders);
+  if (disabled) return disabled;
 
   const json = (body: unknown, status = 200) =>
     new Response(JSON.stringify(body), {
@@ -12,6 +15,8 @@ Deno.serve(async (req) => {
     });
 
   let log = createStepLog('unknown');
+  let ownedAccountId: string | null = null;
+  let ownerId: string | null = null;
 
   try {
     const authHeader = req.headers.get('Authorization') ?? '';
@@ -40,9 +45,11 @@ Deno.serve(async (req) => {
       .eq('user_id', user.id)
       .maybeSingle();
     if (error || !row) {
-      log.push('db_saved', 'Account saved to database', 'error', { error: error?.message ?? 'Account not found' });
-      return json({ error: 'Account not found', steps: log.steps }, 404);
+      const msg = error ? 'Could not load this account. Please try again.' : 'This account no longer exists — it may have been deleted. Refresh and add it again.';
+      log.push('db_saved', 'Account saved to database', 'error', { error: msg });
+      return json({ ok: false, error: msg, steps: log.steps }, 200);
     }
+    ownedAccountId = row.id; ownerId = user.id;
     log.push('db_saved', 'Account saved to database', 'ok', { detail: row.account_name });
 
     await db.from('trading_accounts')
@@ -51,7 +58,8 @@ Deno.serve(async (req) => {
     let metaId: string | null = row.metaapi_account_id;
     if (!metaId) {
       const login = String(row.account_number ?? row.login ?? '');
-      const password = String((row.credentials as Record<string, string> | null)?.password ?? row.password ?? '');
+      const { data: secret } = await db.rpc('get_trading_account_password', { p_account_id: row.id });
+      const password = typeof secret === 'string' ? secret : '';
       const server = String(row.server ?? '');
       if (!login || !password || !server) {
         log.push('metaapi_account', 'MetaApi account created', 'error', { error: 'Login, investor password and server are required' });
@@ -74,14 +82,15 @@ Deno.serve(async (req) => {
     const message = e instanceof Error ? e.message : 'Connection failed';
     console.error('mt-connect error', message);
     try {
-      const body = await req.clone().json().catch(() => ({}));
-      if (body?.account_id) {
+      if (ownedAccountId && ownerId) {
         await admin().from('trading_accounts')
           .update({ status: 'error', sync_error: message })
-          .eq('id', body.account_id);
+          .eq('id', ownedAccountId).eq('user_id', ownerId);
       }
     } catch { /* ignore */ }
-    return json({ error: message, steps: log.steps }, 502);
+    // Provider failures are an expected outcome, not a crash: return them as a handled result
+    // so the connection window shows the reason instead of an app-level error.
+    return json({ ok: false, error: message, steps: log.steps }, 200);
   }
 });
 

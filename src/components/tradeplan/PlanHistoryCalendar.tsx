@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { useActiveAccount } from '@/contexts/ActiveAccountContext';
 import { toKey } from './DatedChecklist';
 
 interface Props {
@@ -9,9 +10,11 @@ interface Props {
   selectedDate: string;
   onSelect: (date: string) => void;
   refresh: number;
+  pair?: string;
 }
 
-export default function PlanHistoryCalendar({ userId, selectedDate, onSelect, refresh }: Props) {
+export default function PlanHistoryCalendar({ userId, selectedDate, onSelect, refresh, pair = 'EURUSD' }: Props) {
+  const { activeAccountId } = useActiveAccount();
   const [month, setMonth] = useState(() => {
     const [y, m] = selectedDate.split('-').map(Number);
     return new Date(y, m - 1, 1);
@@ -27,14 +30,14 @@ export default function PlanHistoryCalendar({ userId, selectedDate, onSelect, re
     let active = true;
     setSaved(new Set());
     setError(false);
-    supabase.from('trade_plans').select('plan_date').eq('user_id', userId)
+    supabase.from('trade_plans').select('plan_date').eq('user_id', userId).eq('account_key', activeAccountId ?? 'all').eq('pair', pair)
       .gte('plan_date', first).lte('plan_date', last).then(({ data, error: err }) => {
         if (!active) return;
         setError(!!err);
         if (!err) setSaved(new Set((data ?? []).map(row => row.plan_date)));
       });
     return () => { active = false; };
-  }, [userId, first, last, refresh]);
+  }, [userId, first, last, refresh, activeAccountId, pair]);
 
   const offset = new Date(year, monthIndex, 1).getDay();
   const days = new Date(year, monthIndex + 1, 0).getDate();

@@ -1,26 +1,32 @@
+import { errorMessage } from '@/lib/dataTypes';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type { Database, Tables, Json } from '@/integrations/supabase/types';
 import {
   ChevronLeft, ChevronRight, Plus, Trash2, Upload, Maximize2, X, Check, Loader2,
-  GripVertical, ArrowUp, ArrowDown, Save, CalendarDays,
+  GripVertical, ArrowUp, ArrowDown, Save, CalendarDays, MoreVertical,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useActiveAccount } from '@/contexts/ActiveAccountContext';
 import { toast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import robotAsset from '@/assets/tradenova-robot-full.jpg.asset.json';
+import { ChecklistRobot, type RobotReaction } from './ChecklistRobot';
 // Local Vite preview doesn't proxy CDN asset paths; hosted preview does.
 const robotSrc = import.meta.env.DEV ? `https://id-preview--0ee4a120-abbf-401b-9623-1114b47e7fda.lovable.app${robotAsset.url}` : robotAsset.url;
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 type Impact = 'low' | 'medium' | 'high';
 interface NewsItem { id: string; title: string; date?: string; time: string; impact: Impact; notes: string }
-interface Rule { id: string; text: string; done: boolean }
+type Rule = { id: string; text: string; done: boolean };
 interface CheckItem { id: string; text: string }
-interface Weekly { bias: string; scenario: string; chart: string; news: NewsItem[]; mainIdea: string }
-interface Daily {
+export interface Weekly { bias: string; scenario: string; chart: string; before: string; after: string; news: NewsItem[]; newsShot: string; mainIdea: string }
+export interface Daily {
   bias: string; price: string; priceCustom: string; scenario: string;
-  before: string; after: string; news: NewsItem[];
+  before: string; after: string; news: NewsItem[]; newsShot: string;
   risk: { riskPct: string; maxLoss: string; maxTrades: string; rr: string };
   psychology: string[]; psychNotes: string;
   rules: Rule[]; mainIdea: string;
@@ -29,17 +35,39 @@ interface Daily {
 interface Model { id: string; name: string; items: CheckItem[] }
 
 const uid = () => crypto.randomUUID();
-const EMPTY_WEEKLY: Weekly = { bias: '', scenario: '', chart: '', news: [], mainIdea: '' };
+const EMPTY_WEEKLY: Weekly = { bias: '', scenario: '', chart: '', before: '', after: '', news: [], newsShot: '', mainIdea: '' };
 const DEFAULT_CHECK = ['Weekly bias aligned', 'Daily bias confirmed', 'Liquidity identified', 'Key level reached', 'Confirmation present', 'Risk calculated', 'News checked', 'Psychology stable'];
 const emptyDaily = (): Daily => ({
-  bias: '', price: '', priceCustom: '', scenario: '', before: '', after: '', news: [],
+  bias: '', price: '', priceCustom: '', scenario: '', before: '', after: '', news: [], newsShot: '',
   risk: { riskPct: '', maxLoss: '', maxTrades: '', rr: '' },
   psychology: [], psychNotes: '', rules: [], mainIdea: '',
   checklist: DEFAULT_CHECK.map(text => ({ id: uid(), text })), checked: {}, modelId: '',
 });
+// Rules are a persistent per-user set: a new day starts with the saved rules (text only, unchecked);
+// editing a rule's text anywhere updates the saved set, while checked state stays per-day.
+const withRuleDefaults = (d: Daily, defaults: Rule[]): Daily =>
+  d.rules.length || !defaults.length ? d : { ...d, rules: defaults.map(r => ({ ...r, done: false })) };
 const BIASES = ['Bullish', 'Bearish', 'Neutral', 'Range'];
 const PRICES = ['Premium', 'Discount', 'Mid-Range', 'Custom'];
 const PSYCH = ['Calm', 'Focused', 'Confident', 'Neutral', 'Stressed', 'Fearful', 'FOMO', 'Revenge Trading'];
+
+// Editable field layout for the plan editor. Saved once per user in workspace_layouts
+// (page daily_plan / weekly_outlook) so every day and every pair renders the same order.
+export const DAILY_LAYOUT_DEFAULT = ['bias_price', 'charts', 'news', 'risk', 'psychology', 'rules', 'main_idea'];
+export const WEEKLY_LAYOUT_DEFAULT = ['bias', 'charts', 'news', 'main_idea'];
+export const FULL_LAYOUT_DEFAULT = ['weekly', 'daily', 'charts', 'news', 'risk', 'psychology', 'rules', 'main_idea'];
+const LAYOUT_DEFAULTS: Record<Tab, string[]> = { daily: DAILY_LAYOUT_DEFAULT, weekly: WEEKLY_LAYOUT_DEFAULT, full: FULL_LAYOUT_DEFAULT };
+const LAYOUT_PAGES: Record<Tab, string> = { daily: 'daily_plan', weekly: 'weekly_outlook', full: 'full_view' };
+export function normalizeLayoutOrder(saved: unknown, fallback: string[]): string[] {
+  if (!Array.isArray(saved)) return [...fallback];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const id of saved) {
+    if (typeof id === 'string' && fallback.includes(id) && !seen.has(id)) { seen.add(id); out.push(id); }
+  }
+  for (const id of fallback) if (!seen.has(id)) out.push(id);
+  return out;
+}
 
 const pad = (n: number) => String(n).padStart(2, '0');
 const toKey = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -48,7 +76,7 @@ const weekStartKey = (k: string) => { const d = fromKey(k); d.setDate(d.getDate(
 const longDate = (k: string) => fromKey(k).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
 // Seed a v2 plan from legacy columns when an old plan has no v2 data (read only — nothing is moved).
-function fromLegacy(row: any): Daily {
+function fromLegacy(row: Tables<'trade_plans'>): Daily {
   const d = emptyDaily();
   const b = String(row.market_bias || '').toLowerCase();
   d.bias = b === 'ranging' ? 'Range' : b ? b[0].toUpperCase() + b.slice(1) : '';
@@ -58,24 +86,29 @@ function fromLegacy(row: any): Daily {
   d.risk = { riskPct: row.max_risk_per_trade?.toString() ?? '', maxLoss: row.max_daily_loss?.toString() ?? '', maxTrades: row.max_trades?.toString() ?? '', rr: '' };
   return d;
 }
-const normDaily = (v: any): Daily => ({ ...emptyDaily(), ...v, risk: { ...emptyDaily().risk, ...(v?.risk || {}) } });
+const normDaily = (v: Partial<Daily>): Daily => ({ ...emptyDaily(), ...v, risk: { ...emptyDaily().risk, ...(v?.risk || {}) } });
 
 // ── Small UI primitives ───────────────────────────────────────────────────────
-const card = 'rounded-2xl border border-border bg-card';
-const label = 'text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground';
-const input = 'w-full rounded-xl border border-border bg-background/60 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none transition-[border-color,box-shadow] duration-300 focus:border-primary/50 focus:shadow-[0_0_0_3px_hsl(var(--primary)/0.12)]';
+const card = 'rounded-2xl border border-border/60 bg-card shadow-[0_1px_0_hsl(var(--foreground)/0.03)_inset,0_12px_32px_-20px_hsl(var(--background))]';
+const label = 'text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground';
+const input = 'w-full rounded-xl border border-border/60 bg-background/50 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none transition-[border-color,box-shadow] duration-300 hover:border-border focus:border-primary/50 focus:shadow-[0_0_0_3px_hsl(var(--primary)/0.10)]';
 
 function Field({ title, children }: { title: string; children: React.ReactNode }) {
-  return <div className="space-y-2"><p className={label}>{title}</p>{children}</div>;
+  return (
+    <section className="space-y-3 border-t border-border/40 pt-6 first:border-0 first:pt-0">
+      <h3 className="text-sm font-medium tracking-tight text-foreground">{title}</h3>
+      {children}
+    </section>
+  );
 }
-function Chips({ options, value, onChange, multi, disabled }: { options: string[]; value: string | string[]; onChange: (v: any) => void; multi?: boolean; disabled?: boolean }) {
+function Chips({ options, value, onChange, multi, disabled }: { options: string[]; disabled?: boolean } & ({ multi: true; value: string[]; onChange: (v: string[]) => void } | { multi?: false; value: string; onChange: (v: string) => void })) {
   const sel = (o: string) => (multi ? (value as string[]).includes(o) : value === o);
   return (
     <div className="flex flex-wrap gap-2">
       {options.map(o => (
-        <button key={o} type="button" disabled={disabled}
-          onClick={() => multi ? onChange(sel(o) ? (value as string[]).filter(x => x !== o) : [...(value as string[]), o]) : onChange(sel(o) ? '' : o)}
-          className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-all duration-300 ${sel(o) ? 'border-primary/60 bg-primary/10 text-primary shadow-[0_0_14px_hsl(var(--primary)/0.18)]' : 'border-border text-muted-foreground hover:text-foreground hover:border-foreground/20'}`}>
+        <button key={o} type="button" disabled={disabled} aria-pressed={sel(o)}
+          onClick={() => multi ? onChange(sel(o) ? (value as string[]).filter(x => x !== o) : [...(value as string[]), o]) : (onChange as (v: string) => void)(sel(o) ? '' : o)}
+          className={`rounded-full border px-4 py-1.5 text-xs font-medium transition-all duration-300 ${sel(o) ? 'border-primary/60 bg-primary/10 text-primary' : 'border-border/60 text-muted-foreground hover:border-foreground/25 hover:text-foreground'}`}>
           {o}
         </button>
       ))}
@@ -91,17 +124,19 @@ function useSigned(path: string) {
   const [url, setUrl] = useState('');
   useEffect(() => {
     let alive = true;
-    if (!path) { setUrl(''); return; }
+    setUrl('');
+    if (!path) return;
     supabase.storage.from('trade-screenshots').createSignedUrl(path, 3600).then(({ data }) => { if (alive) setUrl(data?.signedUrl || ''); });
     return () => { alive = false; };
   }, [path]);
   return url;
 }
-function ImageSlot({ title, path, onChange, readOnly }: { title: string; path: string; onChange?: (p: string) => void; readOnly?: boolean }) {
+function ImageSlot({ title, path, onChange, readOnly, hint = 'Upload chart screenshot' }: { title: string; path: string; onChange?: (p: string) => void; readOnly?: boolean; hint?: string }) {
   const { user } = useAuth();
   const ref = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [full, setFull] = useState(false);
+  const [ratio, setRatio] = useState<number | null>(null);
   const url = useSigned(path);
   const upload = async (f: File) => {
     if (!user || !onChange) return;
@@ -118,10 +153,13 @@ function ImageSlot({ title, path, onChange, readOnly }: { title: string; path: s
   return (
     <div className="space-y-2">
       <p className={label}>{title}</p>
-      <div className="group relative aspect-video overflow-hidden rounded-xl border border-dashed border-border bg-background/50">
+      <div
+        className={`group relative overflow-hidden rounded-xl border border-dashed border-border bg-background/50 ${url && ratio ? '' : 'aspect-video'}`}
+        style={url && ratio ? { aspectRatio: String(ratio), maxHeight: '28rem' } : undefined}
+      >
         {url ? (
           <>
-            <img src={url} alt={title} className="h-full w-full object-cover" />
+            <img src={url} alt={title} onLoad={e => setRatio(e.currentTarget.naturalWidth / e.currentTarget.naturalHeight)} className="h-full w-full object-contain" />
             <div className="absolute inset-0 flex items-end justify-end gap-1.5 bg-gradient-to-t from-background/80 to-transparent p-2 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
               <button type="button" onClick={() => setFull(true)} className="rounded-lg bg-card/90 p-1.5 text-foreground hover:text-primary" aria-label="Preview"><Maximize2 className="h-3.5 w-3.5" /></button>
               {!readOnly && <>
@@ -137,7 +175,7 @@ function ImageSlot({ title, path, onChange, readOnly }: { title: string; path: s
             onDragOver={e => e.preventDefault()} onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) upload(f); }}
             className="flex h-full w-full flex-col items-center justify-center gap-2 text-muted-foreground transition-colors hover:text-primary">
             {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Upload className="h-5 w-5" />}
-            <span className="text-xs">Upload chart screenshot</span>
+            <span className="text-xs">{hint}</span>
           </button>
         )}
       </div>
@@ -175,6 +213,22 @@ function NewsEditor({ items, onChange, withDate }: { items: NewsItem[]; onChange
     </div>
   );
 }
+// News section: a ForexFactory screenshot is the primary input; manual event rows stay available behind a toggle.
+function NewsBlock({ items, onChange, withDate, shotPath, onShot }: { items: NewsItem[]; onChange: (n: NewsItem[]) => void; withDate?: boolean; shotPath: string; onShot: (p: string) => void }) {
+  const [manual, setManual] = useState(false);
+  return (
+    <div className="space-y-3">
+      <ImageSlot title="News screenshot (ForexFactory)" hint="Upload news screenshot" path={shotPath} onChange={onShot} />
+      {manual ? (
+        <NewsEditor items={items} onChange={onChange} withDate={withDate} />
+      ) : (
+        <button type="button" onClick={() => setManual(true)} className="flex items-center gap-1.5 text-xs font-semibold text-primary hover:opacity-80">
+          <Plus className="h-3.5 w-3.5" /> {items.length ? `Edit events (${items.length})` : 'Add event manually'}
+        </button>
+      )}
+    </div>
+  );
+}
 function NewsView({ items }: { items: NewsItem[] }) {
   if (!items.length) return <p className="text-sm text-muted-foreground">No events.</p>;
   return (
@@ -202,7 +256,7 @@ function RulesEditor({ rules, onChange }: { rules: Rule[]; onChange: (r: Rule[])
       {rules.map((r, i) => (
         <div key={r.id} className="flex items-center gap-2 rounded-xl border border-border bg-background/40 px-3 py-2">
           <Box checked={r.done} onClick={() => onChange(rules.map(x => x.id === r.id ? { ...x, done: !x.done } : x))} />
-          <input className="flex-1 bg-transparent text-sm text-foreground outline-none" value={r.text} onChange={e => onChange(rules.map(x => x.id === r.id ? { ...x, text: e.target.value } : x))} />
+          <input className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none" value={r.text} onChange={e => onChange(rules.map(x => x.id === r.id ? { ...x, text: e.target.value } : x))} />
           <button type="button" onClick={() => move(i, -1)} className="p-1 text-muted-foreground hover:text-primary" aria-label="Move up"><ArrowUp className="h-3.5 w-3.5" /></button>
           <button type="button" onClick={() => move(i, 1)} className="p-1 text-muted-foreground hover:text-primary" aria-label="Move down"><ArrowDown className="h-3.5 w-3.5" /></button>
           <button type="button" onClick={() => onChange(rules.filter(x => x.id !== r.id))} className="p-1 text-muted-foreground hover:text-primary" aria-label="Delete rule"><Trash2 className="h-3.5 w-3.5" /></button>
@@ -217,7 +271,7 @@ function RulesEditor({ rules, onChange }: { rules: Rule[]; onChange: (r: Rule[])
 }
 function Box({ checked, onClick, disabled }: { checked: boolean; onClick?: () => void; disabled?: boolean }) {
   return (
-    <button type="button" disabled={disabled} onClick={onClick} aria-pressed={checked}
+    <button type="button" disabled={disabled} onClick={onClick} aria-label={checked ? "Uncheck item" : "Check item"} aria-pressed={checked}
       className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border transition-all duration-300 ${checked ? 'border-primary bg-primary text-primary-foreground shadow-[0_0_12px_hsl(var(--primary)/0.4)]' : 'border-foreground/25 hover:border-primary/60'}`}>
       {checked && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
     </button>
@@ -230,6 +284,8 @@ function Checklist({ daily, set, models, onModelsChange, readOnly }: { daily: Da
   const [draft, setDraft] = useState('');
   const [naming, setNaming] = useState<string | null>(null);
   const dragId = useRef<string | null>(null);
+  const [robotReaction, setRobotReaction] = useState<RobotReaction | null>(null);
+  const reactionId = useRef(0);
   const items = daily.checklist;
   const done = items.filter(i => daily.checked[i.id]).length;
   const complete = items.length > 0 && done === items.length;
@@ -240,9 +296,14 @@ function Checklist({ daily, set, models, onModelsChange, readOnly }: { daily: Da
     if (from < 0 || to < 0 || from === to) return;
     const next = [...items]; const [m] = next.splice(from, 1); next.splice(to, 0, m); set({ checklist: next });
   };
+  const moveItem = (id: string, dir: -1 | 1) => {
+    const from = items.findIndex(i => i.id === id); const to = from + dir;
+    if (from < 0 || to < 0 || to >= items.length) return;
+    const next = [...items]; const [m] = next.splice(from, 1); next.splice(to, 0, m); set({ checklist: next });
+  };
   const saveModel = async () => {
     if (!user || !naming?.trim()) return;
-    const { error } = await (supabase as any).from('checklist_models').insert({ user_id: user.id, name: naming.trim(), items: items.map(({ id, text }) => ({ id, text })) });
+    const { error } = await supabase.from('checklist_models').insert({ user_id: user.id, name: naming.trim(), items: items.map(({ id, text }) => ({ id, text })) });
     if (error) return toast({ title: 'Could not save model', description: error.message, variant: 'destructive' });
     setNaming(null); onModelsChange(); toast({ title: 'Checklist model saved' });
   };
@@ -288,10 +349,22 @@ function Checklist({ daily, set, models, onModelsChange, readOnly }: { daily: Da
             <div key={i.id} draggable={!readOnly} onDragStart={() => (dragId.current = i.id)} onDragOver={e => e.preventDefault()} onDrop={() => drop(i.id)}
               className={`group flex items-center gap-3 rounded-xl border px-3 py-2.5 transition-all duration-300 ${daily.checked[i.id] ? 'border-primary/30 bg-primary/[0.05]' : 'border-border bg-background/40'}`}>
               {!readOnly && <GripVertical className="h-4 w-4 cursor-grab text-muted-foreground/40" />}
-              <Box disabled={readOnly} checked={!!daily.checked[i.id]} onClick={() => set({ checked: { ...daily.checked, [i.id]: !daily.checked[i.id] } })} />
+              <Box disabled={readOnly} checked={!!daily.checked[i.id]} onClick={() => {
+                if (!daily.checked[i.id]) {
+                  reactionId.current += 1;
+                  setRobotReaction({ id: reactionId.current, kind: done + 1 === items.length ? 'complete' : 'progress' });
+                }
+                set({ checked: { ...daily.checked, [i.id]: !daily.checked[i.id] } });
+              }} />
               {readOnly ? <span className="flex-1 text-sm text-foreground">{i.text}</span> :
-                <input className={`flex-1 bg-transparent text-sm outline-none transition-colors ${daily.checked[i.id] ? 'text-foreground/60' : 'text-foreground'}`} value={i.text} onChange={e => set({ checklist: items.map(x => x.id === i.id ? { ...x, text: e.target.value } : x) })} />}
-              {!readOnly && <button type="button" onClick={() => set({ checklist: items.filter(x => x.id !== i.id) })} className="p-1 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-primary" aria-label="Delete item"><Trash2 className="h-3.5 w-3.5" /></button>}
+                <input className={`min-w-0 flex-1 bg-transparent text-sm outline-none transition-colors ${daily.checked[i.id] ? 'text-foreground/60' : 'text-foreground'}`} value={i.text} onChange={e => set({ checklist: items.map(x => x.id === i.id ? { ...x, text: e.target.value } : x) })} />}
+              {!readOnly && (
+                <span className="flex items-center">
+                  <button type="button" disabled={items.indexOf(i) === 0} onClick={() => moveItem(i.id, -1)} className="p-1 text-muted-foreground hover:text-primary disabled:opacity-30" aria-label="Move item up"><ArrowUp className="h-3.5 w-3.5" /></button>
+                  <button type="button" disabled={items.indexOf(i) === items.length - 1} onClick={() => moveItem(i.id, 1)} className="p-1 text-muted-foreground hover:text-primary disabled:opacity-30" aria-label="Move item down"><ArrowDown className="h-3.5 w-3.5" /></button>
+                  <button type="button" onClick={() => set({ checklist: items.filter(x => x.id !== i.id) })} className="p-1 text-muted-foreground hover:text-primary" aria-label="Delete item"><Trash2 className="h-3.5 w-3.5" /></button>
+                </span>
+              )}
             </div>
           ))}
           {!readOnly && (
@@ -303,13 +376,7 @@ function Checklist({ daily, set, models, onModelsChange, readOnly }: { daily: Da
             </div>
           )}
         </div>
-        <div className="relative mx-auto flex w-40 flex-col items-center sm:w-full">
-          <div className={`pointer-events-none absolute inset-x-[10%] inset-y-[15%] rounded-full bg-primary blur-3xl transition-opacity duration-1000 ${complete ? 'animate-pulse' : ''}`}
-            style={{ opacity: complete ? 0.32 : 0.05 + (pct / 100) * 0.18, animationDuration: '4s' }} />
-          <img src={robotSrc} alt="TradeNova robot" draggable={false}
-            className="relative max-h-[420px] w-full select-none object-contain mix-blend-lighten" />
-          {complete && <p className="relative mt-2 text-xs font-semibold text-primary animate-fade-in">✓ Checklist Complete</p>}
-        </div>
+        <ChecklistRobot src={robotSrc} complete={complete} reaction={robotReaction} />
       </div>
     </div>
   );
@@ -323,7 +390,7 @@ function PlanCalendar({ selected, onSelect, savedDates }: { selected: string; on
   const days = new Date(view.getFullYear(), view.getMonth() + 1, 0).getDate();
   const cells: (string | null)[] = [...Array(view.getDay()).fill(null), ...Array.from({ length: days }, (_, i) => toKey(new Date(view.getFullYear(), view.getMonth(), i + 1)))];
   return (
-    <div className={`${card} p-4`}>
+    <div className={`${card} w-full p-4`}>
       <div className="mb-3 flex items-center justify-between">
         <p className="flex items-center gap-2 text-sm font-semibold text-foreground"><CalendarDays className="h-4 w-4 text-primary" /> Calendar</p>
         <button type="button" onClick={() => onSelect(today)} className="rounded-lg border border-border px-2 py-1 text-[11px] font-semibold text-muted-foreground hover:border-primary/40 hover:text-primary">Today</button>
@@ -337,7 +404,7 @@ function PlanCalendar({ selected, onSelect, savedDates }: { selected: string; on
         {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => <span key={d} className="py-1 text-[10px] font-semibold text-muted-foreground">{d}</span>)}
         {cells.map((k, i) => k ? (
           <button key={k} type="button" onClick={() => onSelect(k)} aria-pressed={k === selected}
-            className={`relative aspect-square rounded-lg text-xs transition-all duration-300 ${k === selected ? 'bg-primary text-primary-foreground shadow-[0_0_16px_hsl(var(--primary)/0.45)]' : k === today ? 'border border-primary/60 text-primary' : 'text-foreground/80 hover:bg-foreground/[0.06]'}`}>
+            className={`relative mx-auto aspect-square w-full max-w-11 rounded-full text-xs tabular-nums transition-all duration-300 ${k === selected ? 'bg-primary/15 font-semibold text-primary ring-1 ring-primary/60' : k === today ? 'ring-1 ring-foreground/25 text-foreground' : 'text-foreground/75 hover:bg-foreground/[0.05] hover:text-foreground'}`}>
             {Number(k.slice(8))}
             {savedDates.has(k) && <span className={`absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full ${k === selected ? 'bg-primary-foreground' : 'bg-primary'}`} />}
           </button>
@@ -352,7 +419,117 @@ function Block({ title, children }: { title: string; children: React.ReactNode }
   return <div className="space-y-2 border-t border-border pt-5 first:border-0 first:pt-0"><p className={label}>{title}</p>{children}</div>;
 }
 const Text = ({ v }: { v: string }) => v?.trim() ? <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">{v}</p> : <p className="text-sm text-muted-foreground">—</p>;
+
+// ── Pair-specific checklist state (trade_plan_checklists, type pair_checklist) ─
+export const DEFAULT_PAIRS = ['EURUSD', 'GBPUSD', 'USDJPY', 'XAUUSD', 'NAS100', 'US30', 'BTCUSD'];
+type PairCk = Pick<Daily, 'checklist' | 'checked' | 'modelId'>;
+function PairChecklist({ date, pair, legacy, readOnly, models, onModelsChange, saveRef }: { date: string; pair: string; legacy: Daily | null; readOnly?: boolean; models: Model[]; onModelsChange: () => void; saveRef: React.MutableRefObject<(() => Promise<boolean>) | null> }) {
+  const { user } = useAuth();
+  const { activeAccountId } = useActiveAccount();
+  const accountKey = activeAccountId ?? 'all';
+  const [ckScope, setCkScope] = useState('');
+  const [ck, setCk] = useState<PairCk | null>(null);
+  const pending = useRef<{ key: string; data: PairCk } | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout>>();
+  const inFlight = useRef<Promise<boolean> | null>(null);
+  const ckRef = useRef<PairCk | null>(null);
+  const hasStoredRow = useRef(false);
+  const [saveState, setSaveState] = useState<SaveState>('idle');
+  const flush = useCallback(async (): Promise<boolean> => {
+    if (inFlight.current) return inFlight.current;
+    const run = async () => {
+    clearTimeout(timer.current);
+    while (pending.current && user) {
+    const p = pending.current; pending.current = null;
+    setSaveState('saving');
+    const [d, pr, acc] = p.key.split('|');
+    const done = p.data.checklist.filter(i => p.data.checked[i.id]).length;
+    let error;
+    try { ({ error } = await supabase.from('trade_plan_checklists').upsert({
+      user_id: user.id, account_key: acc, account_id: acc === 'all' ? null : acc, checklist_type: 'pair_checklist',
+      period_date: d, pair: pr, data: p.data as unknown as Json,
+      status: done === 0 ? 'empty' : done === p.data.checklist.length ? 'complete' : 'partial',
+    }, { onConflict: 'user_id,account_key,checklist_type,period_date,pair' })); } catch (failure) { error = failure; }
+    if (error) { if (!pending.current) pending.current = p; setSaveState('error'); toast({ title: 'Checklist not saved', description: error.message, variant: 'destructive' }); return false; }
+    }
+    setSaveState('saved'); return true;
+    };
+    const operation = run().catch(() => { setSaveState('error'); return false; });
+    inFlight.current = operation;
+    try { return await operation; } finally { inFlight.current = null; }
+  }, [user]);
+  saveRef.current = flush;
+  useEffect(() => {
+    const warn = (e: BeforeUnloadEvent) => { if (pending.current || inFlight.current) { e.preventDefault(); e.returnValue = ''; } };
+    window.addEventListener('beforeunload', warn);
+    return () => { window.removeEventListener('beforeunload', warn); void flush(); };
+  }, [flush]);
+  useEffect(() => {
+    if (!user) return;
+    let alive = true; setCk(null);
+    (async () => {
+      if (!await flush()) return;
+      const { data, error } = await supabase.from('trade_plan_checklists').select('data').eq('user_id', user.id).eq('account_key', accountKey)
+        .eq('checklist_type', 'pair_checklist').eq('period_date', date).eq('pair', pair).maybeSingle();
+      if (!alive) return;
+      if (error) { setSaveState('error'); toast({ title: 'Could not load checklist', description: error.message, variant: 'destructive' }); return; }
+      const row = data?.data as unknown as PairCk | undefined; hasStoredRow.current = !!row;
+      // Older checklists were not pair-tagged and were used for EURUSD: show them only there until edited.
+      // The parent may still hold the previous scope while this request runs.
+      // Apply legacy content only after the parent has loaded this exact scope.
+      const base = emptyDaily();
+      const next = row ? { checklist: row.checklist ?? [], checked: row.checked ?? {}, modelId: row.modelId ?? '' } : { checklist: base.checklist, checked: base.checked, modelId: base.modelId };
+      ckRef.current = next; setCk(next); setCkScope(`${date}|${pair}|${accountKey}`); setSaveState('idle');
+    })();
+    return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, accountKey, date, pair]);
+  useEffect(() => {
+    if (legacy && pair === 'EURUSD' && ckScope === `${date}|${pair}|${accountKey}` && !hasStoredRow.current && !pending.current && saveState === 'idle') {
+      const next = { checklist: legacy.checklist, checked: legacy.checked, modelId: legacy.modelId };
+      ckRef.current = next; setCk(next);
+    }
+  }, [legacy, date, pair, accountKey, ckScope, saveState]);
+  if (!ck) return <div className={`${card} p-5`} role="status">{saveState === 'error' ? 'Checklist unavailable. Retry by selecting this plan again.' : 'Loading checklist…'}</div>;
+  const set = (patch: Partial<Daily>) => {
+    if (readOnly || !ckRef.current || ckScope !== `${date}|${pair}|${accountKey}`) return;
+    const n = { ...ckRef.current, ...patch } as PairCk;
+    ckRef.current = n; setCk(n); setSaveState('saving'); hasStoredRow.current = true;
+    pending.current = { key: `${date}|${pair}|${accountKey}`, data: { checklist: n.checklist, checked: n.checked, modelId: n.modelId } };
+    clearTimeout(timer.current); timer.current = setTimeout(() => void flush(), 800);
+  };
+  return <div className="space-y-2"><p className="text-xs text-muted-foreground" aria-live="polite">{saveState === 'saving' ? 'Saving checklist…' : saveState === 'saved' ? 'Checklist saved' : saveState === 'error' ? 'Checklist not saved' : ''}</p><Checklist readOnly={readOnly} daily={{ ...emptyDaily(), ...ck }} set={set} models={models} onModelsChange={onModelsChange} /></div>;
+}
+
+// One normalization for every supported and custom symbol; blank falls back to EURUSD so no write ever uses pair ''.
+export const normalizePair = (p: string | null | undefined) => (p || '').trim().toUpperCase().replace(/[^A-Z0-9.]/g, '') || 'EURUSD';
+
+function PairPicker({ pair, onChange, pairs, onAdd }: { pair: string; onChange: (p: string) => void; pairs: string[]; onAdd: (p: string) => void }) {
+  const [custom, setCustom] = useState('');
+  const add = () => { const v = custom.trim().toUpperCase().replace(/[^A-Z0-9.]/g, ''); if (v) { onAdd(v); onChange(v); setCustom(''); } };
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {pairs.map(p => (
+        <button key={p} type="button" onClick={() => onChange(p)} aria-pressed={pair === p}
+          className={`rounded-lg border px-2.5 py-1 font-mono text-xs font-semibold transition-colors ${pair === p ? 'border-primary bg-primary/15 text-primary' : 'border-border text-muted-foreground hover:text-foreground'}`}>{p}</button>
+      ))}
+      <input value={custom} onChange={e => setCustom(e.target.value)} onKeyDown={e => e.key === 'Enter' && add()} placeholder="+ Custom pair" aria-label="Custom pair"
+        className="h-7 w-28 rounded-lg border border-border bg-background px-2 font-mono text-xs uppercase text-foreground outline-none focus:border-primary/50" />
+    </div>
+  );
+}
+
 const Tag = ({ v }: { v: string }) => v ? <span className="inline-block rounded-lg border border-primary/40 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">{v}</span> : <span className="text-sm text-muted-foreground">—</span>;
+
+// Weekly Outlook is scoped by user + account_key + week + normalized pair. Legacy pair-less rows
+// (account 'all', pair '') are shown read-through under EURUSD only when no scoped row exists;
+// the first edit writes a new scoped row and never rewrites the legacy one.
+async function loadWeekly(userId: string, accountKey: string, pair: string, week: string) {
+  const base = () => supabase.from('trade_plan_checklists').select('data').eq('user_id', userId).eq('checklist_type', 'weekly_outlook').eq('period_date', week);
+  const scoped = await base().eq('account_key', accountKey).eq('pair', pair).maybeSingle();
+  if (scoped.error || scoped.data || pair !== 'EURUSD') return scoped;
+  return base().eq('account_key', 'all').eq('pair', '').maybeSingle();
+}
 
 // ── Main ──────────────────────────────────────────────────────────────────────
 type Tab = 'weekly' | 'daily' | 'full';
@@ -360,11 +537,42 @@ type SaveState = 'idle' | 'saving' | 'saved' | 'error';
 
 export default function TradePlanV2() {
   const { user } = useAuth();
+  const { activeAccountId, activeAccount } = useActiveAccount();
+  const accountKey = activeAccountId ?? 'all';
   const today = toKey(new Date());
-  const [date, setDate] = useState(today);
-  const [tab, setTab] = useState<Tab>('daily');
-  const [calOpen, setCalOpen] = useState(false);
+  // Selected date and calendar open state persist per user (date stored as a local YYYY-MM-DD key, never a Date, to avoid timezone shifts).
+  const dateKey = `tn-checklist-date:${user?.id ?? ''}`;
+  const calKey = `tn-checklist-cal-open:${user?.id ?? ''}`;
+  const [date, setDateRaw] = useState(() => { try { const v = localStorage.getItem(dateKey); return v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : today; } catch { return today; } });
+  const setDate = (k: string) => { setDateRaw(k); try { localStorage.setItem(dateKey, k); } catch { /* ignore */ } };
+  // The signed-in user can arrive after the first render; restore that user's stored date (and open state) once it is known.
+  useEffect(() => {
+    if (!user?.id) return;
+    try {
+      const v = localStorage.getItem(`tn-checklist-date:${user.id}`);
+      const valid = v && /^\d{4}-\d{2}-\d{2}$/.test(v) && toKey(fromKey(v)) === v;
+      setDateRaw(valid ? v! : toKey(new Date()));
+      setCalOpenRaw(localStorage.getItem(`tn-checklist-cal-open:${user.id}`) === '1');
+      const t = localStorage.getItem(`tn-checklist-tab:${user.id}`);
+      setTab(t === 'weekly' || t === 'full' ? t : 'daily');
+    } catch { /* ignore */ }
+  }, [user?.id]);
+  const pairKey = `tn-checklist-pair:${user?.id ?? ''}`;
+  const pairsKey = `tn-checklist-pairs:${user?.id ?? ''}`;
+  const [pair, setPairRaw] = useState(() => { try { return normalizePair(localStorage.getItem(pairKey)); } catch { return 'EURUSD'; } });
+  const [pairs, setPairs] = useState<string[]>(() => { try { return Array.from(new Set([...DEFAULT_PAIRS, ...JSON.parse(localStorage.getItem(pairsKey) || '[]')])); } catch { return DEFAULT_PAIRS; } });
+  const setPair = (raw: string) => { const p = normalizePair(raw); setPairRaw(p); try { localStorage.setItem(pairKey, p); } catch { /* ignore */ } };
+  const addPair = (p: string) => setPairs(prev => { const n = prev.includes(p) ? prev : [...prev, p]; try { localStorage.setItem(pairsKey, JSON.stringify(n.filter(x => !DEFAULT_PAIRS.includes(x)))); } catch { /* ignore */ } return n; });
+  const tabKey = `tn-checklist-tab:${user?.id ?? ''}`;
+  const [tab, setTabRaw] = useState<Tab>(() => { try { const t = localStorage.getItem(tabKey); return t === 'weekly' || t === 'full' ? t : 'daily'; } catch { return 'daily'; } });
+  const setTab = (t: Tab) => { setTabRaw(t); try { localStorage.setItem(tabKey, t); } catch { /* ignore */ } };
+  const [calOpen, setCalOpenRaw] = useState(() => { try { return localStorage.getItem(calKey) === '1'; } catch { return false; } });
+  const setCalOpen = (f: (o: boolean) => boolean) => setCalOpenRaw(o => { const n = f(o); try { localStorage.setItem(calKey, n ? '1' : '0'); } catch { /* ignore */ } return n; });
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [retry, setRetry] = useState(0);
   const [daily, setDaily] = useState<Daily>(emptyDaily);
   const [weekly, setWeekly] = useState<Weekly>(EMPTY_WEEKLY);
   const [dailyExists, setDailyExists] = useState(false);
@@ -374,95 +582,209 @@ export default function TradePlanV2() {
   const [state, setState] = useState<SaveState>('idle');
   const week = weekStartKey(date);
 
+  // Editable plan field layout (drag & drop with the mouse, saved once per user).
+  const [dailyOrder, setDailyOrder] = useState<string[]>(DAILY_LAYOUT_DEFAULT);
+  const [weeklyOrder, setWeeklyOrder] = useState<string[]>(WEEKLY_LAYOUT_DEFAULT);
+  const [fullOrder, setFullOrder] = useState<string[]>(FULL_LAYOUT_DEFAULT);
+  const orders: Record<Tab, string[]> = { daily: dailyOrder, weekly: weeklyOrder, full: fullOrder };
+  const [layoutEdit, setLayoutEdit] = useState<Tab | null>(null);
+  const [layoutDraft, setLayoutDraft] = useState<string[]>([]);
+  const layoutDrag = useRef<string | null>(null);
+
   // Refs to flush pending edits to the date they belong to.
-  const prevAi = useRef<Record<string, any>>({});
-  const pending = useRef<{ daily?: { date: string; data: Daily }; weekly?: { week: string; data: Weekly } }>({});
+  const prevAi = useRef<Record<string, Json | undefined>>({});
+  const loadedScope = useRef('');
+  const pending = useRef<{ daily?: { date: string; pair: string; accountKey: string; data: Daily; ai: Record<string, Json | undefined> }; weekly?: { week: string; pair: string; accountKey: string; data: Weekly }; defaults?: { id: string; text: string }[] }>({});
+  const inFlight = useRef<Promise<boolean> | null>(null);
+  const ruleDefaultsRef = useRef<{ id: string; text: string }[]>([]);
+  const checklistSave = useRef<(() => Promise<boolean>) | null>(null);
+  const dailyRef = useRef(daily); dailyRef.current = daily;
+  const weeklyRef = useRef(weekly); weeklyRef.current = weekly;
   const timer = useRef<ReturnType<typeof setTimeout>>();
 
   const loadModels = useCallback(async () => {
     if (!user) return;
-    const { data } = await (supabase as any).from('checklist_models').select('id,name,items').eq('user_id', user.id).order('created_at');
-    setModels((data || []) as Model[]);
+    const { data } = await supabase.from('checklist_models').select('id,name,items').eq('user_id', user.id).order('created_at');
+    setModels((data || []) as unknown as Model[]);
   }, [user]);
   const loadSaved = useCallback(async () => {
     if (!user) return;
-    const { data } = await supabase.from('trade_plans').select('plan_date').eq('user_id', user.id).order('plan_date', { ascending: false }).limit(1000);
-    setSaved(new Set((data || []).map((r: any) => r.plan_date)));
-  }, [user]);
+    const { data } = await supabase.from('trade_plans').select('plan_date').eq('user_id', user.id).eq('account_key', accountKey).eq('pair', pair).order('plan_date', { ascending: false }).limit(1000);
+    setSaved(new Set((data || []).map((r) => r.plan_date)));
+  }, [user, pair, accountKey]);
   useEffect(() => { loadModels(); loadSaved(); }, [loadModels, loadSaved]);
 
-  const flush = useCallback(async () => {
+  const flush = useCallback(async (): Promise<boolean> => {
+    if (inFlight.current) return inFlight.current;
+    const run = async () => {
     clearTimeout(timer.current);
+    while (user && (pending.current.daily || pending.current.weekly || pending.current.defaults)) {
     const p = pending.current; pending.current = {};
-    if (!user || (!p.daily && !p.weekly)) return;
     setState('saving');
     try {
+      if (p.defaults) {
+        const row: Database['public']['Tables']['daily_plan_rules']['Insert'] = { user_id: user.id, rules: p.defaults };
+        const { error } = await supabase.from('daily_plan_rules').upsert(row);
+        if (error) throw error;
+        p.defaults = undefined;
+      }
       if (p.daily) {
         const d = p.daily.data;
         const num = (v: string) => (v.trim() === '' || isNaN(Number(v)) ? null : Number(v));
         const { error } = await supabase.from('trade_plans').upsert({
-          user_id: user.id, plan_date: p.daily.date,
+          user_id: user.id, plan_date: p.daily.date, pair: p.daily.pair, account_key: p.daily.accountKey, account_id: p.daily.accountKey === 'all' ? null : p.daily.accountKey,
           market_bias: d.bias ? (d.bias === 'Range' ? 'ranging' : d.bias.toLowerCase()) : 'neutral',
           notes: d.mainIdea, psych_notes: d.psychNotes,
           emotion: d.psychology[0]?.toLowerCase() || null,
           max_risk_per_trade: num(d.risk.riskPct), max_daily_loss: num(d.risk.maxLoss),
-          max_trades: num(d.risk.maxTrades) as any,
-          ai_analysis: { ...prevAi.current, daily_v2: d },
-        } as any, { onConflict: 'user_id,plan_date' });
+          max_trades: num(d.risk.maxTrades) == null ? null : Math.max(0, Math.trunc(Number(d.risk.maxTrades))),
+          ai_analysis: { ...p.daily.ai, daily_v2: d } as unknown as Json,
+        }, { onConflict: 'user_id,account_key,plan_date,pair' });
         if (error) throw error;
-        prevAi.current = { ...prevAi.current, daily_v2: d };
-        setSaved(s => new Set(s).add(p.daily!.date));
-        if (p.daily.date === dateRef.current) setDailyExists(true);
+        if (p.daily.date === dateRef.current && p.daily.pair === pairRef.current && p.daily.accountKey === accountRef.current) {
+          prevAi.current = { ...p.daily.ai, daily_v2: d as unknown as Json };
+          const savedDate = p.daily.date; setSaved(s => new Set(s).add(savedDate)); setDailyExists(true);
+        }
+        p.daily = undefined;
       }
       if (p.weekly) {
         const w = p.weekly.data;
         const filled = [w.bias, w.scenario, w.chart, w.mainIdea].filter(Boolean).length + (w.news.length ? 1 : 0);
         const { error } = await supabase.from('trade_plan_checklists').upsert({
-          user_id: user.id, account_key: 'all', checklist_type: 'weekly_outlook', period_date: p.weekly.week,
-          data: w as any, status: filled === 0 ? 'empty' : filled === 5 ? 'complete' : 'partial',
-        }, { onConflict: 'user_id,account_key,checklist_type,period_date' });
+          user_id: user.id, account_key: p.weekly.accountKey, account_id: p.weekly.accountKey === 'all' ? null : p.weekly.accountKey, pair: p.weekly.pair, checklist_type: 'weekly_outlook', period_date: p.weekly.week,
+          data: w as unknown as Json, status: filled === 0 ? 'empty' : filled === 5 ? 'complete' : 'partial',
+        }, { onConflict: 'user_id,account_key,checklist_type,period_date,pair' });
         if (error) throw error;
       }
       setState('saved');
-    } catch (e: any) {
+    } catch (e: unknown) {
+      // Keep the failed snapshot unless a newer edit for this scope is already queued.
+      pending.current = { ...p, ...pending.current };
       setState('error');
-      toast({ title: 'Could not save plan', description: e?.message, variant: 'destructive' });
+      toast({ title: 'Could not save plan', description: errorMessage(e), variant: 'destructive' });
+      return false;
     }
+    }
+    return true;
+    };
+    const operation = run(); inFlight.current = operation;
+    try { return await operation; } finally { inFlight.current = null; }
   }, [user]);
   const dateRef = useRef(date); dateRef.current = date;
+  const pairRef = useRef(pair); pairRef.current = pair;
+  const accountRef = useRef(accountKey); accountRef.current = accountKey;
+  const saveAll = async () => { const planOK = await flush(); const checklistOK = await checklistSave.current?.(); return planOK && checklistOK !== false; };
 
   useEffect(() => {
-    const h = () => { flush(); };
+    const warn = (e: BeforeUnloadEvent) => { if (pending.current.daily || pending.current.weekly || pending.current.defaults || inFlight.current) { e.preventDefault(); e.returnValue = ''; } };
+    window.addEventListener('beforeunload', warn);
+    const h = () => { void flush(); };
     window.addEventListener('pagehide', h);
-    return () => { window.removeEventListener('pagehide', h); flush(); };
+    return () => { window.removeEventListener('pagehide', h); window.removeEventListener('beforeunload', warn); void flush(); };
   }, [flush]);
 
   // Load the selected day's plan and its week's outlook.
   useEffect(() => {
     if (!user) return;
     let alive = true;
-    setLoading(true); setCreating(false);
+    setLoading(true); setLoadError(false); setCreating(false);
     (async () => {
-      const [{ data: row }, { data: wk }] = await Promise.all([
-        supabase.from('trade_plans').select('*').eq('user_id', user.id).eq('plan_date', date).maybeSingle(),
-        supabase.from('trade_plan_checklists').select('data').eq('user_id', user.id).eq('account_key', 'all').eq('checklist_type', 'weekly_outlook').eq('period_date', week).maybeSingle(),
+      if (!await saveAll()) { if (alive) { setLoadError(true); setLoading(false); } return; }
+      const [{ data: row, error: planError }, { data: wk, error: weeklyError }, { data: rd, error: rulesError }] = await Promise.all([
+        supabase.from('trade_plans').select('*').eq('user_id', user.id).eq('account_key', accountKey).eq('plan_date', date).eq('pair', pair).maybeSingle(),
+        loadWeekly(user.id, accountKey, pair, week),
+        supabase.from('daily_plan_rules').select('rules').eq('user_id', user.id).maybeSingle(),
       ]);
       if (!alive) return;
-      const ai = ((row as any)?.ai_analysis || {}) as Record<string, any>;
-      prevAi.current = ai;
-      setDaily(row ? (ai.daily_v2 ? normDaily(ai.daily_v2) : fromLegacy(row)) : emptyDaily());
+      if (planError || weeklyError || rulesError) { setLoadError(true); setLoading(false); toast({ title: 'Could not load plan', description: (planError || weeklyError || rulesError)?.message, variant: 'destructive' }); return; }
+      const defaults: Rule[] = (rd?.rules as unknown as Rule[] | undefined) || [];
+      ruleDefaultsRef.current = defaults;
+      const ai = (row?.ai_analysis || {}) as Record<string, Json | undefined>;
+      prevAi.current = ai; loadedScope.current = `${accountKey}|${date}|${pair}`;
+      setDaily(withRuleDefaults(row ? (ai.daily_v2 ? normDaily(ai.daily_v2 as unknown as Partial<Daily>) : fromLegacy(row)) : emptyDaily(), defaults));
       setDailyExists(!!row);
-      setWeekly({ ...EMPTY_WEEKLY, ...((wk as any)?.data || {}) });
+      setWeekly({ ...EMPTY_WEEKLY, ...((wk?.data as unknown as Partial<Weekly>) || {}) });
       setLoading(false); setState('idle');
     })();
     return () => { alive = false; };
-  }, [user, date, week]);
+  }, [user, date, week, pair, accountKey, retry]);
+
+  // Load the saved field layout once per user: the same order for every day and pair.
+  useEffect(() => {
+    if (!user) return;
+    let alive = true;
+    (async () => {
+      const [{ data: d1 }, { data: d2 }, { data: d3 }] = await Promise.all([
+        supabase.from('workspace_layouts').select('layout').eq('user_id', user.id).eq('page', 'daily_plan').maybeSingle(),
+        supabase.from('workspace_layouts').select('layout').eq('user_id', user.id).eq('page', 'weekly_outlook').maybeSingle(),
+        supabase.from('workspace_layouts').select('layout').eq('user_id', user.id).eq('page', 'full_view').maybeSingle(),
+      ]);
+      if (!alive) return;
+      if (d1?.layout) setDailyOrder(normalizeLayoutOrder((d1.layout as { order?: unknown }).order, DAILY_LAYOUT_DEFAULT));
+      if (d2?.layout) setWeeklyOrder(normalizeLayoutOrder((d2.layout as { order?: unknown }).order, WEEKLY_LAYOUT_DEFAULT));
+      if (d3?.layout) setFullOrder(normalizeLayoutOrder((d3.layout as { order?: unknown }).order, FULL_LAYOUT_DEFAULT));
+    })();
+    return () => { alive = false; };
+  }, [user, retry]);
 
   const schedule = () => { setState('saving'); clearTimeout(timer.current); timer.current = setTimeout(flush, 1000); };
-  const setD = (p: Partial<Daily>) => setDaily(prev => { const n = { ...prev, ...p }; pending.current.daily = { date, data: n }; schedule(); return n; });
-  const setW = (p: Partial<Weekly>) => setWeekly(prev => { const n = { ...prev, ...p }; pending.current.weekly = { week, data: n }; schedule(); return n; });
+  const setD = (p: Partial<Daily>) => { if (loading || loadError || loadedScope.current !== `${accountKey}|${date}|${pair}`) return; const n = { ...dailyRef.current, ...p }; dailyRef.current = n; setDaily(n); pending.current.daily = { date, pair, accountKey, data: n, ai: { ...prevAi.current } }; schedule(); };
+  const setW = (p: Partial<Weekly>) => { if (loading || loadError || loadedScope.current !== `${accountKey}|${date}|${pair}`) return; const n = { ...weeklyRef.current, ...p }; weeklyRef.current = n; setWeekly(n); pending.current.weekly = { week, pair, accountKey, data: n }; schedule(); };
+  // Rule text edits update the user's persistent daily-rules set so they carry over to every future day.
+  const changeRules = (r: Rule[]) => {
+    setD({ rules: r });
+    const next = r.map(({ id, text }) => ({ id, text }));
+    const cur = ruleDefaultsRef.current;
+    const same = cur.length === next.length && cur.every((x, i) => x.id === next[i].id && x.text === next[i].text);
+    if (!same) { ruleDefaultsRef.current = next; pending.current.defaults = next; schedule(); }
+  };
 
-  const go = async (k: string) => { await flush(); setDate(k); setCalOpen(false); };
+  // Edit Layout: drag sections up/down with the mouse; the order is saved once per user,
+  // so every day and every pair keeps the same layout. Cancel reverts, Reset restores defaults.
+  const startLayoutEdit = (t: Tab) => { setLayoutEdit(t); setLayoutDraft([...orders[t]]); };
+  const reorderDraft = (fromId: string, toId: string) => setLayoutDraft(prev => {
+    const arr = [...prev]; const from = arr.indexOf(fromId); const to = arr.indexOf(toId);
+    if (from < 0 || to < 0 || from === to) return prev;
+    arr.splice(from, 1); arr.splice(to, 0, fromId);
+    return arr;
+  });
+  const cancelLayoutEdit = () => { setLayoutEdit(null); layoutDrag.current = null; };
+  const resetLayoutDraft = () => { if (layoutEdit) setLayoutDraft([...LAYOUT_DEFAULTS[layoutEdit]]); };
+  const saveLayoutEdit = async () => {
+    if (!layoutEdit || !user) { cancelLayoutEdit(); return; }
+    const page = LAYOUT_PAGES[layoutEdit];
+    const clean = normalizeLayoutOrder(layoutDraft, LAYOUT_DEFAULTS[layoutEdit]);
+    const { error } = await supabase.from('workspace_layouts').upsert({ user_id: user.id, page, layout: { order: clean } }, { onConflict: 'user_id,page' });
+    if (error) { toast({ title: 'Layout not saved', description: error.message, variant: 'destructive' }); return; }
+    if (layoutEdit === 'daily') setDailyOrder(clean); else if (layoutEdit === 'weekly') setWeeklyOrder(clean); else setFullOrder(clean);
+    toast({ title: 'Layout saved' });
+    setLayoutEdit(null);
+  };
+
+  const choosePair = async (p: string) => { if (p === pair) return; if (await saveAll()) setPair(p); };
+  const go = async (k: string) => { if (await saveAll()) setDate(k); };
+
+  // Delete only the selected Daily Plan row (user + account_key + date + pair); outlooks and checklists are separate rows.
+  const deletePlan = async () => {
+    if (!user || deleting) return;
+    const scope = { date, pair, accountKey };
+    setDeleting(true);
+    try {
+      const pd = pending.current.daily;
+      if (pd && pd.date === scope.date && pd.pair === scope.pair && pd.accountKey === scope.accountKey) pending.current.daily = undefined;
+      if (!await saveAll()) throw new Error('Pending changes could not be saved');
+      const { error } = await supabase.from('trade_plans').delete().eq('user_id', user.id).eq('account_key', scope.accountKey).eq('plan_date', scope.date).eq('pair', scope.pair);
+      if (error) throw error;
+      setSaved(s => { const n = new Set(s); n.delete(scope.date); return n; });
+      if (loadedScope.current === `${scope.accountKey}|${scope.date}|${scope.pair}`) {
+        prevAi.current = {}; setDaily(withRuleDefaults(emptyDaily(), ruleDefaultsRef.current as Rule[])); setDailyExists(false); setCreating(false);
+      }
+      setConfirmDelete(false);
+      toast({ title: 'Daily Plan deleted', description: `${scope.pair} · ${longDate(scope.date)}` });
+    } catch (e: unknown) {
+      toast({ title: 'Could not delete plan', description: errorMessage(e) ?? 'Your plan was not changed.', variant: 'destructive' });
+    } finally { setDeleting(false); }
+  };
   const showDaily = dailyExists || creating || date === today;
 
   const weekLabel = useMemo(() => {
@@ -479,12 +801,82 @@ export default function TradePlanV2() {
 
   const calendar = <PlanCalendar selected={date} onSelect={go} savedDates={saved} />;
 
+  // Field sections in their saved order. Sections render from dailyOrder / weeklyOrder.
+  const weeklyNodes: Record<string, React.ReactNode> = {
+    bias: <Field title="Weekly Bias"><Chips options={BIASES} value={weekly.bias} onChange={v => setW({ bias: v })} /></Field>,
+    charts: (
+      <div className="grid gap-4 sm:grid-cols-2">
+        <ImageSlot title="Before" hint="Upload chart screenshot" path={weekly.before} onChange={p => setW({ before: p })} />
+        <ImageSlot title="After" hint="Upload chart screenshot" path={weekly.after} onChange={p => setW({ after: p })} />
+      </div>
+    ),
+    news: <Field title="News / Events"><NewsBlock withDate items={weekly.news} onChange={n => setW({ news: n })} shotPath={weekly.newsShot || ''} onShot={p => setW({ newsShot: p })} /></Field>,
+    main_idea: <Field title="Main Idea"><Area value={weekly.mainIdea} onChange={v => setW({ mainIdea: v })} placeholder="What is the main idea for this trading week?" /></Field>,
+  };
+
+  const dailyNodes: Record<string, React.ReactNode> = {
+    bias_price: (
+      <div className="grid gap-6 md:grid-cols-2">
+        <Field title="Market Bias"><Chips options={BIASES} value={daily.bias} onChange={v => setD({ bias: v })} /></Field>
+        <Field title="Current Price">
+          <Chips options={PRICES} value={daily.price} onChange={v => setD({ price: v })} />
+          {daily.price === 'Custom' && <input className={input} placeholder="Describe price location" value={daily.priceCustom} onChange={e => setD({ priceCustom: e.target.value })} />}
+        </Field>
+      </div>
+    ),
+    charts: (
+      <div className="grid gap-4 sm:grid-cols-2">
+        <ImageSlot title="Before" path={daily.before} onChange={p => setD({ before: p })} />
+        <ImageSlot title="After" path={daily.after} onChange={p => setD({ after: p })} />
+      </div>
+    ),
+    news: <Field title="News"><NewsBlock items={daily.news} onChange={n => setD({ news: n })} shotPath={daily.newsShot || ''} onShot={p => setD({ newsShot: p })} /></Field>,
+    risk: (
+      <Field title="Risk Management">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          {([['riskPct', 'Risk %', '1'], ['maxLoss', 'Max Daily Loss', '500'], ['maxTrades', 'Max Trades', '2'], ['rr', 'R:R Target', '1:3']] as const).map(([k, l, ph]) => (
+            <label key={k} className="space-y-1"><span className="text-xs text-muted-foreground">{l}</span>
+              <input className={input} placeholder={ph} value={daily.risk[k]} onChange={e => setD({ risk: { ...daily.risk, [k]: e.target.value } })} /></label>
+          ))}
+        </div>
+      </Field>
+    ),
+    psychology: (
+      <Field title="Psychology">
+        <Chips multi options={PSYCH} value={daily.psychology} onChange={v => setD({ psychology: v })} />
+        <Area rows={2} value={daily.psychNotes} onChange={v => setD({ psychNotes: v })} placeholder="How do you feel before trading today?" />
+      </Field>
+    ),
+    rules: <Field title="Rules"><RulesEditor rules={daily.rules} onChange={changeRules} /></Field>,
+    main_idea: <Field title="Main Idea"><Area value={daily.mainIdea} onChange={v => setD({ mainIdea: v })} placeholder="What is today's main trading idea?" /></Field>,
+  };
+
+  const layoutWrap = (id: string, node: React.ReactNode, index: number) => {
+    if (layoutEdit !== tab || loading || loadError) return <React.Fragment key={id}>{node}</React.Fragment>;
+    return (
+      <div key={id}
+        style={{ order: index }}
+        draggable
+        onDragStart={() => { layoutDrag.current = id; }}
+        onDragOver={e => { if (layoutDrag.current && layoutDrag.current !== id) { e.preventDefault(); reorderDraft(layoutDrag.current, id); } }}
+        onDragEnd={() => { layoutDrag.current = null; }}
+        className="cursor-grab rounded-2xl border border-dashed border-primary/30 bg-primary/[0.03] p-4 transition-all duration-200 hover:border-primary/60 hover:bg-primary/[0.06] active:cursor-grabbing active:scale-[0.995] active:opacity-80">
+        <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-primary/90">
+          <GripVertical className="h-4 w-4" /> <span>Drag to move</span>
+        </div>
+        <div className="pointer-events-none select-none">{node}</div>
+      </div>
+    );
+  };
+
   return (
     <div className="mx-auto max-w-7xl space-y-5">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-heading text-2xl font-semibold text-foreground">Trade Plan</h1>
-          <p className="mt-1 text-sm text-muted-foreground">{longDate(date)}</p>
+          <p className={label}>Trading Plan</p>
+          <h1 className="mt-1 font-heading text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">Daily Plan — {pair}</h1>
+          <div className="mt-2"><PairPicker pair={pair} onChange={choosePair} pairs={pairs} onAdd={addPair} /></div>
+          <p className="mt-2 text-xs tracking-wide text-muted-foreground">{longDate(date)} · {activeAccount?.account_name || 'All Accounts / historical unassigned plans'}</p>
         </div>
         <div className="flex items-center gap-3">
           <span className="flex items-center gap-1.5 text-xs text-muted-foreground" aria-live="polite">
@@ -492,118 +884,131 @@ export default function TradePlanV2() {
             {state === 'saved' && <><Check className="h-3 w-3 text-primary" /> Saved</>}
             {state === 'error' && <span className="text-destructive">Not saved</span>}
           </span>
-          <button type="button" onClick={() => { if (tab === 'daily' && showDaily) pending.current.daily = { date, data: daily }; if (tab === 'weekly') pending.current.weekly = { week, data: weekly }; flush(); }}
-            className="flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-[0_0_20px_hsl(var(--primary)/0.25)] transition-opacity hover:opacity-90"><Save className="h-4 w-4" /> Save Plan</button>
+          <button type="button" onClick={() => { if (loading || loadError || loadedScope.current !== `${accountKey}|${date}|${pair}`) return; if (tab === 'daily' && showDaily) pending.current.daily = { date, pair, accountKey, data: daily, ai: { ...prevAi.current } }; if (tab === 'weekly') pending.current.weekly = { week, pair, accountKey, data: weekly }; void saveAll(); }}
+            className="flex items-center gap-1.5 rounded-full bg-primary px-5 py-2 text-sm font-medium text-primary-foreground transition-all hover:opacity-90 active:scale-[0.98]"><Save className="h-4 w-4" /> Save Plan</button>
+          {dailyExists && !loading && !loadError && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button type="button" aria-label="More plan actions" className="rounded-xl border border-border bg-card p-2 text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"><MoreVertical className="h-4 w-4" /></button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={() => setConfirmDelete(true)} className="gap-2 text-destructive focus:text-destructive"><Trash2 className="h-4 w-4" /> Delete Daily Plan</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
+        <AlertDialog open={confirmDelete} onOpenChange={o => { if (!deleting) setConfirmDelete(o); }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Daily Plan?</AlertDialogTitle>
+              <AlertDialogDescription>Are you sure you want to delete your {pair} Daily Plan for {fromKey(date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}? This action cannot be undone.</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+              <AlertDialogAction disabled={deleting} onClick={e => { e.preventDefault(); void deletePlan(); }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">{deleting ? 'Deleting…' : 'Delete Plan'}</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[300px_1fr]">
-        <aside className="lg:sticky lg:top-4 lg:self-start">
-          <div className="hidden lg:block">{calendar}</div>
-          <div className="lg:hidden">
-            <button type="button" onClick={() => setCalOpen(o => !o)} className={`${card} flex w-full items-center justify-between px-4 py-3 text-sm font-semibold text-foreground`}>
-              <span className="flex items-center gap-2"><CalendarDays className="h-4 w-4 text-primary" /> Calendar</span>
-              <ChevronRight className={`h-4 w-4 transition-transform duration-300 ${calOpen ? 'rotate-90' : ''}`} />
-            </button>
-            {calOpen && <div className="mt-2 animate-fade-in">{calendar}</div>}
+      <div className="space-y-5">
+        <section aria-label="Calendar">
+          <button type="button" onClick={() => setCalOpen(o => !o)} aria-expanded={calOpen} className={`${card} flex w-full items-center justify-between px-4 py-3 text-sm font-semibold text-foreground`}>
+            <span className="flex items-center gap-2"><CalendarDays className="h-4 w-4 text-primary" /> Calendar</span>
+            <ChevronRight className={`h-4 w-4 transition-transform duration-300 ${calOpen ? 'rotate-90' : ''}`} />
+          </button>
+          <div className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${calOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}>
+            <div className="overflow-hidden">{calOpen && <div className="mt-2 w-full">{calendar}</div>}</div>
           </div>
-        </aside>
+        </section>
 
         <main className="min-w-0 space-y-5">
-          <div className="inline-flex rounded-xl border border-border bg-card p-1">
-            {([['weekly', 'Weekly Outlook'], ['daily', 'Daily Plan'], ['full', 'Full View']] as [Tab, string][]).map(([k, l]) => (
-              <button key={k} type="button" onClick={() => setTab(k)} aria-pressed={tab === k}
-                className={`rounded-lg px-3 py-2 text-[11px] font-bold uppercase tracking-[0.12em] transition-all duration-300 sm:px-4 ${tab === k ? 'bg-primary/15 text-primary shadow-[0_0_14px_hsl(var(--primary)/0.15)]' : 'text-muted-foreground hover:text-foreground'}`}>{l}</button>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="inline-flex max-w-full overflow-x-auto rounded-full border border-border/60 bg-card/60 p-1">
+              {([['weekly', 'Weekly Outlook'], ['daily', 'Daily Plan'], ['full', 'Full View']] as [Tab, string][]).map(([k, l]) => (
+                <button key={k} type="button" onClick={async () => { if (await saveAll()) { setLayoutEdit(null); setTab(k); } }} aria-pressed={tab === k}
+                  className={`whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-medium tracking-wide transition-all duration-300 sm:px-5 ${tab === k ? 'bg-foreground/[0.07] text-foreground ring-1 ring-primary/50' : 'text-muted-foreground hover:text-foreground'}`}>{l}</button>
+              ))}
+            </div>
+            {!loading && !loadError && (layoutEdit === tab ? (
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={saveLayoutEdit} className="flex items-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground transition-opacity hover:opacity-90"><Save className="h-3.5 w-3.5" /> Save Layout</button>
+                <button type="button" onClick={cancelLayoutEdit} className="rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground">Cancel</button>
+                <button type="button" onClick={resetLayoutDraft} className="rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground">Reset</button>
+              </div>
+            ) : (
+              <button type="button" onClick={() => startLayoutEdit(tab)} className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground transition-colors hover:border-primary/40 hover:text-primary"><GripVertical className="h-3.5 w-3.5" /> Edit Layout</button>
             ))}
           </div>
 
-          {loading ? (
+          {loadError ? <div className={`${card} p-6`} role="alert"><p>Plan unavailable or previous changes not saved.</p><button type="button" className="mt-3 text-primary underline" onClick={() => setRetry(n => n + 1)}>Retry</button></div> : loading ? (
             <div className={`${card} flex items-center justify-center py-20`}><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
           ) : (
-            <div key={`${tab}-${date}`} className="content-crossfade space-y-5">
+            <div key={`${tab}-${date}-${accountKey}-${pair}`} className="content-crossfade">
               {tab === 'weekly' && (
-                <div className={`${card} space-y-6 p-5 sm:p-6`}>
+                <div className={`${card} flex flex-col gap-6 p-5 sm:p-8`}>
                   <div><p className={label}>Weekly Outlook</p><p className="mt-1 text-sm text-foreground">{weekLabel}</p></div>
-                  <Field title="Weekly Bias"><Chips options={BIASES} value={weekly.bias} onChange={v => setW({ bias: v })} /></Field>
-                  <Field title="Scenario"><Area value={weekly.scenario} onChange={v => setW({ scenario: v })} placeholder="Describe the main scenario expected for this week..." /></Field>
-                  <div className="max-w-xl"><ImageSlot title="Chart Screenshot" path={weekly.chart} onChange={p => setW({ chart: p })} /></div>
-                  <Field title="News / Events"><NewsEditor withDate items={weekly.news} onChange={n => setW({ news: n })} /></Field>
-                  <Field title="Main Idea"><Area value={weekly.mainIdea} onChange={v => setW({ mainIdea: v })} placeholder="What is the main idea for this trading week?" /></Field>
+                  {(layoutEdit === 'weekly' ? layoutDraft : weeklyOrder).map((id, i) => layoutWrap(id, weeklyNodes[id], i))}
                 </div>
               )}
 
-              {tab === 'daily' && (!showDaily ? empty : (
+              {tab === 'daily' && (!showDaily && layoutEdit !== 'daily' ? empty : (
                 <>
-                  <div className={`${card} space-y-6 p-5 sm:p-6`}>
-                    <div className="grid gap-6 md:grid-cols-2">
-                      <Field title="Market Bias"><Chips options={BIASES} value={daily.bias} onChange={v => setD({ bias: v })} /></Field>
-                      <Field title="Current Price">
-                        <Chips options={PRICES} value={daily.price} onChange={v => setD({ price: v })} />
-                        {daily.price === 'Custom' && <input className={input} placeholder="Describe price location" value={daily.priceCustom} onChange={e => setD({ priceCustom: e.target.value })} />}
-                      </Field>
-                    </div>
-                    <Field title="Daily Scenario"><Area value={daily.scenario} onChange={v => setD({ scenario: v })} placeholder="Describe today's expected scenario..." /></Field>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <ImageSlot title="Before" path={daily.before} onChange={p => setD({ before: p })} />
-                      <ImageSlot title="After" path={daily.after} onChange={p => setD({ after: p })} />
-                    </div>
-                    <Field title="News"><NewsEditor items={daily.news} onChange={n => setD({ news: n })} /></Field>
-                    <Field title="Risk Management">
-                      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                        {([['riskPct', 'Risk %', '1'], ['maxLoss', 'Max Daily Loss', '500'], ['maxTrades', 'Max Trades', '2'], ['rr', 'R:R Target', '1:3']] as const).map(([k, l, ph]) => (
-                          <label key={k} className="space-y-1"><span className="text-xs text-muted-foreground">{l}</span>
-                            <input className={input} placeholder={ph} value={daily.risk[k]} onChange={e => setD({ risk: { ...daily.risk, [k]: e.target.value } })} /></label>
-                        ))}
-                      </div>
-                    </Field>
-                    <Field title="Psychology">
-                      <Chips multi options={PSYCH} value={daily.psychology} onChange={v => setD({ psychology: v })} />
-                      <Area rows={2} value={daily.psychNotes} onChange={v => setD({ psychNotes: v })} placeholder="How do you feel before trading today?" />
-                    </Field>
-                    <Field title="Rules"><RulesEditor rules={daily.rules} onChange={r => setD({ rules: r })} /></Field>
-                    <Field title="Main Idea"><Area value={daily.mainIdea} onChange={v => setD({ mainIdea: v })} placeholder="What is today's main trading idea?" /></Field>
+                  <div className={`${card} flex flex-col gap-6 p-5 sm:p-8`}>
+                    {(layoutEdit === 'daily' ? layoutDraft : dailyOrder).map((id, i) => layoutWrap(id, dailyNodes[id], i))}
                   </div>
-                  <Checklist daily={daily} set={setD} models={models} onModelsChange={loadModels} />
                 </>
               ))}
 
-              {tab === 'full' && (
-                <div className={`${card} space-y-5 p-5 sm:p-8`}>
-                  <h2 className="font-heading text-xl font-semibold text-foreground">{longDate(date)}</h2>
-                  <Block title={`Weekly Context · ${weekLabel}`}>
+              {tab === 'full' && (() => {
+                // Full View sections share one per-user order (workspace_layouts page 'full_view').
+                const none = <Block title="Daily Plan"><p className="text-sm text-muted-foreground">No plan saved for this day</p></Block>;
+                const d = (n: React.ReactNode) => (dailyExists ? n : null);
+                const fullNodes: Record<string, React.ReactNode> = {
+                  weekly: <Block title={`Weekly Context · ${weekLabel}`}>
                     <div className="space-y-4">
                       <Tag v={weekly.bias} />
-                      <Text v={weekly.scenario} />
                       <div className="max-w-xl"><ImageSlot readOnly title="Weekly Chart" path={weekly.chart} /></div>
+                      {(weekly.before || weekly.after) && <div className="grid gap-4 sm:grid-cols-2"><ImageSlot readOnly title="Before" path={weekly.before} /><ImageSlot readOnly title="After" path={weekly.after} /></div>}
                       <NewsView items={weekly.news} />
+                      {weekly.newsShot && <div className="max-w-xl"><ImageSlot readOnly title="News screenshot" path={weekly.newsShot} /></div>}
                       <div><p className="mb-1 text-xs text-muted-foreground">Main idea</p><Text v={weekly.mainIdea} /></div>
                     </div>
-                  </Block>
-                  {!dailyExists ? <Block title="Daily Plan"><p className="text-sm text-muted-foreground">No plan saved for this day</p></Block> : <>
-                    <Block title="Daily Plan">
+                  </Block>,
+                  daily: dailyExists ? <Block title="Daily Plan">
                       <div className="flex flex-wrap gap-2"><Tag v={daily.bias} /><Tag v={daily.price === 'Custom' ? daily.priceCustom || 'Custom' : daily.price} /></div>
-                      <Text v={daily.scenario} />
-                    </Block>
-                    {(daily.before || daily.after) && <Block title="Before / After Charts"><div className="grid gap-4 sm:grid-cols-2"><ImageSlot readOnly title="Before" path={daily.before} /><ImageSlot readOnly title="After" path={daily.after} /></div></Block>}
-                    <Block title="News"><NewsView items={daily.news} /></Block>
-                    <Block title="Risk Management">
+                    </Block> : none,
+                  charts: d((daily.before || daily.after) && <Block title="Before / After Charts"><div className="grid gap-4 sm:grid-cols-2"><ImageSlot readOnly title="Before" path={daily.before} /><ImageSlot readOnly title="After" path={daily.after} /></div></Block>),
+                  news: d(<Block title="News"><NewsView items={daily.news} />{daily.newsShot && <div className="mt-3 max-w-xl"><ImageSlot readOnly title="News screenshot" path={daily.newsShot} /></div>}</Block>),
+                  risk: d(<Block title="Risk Management">
                       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                         {([['Risk %', daily.risk.riskPct], ['Max Daily Loss', daily.risk.maxLoss], ['Max Trades', daily.risk.maxTrades], ['R:R Target', daily.risk.rr]]).map(([l, v]) => (
                           <div key={l} className="rounded-xl border border-border bg-background/40 px-3 py-2"><p className="text-[11px] text-muted-foreground">{l}</p><p className="text-sm font-semibold text-foreground">{v || '—'}</p></div>
                         ))}
                       </div>
-                    </Block>
-                    <Block title="Psychology"><div className="flex flex-wrap gap-2">{daily.psychology.length ? daily.psychology.map(p => <Tag key={p} v={p} />) : <Tag v="" />}</div><Text v={daily.psychNotes} /></Block>
-                    <Block title="Rules">
+                    </Block>),
+                  psychology: d(<Block title="Psychology"><div className="flex flex-wrap gap-2">{daily.psychology.length ? daily.psychology.map(p => <Tag key={p} v={p} />) : <Tag v="" />}</div><Text v={daily.psychNotes} /></Block>),
+                  rules: d(<Block title="Rules">
                       {daily.rules.length ? daily.rules.map(r => <div key={r.id} className="flex items-center gap-2 text-sm text-foreground"><Box disabled checked={r.done} />{r.text}</div>) : <p className="text-sm text-muted-foreground">—</p>}
-                    </Block>
-                    <Block title="Main Idea"><Text v={daily.mainIdea} /></Block>
-                    <Checklist readOnly daily={daily} set={() => {}} models={models} onModelsChange={() => {}} />
-                  </>}
-                </div>
-              )}
+                    </Block>),
+                  main_idea: d(<Block title="Main Idea"><Text v={daily.mainIdea} /></Block>),
+                };
+                const list = (layoutEdit === 'full' ? layoutDraft : fullOrder).map((id, i) => {
+                  const node = fullNodes[id] || (layoutEdit === 'full' ? <Block title={id.replace('_', ' ')}><p className="text-sm text-muted-foreground">No plan saved for this day</p></Block> : null);
+                  return node ? layoutWrap(id, layoutEdit === 'full' ? node : <div key={id} style={{ order: i }}>{node}</div>, i) : null;
+                });
+                return (
+                  <div className={`${card} flex flex-col gap-5 p-5 sm:p-8`}>
+                    <h2 className="font-heading text-xl font-semibold text-foreground">{longDate(date)}</h2>
+                    {list}
+                  </div>
+                );
+              })()}
             </div>
           )}
+          <div className={loading || loadError || tab === 'weekly' || !showDaily ? 'hidden' : ''}>
+            <PairChecklist date={date} pair={pair} legacy={!loading && dailyExists && loadedScope.current === `${accountKey}|${date}|${pair}` ? daily : null} readOnly={loading || loadError || tab !== 'daily'} models={models} onModelsChange={loadModels} saveRef={checklistSave} />
+          </div>
         </main>
       </div>
     </div>

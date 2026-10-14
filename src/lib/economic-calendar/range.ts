@@ -1,5 +1,6 @@
 import { addDays, addMonths, addWeeks, endOfDay, endOfMonth, endOfWeek, format, isSameDay, isSameMonth, isSameWeek, startOfDay, startOfMonth, startOfWeek } from "date-fns";
 import type { DateRangeSpec, EventFilters, RangeMode, RangePreset } from "./types";
+import { normalizeEventTypes } from "./eventTypes";
 
 const WK = { weekStartsOn: 1 as const };
 export const toKey = (d: Date) => format(d, "yyyy-MM-dd");
@@ -62,21 +63,23 @@ export function shiftRange(r: DateRangeSpec, dir: 1 | -1): DateRangeSpec {
 
 export const stepLabel = (m: RangeMode) => (m === "day" ? "Day" : m === "week" ? "Week" : m === "month" ? "Month" : "Period");
 
+/** First-time default: High impact, USD only, all event types, this week. Saved defaults always win. */
 export const DEFAULT_FILTERS: EventFilters = {
   range: { mode: "week", preset: "this_week" },
-  currencies: [], impacts: [], categories: [], countries: [], search: "",
+  currencies: ["USD"], impacts: ["high"], categories: [], countries: [], search: "",
 };
 
 /** Accept anything stored (including the older single-value localStorage shape) and return valid filters. */
-export function normalizeFilters(raw: any): EventFilters {
+export function normalizeFilters(value: unknown): EventFilters {
+  const raw = value as Partial<EventFilters>;
   if (!raw || typeof raw !== "object") return { ...DEFAULT_FILTERS };
   const arr = (v: unknown) => (Array.isArray(v) ? v.filter((x) => typeof x === "string") : []);
   const r = raw.range && typeof raw.range === "object" && ["day", "week", "month", "custom"].includes(raw.range.mode) ? raw.range : DEFAULT_FILTERS.range;
   return {
     range: r,
     currencies: arr(raw.currencies),
-    impacts: arr(raw.impacts) as EventFilters["impacts"],
-    categories: arr(raw.categories),
+    impacts: arr(raw.impacts).filter((i) => ["high", "medium", "low", "holiday"].includes(i)) as EventFilters["impacts"],
+    categories: normalizeEventTypes(arr(raw.categories)),
     countries: arr(raw.countries),
     search: typeof raw.search === "string" ? raw.search : "",
   };

@@ -1,6 +1,7 @@
 // Pull live account state + trade history from MetaApi into the database.
 
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { assertMtAutoSyncEnabled } from './mtFeature.ts';
 import { accountInformation, getAccount, deployAccount, historyDeals, positions } from './metaapi.ts';
 
 export function admin() {
@@ -91,6 +92,7 @@ export function createStepLog(accountId: string) {
 }
 
 export async function syncAccount(row: AccountRow, log = createStepLog(row.id)) {
+  assertMtAutoSyncEnabled();
   const db = admin();
   const metaId = row.metaapi_account_id;
   if (!metaId) {
@@ -128,7 +130,7 @@ export async function syncAccount(row: AccountRow, log = createStepLog(row.id)) 
 
   const to = new Date();
   const from = new Date(to.getTime() - 365 * 24 * 3600 * 1000);
-  const deals: any[] = await historyDeals(metaId, region, from.toISOString(), to.toISOString()).catch((e) => {
+  const deals = await historyDeals(metaId, region, from.toISOString(), to.toISOString()).catch((e) => {
     log.push('history', 'Trade history loaded', 'error', { error: e instanceof Error ? e.message : 'History request failed' });
     return [];
   });

@@ -5,6 +5,7 @@ import {
   BarChart3, BookOpen, Brain, CalendarClock, CalendarDays,
   ChevronRight, CircleDollarSign, ClipboardCheck, LayoutDashboard, List,
   Menu, PanelLeftClose, PanelLeftOpen, Settings, Shield, X,
+  Award,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,6 +27,7 @@ export const BASE_ITEMS = [
   { id: 'ai',        label: 'NOVA AI',    icon: Brain },
   { id: 'plan',      label: 'Checklist',  icon: ClipboardCheck },
   { id: 'economic',  label: 'Economic',   icon: CalendarClock },
+  { id: 'certificates', label: 'Certificates', icon: Award },
   { id: 'settings',  label: 'Settings',   icon: Settings },
 ];
 
@@ -55,7 +57,7 @@ function SidebarUser({ onNavigate }: { onNavigate: (id: string) => void }) {
   const { profile, displayName } = useProfile();
   const plan = profile?.plan_type ?? null;
   const badge = plan === 'elite'
-    ? 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+    ? 'bg-muted/10 text-muted-foreground border-border/20'
     : plan === 'pro'
     ? 'bg-primary/10 text-primary border-primary/20'
     : 'bg-muted text-muted-foreground border-border';
@@ -196,7 +198,7 @@ export default function AppLayout({ active, onNavigate, dark, children, topBar }
       </AnimatePresence>
 
       {/* Main */}
-      <main className="flex-1 flex flex-col overflow-hidden min-w-0">
+      <main className="tn-app-ambient flex-1 flex flex-col overflow-hidden min-w-0">
         {/* Mobile header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border lg:hidden flex-shrink-0">
           <div className="flex items-center gap-3">
@@ -227,7 +229,7 @@ export default function AppLayout({ active, onNavigate, dark, children, topBar }
               <button key={item.id} onClick={() => onNavigate(item.id)}
                 className={cx('flex flex-col items-center gap-0.5 px-3 py-2 rounded-xl transition-all',
                   sel ? 'text-primary' : 'text-muted-foreground')}>
-                <Icon className={cx('h-5 w-5', sel && 'drop-shadow-[0_0_6px_rgba(124,58,237,0.6)]')} />
+                <Icon className="h-5 w-5" />
                 <span className="text-[10px] font-medium">{item.label}</span>
               </button>
             );
