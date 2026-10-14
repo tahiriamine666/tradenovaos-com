@@ -124,7 +124,9 @@ Deno.serve(async (req) => {
     if (!/^[A-Za-z0-9_-]{1,100}$/.test(paymentId)) return json({ error: "invalid_payment" }, 400);
     const pay = await dodo(`/payments/${encodeURIComponent(paymentId)}`);
     if (!pay.ok || pay.body?.customer?.customer_id !== customerId || pay.body?.status !== "succeeded") return json({ ok: false, error: "not_found" }, 404);
-    const pdf = await fetch(`${dodoApiBase()}/invoices/payments/${encodeURIComponent(paymentId)}`, { headers: dodoAuthHeaders() });
+    const pdf = await fetch(`${dodoApiBase()}/invoices/payments/${encodeURIComponent(paymentId)}`, {
+      headers: { ...dodoAuthHeaders(), Accept: "application/pdf" },
+    });
     if (!pdf.ok) return json({ ok: false, error: "invoice_unavailable" }, 404);
     return new Response(pdf.body, { headers: { ...cors, "Content-Type": "application/octet-stream" } });
   } catch (e) {
