@@ -130,7 +130,7 @@ export async function syncAccount(row: AccountRow, log = createStepLog(row.id)) 
 
   const to = new Date();
   const from = new Date(to.getTime() - 365 * 24 * 3600 * 1000);
-  const deals: any[] = await historyDeals(metaId, region, from.toISOString(), to.toISOString()).catch((e) => {
+  const deals = await historyDeals(metaId, region, from.toISOString(), to.toISOString()).catch((e) => {
     log.push('history', 'Trade history loaded', 'error', { error: e instanceof Error ? e.message : 'History request failed' });
     return [];
   });

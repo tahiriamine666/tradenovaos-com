@@ -52,7 +52,7 @@ const SCORE_ITEMS = [
   { label: 'Consistency', value: 85, color: 'hsl(var(--primary))' },
 ];
 
-const ease: any = [0.22, 1, 0.36, 1];
+const ease: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 function useReveal() {
   const ref = useRef(null);
@@ -683,7 +683,7 @@ const FEATURES = [
   {icon:Sparkles,  title:'Trade Plan',             desc:'Weekly Outlook, Daily Plan, custom rules and reusable pre-trade checklists.',            tag:'Plan',       c:'violet'},
 ];
 
-const CM: Record<string,any> = {
+const CM: Record<string, { bg: string; b: string; t: string; bd: string }> = {
   violet: {bg:'bg-primary/10', b:'border-primary/20',  t:'text-primary',  bd:'bg-primary/15 text-primary'},
   blue:   {bg:'bg-primary/10',    b:'border-primary/20',    t:'text-primary',    bd:'bg-primary/15 text-primary'},
   pink:   {bg:'bg-primary/10',    b:'border-primary/20',    t:'text-primary',    bd:'bg-primary/15 text-primary'},
@@ -810,7 +810,7 @@ function DashboardShowcase({ onSignup }: { onSignup: () => void }) {
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--foreground) / 0.04)" vertical={false}/>
                   <XAxis dataKey="day" tick={{fontSize:11,fill:'hsl(var(--muted-foreground))'}} axisLine={false} tickLine={false}/>
                   <YAxis tick={{fontSize:11,fill:'hsl(var(--muted-foreground))'}} axisLine={false} tickLine={false} width={50} tickFormatter={v=>`$${(v/1000).toFixed(0)}k`}/>
-                  <Tooltip contentStyle={{background:'hsl(var(--popover))',border:'1px solid hsl(var(--border))',borderRadius:'8px',fontSize:12}} labelStyle={{color:'hsl(var(--muted-foreground))'}} itemStyle={{color:'hsl(var(--primary))',fontWeight:700}} formatter={(v:any)=>[`$${Number(v).toLocaleString()}`,'P&L']}/>
+                  <Tooltip contentStyle={{background:'hsl(var(--popover))',border:'1px solid hsl(var(--border))',borderRadius:'8px',fontSize:12}} labelStyle={{color:'hsl(var(--muted-foreground))'}} itemStyle={{color:'hsl(var(--primary))',fontWeight:700}} formatter={(v)=>[`$${Number(v).toLocaleString()}`,'P&L']}/>
                   <Area type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2.5} fill="url(#sg)" dot={false} activeDot={{r:5,fill:'hsl(var(--primary))',strokeWidth:0}}/>
                 </AreaChart>
               </ResponsiveContainer>

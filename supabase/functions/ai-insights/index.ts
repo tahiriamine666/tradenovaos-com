@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
 
     // Plan-tier check: require Pro or Elite
     const { data: planInfo } = await supabase.rpc("get_user_plan_info");
-    const info = planInfo as any;
+    const info = planInfo as { is_pro?: boolean; is_elite?: boolean };
     if (!info?.is_pro && !info?.is_elite) {
       return new Response(JSON.stringify({ error: "Upgrade to Pro or Elite to use AI Insights." }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },

@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
       {
         const p = await dodo(`/payments?customer_id=${encodeURIComponent(customerId)}&subscription_id=${sp}&page_size=24`);
         if (p.ok) {
-          const items = (p.body?.items ?? []) as any[];
+          const items = (p.body?.items ?? []) as { customer?: { customer_id?: string }; subscription_id?: string; payment_id?: string; created_at?: string; total_amount?: number; currency?: string; status?: string }[];
           payments = items
             .filter((x) => x.customer?.customer_id === customerId && x.subscription_id === subId)
             .map((x) => ({

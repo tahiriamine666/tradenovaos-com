@@ -1,3 +1,4 @@
+import type { DodoSubscription } from '../_shared/dodoTypes.ts';
 // Dodo Payments webhook handler.
 // Verifies Standard Webhooks HMAC and writes canonical billing state to public.billing_subscriptions.
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
@@ -64,7 +65,7 @@ Deno.serve(async (req) => {
     return new Response("invalid_signature", { status: 401, headers: corsHeaders });
   }
 
-  let event: any;
+  let event: { type?: string; data?: DodoSubscription };
   try {
     event = JSON.parse(raw);
   } catch {

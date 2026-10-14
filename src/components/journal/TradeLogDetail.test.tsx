@@ -1,15 +1,18 @@
+import type { TradeFields } from '@/lib/dataTypes';
+type MockResult = { data?: unknown; error?: null };
+interface LogQuery { select(): LogQuery; eq(k: string, v: string): LogQuery; maybeSingle(): LogQuery; then(res: (value: MockResult) => unknown): Promise<unknown>; }
 import { render, screen, waitFor, cleanup, fireEvent } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-const fake = vi.hoisted(() => ({ rows: new Map<string, any>(), delay: new Map<string, Promise<void>>() }));
+const fake = vi.hoisted(() => ({ rows: new Map<string, TradeFields>(), delay: new Map<string, Promise<void>>() }));
 const authUser = vi.hoisted(() => ({ id: 'u1' }));
 vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => ({ user: authUser }) }));
 vi.mock('@/integrations/supabase/client', () => ({ supabase: {
   storage: { from: () => ({ createSignedUrl: async (p: string) => ({ data: { signedUrl: `https://signed/${p}` } }) }) },
   from: (table: string) => {
-    const f: Record<string, any> = {};
-    const q: any = { select: () => q, eq: (k: string, v: any) => { f[k] = v; return q; }, maybeSingle: () => q,
-      then: async (res: any) => {
+    const f: Record<string, string> = {};
+    const q: LogQuery = { select: () => q, eq: (k: string, v: string) => { f[k] = v; return q; }, maybeSingle: () => q,
+      then: async (res: (value: MockResult) => unknown) => {
         if (table === 'trading_accounts') return res({ data: f.user_id === 'u1' ? { account_name: 'FTMO 100k' } : null });
         if (table === 'playbooks') return res({ data: { title: 'London Sweep' } });
         await (fake.delay.get(f.id) ?? Promise.resolve());

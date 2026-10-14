@@ -25,9 +25,9 @@ export function useAccessState() {
     if (!user) { setState(null); setLoading(false); setError(null); return null; }
     setError(null);
     try {
-    const { data, error } = await (supabase.rpc as any)("get_access_state");
+    const { data, error } = await supabase.rpc("get_access_state");
     if (error) throw error;
-    const s = (data ?? null) as AccessState | null;
+    const s = (data ?? null) as unknown as AccessState | null;
     setState(s);
     setLoading(false);
     return s;

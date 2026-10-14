@@ -1,3 +1,4 @@
+import type { Json } from '@/integrations/supabase/types';
 import * as React from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -101,14 +102,14 @@ export function useChartPreferences() {
         .maybeSingle();
       if (cancelled) return;
       if (data) {
-        const d = data as any;
+        const d = data;
         setPrefs({
           ...DEFAULT_PREFS,
           ...d,
           favorite_symbols: (d.favorite_symbols as string[]) ?? DEFAULT_PREFS.favorite_symbols,
           recent_symbols: (d.recent_symbols as string[]) ?? [],
           saved_layouts: (d.saved_layouts as unknown as SavedLayout[]) ?? [],
-          drawing_prefs: (d.drawing_prefs as any) ?? DEFAULT_PREFS.drawing_prefs,
+          drawing_prefs: (d.drawing_prefs as unknown as ChartPreferences["drawing_prefs"]) ?? DEFAULT_PREFS.drawing_prefs,
         } as ChartPreferences);
       }
       setLoading(false);
@@ -127,10 +128,10 @@ export function useChartPreferences() {
         {
           user_id: user.id,
           ...next,
-          favorite_symbols: next.favorite_symbols as any,
-          recent_symbols: next.recent_symbols as any,
-          saved_layouts: next.saved_layouts as any,
-          drawing_prefs: next.drawing_prefs as any,
+          favorite_symbols: next.favorite_symbols as unknown as Json,
+          recent_symbols: next.recent_symbols as unknown as Json,
+          saved_layouts: next.saved_layouts as unknown as Json,
+          drawing_prefs: next.drawing_prefs as unknown as Json,
         },
         { onConflict: "user_id" },
       );

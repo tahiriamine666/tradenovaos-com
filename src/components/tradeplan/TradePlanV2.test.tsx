@@ -1,26 +1,35 @@
+import type { Daily, Weekly } from './TradePlanV2';
+type PlanTestRow = { [key: string]: unknown; table?: string; user_id?: string; account_key?: string; plan_date?: string; period_date?: string; pair?: string; checklist_type?: string; ai_analysis?: { daily_v2?: Partial<Daily> }; data?: Partial<Weekly>; rules?: { id: string; text: string; done?: boolean }[]; layout?: { order: string[] } };
+type PlanWrite = { table: string; payload?: PlanTestRow; options?: { onConflict?: string }; deleted?: Record<string, unknown> };
+interface PlanQuery {
+ delete(): PlanQuery; select(): PlanQuery; eq(k: string, v: unknown): PlanQuery;
+ order(): PlanQuery; limit(): PlanQuery; maybeSingle(): PlanQuery;
+ then(resolve: (value: { data?: PlanTestRow | PlanTestRow[]; error: null }) => unknown, reject: (reason: unknown) => unknown): Promise<unknown>;
+ upsert(payload: PlanTestRow, options: { onConflict?: string }): Promise<{ error: { message: string } | null }>;
+}
 /// <reference lib="es2022.array" />
 import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
 import { beforeEach, afterEach, describe, it, expect, vi } from 'vitest';
 import TradePlanV2, { normalizePair, normalizeLayoutOrder, FULL_LAYOUT_DEFAULT, DAILY_LAYOUT_DEFAULT, WEEKLY_LAYOUT_DEFAULT } from './TradePlanV2';
 
-const fake = vi.hoisted(() => ({ user: { id: 'user-one' }, account: 'account-a', rows: new Map<string, any>(), writes: [] as any[], fail: false }));
+const fake = vi.hoisted(() => ({ user: { id: 'user-one' }, account: 'account-a', rows: new Map<string, PlanTestRow>(), writes: [] as PlanWrite[], fail: false }));
 vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => ({ user: fake.user }) }));
 vi.mock('@/contexts/ActiveAccountContext', () => ({ useActiveAccount: () => ({ activeAccountId: fake.account, activeAccount: { account_name: fake.account } }) }));
 vi.mock('@/hooks/use-toast', () => ({ toast: vi.fn() }));
 vi.mock('@/integrations/supabase/client', () => ({ supabase: { storage: { from: () => ({ createSignedUrl: async (p: string) => ({ data: { signedUrl: `https://signed/${p}` }, error: null }) }) }, from: (table: string) => {
-  const filters: Record<string, any> = {};
+  const filters: Record<string, unknown> = {};
   let many = true; let del = false;
-  const query: any = {
+  const query: PlanQuery = {
     delete: () => { del = true; return query; },
-    select: () => query, eq: (k: string, v: any) => { filters[k] = v; return query; },
+    select: () => query, eq: (k: string, v: unknown) => { filters[k] = v; return query; },
     order: () => query, limit: () => query,
     maybeSingle: () => { many = false; return query; },
-    then: (resolve: any, reject: any) => {
+    then: (resolve: (value: { data?: PlanTestRow | PlanTestRow[]; error: null }) => unknown, reject: (reason: unknown) => unknown) => {
       const matches = [...fake.rows.values()].filter(r => r.table === table && Object.entries(filters).every(([k,v]) => r[k] === v));
       if (del) { for (const [k, r] of [...fake.rows.entries()]) if (matches.includes(r)) fake.rows.delete(k); fake.writes.push({ table, deleted: { ...filters } }); return Promise.resolve({ error: null }).then(resolve, reject); }
       return Promise.resolve({ data: many ? matches : matches[0] ?? null, error: null }).then(resolve, reject);
     },
-    upsert: async (payload: any, options: any) => {
+    upsert: async (payload: PlanTestRow, options: { onConflict?: string }) => {
       fake.writes.push({ table, payload: structuredClone(payload), options });
       if (fake.fail) return { error: { message: 'Simulated offline save' } };
       const key = [table, payload.user_id, payload.account_key, payload.plan_date ?? payload.period_date, payload.pair, payload.checklist_type ?? ''].join('|');
@@ -82,7 +91,7 @@ describe('Daily plan isolation and failure handling', () => {
     expect(savedDefaults.payload.rules).toEqual([{ id: 'r1', text: 'No revenge trading' }, { id: 'r2', text: 'Max 3 trades per day' }]);
     // Checking/unchecking a rule is day-only: it saves the day but never rewrites the default set
     fireEvent.click(screen.getAllByRole('button', { name: 'Check item' })[0]);
-    await waitFor(() => expect(fake.writes.some(w => w.table === 'trade_plans' && w.payload.ai_analysis.daily_v2.rules.some((r: any) => r.text === 'No revenge trading' && r.done))).toBe(true));
+    await waitFor(() => expect(fake.writes.some(w => w.table === 'trade_plans' && w.payload.ai_analysis.daily_v2.rules.some((r) => r.text === 'No revenge trading' && r.done))).toBe(true));
     expect(fake.writes.filter(w => w.table === 'daily_plan_rules')).toHaveLength(1);
     expect(today()).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
@@ -134,7 +143,7 @@ describe('Weekly Outlook pair scoping', () => {
   const openWeekly = async () => { const btn = await screen.findByRole('button', { name: 'Weekly Outlook' }); if (btn.getAttribute('aria-pressed') !== 'true') fireEvent.click(btn); await waitFor(() => area()); };
   const toPair = async (name: string) => { fireEvent.click(screen.getByRole('button', { name })); await waitFor(() => expect(screen.getByRole('heading', { name: `Daily Plan — ${name}` })).toBeInTheDocument()); await waitFor(() => area()); };
   const weeklyRows = () => [...fake.rows.values()].filter(r => r.table === 'trade_plan_checklists' && r.checklist_type === 'weekly_outlook');
-  const seed = (account: string, pair: string, period: string, data: any) => fake.rows.set(`trade_plan_checklists|user-one|${account}|${period}|${pair}|weekly_outlook`, { table: 'trade_plan_checklists', user_id: 'user-one', account_key: account, pair, checklist_type: 'weekly_outlook', period_date: period, data });
+  const seed = (account: string, pair: string, period: string, data: Partial<Weekly>) => fake.rows.set(`trade_plan_checklists|user-one|${account}|${period}|${pair}|weekly_outlook`, { table: 'trade_plan_checklists', user_id: 'user-one', account_key: account, pair, checklist_type: 'weekly_outlook', period_date: period, data });
 
   it('normalizes pairs and never yields a blank pair', () => {
     expect(normalizePair(' xau/usd ')).toBe('XAUUSD');

@@ -1,3 +1,4 @@
+import type { TradeInput } from '@/lib/dataTypes';
 import React, { useState, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,7 +18,7 @@ import { toast } from '@/hooks/use-toast';
 interface ParsedRow {
   index: number;
   raw: Record<string, string>;
-  mapped: Record<string, any> | null;
+  mapped: Record<string, string | number | null> | null;
   errors: string[];
   valid: boolean;
 }
@@ -116,7 +117,7 @@ function parseCSV(text: string): { headers: string[]; rows: Record<string, strin
 // ─── Map + validate a single row ─────────────────────────────────────────────
 function mapAndValidateRow(raw: Record<string, string>, index: number): ParsedRow {
   const errors: string[] = [];
-  const mapped: Record<string, any> = {};
+  const mapped: Record<string, string | number | null> = {};
 
   // Map columns
   Object.entries(raw).forEach(([key, val]) => {
@@ -274,7 +275,7 @@ export default function CSVImport({ onImportComplete }: { onImportComplete?: () 
 
     for (let i = 0; i < validRows.length; i += CHUNK) {
       const chunk = validRows.slice(i, i + CHUNK);
-      const records = chunk.map(r => ({ ...(r.mapped as any), user_id: user.id })) as any;
+      const records = chunk.map(r => ({ ...r.mapped, user_id: user.id })) as TradeInput[];
 
       const { error: insertErr } = await supabase.from('trades').insert(records);
 
@@ -417,8 +418,8 @@ export default function CSVImport({ onImportComplete }: { onImportComplete?: () 
                               : <span className="text-muted-foreground">—</span>
                             }
                           </td>
-                          <td className={`py-2 px-3 font-semibold ${(row.mapped?.result ?? 0) >= 0 ? 'text-primary' : 'text-muted-foreground'}`}>
-                            {(row.mapped?.result ?? 0) >= 0 ? '+' : ''}${row.mapped?.result}
+                          <td className={`py-2 px-3 font-semibold ${Number(row.mapped?.result ?? 0) >= 0 ? 'text-primary' : 'text-muted-foreground'}`}>
+                            {Number(row.mapped?.result ?? 0) >= 0 ? '+' : ''}${row.mapped?.result}
                           </td>
                           <td className="py-2 px-3 text-muted-foreground">{row.mapped?.trade_date}</td>
                           <td className="py-2 px-3 text-muted-foreground">{row.mapped?.setup ?? '—'}</td>

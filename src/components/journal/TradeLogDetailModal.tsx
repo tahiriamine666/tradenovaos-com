@@ -1,3 +1,4 @@
+import type { TradeFields } from '@/lib/dataTypes';
 import { useEffect, useState } from 'react';
 import { Copy, Edit, ImageIcon, Maximize2, RefreshCw, Sparkles, Trash2, X, ZoomIn, ZoomOut } from 'lucide-react';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
@@ -23,7 +24,7 @@ const money = (v: unknown) => {
 };
 const cap = (v: unknown) => { const s = txt(v); return s === NR ? s : s.charAt(0).toUpperCase() + s.slice(1); };
 
-export function outcomeLabel(t: Record<string, any>): string {
+export function outcomeLabel(t: TradeFields): string {
   const o = typeof t.outcome === 'string' ? t.outcome.toLowerCase() : '';
   if (o === 'win') return 'Win';
   if (o === 'loss') return 'Loss';
@@ -36,8 +37,8 @@ export function outcomeLabel(t: Record<string, any>): string {
 export type LogSection = { id: 'overview' | 'planning' | 'risk' | 'psychology' | 'review'; title: string; rows: [string, string][] };
 
 /** Every persisted trade field for Trade Logs, each shown exactly once; missing values read "Not recorded". */
-export function tradeLogSections(t: Record<string, any>, ctx: { accountName?: string | null; playbookName?: string | null } = {}): LogSection[] {
-  const plan = effectivePlanStatus({ plan_status: t.plan_status ?? null, followed_plan: t.followed_plan ?? null });
+export function tradeLogSections(t: TradeFields, ctx: { accountName?: string | null; playbookName?: string | null } = {}): LogSection[] {
+  const plan = effectivePlanStatus({ plan_status: (t.plan_status ?? null) as 'yes' | 'no' | 'partial' | null, followed_plan: t.followed_plan ?? null });
   return [
     { id: 'overview', title: 'Overview', rows: [
       ['Pair', txt(t.pair)], ['Date', txt(t.trade_date)], ['Account', txt(ctx.accountName)],
@@ -90,11 +91,11 @@ function Rows({ rows }: { rows: [string, string][] }) {
 
 export function TradeLogDetailModal({ tradeId, refreshKey = 0, onClose, onEdit, onDuplicate, onDelete, onAIReview, reviewing }: {
   tradeId: string | null; refreshKey?: number; onClose: () => void;
-  onEdit: (t: Record<string, any>) => void; onDuplicate?: (t: Record<string, any>) => void; onDelete?: (t: Record<string, any>) => void;
-  onAIReview?: (t: Record<string, any>) => void; reviewing?: boolean;
+  onEdit: (t: TradeFields) => void; onDuplicate?: (t: TradeFields) => void; onDelete?: (t: TradeFields) => void;
+  onAIReview?: (t: TradeFields) => void; reviewing?: boolean;
 }) {
   const { user } = useAuth();
-  const [trade, setTrade] = useState<Record<string, any> | null>(null);
+  const [trade, setTrade] = useState<TradeFields | null>(null);
   const [ctx, setCtx] = useState<{ accountName: string | null; playbookName: string | null }>({ accountName: null, playbookName: null });
   const [state, setState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [urls, setUrls] = useState<{ before: string | null; after: string | null }>({ before: null, after: null });
@@ -128,6 +129,7 @@ export function TradeLogDetailModal({ tradeId, refreshKey = 0, onClose, onEdit, 
   }, [tradeId, user, refreshKey]);
 
   const t = trade && trade.id === tradeId ? trade : null;
+  const aiReview = t?.ai_review as { verdict?: string; discipline_score?: number; what_went_well?: string; what_went_wrong?: string; rule_broken?: string; improvement?: string } | null;
   const sections = t ? tradeLogSections(t, ctx) : [];
   const pnl = Number(t?.result ?? 0);
   const outcome = t ? outcomeLabel(t) : '';
@@ -201,16 +203,16 @@ export function TradeLogDetailModal({ tradeId, refreshKey = 0, onClose, onEdit, 
                 </div>
               </TabsContent>
               <TabsContent value="ai" className="mt-0 space-y-3">
-                {t.ai_review?.verdict ? (
+                {aiReview?.verdict ? (
                   <>
-                    <p className="text-sm font-semibold text-foreground">{t.ai_review.verdict}{t.ai_review.discipline_score != null && <span className="ml-2 text-muted-foreground">Score {t.ai_review.discipline_score}</span>}</p>
-                    <Rows rows={[['What went well', txt(t.ai_review.what_went_well)], ['What went wrong', txt(t.ai_review.what_went_wrong)], ['Rule broken', txt(t.ai_review.rule_broken)], ['Action item', txt(t.ai_review.improvement)]]} />
+                    <p className="text-sm font-semibold text-foreground">{aiReview.verdict}{aiReview.discipline_score != null && <span className="ml-2 text-muted-foreground">Score {aiReview.discipline_score}</span>}</p>
+                    <Rows rows={[['What went well', txt(aiReview.what_went_well)], ['What went wrong', txt(aiReview.what_went_wrong)], ['Rule broken', txt(aiReview.rule_broken)], ['Action item', txt(aiReview.improvement)]]} />
                   </>
                 ) : <p className="py-6 text-center text-sm text-muted-foreground">No AI review yet.</p>}
                 {onAIReview && (
                   <Button size="sm" variant="outline" disabled={reviewing} onClick={() => onAIReview(t)} className="gap-2">
-                    {t.ai_review?.verdict ? <RefreshCw className={cn('h-3.5 w-3.5', reviewing && 'animate-spin')} /> : <Sparkles className={cn('h-3.5 w-3.5', reviewing && 'animate-spin')} />}
-                    {reviewing ? 'Analyzing…' : t.ai_review?.verdict ? 'Re-analyze' : 'Analyze trade'}
+                    {aiReview?.verdict ? <RefreshCw className={cn('h-3.5 w-3.5', reviewing && 'animate-spin')} /> : <Sparkles className={cn('h-3.5 w-3.5', reviewing && 'animate-spin')} />}
+                    {reviewing ? 'Analyzing…' : aiReview?.verdict ? 'Re-analyze' : 'Analyze trade'}
                   </Button>
                 )}
               </TabsContent>

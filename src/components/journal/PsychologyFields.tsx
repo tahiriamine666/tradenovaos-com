@@ -31,13 +31,13 @@ export const EMPTY_PSYCHOLOGY: Psychology = {
   overconfidence: null, psychology_note: null,
 };
 
-export function psychologyFrom(row: any): Psychology {
+export function psychologyFrom(row: Partial<Record<keyof Psychology, unknown>>): Psychology {
   if (!row) return EMPTY_PSYCHOLOGY;
   return Object.fromEntries(Object.keys(EMPTY_PSYCHOLOGY).map((k) => [k, row[k] ?? null])) as Psychology;
 }
 
 export function hasPsychology(p: Partial<Psychology> | null | undefined) {
-  return !!p && Object.keys(EMPTY_PSYCHOLOGY).some((k) => (p as any)[k] !== null && (p as any)[k] !== undefined && (p as any)[k] !== '');
+  return !!p && Object.keys(EMPTY_PSYCHOLOGY).some((k) => p[k as keyof Psychology] !== null && p[k as keyof Psychology] !== undefined && p[k as keyof Psychology] !== '');
 }
 
 /**
@@ -89,7 +89,7 @@ export function PsychologyFields({ value, onChange, collapsible = true }: { valu
   const [open, setOpen] = useState(!collapsible || hasPsychology(value));
   const set = <K extends keyof Psychology>(k: K, v: Psychology[K]) => onChange({ ...value, [k]: v });
   const plan = effectivePlanStatus(value);
-  const emotionOptions = (cur: string | null) => [...EMOTIONS, ...LEGACY_EMOTIONS, ...(cur && ![...EMOTIONS, ...LEGACY_EMOTIONS].includes(cur as any) ? [cur] : [])];
+  const emotionOptions = (cur: string | null) => [...EMOTIONS, ...LEGACY_EMOTIONS, ...(cur && !([...EMOTIONS, ...LEGACY_EMOTIONS] as readonly string[]).includes(cur) ? [cur] : [])];
   const body = (
     <div className={cn('space-y-3', collapsible && 'border-t border-border px-3 py-3')}>
       <div className="grid grid-cols-2 gap-3">

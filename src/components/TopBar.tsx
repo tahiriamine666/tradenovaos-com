@@ -1,3 +1,4 @@
+import type { ProfileRow } from '@/lib/dataTypes';
 // src/components/TopBar.tsx
 // Premium top bar — filters + theme toggle + logout + user avatar (YouTube style)
 
@@ -278,7 +279,7 @@ function AccountDropdown() {
 
 // ─── Avatar dropdown menu (YouTube-style) ────────────────────────────────────
 function AvatarMenu({ profile, onNavigate, onLogout, dark, onToggleTheme, onAvatarUpdated }: {
-  profile: any; onNavigate: (id: string) => void; onLogout: () => void;
+  profile: Pick<ProfileRow, 'avatar_url' | 'display_name' | 'full_name' | 'email' | 'subscription_plan'> | null; onNavigate: (id: string) => void; onLogout: () => void;
   dark: boolean; onToggleTheme: () => void; onAvatarUpdated: (url: string) => void;
 }) {
   const name = profile?.display_name || profile?.full_name || profile?.email?.split('@')[0] || 'Trader';
@@ -353,7 +354,7 @@ interface TopBarProps {
 export default function TopBar({ dark, onToggleTheme, onLogout, activePageLabel, onNavigate }: TopBarProps) {
   const { user } = useAuth();
   const { activeCount, resetFilters } = useGlobalFilters();
-  const [profile, setProfile] = useState<any>(null);
+  const [profile, setProfile] = useState<Pick<ProfileRow, 'avatar_url' | 'display_name' | 'full_name' | 'email' | 'subscription_plan'> | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -362,11 +363,11 @@ export default function TopBar({ dark, onToggleTheme, onLogout, activePageLabel,
   }, [user]);
 
   useEffect(() => {
-    const h = (e: Event) => setProfile((p: any) => p ? { ...p, ...(e as CustomEvent).detail } : p);
+    const h = (e: Event) => setProfile((p) => p ? { ...p, ...(e as CustomEvent).detail } : p);
     window.addEventListener('tradenova:profile-updated', h);
     return () => window.removeEventListener('tradenova:profile-updated', h);
   }, []);
-  const handleAvatarUpdated = (url: string) => setProfile((p: any) => p ? { ...p, avatar_url: url } : p);
+  const handleAvatarUpdated = (url: string) => setProfile((p) => p ? { ...p, avatar_url: url } : p);
 
   return (
     <div className="flex-shrink-0">

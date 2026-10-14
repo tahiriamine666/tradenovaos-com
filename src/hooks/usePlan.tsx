@@ -70,7 +70,7 @@ export function PlanProvider({ children }: { children: ReactNode }) {
       const { data: raw, error } = await supabase.rpc('get_user_plan_info');
       if (error || !raw) throw error ?? new Error('Missing subscription state');
 
-      const data = raw as any;
+      const data = raw as { effective_plan?: string; status?: string; is_active?: boolean; trial_ends_at?: string; is_trial?: boolean };
       const plan: Plan | null =
         data.effective_plan === 'elite' ? 'elite' :
         data.effective_plan === 'pro' ? 'pro' : null;

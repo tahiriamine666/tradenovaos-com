@@ -70,7 +70,8 @@ export const DEFAULT_FILTERS: EventFilters = {
 };
 
 /** Accept anything stored (including the older single-value localStorage shape) and return valid filters. */
-export function normalizeFilters(raw: any): EventFilters {
+export function normalizeFilters(value: unknown): EventFilters {
+  const raw = value as Partial<EventFilters>;
   if (!raw || typeof raw !== "object") return { ...DEFAULT_FILTERS };
   const arr = (v: unknown) => (Array.isArray(v) ? v.filter((x) => typeof x === "string") : []);
   const r = raw.range && typeof raw.range === "object" && ["day", "week", "month", "custom"].includes(raw.range.mode) ? raw.range : DEFAULT_FILTERS.range;

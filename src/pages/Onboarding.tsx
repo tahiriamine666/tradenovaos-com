@@ -1,3 +1,4 @@
+import { errorMessage } from '@/lib/dataTypes';
 import { useEffect, useMemo, useState } from "react";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
 import { Check, Loader2, Lock, ShieldCheck } from "lucide-react";
@@ -149,7 +150,7 @@ export default function Onboarding() {
 
   const next = async (fn: () => Promise<void>) => {
     setBusy(true); setError(null);
-    try { await fn(); } catch (e: any) { setError(e?.message ?? "Something went wrong. Please try again."); }
+    try { await fn(); } catch (e: unknown) { setError(errorMessage(e) ?? "Something went wrong. Please try again."); }
     finally { setBusy(false); }
   };
 

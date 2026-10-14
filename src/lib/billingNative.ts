@@ -15,7 +15,7 @@ export type NativeSubscription = {
 export type NativePayment = { id: string; created_at: string | null; amount: number | null; currency: string | null; status: string | null };
 export type BillingSummary = { subscription: NativeSubscription; payments: NativePayment[] };
 
-async function call(body: Record<string, unknown>): Promise<any> {
+async function call(body: Record<string, unknown>): Promise<{ ok?: boolean; subscription?: NativeSubscription; payments?: NativePayment[]; cancel_at_next_billing_date?: boolean; url?: string }> {
   const { data, error } = await supabase.functions.invoke("dodo-billing", { body });
   if (error) throw new Error("Billing service unavailable");
   return data;

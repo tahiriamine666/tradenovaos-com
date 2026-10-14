@@ -1,3 +1,6 @@
+import type { Tables } from '@/integrations/supabase/types';
+import type { Daily } from '@/components/tradeplan/TradePlanV2';
+import type { LucideIcon } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, CalendarDays, Pencil, BookOpen, Target, Sun, CalendarRange, Loader2, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
@@ -21,7 +24,8 @@ async function sign(path: string | null) {
   return data?.signedUrl ?? null;
 }
 
-type DayData = { trades: any[]; journal: any | null; plan: any | null; plans: any[]; daily: any | null; weekly: any | null; shots: Record<string, { before: string | null; after: string | null }> };
+type CalendarPlan = Omit<Tables<'trade_plans'>, 'ai_analysis'> & { ai_analysis: { daily_v2?: Partial<Daily>; framework?: { scenario?: Record<string, string | boolean> } } | null };
+type DayData = { trades: Tables<'trades'>[]; journal: Tables<'journal_entries'> | null; plan: CalendarPlan | null; plans: CalendarPlan[]; daily: Record<string, unknown> | null; weekly: Record<string, unknown> | null; shots: Record<string, { before: string | null; after: string | null }> };
 
 function Rows({ items }: { items: [string, unknown][] }) {
   const shown = items.filter(([, v]) => has(v));
@@ -31,14 +35,14 @@ function Rows({ items }: { items: [string, unknown][] }) {
       {shown.map(([k, v]) => (
         <div key={k} className="min-w-0">
           <dt className="text-[10px] uppercase tracking-wider text-muted-foreground">{k}</dt>
-          <dd className="text-sm text-foreground whitespace-pre-wrap break-words">{Array.isArray(v) ? (v as any[]).filter(Boolean).join(' • ') : String(v)}</dd>
+          <dd className="text-sm text-foreground whitespace-pre-wrap break-words">{Array.isArray(v) ? v.filter(Boolean).join(' • ') : String(v)}</dd>
         </div>
       ))}
     </dl>
   );
 }
 
-function Section({ icon: Icon, title, children, action }: { icon: any; title: string; children: React.ReactNode; action?: React.ReactNode }) {
+function Section({ icon: Icon, title, children, action }: { icon: LucideIcon; title: string; children: React.ReactNode; action?: React.ReactNode }) {
   return (
     <section className="border-b border-border pb-6 space-y-4">
       <div className="flex items-center justify-between gap-2">
@@ -81,9 +85,9 @@ export default function DayDetailsDialog({ date, onClose, onDateChange }: { date
     ]);
     const trades = t.data ?? [];
     const shots: DayData['shots'] = {};
-    await Promise.all(trades.map(async (tr: any) => { shots[tr.id] = { before: await sign(tr.before_screenshot_url), after: await sign(tr.screenshot_url) }; }));
+    await Promise.all(trades.map(async (tr) => { shots[tr.id] = { before: await sign(tr.before_screenshot_url), after: await sign(tr.screenshot_url) }; }));
     if (id !== reqId.current) return;
-    const result: DayData = { trades, journal: activeAccountId ? null : j.data, plan: null, plans: p.data ?? [], daily: d.data?.data ?? null, weekly: w.data?.data ?? null, shots };
+    const result: DayData = { trades, journal: activeAccountId ? null : j.data, plan: null, plans: (p.data ?? []) as unknown as CalendarPlan[], daily: d.data?.data as Record<string, unknown> ?? null, weekly: w.data?.data as Record<string, unknown> ?? null, shots };
     cache.current.set(ck, result);
     setData(result); setPlanPair(prev => result.plans.some(p => p.pair === prev) ? prev : result.plans[0]?.pair || 'EURUSD'); setLoading(false);
   }, [user, key, accountKey, activeAccountId]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -106,7 +110,7 @@ export default function DayDetailsDialog({ date, onClose, onDateChange }: { date
   const v2 = plan?.ai_analysis?.daily_v2;
   const scenario = plan?.ai_analysis?.framework?.scenario;
   const hasScenario = scenario && (scenario.enabled || ['market', 'setup', 'confirmation', 'trigger', 'invalidation'].some(k => has(scenario[k])));
-  const checklist: any[] = Array.isArray(plan?.checklist) ? plan.checklist : [];
+  const checklist = (Array.isArray(plan?.checklist) ? plan.checklist : []) as { done?: boolean; label?: string; text?: string; title?: string }[];
   const empty = data && !trades.length && !j && !plan && !daily && !weekly;
 
   return (
@@ -138,7 +142,7 @@ export default function DayDetailsDialog({ date, onClose, onDateChange }: { date
           {data && !empty && (<>
             {trades.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {([['P&L', money(pnl)], ['Trades', trades.length], ['Wins', wins], ['Losses', losses], ['Win Rate', `${Math.round((wins / trades.length) * 100)}%`], ['Direction', mainDir]] as [string, any][]).map(([k, v]) => (
+                {([['P&L', money(pnl)], ['Trades', trades.length], ['Wins', wins], ['Losses', losses], ['Win Rate', `${Math.round((wins / trades.length) * 100)}%`], ['Direction', mainDir]] as [string, string | number][]).map(([k, v]) => (
                   <div key={k} className="rounded-md border border-border bg-surface-1/60 px-4 py-3">
                     <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{k}</div>
                     <div className={`text-sm font-semibold ${k === 'P&L' ? (pnl >= 0 ? 'text-success' : 'text-danger') : 'text-foreground'}`}>{v}</div>
@@ -236,7 +240,7 @@ export default function DayDetailsDialog({ date, onClose, onDateChange }: { date
               <Section icon={Target} title={`Daily Plan — ${plan.pair || "Legacy"}`} action={<Button size="sm" variant="ghost" onClick={() => go('plan')}><Pencil className="h-3.5 w-3.5" />Edit Trade Plan</Button>}>
                 {v2 ? <Rows items={[
                   ['Market Bias', v2.bias], ['Price Location', v2.price === 'Custom' ? v2.priceCustom : v2.price],
-                  ['Scenario', v2.scenario], ['Main Idea', v2.mainIdea], ['News', (v2.news || []).map((n: any) => Object.values(n).filter(Boolean).join(' · '))],
+                  ['Scenario', v2.scenario], ['Main Idea', v2.mainIdea], ['News', (v2.news || []).map((n) => Object.values(n).filter(Boolean).join(' · '))],
                   ['Risk %', v2.risk?.riskPct], ['Max Daily Loss', v2.risk?.maxLoss], ['Max Trades', v2.risk?.maxTrades], ['R:R Target', v2.risk?.rr],
                   ['Psychology', v2.psychology], ['Psychology Notes', v2.psychNotes], ['Rules', v2.rules],
                 ]} /> : <Rows items={[

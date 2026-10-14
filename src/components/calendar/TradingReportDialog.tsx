@@ -1,3 +1,4 @@
+import type { TradeRow } from '@/lib/dataTypes';
 import { useEffect, useMemo, useState } from 'react';
 import { BarChart3, Lightbulb, Activity, TrendingUp, Target, Layers } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -55,7 +56,7 @@ const TITLES: Record<ReportPeriod, string> = {
 export default function TradingReportDialog({ period, anchor, onClose }: Props) {
   const { user } = useAuth();
   const { activeAccountId, version } = useActiveAccount();
-  const [trades, setTrades] = useState<any[]>([]);
+  const [trades, setTrades] = useState<TradeRow[]>([]);
   const [loading, setLoading] = useState(false);
 
   const range = useMemo(() => (period ? rangeFor(period, anchor) : null), [period, anchor]);
@@ -81,7 +82,7 @@ export default function TradingReportDialog({ period, anchor, onClose }: Props) 
   }, [user, period, range, activeAccountId, version]);
 
   const stats = useMemo(() => {
-    const pnlOf = (t: any) => Number(t.result ?? 0);
+    const pnlOf = (t: TradeRow) => Number(t.result ?? 0);
     const total = trades.reduce((s, t) => s + pnlOf(t), 0);
     const wins = trades.filter((t) => pnlOf(t) > 0);
     const losses = trades.filter((t) => pnlOf(t) < 0);

@@ -1,3 +1,5 @@
+import type { TradeInput, JsonObject } from '@/lib/dataTypes';
+import { errorMessage } from '@/lib/dataTypes';
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -58,7 +60,7 @@ interface Trade {
   mistakes: string[]; screenshot_url: string | null;
   playbook_id: string | null; discipline_score: number | null;
   execution_score: number | null; emotion: string | null;
-  account_type: string; ai_review: Record<string, any>;
+  account_type: string; ai_review: JsonObject;
   is_starred: boolean; tags: string[]; created_at: string; updated_at: string;
 }
 
@@ -324,7 +326,7 @@ function AddTradeModal({ open, onClose, onSaved, editTrade, playbooks }: {
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const fileRef = useRef<HTMLInputElement>(null);
-  const set = (k: keyof FormData, v: any) => setForm(f => ({ ...f, [k]: v }));
+  const set = <K extends keyof FormData,>(k: K, v: FormData[K]) => setForm(f => ({ ...f, [k]: v }));
 
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
@@ -332,9 +334,9 @@ function AddTradeModal({ open, onClose, onSaved, editTrade, playbooks }: {
     if (open) {
       setStep(1); setErrors({});
       setForm(editTrade ? {
-        pair: editTrade.pair, side: (editTrade.side as any) ?? 'long',
+        pair: editTrade.pair, side: (editTrade.side as FormData['side']) ?? 'long',
         trade_date: editTrade.trade_date, session: editTrade.session ?? '',
-        outcome: (editTrade.outcome as any) ?? 'win',
+        outcome: (editTrade.outcome as FormData['outcome']) ?? 'win',
         result: editTrade.result?.toString() ?? '', rr: editTrade.rr?.toString() ?? '',
         entry_price: editTrade.entry_price?.toString() ?? '',
         exit_price: editTrade.exit_price?.toString() ?? '',
@@ -381,7 +383,7 @@ function AddTradeModal({ open, onClose, onSaved, editTrade, playbooks }: {
         discipline_score: form.discipline_score, execution_score: form.execution_score,
         trading_account_id: activeAccountId || null,
         updated_at: new Date().toISOString(),
-      } as any;
+      } as TradeInput;
       if (editTrade) {
         const { error } = await supabase.from('trades').update(payload).eq('id', editTrade.id);
         if (error) throw error;
@@ -396,8 +398,8 @@ function AddTradeModal({ open, onClose, onSaved, editTrade, playbooks }: {
         setStep(1); setErrors({});
         onSaved();
       } else { onSaved(); onClose(); }
-    } catch (e: any) {
-      toast({ title: 'Error', description: e.message, variant: 'destructive' });
+    } catch (e: unknown) {
+      toast({ title: 'Error', description: errorMessage(e), variant: 'destructive' });
     } finally { setSaving(false); }
   };
 
@@ -535,7 +537,7 @@ function AddTradeModal({ open, onClose, onSaved, editTrade, playbooks }: {
                 ] as const).map(f => (
                   <div key={f.key} className="space-y-2">
                     <Label>{f.label}</Label>
-                    <Input type="number" value={(form as any)[f.key]} onChange={e => set(f.key as any, e.target.value)}
+                    <Input type="number" value={form[f.key as keyof FormData]} onChange={e => set(f.key as keyof FormData, e.target.value)}
                       placeholder={f.placeholder} />
                   </div>
                 ))}
@@ -697,7 +699,7 @@ export default function TradeVault() {
   const load = useCallback(async () => {
     if (!user) return;
     setLoading(true);
-    let tq: any = supabase.from('trades').select('*').eq('user_id', user.id)
+    let tq = supabase.from('trades').select('*').eq('user_id', user.id)
       .order('trade_date', { ascending: false }).order('created_at', { ascending: false });
     if (activeAccountId) tq = tq.eq('trading_account_id', activeAccountId);
     const [tr, pb] = await Promise.all([
@@ -742,8 +744,8 @@ export default function TradeVault() {
       setTrades(p => p.map(t => t.id === trade.id ? { ...t, ai_review: review } : t));
       if (viewTrade?.id === trade.id) setViewTrade(p => p ? { ...p, ai_review: review } : p);
       toast({ title: 'AI review ready' });
-    } catch (e: any) {
-      toast({ title: 'AI review failed', description: e.message, variant: 'destructive' });
+    } catch (e: unknown) {
+      toast({ title: 'AI review failed', description: errorMessage(e), variant: 'destructive' });
     } finally {
       setReviewingId(null);
     }

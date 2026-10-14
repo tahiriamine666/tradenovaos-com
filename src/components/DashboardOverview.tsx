@@ -68,7 +68,7 @@ function periodCutoff(p: Period): Date | null {
 }
 
 // ─── Custom tooltip ──────────────────────────────────────────────────────────
-function ChartTooltip({ active, payload, label }: any) {
+function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: { value?: number }[]; label?: string | number }) {
   if (!active || !payload?.length) return null;
   const v = payload[0]?.value ?? 0;
   return (
@@ -477,7 +477,7 @@ export default function DashboardOverview({ onNavigate, onAddTrade, calendar }: 
     if (!user) return;
     setLoading(true);
     setError(null);
-    let tradesQuery: any = supabase
+    let tradesQuery = supabase
       .from("trades")
       .select("id,pair,side,result,outcome,trade_date,setup,rr,trading_account_id")
       .eq("user_id", user.id)

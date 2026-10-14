@@ -13,7 +13,7 @@ import MarketingNavbar from '@/components/MarketingNavbar';
 import SeoHead from '@/components/SeoHead';
 import { BLOG_ARTICLES, articlePath } from '@/pages/blog/articles';
 
-const ease: any = [0.22, 1, 0.36, 1];
+const ease: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 const FEATURE_DATA: Record<string, {
   icon: React.ElementType; color: string; bg: string;

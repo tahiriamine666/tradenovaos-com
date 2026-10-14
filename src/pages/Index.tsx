@@ -1,3 +1,4 @@
+import type { TradeRow, TradeFields } from '@/lib/dataTypes';
 import React, { useMemo, useState, useEffect, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, useReducedMotion } from "framer-motion";
@@ -72,9 +73,9 @@ function formatMoney(val: number): string {
   return `${prefix}$${Math.abs(val).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-function AnalyticsView({ dark, user }: { dark: boolean; user: any }) {
+function AnalyticsView({ dark, user }: { dark: boolean; user: { id: string } | null }) {
   const { activeAccountId, version } = useActiveAccount();
-  const [trades, setTrades] = useState<any[]>([]);
+  const [trades, setTrades] = useState<Array<TradeRow & { pnl?: number }>>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -91,7 +92,7 @@ function AnalyticsView({ dark, user }: { dark: boolean; user: any }) {
   }, [user, activeAccountId, version]);
 
   const metrics = useMemo(() => {
-    const pnlOf = (t: any) => Number(t.result ?? t.pnl ?? 0);
+    const pnlOf = (t: TradeFields & { pnl?: number }) => Number(t.result ?? t.pnl ?? 0);
     const wins = trades.filter((t) => pnlOf(t) > 0);
     const losses = trades.filter((t) => pnlOf(t) < 0);
     const totalPnl = trades.reduce((s, t) => s + pnlOf(t), 0);
@@ -403,17 +404,17 @@ function TradingCalendar({ dark }: { dark: boolean }) {
           .gte("entry_date", monthStart)
           .lte("entry_date", monthEnd),
       ]);
-      setJournalDays(new Set((jd ?? []).map((r: any) => Number(String(r.entry_date).slice(8, 10)))));
+      setJournalDays(new Set((jd ?? []).map((r) => Number(String(r.entry_date).slice(8, 10)))));
 
       const grouped: Record<number, { pnl: number; trades: number; discipline: number; wins: number }> = {};
       (data ?? []).forEach((t) => {
         const day = getTradeDateDay(t.trade_date);
         if (!grouped[day]) grouped[day] = { pnl: 0, trades: 0, discipline: 0, wins: 0 };
-        const r = (t as any).result ?? (t as any).pnl ?? 0;
+        const r = (t as typeof t & { pnl?: number }).result ?? (t as typeof t & { pnl?: number }).pnl ?? 0;
         grouped[day].pnl += r;
         grouped[day].trades += 1;
         if (r > 0) grouped[day].wins += 1;
-        grouped[day].discipline += Number((t as any).discipline_score ?? 0);
+        grouped[day].discipline += Number((t as typeof t & { pnl?: number }).discipline_score ?? 0);
       });
       setDayMap(grouped);
       setLoading(false);
@@ -749,7 +750,7 @@ function TradingDashboardInner() {
   const navigate = useNavigate();
 
   const [dashLoading, setDashLoading] = useState(true);
-  const [allTrades, setAllTrades] = useState<any[]>([]);
+  const [allTrades, setAllTrades] = useState<Array<TradeRow & { pnl?: number }>>([]);
 
   const fetchDashboardData = useCallback(async () => {
     if (!user) return;
@@ -765,7 +766,7 @@ function TradingDashboardInner() {
   }, [user]);
 
   const { totalPnl, tradesCount, winRate, recentTrades, equityData, setupData } = useMemo(() => {
-    const pnlOf = (t: any) => Number(t.result ?? t.pnl ?? 0);
+    const pnlOf = (t: TradeFields & { pnl?: number }) => Number(t.result ?? t.pnl ?? 0);
     const pnl = allTrades.reduce((sum, t) => sum + pnlOf(t), 0);
     const wins = allTrades.filter((t) => pnlOf(t) > 0).length;
     const wr = allTrades.length > 0 ? Math.round((wins / allTrades.length) * 100) : 0;

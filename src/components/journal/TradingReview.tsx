@@ -1,3 +1,4 @@
+import type { Tables } from '@/integrations/supabase/types';
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { AlertCircle, ArrowDown, ArrowUp, CheckCircle2, ChevronDown, History, Loader2, Pencil, Play, Plus, RotateCcw, Save, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -86,7 +87,7 @@ const fx = (n: number | null | undefined, d = 2, suffix = "") =>
   n == null ? na : `${n.toLocaleString(undefined, { maximumFractionDigits: d })}${suffix}`;
 const frac = (x: { recorded: number } | null, k: string) => (x ? `${(x)[k]} / ${x.recorded}` : na);
 
-function toServerRow(r: any): ServerRow {
+function toServerRow(r: Tables<'trading_reviews'>): ServerRow {
   return {
     id: r.id,
     revision: r.revision ?? 0,
@@ -94,8 +95,8 @@ function toServerRow(r: any): ServerRow {
     status: r.status,
     updated_at: r.updated_at,
     draft: {
-      answers: r.answers ?? {},
-      action_plan: r.action_plan ?? {},
+      answers: (r.answers ?? {}) as Record<string, string>,
+      action_plan: (r.action_plan ?? {}) as Record<string, string>,
       ratings: Object.fromEntries(RATINGS.map(([k]) => [k, r[k] ?? null])),
     },
     legacy: Object.fromEntries(LEGACY_FIELDS.map((k) => [k, r[k] ?? null])),
@@ -351,7 +352,7 @@ export function TradingReview({ type = "weekly" }: { type?: PeriodType }) {
             .order("plan_date")
             .order("pair")
             .order("id")
-            .range(a, b);
+            .range(a, b).overrideTypes<ReviewPlan[], { merge: false }>();
         }),
         fetchAll<ReviewChecklist>((a, b) => {
           let q = supabase
@@ -364,7 +365,7 @@ export function TradingReview({ type = "weekly" }: { type?: PeriodType }) {
             .lte("period_date", period.end)
             .order("period_date")
             .order("id")
-            .range(a, b);
+            .range(a, b).overrideTypes<ReviewChecklist[], { merge: false }>();
         }),
         fetchAll<ReviewJournal>(
           (a, b) =>
@@ -473,7 +474,7 @@ export function TradingReview({ type = "weekly" }: { type?: PeriodType }) {
         .order("id");
       setStarting(false);
       if (startedFor !== identityRef.current) return;
-      const same = existing?.find((r: any) => r.period_end === period.end);
+      const same = existing?.find((r) => r.period_end === period.end);
       if (same) {
         const r = toServerRow(same);
         queue.load(r);

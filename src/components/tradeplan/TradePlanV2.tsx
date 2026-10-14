@@ -1,5 +1,6 @@
+import { errorMessage } from '@/lib/dataTypes';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { Database } from '@/integrations/supabase/types';
+import type { Database, Tables, Json } from '@/integrations/supabase/types';
 import {
   ChevronLeft, ChevronRight, Plus, Trash2, Upload, Maximize2, X, Check, Loader2,
   GripVertical, ArrowUp, ArrowDown, Save, CalendarDays, MoreVertical,
@@ -22,8 +23,8 @@ type Impact = 'low' | 'medium' | 'high';
 interface NewsItem { id: string; title: string; date?: string; time: string; impact: Impact; notes: string }
 type Rule = { id: string; text: string; done: boolean };
 interface CheckItem { id: string; text: string }
-interface Weekly { bias: string; scenario: string; chart: string; before: string; after: string; news: NewsItem[]; newsShot: string; mainIdea: string }
-interface Daily {
+export interface Weekly { bias: string; scenario: string; chart: string; before: string; after: string; news: NewsItem[]; newsShot: string; mainIdea: string }
+export interface Daily {
   bias: string; price: string; priceCustom: string; scenario: string;
   before: string; after: string; news: NewsItem[]; newsShot: string;
   risk: { riskPct: string; maxLoss: string; maxTrades: string; rr: string };
@@ -75,7 +76,7 @@ const weekStartKey = (k: string) => { const d = fromKey(k); d.setDate(d.getDate(
 const longDate = (k: string) => fromKey(k).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
 // Seed a v2 plan from legacy columns when an old plan has no v2 data (read only — nothing is moved).
-function fromLegacy(row: any): Daily {
+function fromLegacy(row: Tables<'trade_plans'>): Daily {
   const d = emptyDaily();
   const b = String(row.market_bias || '').toLowerCase();
   d.bias = b === 'ranging' ? 'Range' : b ? b[0].toUpperCase() + b.slice(1) : '';
@@ -85,7 +86,7 @@ function fromLegacy(row: any): Daily {
   d.risk = { riskPct: row.max_risk_per_trade?.toString() ?? '', maxLoss: row.max_daily_loss?.toString() ?? '', maxTrades: row.max_trades?.toString() ?? '', rr: '' };
   return d;
 }
-const normDaily = (v: any): Daily => ({ ...emptyDaily(), ...v, risk: { ...emptyDaily().risk, ...(v?.risk || {}) } });
+const normDaily = (v: Partial<Daily>): Daily => ({ ...emptyDaily(), ...v, risk: { ...emptyDaily().risk, ...(v?.risk || {}) } });
 
 // ── Small UI primitives ───────────────────────────────────────────────────────
 const card = 'rounded-2xl border border-border/60 bg-card shadow-[0_1px_0_hsl(var(--foreground)/0.03)_inset,0_12px_32px_-20px_hsl(var(--background))]';
@@ -100,13 +101,13 @@ function Field({ title, children }: { title: string; children: React.ReactNode }
     </section>
   );
 }
-function Chips({ options, value, onChange, multi, disabled }: { options: string[]; value: string | string[]; onChange: (v: any) => void; multi?: boolean; disabled?: boolean }) {
+function Chips({ options, value, onChange, multi, disabled }: { options: string[]; disabled?: boolean } & ({ multi: true; value: string[]; onChange: (v: string[]) => void } | { multi?: false; value: string; onChange: (v: string) => void })) {
   const sel = (o: string) => (multi ? (value as string[]).includes(o) : value === o);
   return (
     <div className="flex flex-wrap gap-2">
       {options.map(o => (
         <button key={o} type="button" disabled={disabled} aria-pressed={sel(o)}
-          onClick={() => multi ? onChange(sel(o) ? (value as string[]).filter(x => x !== o) : [...(value as string[]), o]) : onChange(sel(o) ? '' : o)}
+          onClick={() => multi ? onChange(sel(o) ? (value as string[]).filter(x => x !== o) : [...(value as string[]), o]) : (onChange as (v: string) => void)(sel(o) ? '' : o)}
           className={`rounded-full border px-4 py-1.5 text-xs font-medium transition-all duration-300 ${sel(o) ? 'border-primary/60 bg-primary/10 text-primary' : 'border-border/60 text-muted-foreground hover:border-foreground/25 hover:text-foreground'}`}>
           {o}
         </button>
@@ -302,7 +303,7 @@ function Checklist({ daily, set, models, onModelsChange, readOnly }: { daily: Da
   };
   const saveModel = async () => {
     if (!user || !naming?.trim()) return;
-    const { error } = await (supabase as any).from('checklist_models').insert({ user_id: user.id, name: naming.trim(), items: items.map(({ id, text }) => ({ id, text })) });
+    const { error } = await supabase.from('checklist_models').insert({ user_id: user.id, name: naming.trim(), items: items.map(({ id, text }) => ({ id, text })) });
     if (error) return toast({ title: 'Could not save model', description: error.message, variant: 'destructive' });
     setNaming(null); onModelsChange(); toast({ title: 'Checklist model saved' });
   };
@@ -446,7 +447,7 @@ function PairChecklist({ date, pair, legacy, readOnly, models, onModelsChange, s
     let error;
     try { ({ error } = await supabase.from('trade_plan_checklists').upsert({
       user_id: user.id, account_key: acc, account_id: acc === 'all' ? null : acc, checklist_type: 'pair_checklist',
-      period_date: d, pair: pr, data: p.data as any,
+      period_date: d, pair: pr, data: p.data as unknown as Json,
       status: done === 0 ? 'empty' : done === p.data.checklist.length ? 'complete' : 'partial',
     }, { onConflict: 'user_id,account_key,checklist_type,period_date,pair' })); } catch (failure) { error = failure; }
     if (error) { if (!pending.current) pending.current = p; setSaveState('error'); toast({ title: 'Checklist not saved', description: error.message, variant: 'destructive' }); return false; }
@@ -472,7 +473,7 @@ function PairChecklist({ date, pair, legacy, readOnly, models, onModelsChange, s
         .eq('checklist_type', 'pair_checklist').eq('period_date', date).eq('pair', pair).maybeSingle();
       if (!alive) return;
       if (error) { setSaveState('error'); toast({ title: 'Could not load checklist', description: error.message, variant: 'destructive' }); return; }
-      const row = (data as any)?.data as PairCk | undefined; hasStoredRow.current = !!row;
+      const row = data?.data as unknown as PairCk | undefined; hasStoredRow.current = !!row;
       // Older checklists were not pair-tagged and were used for EURUSD: show them only there until edited.
       // The parent may still hold the previous scope while this request runs.
       // Apply legacy content only after the parent has loaded this exact scope.
@@ -591,9 +592,9 @@ export default function TradePlanV2() {
   const layoutDrag = useRef<string | null>(null);
 
   // Refs to flush pending edits to the date they belong to.
-  const prevAi = useRef<Record<string, any>>({});
+  const prevAi = useRef<Record<string, Json | undefined>>({});
   const loadedScope = useRef('');
-  const pending = useRef<{ daily?: { date: string; pair: string; accountKey: string; data: Daily; ai: Record<string, any> }; weekly?: { week: string; pair: string; accountKey: string; data: Weekly }; defaults?: { id: string; text: string }[] }>({});
+  const pending = useRef<{ daily?: { date: string; pair: string; accountKey: string; data: Daily; ai: Record<string, Json | undefined> }; weekly?: { week: string; pair: string; accountKey: string; data: Weekly }; defaults?: { id: string; text: string }[] }>({});
   const inFlight = useRef<Promise<boolean> | null>(null);
   const ruleDefaultsRef = useRef<{ id: string; text: string }[]>([]);
   const checklistSave = useRef<(() => Promise<boolean>) | null>(null);
@@ -603,13 +604,13 @@ export default function TradePlanV2() {
 
   const loadModels = useCallback(async () => {
     if (!user) return;
-    const { data } = await (supabase as any).from('checklist_models').select('id,name,items').eq('user_id', user.id).order('created_at');
-    setModels((data || []) as Model[]);
+    const { data } = await supabase.from('checklist_models').select('id,name,items').eq('user_id', user.id).order('created_at');
+    setModels((data || []) as unknown as Model[]);
   }, [user]);
   const loadSaved = useCallback(async () => {
     if (!user) return;
     const { data } = await supabase.from('trade_plans').select('plan_date').eq('user_id', user.id).eq('account_key', accountKey).eq('pair', pair).order('plan_date', { ascending: false }).limit(1000);
-    setSaved(new Set((data || []).map((r: any) => r.plan_date)));
+    setSaved(new Set((data || []).map((r) => r.plan_date)));
   }, [user, pair, accountKey]);
   useEffect(() => { loadModels(); loadSaved(); }, [loadModels, loadSaved]);
 
@@ -637,11 +638,11 @@ export default function TradePlanV2() {
           emotion: d.psychology[0]?.toLowerCase() || null,
           max_risk_per_trade: num(d.risk.riskPct), max_daily_loss: num(d.risk.maxLoss),
           max_trades: num(d.risk.maxTrades) == null ? null : Math.max(0, Math.trunc(Number(d.risk.maxTrades))),
-          ai_analysis: { ...p.daily.ai, daily_v2: d },
-        } as any, { onConflict: 'user_id,account_key,plan_date,pair' });
+          ai_analysis: { ...p.daily.ai, daily_v2: d } as unknown as Json,
+        }, { onConflict: 'user_id,account_key,plan_date,pair' });
         if (error) throw error;
         if (p.daily.date === dateRef.current && p.daily.pair === pairRef.current && p.daily.accountKey === accountRef.current) {
-          prevAi.current = { ...p.daily.ai, daily_v2: d };
+          prevAi.current = { ...p.daily.ai, daily_v2: d as unknown as Json };
           const savedDate = p.daily.date; setSaved(s => new Set(s).add(savedDate)); setDailyExists(true);
         }
         p.daily = undefined;
@@ -651,16 +652,16 @@ export default function TradePlanV2() {
         const filled = [w.bias, w.scenario, w.chart, w.mainIdea].filter(Boolean).length + (w.news.length ? 1 : 0);
         const { error } = await supabase.from('trade_plan_checklists').upsert({
           user_id: user.id, account_key: p.weekly.accountKey, account_id: p.weekly.accountKey === 'all' ? null : p.weekly.accountKey, pair: p.weekly.pair, checklist_type: 'weekly_outlook', period_date: p.weekly.week,
-          data: w as any, status: filled === 0 ? 'empty' : filled === 5 ? 'complete' : 'partial',
+          data: w as unknown as Json, status: filled === 0 ? 'empty' : filled === 5 ? 'complete' : 'partial',
         }, { onConflict: 'user_id,account_key,checklist_type,period_date,pair' });
         if (error) throw error;
       }
       setState('saved');
-    } catch (e: any) {
+    } catch (e: unknown) {
       // Keep the failed snapshot unless a newer edit for this scope is already queued.
       pending.current = { ...p, ...pending.current };
       setState('error');
-      toast({ title: 'Could not save plan', description: e?.message, variant: 'destructive' });
+      toast({ title: 'Could not save plan', description: errorMessage(e), variant: 'destructive' });
       return false;
     }
     }
@@ -696,13 +697,13 @@ export default function TradePlanV2() {
       ]);
       if (!alive) return;
       if (planError || weeklyError || rulesError) { setLoadError(true); setLoading(false); toast({ title: 'Could not load plan', description: (planError || weeklyError || rulesError)?.message, variant: 'destructive' }); return; }
-      const defaults: Rule[] = ((rd as any)?.rules as Rule[] | undefined) || [];
+      const defaults: Rule[] = (rd?.rules as unknown as Rule[] | undefined) || [];
       ruleDefaultsRef.current = defaults;
-      const ai = ((row as any)?.ai_analysis || {}) as Record<string, any>;
+      const ai = (row?.ai_analysis || {}) as Record<string, Json | undefined>;
       prevAi.current = ai; loadedScope.current = `${accountKey}|${date}|${pair}`;
-      setDaily(withRuleDefaults(row ? (ai.daily_v2 ? normDaily(ai.daily_v2) : fromLegacy(row)) : emptyDaily(), defaults));
+      setDaily(withRuleDefaults(row ? (ai.daily_v2 ? normDaily(ai.daily_v2 as unknown as Partial<Daily>) : fromLegacy(row)) : emptyDaily(), defaults));
       setDailyExists(!!row);
-      setWeekly({ ...EMPTY_WEEKLY, ...((wk as any)?.data || {}) });
+      setWeekly({ ...EMPTY_WEEKLY, ...((wk?.data as unknown as Partial<Weekly>) || {}) });
       setLoading(false); setState('idle');
     })();
     return () => { alive = false; };
@@ -780,8 +781,8 @@ export default function TradePlanV2() {
       }
       setConfirmDelete(false);
       toast({ title: 'Daily Plan deleted', description: `${scope.pair} · ${longDate(scope.date)}` });
-    } catch (e: any) {
-      toast({ title: 'Could not delete plan', description: e?.message ?? 'Your plan was not changed.', variant: 'destructive' });
+    } catch (e: unknown) {
+      toast({ title: 'Could not delete plan', description: errorMessage(e) ?? 'Your plan was not changed.', variant: 'destructive' });
     } finally { setDeleting(false); }
   };
   const showDaily = dailyExists || creating || date === today;

@@ -1,3 +1,4 @@
+import type { TradeFields } from '@/lib/dataTypes';
 import { useEffect, useState } from 'react';
 import { ArrowDownRight, ArrowUpRight, Brain, CalendarDays, Clock, Crosshair, Gauge, ImageIcon, Layers, LineChart, Maximize2, StickyNote, Tags, ZoomIn, ZoomOut } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -35,8 +36,8 @@ const score = (v: unknown) => (v == null ? NR : `${Number(v)}/10`);
 const list = (v: unknown) => (Array.isArray(v) && v.length ? v.join(', ') : NR);
 
 /** Every persisted, user-entered trade field grouped as shown in the detail view (absent values read "Not recorded"). */
-export function tradeDetailSections(t: Record<string, any>): { title: string; rows: [string, string][] }[] {
-  const plan = effectivePlanStatus({ plan_status: t.plan_status ?? null, followed_plan: t.followed_plan ?? null });
+export function tradeDetailSections(t: TradeFields): { title: string; rows: [string, string][] }[] {
+  const plan = effectivePlanStatus({ plan_status: (t.plan_status ?? null) as 'yes' | 'no' | 'partial' | null, followed_plan: t.followed_plan ?? null });
   return [
     { title: 'Trade Details', rows: [['Pair', txt(t.pair)], ['Direction', t.side === 'long' ? 'Long (buy)' : t.side === 'short' ? 'Short (sell)' : txt(t.side)], ['Outcome', txt(t.outcome)], ['Result', num(t.result)], ['Date', txt(t.trade_date)], ['Session', txt(t.session)], ['Timeframe', txt(t.timeframe)]] },
     { title: 'Planning', rows: [['Weekly context', txt(t.weekly_context)], ['Daily bias', txt(t.daily_bias)], ['Setup', txt(t.setup)], ['Planned trade', yn(t.planned_trade)], ['Checklist completed', yn(t.checklist_completed)], ['Entry reason', txt(t.entry_reason)]] },
@@ -79,7 +80,7 @@ function Bullet({ children }: { children: React.ReactNode }) {
 export function TradeDetailDialog({ trade: listTrade, open, onOpenChange }: { trade: DetailTrade | null; open: boolean; onOpenChange: (open: boolean) => void }) {
   const { user } = useAuth();
   // List rows are partial projections: load the complete own-user row by id; ignore results for a previous id.
-  const [full, setFull] = useState<Record<string, any> | null>(null);
+  const [full, setFull] = useState<TradeFields | null>(null);
   useEffect(() => {
     setFull(null);
     if (!open || !listTrade?.id || !user) return;
@@ -87,7 +88,7 @@ export function TradeDetailDialog({ trade: listTrade, open, onOpenChange }: { tr
     supabase.from('trades').select('*').eq('id', listTrade.id).eq('user_id', user.id).maybeSingle().then(({ data }) => { if (active && data) setFull(data); });
     return () => { active = false; };
   }, [listTrade?.id, open, user]);
-  const trade = (listTrade && full && full.id === listTrade.id ? { ...listTrade, ...full } : listTrade) as (DetailTrade & Record<string, any>) | null;
+  const trade = (listTrade && full && full.id === listTrade.id ? { ...listTrade, ...full } : listTrade) as (DetailTrade & TradeFields) | null;
   const [lightbox, setLightbox] = useState<'before' | 'after' | null>(null);
   const [zoom, setZoom] = useState(false);
   const [chartUrls, setChartUrls] = useState<{ before: string | null; after: string | null }>({ before: null, after: null });

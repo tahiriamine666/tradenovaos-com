@@ -1,3 +1,4 @@
+import { errorMessage } from '@/lib/dataTypes';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -86,7 +87,7 @@ export default function Billing() {
 
   const run = async (key: string, fn: () => Promise<void>, errTitle: string) => {
     try { setBusy(key); await fn(); }
-    catch (e: any) { toast({ title: errTitle, description: e?.message ?? 'Try again later', variant: 'destructive' }); }
+    catch (e: unknown) { toast({ title: errTitle, description: errorMessage(e) ?? 'Try again later', variant: 'destructive' }); }
     finally { setBusy(null); }
   };
 

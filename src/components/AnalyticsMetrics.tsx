@@ -77,7 +77,7 @@ export default function AnalyticsMetrics() {
     const load = async () => {
       setLoading(true);
       {
-        let q: any = supabase
+        let q = supabase
           .from('trades')
           .select('result, rr, trading_account_id')
           .eq('user_id', user.id);

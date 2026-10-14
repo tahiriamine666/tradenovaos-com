@@ -39,8 +39,8 @@ export const EMPTY_FRAMEWORK: PlanFramework = {
   },
 };
 
-export function normalizeFramework(raw: any): PlanFramework {
-  const r = raw && typeof raw === 'object' ? raw : {};
+export function normalizeFramework(raw: unknown): PlanFramework {
+  const r = raw && typeof raw === 'object' ? raw as Partial<PlanFramework> : {};
   return {
     weekly: { ...EMPTY_FRAMEWORK.weekly, ...(r.weekly ?? {}) },
     scenario: { ...EMPTY_FRAMEWORK.scenario, ...(r.scenario ?? {}) },

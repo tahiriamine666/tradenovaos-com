@@ -1,3 +1,4 @@
+import { errorMessage } from '@/lib/dataTypes';
 import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,6 +24,7 @@ import { CookieSettingsButton } from '@/components/CookieConsent';
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface Profile {
   id: string;
+  created_at?: string;
   email: string | null;
   full_name: string | null;
   display_name: string | null;
@@ -149,7 +151,7 @@ export default function StudioSettings() {
     return () => window.removeEventListener(PROFILE_UPDATED_EVENT, h);
   }, []);
 
-  const set = (key: keyof Profile, val: any) => { setProfile(prev => prev ? { ...prev, [key]: val } : prev); setSaved(false); setDirty(true); };
+  const set = <K extends keyof Profile,>(key: K, val: Profile[K]) => { setProfile(prev => prev ? { ...prev, [key]: val } : prev); setSaved(false); setDirty(true); };
 
   const handleSave = async () => {
     if (!profile || !user) return;
@@ -214,7 +216,7 @@ export default function StudioSettings() {
 
   if (!profile) return null;
 
-  const createdAt = (profile as any).created_at as string | undefined;
+  const createdAt = profile.created_at as string | undefined;
   const memberSince = createdAt ? new Date(createdAt).toLocaleDateString(undefined, { month: 'short', year: 'numeric' }) : '—';
   const provider = (user?.app_metadata?.provider as string | undefined) ?? 'email';
   const providers = (user?.app_metadata?.providers as string[] | undefined) ?? [provider];
@@ -386,8 +388,8 @@ function ManageBillingButton() {
     try {
       setOpening(true);
       window.location.assign('/billing');
-    } catch (e: any) {
-      toast({ title: 'Could not open billing portal', description: e?.message ?? 'Try again later', variant: 'destructive' });
+    } catch (e: unknown) {
+      toast({ title: 'Could not open billing portal', description: errorMessage(e) ?? 'Try again later', variant: 'destructive' });
     } finally {
       setOpening(false);
     }

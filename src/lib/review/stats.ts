@@ -1,3 +1,4 @@
+import type { Daily, Weekly } from '@/components/tradeplan/TradePlanV2';
 // Pure statistics for Weekly / Bi-Weekly reviews. Unknown values are `null`
 // (rendered as "Unavailable"), never fake zeros. A trade whose `result` is
 // null is UNRESOLVED — it is not breakeven.
@@ -40,7 +41,7 @@ export type ReviewTrade = {
 };
 export type ReviewPlan = {
   account_key?: string;
-  ai_analysis?: any;
+  ai_analysis?: { daily_v2?: Partial<Daily> };
   plan_date: string;
   pair: string;
   session: string | null;
@@ -57,7 +58,7 @@ export type ReviewChecklist = {
   period_date: string;
   pair: string;
   status: string;
-  data: any;
+  data: Partial<Weekly>;
 };
 const accountMatches = (t: ReviewTrade, p: { account_key?: string }) =>
   (p.account_key ?? "all") === (t.trading_account_id ?? "all");
@@ -202,7 +203,7 @@ export function performance(trades: ReviewTrade[], setupName: (t: ReviewTrade) =
 
 // ── Execution ────────────────────────────────────────────────────────────────
 export const planStatus = (t: ReviewTrade): "yes" | "no" | "partial" | null =>
-  (t.plan_status as any) ?? (t.followed_plan === true ? "yes" : t.followed_plan === false ? "no" : null);
+  (t.plan_status as 'yes' | 'no' | 'partial' | null) ?? (t.followed_plan === true ? "yes" : t.followed_plan === false ? "no" : null);
 const flagCount = (trades: ReviewTrade[], k: keyof ReviewTrade) => {
   const rec = trades.filter((t) => t[k] != null);
   return rec.length ? { count: rec.filter((t) => t[k] === true).length, recorded: rec.length } : null;
@@ -306,7 +307,7 @@ export function planning(trades: ReviewTrade[], plans: ReviewPlan[], checklists:
   });
   const checklistItems = plans.flatMap((p) => {
     const d = p.ai_analysis?.daily_v2;
-    return Array.isArray(d?.checklist) ? d.checklist.map((c: any) => d.checked?.[c.id] === true) : [];
+    return Array.isArray(d?.checklist) ? d.checklist.map((c) => d.checked?.[c.id] === true) : [];
   });
   const weekly = checklists.filter((c) => c.checklist_type === "weekly_outlook" || c.checklist_type === "weekly");
   weekly.forEach((c) => {
@@ -340,7 +341,7 @@ export function planning(trades: ReviewTrade[], plans: ReviewPlan[], checklists:
         }
       : null,
     checklistRate: checklistItems.length ? (100 * checklistItems.filter(Boolean).length) / checklistItems.length : null,
-    news: news.map((n: any) => (typeof n === "string" ? n : n?.title)).filter(Boolean) as string[],
+    news: news.map((n) => (typeof n === "string" ? n : n?.title)).filter(Boolean) as string[],
     plannedPairs: [...new Set(plans.map((p) => p.pair).filter(Boolean))].sort(),
     untradedPlans: plans
       .filter((p) => !trades.some((t) => accountMatches(t, p) && t.trade_date === p.plan_date && t.pair === p.pair))

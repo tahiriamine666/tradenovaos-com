@@ -1,3 +1,4 @@
+import { errorMessage } from '@/lib/dataTypes';
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { supabase } from "@/integrations/supabase/client";
@@ -199,7 +200,7 @@ function ago(d: string) {
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 export default function NovaAI() {
-  const { user, profile } = useAuth() as any;
+  const { user, profile } = useAuth() as ReturnType<typeof useAuth> & { profile?: { display_name?: string; full_name?: string } };
   const firstName = ((profile?.display_name || profile?.full_name || user?.email?.split("@")[0] || "") as string).split(
     " ",
   )[0];
@@ -211,7 +212,8 @@ export default function NovaAI() {
   const [usage, setUsage] = useState<{ plan: string; limit: number; used: number; resets_at: string } | null>(null);
   const [outOfCredits, setOutOfCredits] = useState(false);
   const loadUsage = useCallback(async () => {
-    const { data } = await (supabase.rpc as any)("get_nova_usage");
+    const { data: rawUsage } = await supabase.rpc("get_nova_usage");
+    const data = rawUsage as { plan: string; limit: number; used: number; resets_at: string } | null;
     if (data) {
       setUsage(data);
       setOutOfCredits(data.limit > 0 && data.used >= data.limit);
@@ -324,8 +326,8 @@ export default function NovaAI() {
         .from("nova_conversations")
         .update({ preview: acc.replace(/[#*_`>]/g, "").slice(0, 120) })
         .eq("id", cid);
-    } catch (e: any) {
-      toast({ title: "NOVA could not answer", description: e?.message, variant: "destructive" });
+    } catch (e: unknown) {
+      toast({ title: "NOVA could not answer", description: errorMessage(e), variant: "destructive" });
       setMsgs((m) => m.filter((x) => x.content !== "" || x.role !== "assistant"));
     } finally {
       setBusy(false);

@@ -1,3 +1,4 @@
+import { errorMessage } from '@/lib/dataTypes';
 import React, { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -92,7 +93,7 @@ export default function ProfileEditDialog({ open, onOpenChange, profile, markets
       emitProfileUpdated(patch);
       setState('saved');
       setTimeout(() => onOpenChange(false), 700);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Profile save failed', err);
       setState('idle');
       toast({ title: 'Could not save profile', description: 'Please try again.' });

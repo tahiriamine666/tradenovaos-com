@@ -85,7 +85,7 @@ Trade: ${trade.pair} ${String(trade.side ?? '').toUpperCase()}, ${String(trade.o
     const data = await res.json();
     const text: string = data?.choices?.[0]?.message?.content ?? '{}';
     const clean = text.replace(/```json|```/g, '').trim();
-    let parsed: any;
+    let parsed: unknown;
     try { parsed = JSON.parse(clean); } catch { parsed = FALLBACK; }
 
     return new Response(JSON.stringify(parsed), {

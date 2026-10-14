@@ -1,3 +1,4 @@
+import type { Json } from '@/integrations/supabase/types';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, ChevronLeft, ChevronRight, History, Copy, Plus, Loader2, Check } from 'lucide-react';
@@ -26,7 +27,7 @@ const fmtLong = (type: ChecklistType, d: Date) => type === 'weekly'
   ? `${d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} – ${addDays(d, 6).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`
   : d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
 
-function computeStatus(data: Record<string, any>, fields: string[]): Status {
+function computeStatus(data: Record<string, unknown>, fields: string[]): Status {
   const filled = fields.filter(f => typeof data[f] === 'string' ? data[f].trim() !== '' : !!data[f]).length;
   if (filled === 0) return 'empty';
   return filled === fields.length ? 'complete' : 'partial';
@@ -44,7 +45,7 @@ export function StatusDot({ status }: { status: Status }) {
 
 const btn = 'flex items-center gap-1 px-2 py-1 rounded-lg border border-white/[0.08] text-[10px] font-bold text-white/45 hover:text-primary hover:border-primary/30 transition-colors disabled:opacity-40';
 
-interface Props<T extends Record<string, any>> {
+interface Props<T extends Record<string, unknown>> {
   type: ChecklistType;
   selectedDate?: string;
   readOnly?: boolean;
@@ -56,7 +57,7 @@ interface Props<T extends Record<string, any>> {
   children: (data: T, set: (patch: Partial<T>) => void) => React.ReactNode;
 }
 
-export default function DatedChecklist<T extends Record<string, any>>({ type, selectedDate, readOnly = false, legacyData, title, icon: Icon, template, statusFields, children }: Props<T>) {
+export default function DatedChecklist<T extends Record<string, unknown>>({ type, selectedDate, readOnly = false, legacyData, title, icon: Icon, template, statusFields, children }: Props<T>) {
   const { user } = useAuth();
   const { activeAccountId } = useActiveAccount();
   const accountKey = activeAccountId ?? 'all';
@@ -94,7 +95,7 @@ export default function DatedChecklist<T extends Record<string, any>>({ type, se
       account_key: p.account,
       checklist_type: type,
       period_date: p.key,
-      data: p.data as any,
+      data: p.data as unknown as Json,
       pair: '',
       status: computeStatus(p.data, statusFields),
     }, { onConflict: 'user_id,account_key,checklist_type,period_date,pair' });
@@ -118,7 +119,7 @@ export default function DatedChecklist<T extends Record<string, any>>({ type, se
       const fallback = readOnly && selectedDate && toKey(period) === toKey(periodOf(type, fromKey(selectedDate)))
         && legacyData && statusFields.some(field => !!legacyData[field]);
       setFromLegacy(!row && !!fallback);
-      setData(row ? ({ ...template, ...(row.data as any) }) : fallback ? ({ ...template, ...legacyData }) : null);
+      setData(row ? ({ ...template, ...(row.data as unknown as Partial<T>) }) : fallback ? ({ ...template, ...legacyData }) : null);
       setSave(row ? 'saved' : 'idle');
       setLoading(false);
     })();
@@ -161,7 +162,7 @@ export default function DatedChecklist<T extends Record<string, any>>({ type, se
       .eq('user_id', user.id).eq('account_key', accountKey).eq('checklist_type', type).eq('pair', '')
       .eq('period_date', toKey(prev)).maybeSingle();
     if (!row) { setNotice(`No previous ${unit.toLowerCase()} checklist to copy.`); return; }
-    write({ ...template, ...(row.data as any) });
+    write({ ...template, ...(row.data as unknown as Partial<T>) });
     setNotice(null);
   };
 

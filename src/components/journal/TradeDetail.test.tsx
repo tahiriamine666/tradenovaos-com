@@ -1,7 +1,14 @@
+import type { TradeFields } from '@/lib/dataTypes';
+type MockResult = { data?: unknown; error?: null };
+interface TradeQuery {
+ select(): TradeQuery; order(): TradeQuery; eq(k: string, v: string): TradeQuery;
+ update(p: TradeFields): TradeQuery; maybeSingle(): TradeQuery;
+ then(res: (value: MockResult) => unknown): Promise<unknown>;
+}
 import { render, screen, waitFor, cleanup, fireEvent } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const fake = vi.hoisted(() => ({ rows: new Map<string, any>(), updates: [] as any[], delay: new Map<string, Promise<void>>() }));
+const fake = vi.hoisted(() => ({ rows: new Map<string, TradeFields>(), updates: [] as { filters: Record<string, string>; patch: TradeFields }[], delay: new Map<string, Promise<void>>() }));
 const authUser = vi.hoisted(() => ({ id: 'u1' }));
 vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => ({ user: authUser }) }));
 vi.mock('@/contexts/ActiveAccountContext', () => ({ useActiveAccount: () => ({ activeAccountId: 'acc-1' }) }));
@@ -9,12 +16,12 @@ vi.mock('@/hooks/use-toast', () => ({ toast: vi.fn() }));
 vi.mock('@/integrations/supabase/client', () => ({ supabase: {
   storage: { from: () => ({ createSignedUrl: async (p: string) => ({ data: { signedUrl: `https://signed/${p}` } }), upload: async () => ({ error: null }) }) },
   from: (table: string) => {
-    const f: Record<string, any> = {}; let patch: any = null;
-    const q: any = {
-      select: () => q, order: () => q, eq: (k: string, v: any) => { f[k] = v; return q; },
-      update: (p: any) => { patch = p; return q; },
+    const f: Record<string, string> = {}; let patch: TradeFields | null = null;
+    const q: TradeQuery = {
+      select: () => q, order: () => q, eq: (k: string, v: string) => { f[k] = v; return q; },
+      update: (p: TradeFields) => { patch = p; return q; },
       maybeSingle: () => q,
-      then: async (res: any) => {
+      then: async (res: (value: MockResult) => unknown) => {
         if (table !== 'trades') return res({ data: [], error: null });
         if (patch) { fake.updates.push({ filters: { ...f }, patch }); return res({ error: null }); }
         await (fake.delay.get(f.id) ?? Promise.resolve());
@@ -36,7 +43,7 @@ const complete = {
   followed_plan: true, plan_status: 'partial', impulsive_entry: false, fomo: true, revenge_trade: false, hesitation: true, overconfidence: false, psychology_note: 'Stayed patient',
   screenshot_url: 'u1/after.png', before_screenshot_url: 'u1/before.png', is_starred: true, emotion: 'calm',
 };
-const partialList = (r: any) => ({ id: r.id, pair: r.pair, side: r.side, result: r.result, rr: r.rr, trade_date: r.trade_date, setup: r.setup, notes: r.notes, outcome: r.outcome, screenshot_url: r.screenshot_url, before_screenshot_url: r.before_screenshot_url, session: r.session, tags: r.tags ?? [], weekly_context: r.weekly_context, daily_bias: r.daily_bias, timeframe: r.timeframe, weekly: '—', daily: '—' });
+const partialList = (r: TradeFields) => ({ id: r.id, pair: r.pair, side: r.side, result: r.result, rr: r.rr, trade_date: r.trade_date, setup: r.setup, notes: r.notes, outcome: r.outcome, screenshot_url: r.screenshot_url, before_screenshot_url: r.before_screenshot_url, session: r.session, tags: r.tags ?? [], weekly_context: r.weekly_context, daily_bias: r.daily_bias, timeframe: r.timeframe, weekly: '—', daily: '—' });
 
 beforeEach(() => { fake.rows.clear(); fake.updates = []; fake.delay.clear(); fake.rows.set('t1', complete); });
 afterEach(cleanup);

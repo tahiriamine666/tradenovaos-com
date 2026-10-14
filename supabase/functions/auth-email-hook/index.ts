@@ -22,7 +22,8 @@ const FROM_DOMAIN = "tradenovaos.com"
 const SITE_URL = `https://${ROOT_DOMAIN}`
 
 // Template mapping for preview mode
-const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
+type PreviewProps = React.ComponentProps<typeof SignupEmail> & React.ComponentProps<typeof InviteEmail> & React.ComponentProps<typeof MagicLinkEmail> & React.ComponentProps<typeof RecoveryEmail> & React.ComponentProps<typeof EmailChangeEmail> & React.ComponentProps<typeof ReauthenticationEmail>;
+const EMAIL_TEMPLATES: Record<string, React.ComponentType<PreviewProps>> = {
   signup: SignupEmail,
   invite: InviteEmail,
   magiclink: MagicLinkEmail,
@@ -112,7 +113,7 @@ async function handlePreview(req: Request): Promise<Response> {
   }
 
   const sampleData = SAMPLE_DATA[type] || {}
-  const html = await renderAsync(React.createElement(EmailTemplate, sampleData))
+  const html = await renderAsync(React.createElement(EmailTemplate, sampleData as PreviewProps))
 
   return new Response(html, {
     status: 200,

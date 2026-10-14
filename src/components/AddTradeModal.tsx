@@ -1,3 +1,4 @@
+import type { TradeRow, TradeInput, TradeFields } from '@/lib/dataTypes';
 // ─── AddTradeModal.tsx ────────────────────────────────────────────────────────
 // Improved Add Trade modal:
 // - Outcome field (Win / Loss / Breakeven) — required
@@ -251,7 +252,7 @@ interface AddTradeModalProps {
   onClose: () => void;
   onSaved: () => void;
   onGoToPlaybooks: () => void;
-  editTrade?: any; // if provided, edit mode
+  editTrade?: TradeFields; // if provided, edit mode
 }
 
 export default function AddTradeModal({
@@ -267,7 +268,7 @@ export default function AddTradeModal({
   const [beforeFile, setBeforeFile] = useState<File | null>(null);
   const [psy, setPsy] = useState<Psychology>(EMPTY_PSYCHOLOGY);
   const [flags, setFlags] = useState<Flags>(EMPTY_FLAGS);
-  const [full, setFull] = useState<any>(null);
+  const [full, setFull] = useState<TradeRow | null>(null);
   const [loadingFull, setLoadingFull] = useState(false);
   const [loadError, setLoadError] = useState(false);
 
@@ -302,7 +303,7 @@ export default function AddTradeModal({
     if (t) {
       const s = (v: unknown) => (v == null ? '' : String(v));
       setForm({
-        pair: t.pair ?? '', side: t.side ?? '', outcome: t.outcome ?? '',
+        pair: t.pair ?? '', side: (t.side ?? '') as TradeForm['side'], outcome: (t.outcome ?? '') as TradeForm['outcome'],
         result: t.result != null ? String(Math.abs(t.result)) : '',
         trade_date: t.trade_date ?? new Date().toISOString().split('T')[0],
         setup: t.setup ?? '', playbook_id: t.playbook_id ?? '', notes: t.notes ?? '', rr: s(t.rr), session: t.session ?? '',
@@ -364,7 +365,7 @@ export default function AddTradeModal({
     if (!validate()) return;
     setSaving(true);
 
-    const payload: any = {
+    const payload: TradeInput = {
       user_id: user.id,
       pair: form.pair.trim().toUpperCase(),
       side: form.side || null,

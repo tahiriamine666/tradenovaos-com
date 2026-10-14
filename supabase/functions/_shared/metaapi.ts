@@ -12,7 +12,7 @@ export function token(): string {
   return t;
 }
 
-async function req(url: string, init: RequestInit = {}) {
+async function req<T = unknown>(url: string, init: RequestInit = {}): Promise<T> {
   const res = await fetch(url, {
     ...init,
     headers: {
@@ -28,7 +28,7 @@ async function req(url: string, init: RequestInit = {}) {
     const msg = (body as { message?: string })?.message ?? (typeof body === 'string' ? body : res.statusText);
     throw new Error(`MetaApi ${res.status}: ${msg}`);
   }
-  return body as any;
+  return body as T;
 }
 
 export interface ProvisionInput {
@@ -41,7 +41,7 @@ export interface ProvisionInput {
 }
 
 export async function createAccount(input: ProvisionInput): Promise<{ id: string }> {
-  return await req(`${PROVISIONING}/users/current/accounts`, {
+  return await req<{ id: string }>(`${PROVISIONING}/users/current/accounts`, {
     method: 'POST',
     body: JSON.stringify({
       name: input.name,
@@ -60,7 +60,7 @@ export async function createAccount(input: ProvisionInput): Promise<{ id: string
 }
 
 export async function getAccount(id: string) {
-  return await req(`${PROVISIONING}/users/current/accounts/${id}`);
+  return await req<{ region?: string; state?: string; connectionStatus?: string }>(`${PROVISIONING}/users/current/accounts/${id}`);
 }
 
 export async function deployAccount(id: string) {
@@ -72,14 +72,14 @@ export async function deleteAccount(id: string) {
 }
 
 export async function accountInformation(id: string, region: string) {
-  return await req(`${clientApi(region)}/users/current/accounts/${id}/account-information`);
+  return await req<{ balance?: number; equity?: number; currency?: string; leverage?: number; broker?: string; margin?: number; freeMargin?: number }>(`${clientApi(region)}/users/current/accounts/${id}/account-information`);
 }
 
 export async function positions(id: string, region: string) {
-  return await req(`${clientApi(region)}/users/current/accounts/${id}/positions`);
+  return await req<unknown[]>(`${clientApi(region)}/users/current/accounts/${id}/positions`);
 }
 
 export async function historyDeals(id: string, region: string, fromISO: string, toISO: string) {
   const url = `${clientApi(region)}/users/current/accounts/${id}/history-deals/time/${encodeURIComponent(fromISO)}/${encodeURIComponent(toISO)}`;
-  return await req(url);
+  return await req<{ entryType?: string; symbol?: string; profit?: number; swap?: number; commission?: number; id: string; type?: string; time?: string; price?: number; volume?: number }[]>(url);
 }
