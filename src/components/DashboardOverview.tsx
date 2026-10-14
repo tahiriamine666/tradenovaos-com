@@ -628,7 +628,7 @@ export default function DashboardOverview({ onNavigate, onAddTrade, calendar }: 
         description="Trading overview for your selected account and period."
         actions={
           <>
-            <Button variant="outline" size="sm" disabled={dashboard.loading || dashboard.error || !user} onClick={() => setEditingLayout(true)}>
+            <Button variant="outline" size="sm" disabled={editingLayout || dashboard.loading || dashboard.error || !user} onClick={() => setEditingLayout(true)}>
               <SlidersHorizontal className="mr-1.5 h-4 w-4" /> Edit Layout
             </Button>
           {onAddTrade && (
@@ -643,7 +643,6 @@ export default function DashboardOverview({ onNavigate, onAddTrade, calendar }: 
         Could not load your saved layout.
         <Button variant="ghost" size="sm" onClick={() => dashboard.reload()}>Retry</Button>
       </div>}
-      {editingLayout && user && <DashboardLayoutEditor key={user.id} initial={dashboard.layout} onSave={dashboard.save} onClose={() => setEditingLayout(false)} />}
       {!isEmpty && dashboard.loading && <Skeleton className="h-32 w-full" />}
 
 
@@ -691,7 +690,10 @@ export default function DashboardOverview({ onNavigate, onAddTrade, calendar }: 
         </div>
       )}
 
-      {isEmpty && !error ? (
+      {editingLayout && user ? (
+        <DashboardLayoutEditor key={user.id} initial={dashboard.layout} onSave={dashboard.save} onClose={() => setEditingLayout(false)}
+          widgets={{ ...widgets, account: activeAccount && (activeAccount.balance != null || activeAccount.equity != null) ? widgets.account : undefined }} />
+      ) : isEmpty && !error ? (
         activeAccount ? (
           <EmptyState
             title={activeAccount.status === "error" ? "Account connection issue" : "Importing your trade history"}
