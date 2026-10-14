@@ -156,7 +156,7 @@ export default function Billing() {
                 {effectivePlan !== 'elite' && (
                   <Button asChild className="rounded-xl"><Link to="/pricing">Upgrade Plan</Link></Button>
                 )}
-                {hasSubscription && !isEnded && native && (
+                {hasSubscription && !isEnded && native && ['active', 'on_hold'].includes(String(sub?.status).toLowerCase()) && (
                   <>
                     <Button variant="outline" className="rounded-xl" disabled={!!busy}
                       onClick={() => run('pm', startPaymentMethodUpdate, 'Could not start payment update')}>

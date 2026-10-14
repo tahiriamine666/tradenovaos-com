@@ -46,7 +46,7 @@ export async function startPaymentMethodUpdate(): Promise<void> {
 export async function downloadInvoice(paymentId: string): Promise<void> {
   const { data, error } = await supabase.functions.invoke("dodo-billing", { body: { action: "invoice", payment_id: paymentId } });
   if (error || !(data instanceof Blob)) throw new Error("Invoice not available");
-  const url = URL.createObjectURL(data);
+  const url = URL.createObjectURL(new Blob([data], { type: "application/pdf" }));
   const a = document.createElement("a");
   a.href = url;
   a.download = `TradeNova-invoice-${paymentId}.pdf`;
