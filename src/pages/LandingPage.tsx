@@ -56,7 +56,7 @@ const ease: any = [0.22, 1, 0.36, 1];
 
 function useReveal() {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: '-60px' as any });
+  const inView = useInView(ref, { once: true, margin: '-60px' });
   return { ref, inView };
 }
 
@@ -938,7 +938,7 @@ function Pricing({ onSignup }: { onSignup: () => void }) {
               {p.badge&&<div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-primary text-foreground text-[11px] font-bold px-4 py-1 rounded-full">{p.badge}</div>}
               <div className="mb-5">
                 <p className="text-sm font-bold text-muted-foreground mb-1.5">{p.name}</p>
-                <div className="flex items-end gap-1"><span className="text-4xl font-black text-foreground">{p.price}</span>{(p as any).per&&<span className="text-muted-foreground text-sm mb-1">{(p as any).per}</span>}</div>
+                <div className="flex items-end gap-1"><span className="text-4xl font-black text-foreground">{p.price}</span>{(p).per&&<span className="text-muted-foreground text-sm mb-1">{(p).per}</span>}</div>
                 <p className="text-xs text-muted-foreground mt-1">{p.desc}</p>
               </div>
               <ul className="space-y-2.5 mb-6">{p.features.map(f=><li key={f} className="flex items-center gap-2 text-sm text-muted-foreground"><Check className="h-3.5 w-3.5 text-primary flex-shrink-0"/>{f}</li>)}</ul>

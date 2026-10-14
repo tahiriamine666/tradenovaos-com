@@ -104,13 +104,13 @@ export default function Onboarding() {
     supabase.from("profiles").select("market_types, experience_level:trading_experience, main_trading_problem").eq("id", user.id).maybeSingle()
       .then(({ data }) => {
         if (!data) return;
-        setMarkets((data as any).market_types ?? []);
-        setExperience((data as any).experience_level ?? null);
-        const pr = (data as any).main_trading_problem as string | null;
+        setMarkets((data).market_types ?? []);
+        setExperience((data).experience_level ?? null);
+        const pr = (data).main_trading_problem as string | null;
         if (pr) { if (PROBLEMS.includes(pr)) setProblem(pr); else { setProblem("Other"); setOther(pr); } }
       });
     supabase.functions.invoke("dodo-checkout", { body: { action: "prices" } })
-      .then(({ data }) => setPrices(((data as any)?.prices ?? {}) as Record<string, Price>));
+      .then(({ data }) => setPrices(((data)?.prices ?? {}) as Record<string, Price>));
   }, [user]);
 
   // Setup transition: real save already happened; short sequential ticks (~1.8s total).
@@ -140,7 +140,7 @@ export default function Onboarding() {
   }, [stage, refresh]);
 
   const save = async (patch: Partial<{ step: number; markets: string[]; experience: string; problem: string; completed: boolean; plan: string; billing: string }>) => {
-    const { error } = await (supabase.rpc as any)("save_onboarding", {
+    const { error } = await (supabase.rpc)("save_onboarding", {
       p_step: patch.step ?? null, p_market_types: patch.markets ?? null, p_experience: patch.experience ?? null,
       p_problem: patch.problem ?? null, p_completed: patch.completed ?? null, p_plan: patch.plan ?? null, p_billing: patch.billing ?? null,
     });
@@ -157,7 +157,7 @@ export default function Onboarding() {
     await save({ plan, billing });
     const { data, error } = await supabase.functions.invoke("dodo-checkout", { body: { plan, billing, onboarding: true } });
     if (error) throw new Error("Checkout could not be started. Please try again.");
-    const url = (data as any)?.url;
+    const url = (data)?.url;
     if (!url) throw new Error("Checkout could not be started. Please try again.");
     window.location.href = url;
   });

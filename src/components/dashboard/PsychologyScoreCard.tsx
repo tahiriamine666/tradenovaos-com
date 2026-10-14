@@ -45,7 +45,7 @@ interface Props { onNavigate: (id: string) => void }
 
 export default function PsychologyScoreCard({ onNavigate }: Props) {
   const { user } = useAuth();
-  const { activeAccountId, version } = useActiveAccount() as any;
+  const { activeAccountId, version } = useActiveAccount();
   const [period, setPeriod] = useState<Period>("week");
   const [trades, setTrades] = useState<PsyTrade[]>([]);
   const [journal, setJournal] = useState<{ entry_date: string; confidence_level: number | null }[]>([]);
@@ -60,8 +60,8 @@ export default function PsychologyScoreCard({ onNavigate }: Props) {
       q,
       supabase.from("journal_entries").select("entry_date, confidence_level").eq("user_id", user.id),
     ]);
-    setTrades((t ?? []) as any);
-    setJournal((j ?? []) as any);
+    setTrades((t ?? []));
+    setJournal((j ?? []));
     setLoading(false);
   }, [user, activeAccountId]);
 

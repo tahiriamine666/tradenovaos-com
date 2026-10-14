@@ -819,7 +819,7 @@ function TradingDashboardInner() {
     document.documentElement.classList.toggle("dark", dark);
     try {
       window.localStorage.setItem("tn-theme", dark ? "dark" : "light");
-    } catch {}
+    } catch { /* Theme remains in memory when browser storage is unavailable. */ }
   }, [dark]);
 
   const { openNew: openNewTrade } = useTradeDialog();

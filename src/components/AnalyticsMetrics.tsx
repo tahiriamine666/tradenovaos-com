@@ -159,7 +159,7 @@ export default function AnalyticsMetrics() {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {metrics.map(m => (
-        <MetricCard key={m.title} {...m as any} />
+        <MetricCard key={m.title} {...m} />
       ))}
     </div>
   );

@@ -292,9 +292,9 @@ describe('Delete Daily Plan and calendar persistence', () => {
     localStorage.setItem('tn-checklist-date:user-one', '2026-10-12');
     localStorage.setItem('tn-checklist-date:user-two', '2026-10-05');
     localStorage.setItem('tn-checklist-date:bad', 'not-a-date');
-    const real = fake.user; (fake as any).user = null;
+    const real = fake.user; (fake).user = null;
     const view = render(<TradePlanV2 />);
-    (fake as any).user = real; view.rerender(<TradePlanV2 />);
+    (fake).user = real; view.rerender(<TradePlanV2 />);
     expect(await screen.findByText(/October 12, 2026/)).toBeInTheDocument();
     for (const name of ['Weekly Outlook', 'Full View', 'Daily Plan']) fireEvent.click(screen.getByRole('button', { name }));
     await waitFor(() => expect(screen.getByText(/October 12, 2026/)).toBeInTheDocument());
@@ -314,12 +314,12 @@ describe('Delete Daily Plan and calendar persistence', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: 'Weekly Outlook' })).toHaveAttribute('aria-pressed', 'true'));
     expect(screen.getByText(/October 12, 2026/)).toBeInTheDocument();
     cleanup();
-    (fake as any).user = { id: 'user-two' };
+    (fake).user = { id: 'user-two' };
     render(<TradePlanV2 />);
     await waitFor(() => expect(screen.getByRole('button', { name: 'Full View' })).toHaveAttribute('aria-pressed', 'true'));
     expect(localStorage.getItem('tn-checklist-tab:user-one')).toBe('weekly');
     cleanup();
-    (fake as any).user = { id: 'user-three' };
+    (fake).user = { id: 'user-three' };
     render(<TradePlanV2 />);
     await waitFor(() => expect(screen.getByRole('button', { name: 'Daily Plan' })).toHaveAttribute('aria-pressed', 'true'));
   });

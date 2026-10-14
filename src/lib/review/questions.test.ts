@@ -22,7 +22,7 @@ describe('review question template', () => {
   it('answers stay linked to their question id after rewording and reordering', () => {
     const answers = { did_well: 'A', improve_next: 'B' };
     const next = applyEdit(normalizeTemplate(null), [{ id: 'improve_next', text: 'Renamed' }, { id: 'did_well', text: 'Wins?' }]);
-    const shown = activeQuestions(next).map(q => [q.text, (answers as any)[q.id]]);
+    const shown = activeQuestions(next).map(q => [q.text, (answers)[q.id]]);
     expect(shown).toEqual([['Renamed', 'B'], ['Wins?', 'A']]);
   });
   it('historical 14-question answers and removed questions stay readable', () => {

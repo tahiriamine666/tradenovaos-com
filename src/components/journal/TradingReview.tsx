@@ -84,7 +84,7 @@ const money = (n: number | null | undefined) =>
   n == null ? na : `${n > 0 ? "+" : ""}${n.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 const fx = (n: number | null | undefined, d = 2, suffix = "") =>
   n == null ? na : `${n.toLocaleString(undefined, { maximumFractionDigits: d })}${suffix}`;
-const frac = (x: { recorded: number } | null, k: string) => (x ? `${(x as any)[k]} / ${x.recorded}` : na);
+const frac = (x: { recorded: number } | null, k: string) => (x ? `${(x)[k]} / ${x.recorded}` : na);
 
 function toServerRow(r: any): ServerRow {
   return {
@@ -117,7 +117,7 @@ export const makeSaver =
         status: pct === 100 ? "complete" : "draft",
         ...d.ratings,
         revision: base + 1,
-      } as any)
+      })
       .eq("id", id)
       .eq("user_id", userId)
       .eq("revision", base)
@@ -193,7 +193,7 @@ export function TradingReview({ type = "weekly" }: { type?: PeriodType }) {
     if (!user) return false;
     const { error } = await supabase
       .from("review_question_templates")
-      .upsert({ user_id: user.id, questions: next as any }, { onConflict: "user_id" });
+      .upsert({ user_id: user.id, questions: next }, { onConflict: "user_id" });
     if (error) return false;
     setTemplate(next);
     return true;
@@ -335,7 +335,7 @@ export function TradingReview({ type = "weekly" }: { type?: PeriodType }) {
             .gte("trade_date", period.start)
             .lte("trade_date", period.end);
           if (activeAccountId) q = q.eq("trading_account_id", activeAccountId);
-          return q.order("trade_date").order("id").range(a, b) as any;
+          return q.order("trade_date").order("id").range(a, b);
         }),
         fetchAll<ReviewPlan>((a, b) => {
           let q = supabase
@@ -351,7 +351,7 @@ export function TradingReview({ type = "weekly" }: { type?: PeriodType }) {
             .order("plan_date")
             .order("pair")
             .order("id")
-            .range(a, b) as any;
+            .range(a, b);
         }),
         fetchAll<ReviewChecklist>((a, b) => {
           let q = supabase
@@ -364,7 +364,7 @@ export function TradingReview({ type = "weekly" }: { type?: PeriodType }) {
             .lte("period_date", period.end)
             .order("period_date")
             .order("id")
-            .range(a, b) as any;
+            .range(a, b);
         }),
         fetchAll<ReviewJournal>(
           (a, b) =>
@@ -376,10 +376,10 @@ export function TradingReview({ type = "weekly" }: { type?: PeriodType }) {
               .lte("entry_date", period.end)
               .order("entry_date")
               .order("id")
-              .range(a, b) as any,
+              .range(a, b),
         ),
         fetchAll<{ id: string; title: string }>(
-          (a, b) => supabase.from("playbooks").select("id,title").eq("user_id", user.id).order("id").range(a, b) as any,
+          (a, b) => supabase.from("playbooks").select("id,title").eq("user_id", user.id).order("id").range(a, b),
         ),
       ]);
       if (seq !== sourceSeq.current) return;
@@ -454,7 +454,7 @@ export function TradingReview({ type = "weekly" }: { type?: PeriodType }) {
         preset,
         answers: {},
         action_plan: {},
-      } as any)
+      })
       .select("*")
       .single();
     if (startedFor !== identityRef.current) {

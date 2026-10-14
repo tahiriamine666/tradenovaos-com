@@ -121,7 +121,7 @@ export function TradeLogDetailModal({ tradeId, refreshKey = 0, onClose, onEdit, 
         signed(data.before_screenshot_url).catch(() => null), signed(data.screenshot_url).catch(() => null),
       ]);
       if (!active) return;
-      setCtx({ accountName: (acc as any).data?.account_name ?? null, playbookName: (pb as any).data?.name || (pb as any).data?.title || null });
+      setCtx({ accountName: (acc).data?.account_name ?? null, playbookName: (pb).data?.name || (pb).data?.title || null });
       setUrls({ before, after });
     })();
     return () => { active = false; };

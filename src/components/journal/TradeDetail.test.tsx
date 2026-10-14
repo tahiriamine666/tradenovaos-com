@@ -56,7 +56,7 @@ describe('tradeDetailSections mapping', () => {
 
 describe('Trade detail view', () => {
   it('loads the complete row for a partial list object and shows both screenshots by reference', async () => {
-    render(<TradeDetailDialog trade={partialList(complete) as any} open onOpenChange={() => {}} />);
+    render(<TradeDetailDialog trade={partialList(complete)} open onOpenChange={() => {}} />);
     await waitFor(() => expect(screen.getByText('Sweep')).toBeInTheDocument());
     expect(screen.getByText('TP hit')).toBeInTheDocument();
     expect(screen.getByText('Stayed patient')).toBeInTheDocument();
@@ -65,14 +65,14 @@ describe('Trade detail view', () => {
   });
   it('a partial saved trade shows Not recorded', async () => {
     fake.rows.set('t2', { id: 't2', user_id: 'u1', pair: 'GBPUSD', trade_date: '2026-10-02', result: -20, mistakes: [], rule_violations: [], tags: [] });
-    render(<TradeDetailDialog trade={partialList(fake.rows.get('t2')) as any} open onOpenChange={() => {}} />);
+    render(<TradeDetailDialog trade={partialList(fake.rows.get('t2'))} open onOpenChange={() => {}} />);
     await waitFor(() => expect(screen.getAllByText('Not recorded').length).toBeGreaterThan(10));
   });
   it('switching trade id never shows the previous trade\'s late response', async () => {
     let release!: () => void; fake.delay.set('t1', new Promise(r => { release = r; }));
     fake.rows.set('t3', { ...complete, id: 't3', pair: 'XAUUSD', entry_reason: 'Gold reason' });
-    const v = render(<TradeDetailDialog trade={partialList(complete) as any} open onOpenChange={() => {}} />);
-    v.rerender(<TradeDetailDialog trade={partialList(fake.rows.get('t3')) as any} open onOpenChange={() => {}} />);
+    const v = render(<TradeDetailDialog trade={partialList(complete)} open onOpenChange={() => {}} />);
+    v.rerender(<TradeDetailDialog trade={partialList(fake.rows.get('t3'))} open onOpenChange={() => {}} />);
     await waitFor(() => expect(screen.getByText('Gold reason')).toBeInTheDocument());
     release(); await new Promise(r => setTimeout(r, 20));
     expect(screen.queryByText('Sweep')).not.toBeInTheDocument();
@@ -92,7 +92,7 @@ describe('Edit Trade', () => {
     expect(filters).toEqual({ id: 't1', user_id: 'u1' });
     expect(patch.notes).toBe('Edited note');
     for (const k of ['entry_price', 'stop_loss', 'take_profit', 'risk_amount', 'risk_percent', 'entry_reason', 'exit_reason', 'mistakes', 'rule_violations', 'planned_trade', 'checklist_completed', 'late_entry', 'early_exit', 'moved_stop', 'emotion_before', 'emotion_after', 'confidence_score', 'discipline_score', 'execution_score', 'stress_score', 'patience_score', 'followed_plan', 'plan_status', 'fomo', 'revenge_trade', 'hesitation', 'overconfidence', 'psychology_note', 'side', 'outcome', 'session', 'timeframe', 'weekly_context', 'rr', 'setup'] as const)
-      expect(patch[k], k).toEqual((complete as any)[k]);
+      expect(patch[k], k).toEqual((complete)[k]);
     expect(patch.result).toBe(150);
     for (const k of ['screenshot_url', 'before_screenshot_url', 'trading_account_id', 'tags', 'is_starred', 'emotion']) expect(k in patch, k).toBe(false);
   });

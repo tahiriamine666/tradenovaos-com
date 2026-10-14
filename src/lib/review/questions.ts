@@ -23,11 +23,11 @@ export function normalizeTemplate(raw: unknown): ReviewQuestion[] {
   const out: ReviewQuestion[] = [];
   for (const q of raw) {
     if (!q || typeof q !== "object") continue;
-    const id = typeof (q as any).id === "string" ? (q as any).id.trim() : "";
-    const text = typeof (q as any).text === "string" ? (q as any).text : "";
+    const id = typeof (q).id === "string" ? (q).id.trim() : "";
+    const text = typeof (q).text === "string" ? (q).text : "";
     if (!id || seen.has(id)) continue;
     seen.add(id);
-    out.push({ id, text, active: (q as any).active !== false });
+    out.push({ id, text, active: (q).active !== false });
   }
   return out.length ? out : DEFAULT_QUESTIONS.map((q) => ({ ...q }));
 }

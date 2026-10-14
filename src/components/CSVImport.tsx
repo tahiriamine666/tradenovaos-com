@@ -74,7 +74,7 @@ function normalizeDate(val: string): string | null {
     return iso.toISOString().split('T')[0];
   }
   // Try DD/MM/YYYY
-  const dmy = val.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})$/);
+  const dmy = val.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{2,4})$/);
   if (dmy) {
     const [_, d, m, y] = dmy;
     const year = y.length === 2 ? `20${y}` : y;
