@@ -48,7 +48,7 @@ Deno.serve(async (req) => {
     if (rowErr) throw rowErr;
     const subId = row?.subscription_id as string | undefined;
     const customerId = row?.customer_id as string | undefined;
-    if (!subId) return json({ ok: false, error: "no_subscription" });
+    if (!subId || !customerId) return json({ ok: false, error: "no_subscription" });
     const sp = encodeURIComponent(subId);
 
     if (action === "summary") {
@@ -57,12 +57,12 @@ Deno.serve(async (req) => {
       const s = sub.body ?? {};
       // Payments are listed only for this user's own customer id, then filtered to their subscription.
       let payments: unknown[] = [];
-      if (customerId) {
-        const p = await dodo(`/payments?customer_id=${encodeURIComponent(customerId)}&page_size=24`);
+      {
+        const p = await dodo(`/payments?customer_id=${encodeURIComponent(customerId)}&subscription_id=${sp}&page_size=24`);
         if (p.ok) {
           const items = (p.body?.items ?? []) as any[];
           payments = items
-            .filter((x) => !x.subscription_id || x.subscription_id === subId)
+            .filter((x) => x.customer?.customer_id === customerId && x.subscription_id === subId)
             .map((x) => ({
               id: String(x.payment_id ?? ""),
               created_at: x.created_at ?? null,
@@ -90,7 +90,13 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Ownership of every mutating action: the provider's subscription must belong to this user's customer.
+    const current = await dodo(`/subscriptions/${sp}`);
+    if (!current.ok || current.body?.customer?.customer_id !== customerId) return json({ ok: false, error: "not_found" }, 404);
+    const curStatus = String(current.body?.status ?? "").toLowerCase();
+
     if (action === "cancel" || action === "reactivate") {
+      if (!["active", "on_hold"].includes(curStatus)) return json({ ok: false, error: "not_allowed_in_status" });
       const r = await dodo(`/subscriptions/${sp}`, {
         method: "PATCH",
         body: JSON.stringify({ cancel_at_next_billing_date: action === "cancel" }),
@@ -100,6 +106,7 @@ Deno.serve(async (req) => {
     }
 
     if (action === "update_payment_method") {
+      if (!["active", "on_hold"].includes(curStatus)) return json({ ok: false, error: "not_allowed_in_status" });
       const origin = req.headers.get("origin");
       const returnUrl = origin && /^https:\/\/(www\.)?tradenovaos\.com$|^https:\/\/[a-z0-9-]+\.lovable\.app$|^http:\/\/localhost:\d+$/.test(origin)
         ? `${origin}/billing` : "https://tradenovaos.com/billing";
@@ -116,10 +123,10 @@ Deno.serve(async (req) => {
     const paymentId = typeof body?.payment_id === "string" ? body.payment_id : "";
     if (!/^[A-Za-z0-9_-]{1,100}$/.test(paymentId)) return json({ error: "invalid_payment" }, 400);
     const pay = await dodo(`/payments/${encodeURIComponent(paymentId)}`);
-    if (!pay.ok || pay.body?.customer?.customer_id !== customerId) return json({ ok: false, error: "not_found" }, 404);
+    if (!pay.ok || pay.body?.customer?.customer_id !== customerId || pay.body?.status !== "succeeded") return json({ ok: false, error: "not_found" }, 404);
     const pdf = await fetch(`${dodoApiBase()}/invoices/payments/${encodeURIComponent(paymentId)}`, { headers: dodoAuthHeaders() });
     if (!pdf.ok) return json({ ok: false, error: "invoice_unavailable" }, 404);
-    return new Response(pdf.body, { headers: { ...cors, "Content-Type": "application/pdf" } });
+    return new Response(pdf.body, { headers: { ...cors, "Content-Type": "application/octet-stream" } });
   } catch (e) {
     console.error("dodo-billing error", e instanceof Error ? e.message : "unknown");
     return json({ ok: false, error: "internal_error" }, 500);
