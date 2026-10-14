@@ -30,7 +30,7 @@ vi.mock('@/integrations/supabase/client', () => ({ supabase: { storage: { from: 
 } } }));
 beforeEach(() => { fake.account = 'account-a'; fake.rows.clear(); fake.writes = []; fake.fail = false; localStorage.clear(); });
 afterEach(() => { cleanup(); });
-const ready = () => waitFor(() => expect(screen.getByPlaceholderText('Write your daily scenario...')).toBeInTheDocument());
+const ready = () => waitFor(() => expect(screen.getByPlaceholderText("What is today's main trading idea?")).toBeInTheDocument());
 const switchPair = async (name: string) => { fireEvent.click(screen.getByRole('button', { name })); await waitFor(() => expect(screen.getByRole('heading', {name: `Daily Plan — ${name}`})).toBeInTheDocument()); await ready(); };
 
 describe('Daily plan isolation and failure handling', () => {
@@ -59,12 +59,12 @@ describe('Daily plan isolation and failure handling', () => {
   });
   it('blocks pair switches on failed save and retries the same dirty snapshot', async () => {
     render(<TradePlanV2 />); await ready();
-    fireEvent.change(screen.getByPlaceholderText('Write your daily scenario...'), {target:{value:'Retain this scenario'}});
+    fireEvent.change(screen.getByPlaceholderText("What is today's main trading idea?"), {target:{value:'Retain this idea'}});
     fake.fail = true; fireEvent.click(screen.getByRole('button', {name:'XAUUSD'}));
     await waitFor(() => expect(screen.getByText('Not saved')).toBeInTheDocument());
     expect(screen.getByRole('heading', {name:'Daily Plan — EURUSD'})).toBeInTheDocument();
     fake.fail = false; await switchPair('XAUUSD');
-    expect([...fake.rows.values()].find(r => r.table === 'trade_plans')?.ai_analysis.daily_v2.scenario).toBe('Retain this scenario');
+    expect([...fake.rows.values()].find(r => r.table === 'trade_plans')?.ai_analysis.daily_v2.mainIdea).toBe('Retain this idea');
   });
   it('carries daily rules over: prefills a new day from the saved set and syncs edits to it', async () => {
     const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
@@ -98,12 +98,14 @@ describe('Daily plan isolation and failure handling', () => {
 
 describe('Editable field layout', () => {
   it('normalizes a saved order: drops unknown ids, dedupes and appends missing defaults', () => {
+    // A layout saved before the scenario section was removed never restores it.
     expect(normalizeLayoutOrder(['risk', 'nope', 'bias_price', 'risk', 'scenario'], DAILY_LAYOUT_DEFAULT))
-      .toEqual(['risk', 'bias_price', 'scenario', 'charts', 'news', 'psychology', 'rules', 'main_idea']);
+      .toEqual(['risk', 'bias_price', 'charts', 'news', 'psychology', 'rules', 'main_idea']);
     expect(normalizeLayoutOrder(null, WEEKLY_LAYOUT_DEFAULT)).toEqual(WEEKLY_LAYOUT_DEFAULT);
     expect(normalizeLayoutOrder([99, { bad: true }], WEEKLY_LAYOUT_DEFAULT)).toEqual(WEEKLY_LAYOUT_DEFAULT);
   });
   it('applies the saved per-user layout to every pair and saves it to workspace_layouts', async () => {
+    // Saved order still lists the removed 'scenario' section; it must be dropped, not restored.
     const order = ['risk', 'bias_price', 'scenario', 'charts', 'news', 'psychology', 'rules', 'main_idea'];
     fake.rows.set('workspace_layouts|user-one', { table: 'workspace_layouts', user_id: 'user-one', page: 'daily_plan', layout: { order } });
     render(<TradePlanV2 />); await ready();
@@ -121,13 +123,13 @@ describe('Editable field layout', () => {
     await waitFor(() => expect(fake.writes.some(w => w.table === 'workspace_layouts')).toBe(true));
     const saved = fake.writes.find(w => w.table === 'workspace_layouts')!;
     expect(saved.payload).toMatchObject({ user_id: 'user-one', page: 'daily_plan' });
-    expect(saved.payload.layout.order).toEqual(order);
+    expect(saved.payload.layout.order).toEqual(DAILY_LAYOUT_DEFAULT);
   });
 });
 
 describe('Weekly Outlook pair scoping', () => {
   const wk = () => { const d = new Date(); const x = new Date(d.getFullYear(), d.getMonth(), d.getDate()); x.setDate(x.getDate() - ((x.getDay() + 6) % 7)); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
-  const area = () => screen.getByPlaceholderText('Write your weekly scenario...') as HTMLTextAreaElement;
+  const area = () => screen.getByPlaceholderText('What is the main idea for this trading week?') as HTMLTextAreaElement;
   const openWeekly = async () => { const btn = await screen.findByRole('button', { name: 'Weekly Outlook' }); if (btn.getAttribute('aria-pressed') !== 'true') fireEvent.click(btn); await waitFor(() => area()); };
   const toPair = async (name: string) => { fireEvent.click(screen.getByRole('button', { name })); await waitFor(() => expect(screen.getByRole('heading', { name: `Daily Plan — ${name}` })).toBeInTheDocument()); await waitFor(() => area()); };
   const weeklyRows = () => [...fake.rows.values()].filter(r => r.table === 'trade_plan_checklists' && r.checklist_type === 'weekly_outlook');
@@ -141,7 +143,7 @@ describe('Weekly Outlook pair scoping', () => {
   });
 
   it('EURUSD -> XAUUSD -> EURUSD keeps each pair\'s outlook and screenshots separate after save and reload', async () => {
-    seed('account-a', 'EURUSD', wk(), { scenario: 'seed', before: 'u/eur-before.png', after: 'u/eur-after.png' });
+    seed('account-a', 'EURUSD', wk(), { mainIdea: 'seed', before: 'u/eur-before.png', after: 'u/eur-after.png' });
     const view = render(<TradePlanV2 />); await openWeekly();
     expect(area().value).toBe('seed');
     fireEvent.change(area(), { target: { value: 'EUR story' } });
@@ -152,8 +154,8 @@ describe('Weekly Outlook pair scoping', () => {
     expect(area().value).toBe('EUR story');
     const eur = weeklyRows().find(r => r.pair === 'EURUSD')!, xau = weeklyRows().find(r => r.pair === 'XAUUSD')!;
     expect(eur).toMatchObject({ account_key: 'account-a', account_id: 'account-a', period_date: wk() });
-    expect(eur.data).toMatchObject({ scenario: 'EUR story', before: 'u/eur-before.png', after: 'u/eur-after.png' });
-    expect(xau.data).toMatchObject({ scenario: 'Gold story', before: '', after: '' });
+    expect(eur.data).toMatchObject({ mainIdea: 'EUR story', before: 'u/eur-before.png', after: 'u/eur-after.png' });
+    expect(xau.data).toMatchObject({ mainIdea: 'Gold story', before: '', after: '' });
     expect(fake.writes.filter(w => w.table === 'trade_plan_checklists' && w.payload.checklist_type === 'weekly_outlook').every(w => w.payload.pair !== '' && w.options.onConflict === 'user_id,account_key,checklist_type,period_date,pair')).toBe(true);
     view.unmount(); render(<TradePlanV2 />); await openWeekly();
     expect(area().value).toBe('EUR story');
@@ -161,8 +163,8 @@ describe('Weekly Outlook pair scoping', () => {
   });
 
   it('isolates accounts and weeks', async () => {
-    seed('account-a', 'EURUSD', wk(), { scenario: 'A only' });
-    seed('account-a', 'EURUSD', '2000-01-03', { scenario: 'old week' });
+    seed('account-a', 'EURUSD', wk(), { mainIdea: 'A only' });
+    seed('account-a', 'EURUSD', '2000-01-03', { mainIdea: 'old week' });
     const view = render(<TradePlanV2 />); await openWeekly();
     expect(area().value).toBe('A only');
     fake.account = 'account-b'; view.rerender(<TradePlanV2 />);
@@ -170,7 +172,7 @@ describe('Weekly Outlook pair scoping', () => {
   });
 
   it('shows the legacy pair-less outlook only under EURUSD and never rewrites it', async () => {
-    seed('all', '', wk(), { scenario: 'legacy', before: 'u/legacy.png' });
+    seed('all', '', wk(), { mainIdea: 'legacy', before: 'u/legacy.png' });
     render(<TradePlanV2 />); await openWeekly();
     expect(area().value).toBe('legacy');
     await toPair('XAUUSD'); expect(area().value).toBe('');
@@ -179,8 +181,8 @@ describe('Weekly Outlook pair scoping', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Save Plan' }));
     await waitFor(() => expect(weeklyRows().some(r => r.pair === 'EURUSD' && r.account_key === 'account-a')).toBe(true));
     const legacy = weeklyRows().find(r => r.pair === '')!;
-    expect(legacy.data).toEqual({ scenario: 'legacy', before: 'u/legacy.png' });
-    expect(weeklyRows().find(r => r.pair === 'EURUSD')!.data).toMatchObject({ scenario: 'legacy edited', before: 'u/legacy.png' });
+    expect(legacy.data).toEqual({ mainIdea: 'legacy', before: 'u/legacy.png' });
+    expect(weeklyRows().find(r => r.pair === 'EURUSD')!.data).toMatchObject({ mainIdea: 'legacy edited', before: 'u/legacy.png' });
   });
 
   it('scopes custom pairs and ignores edits while a pair is still loading', async () => {
@@ -192,13 +194,13 @@ describe('Weekly Outlook pair scoping', () => {
     fireEvent.change(area(), { target: { value: 'BTC story' } });
     fireEvent.click(screen.getByRole('button', { name: 'XAUUSD' }));
     // Typing while the switch is in flight belongs to the still-visible BTCUSD scope, never XAUUSD
-    const maybe = screen.queryByPlaceholderText('Write your weekly scenario...');
+    const maybe = screen.queryByPlaceholderText('What is the main idea for this trading week?');
     if (maybe) fireEvent.change(maybe, { target: { value: 'racing edit' } });
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Daily Plan — XAUUSD' })).toBeInTheDocument());
     await waitFor(() => area());
     await waitFor(() => expect(area().value).toBe(''));
-    expect(['BTC story', 'racing edit']).toContain(weeklyRows().find(r => r.pair === 'BTCUSD')!.data.scenario);
-    expect(weeklyRows().some(r => r.pair === 'XAUUSD' && r.data.scenario)).toBe(false);
+    expect(['BTC story', 'racing edit']).toContain(weeklyRows().find(r => r.pair === 'BTCUSD')!.data.mainIdea);
+    expect(weeklyRows().some(r => r.pair === 'XAUUSD' && r.data.mainIdea)).toBe(false);
     expect(weeklyRows().some(r => r.pair === '')).toBe(false);
   });
 });
