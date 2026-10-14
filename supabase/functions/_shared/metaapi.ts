@@ -1,10 +1,12 @@
 // Thin MetaApi REST wrapper shared by the MT connect / sync functions.
+import { assertMtAutoSyncEnabled } from './mtFeature.ts';
 
 export const PROVISIONING = 'https://mt-provisioning-api-v1.agiliumtrade.agiliumtrade.ai';
 export const clientApi = (region: string) =>
   `https://mt-client-api-v1.${region}.agiliumtrade.ai`;
 
 export function token(): string {
+  assertMtAutoSyncEnabled();
   const t = Deno.env.get('METAAPI_TOKEN');
   if (!t) throw new Error('METAAPI_TOKEN is not configured');
   return t;
