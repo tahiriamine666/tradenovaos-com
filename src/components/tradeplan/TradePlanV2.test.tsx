@@ -123,7 +123,7 @@ describe('Editable field layout', () => {
     await waitFor(() => expect(fake.writes.some(w => w.table === 'workspace_layouts')).toBe(true));
     const saved = fake.writes.find(w => w.table === 'workspace_layouts')!;
     expect(saved.payload).toMatchObject({ user_id: 'user-one', page: 'daily_plan' });
-    expect(saved.payload.layout.order).toEqual(DAILY_LAYOUT_DEFAULT);
+    expect(saved.payload.layout.order).toEqual(order.filter(id => id !== 'scenario'));
   });
 });
 
