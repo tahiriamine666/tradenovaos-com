@@ -52,8 +52,8 @@ const PSYCH = ['Calm', 'Focused', 'Confident', 'Neutral', 'Stressed', 'Fearful',
 
 // Editable field layout for the plan editor. Saved once per user in workspace_layouts
 // (page daily_plan / weekly_outlook) so every day and every pair renders the same order.
-export const DAILY_LAYOUT_DEFAULT = ['bias_price', 'scenario', 'charts', 'news', 'risk', 'psychology', 'rules', 'main_idea'];
-export const WEEKLY_LAYOUT_DEFAULT = ['bias', 'scenario', 'charts', 'news', 'main_idea'];
+export const DAILY_LAYOUT_DEFAULT = ['bias_price', 'charts', 'news', 'risk', 'psychology', 'rules', 'main_idea'];
+export const WEEKLY_LAYOUT_DEFAULT = ['bias', 'charts', 'news', 'main_idea'];
 export const FULL_LAYOUT_DEFAULT = ['weekly', 'daily', 'charts', 'news', 'risk', 'psychology', 'rules', 'main_idea'];
 const LAYOUT_DEFAULTS: Record<Tab, string[]> = { daily: DAILY_LAYOUT_DEFAULT, weekly: WEEKLY_LAYOUT_DEFAULT, full: FULL_LAYOUT_DEFAULT };
 const LAYOUT_PAGES: Record<Tab, string> = { daily: 'daily_plan', weekly: 'weekly_outlook', full: 'full_view' };
@@ -803,7 +803,6 @@ export default function TradePlanV2() {
   // Field sections in their saved order. Sections render from dailyOrder / weeklyOrder.
   const weeklyNodes: Record<string, React.ReactNode> = {
     bias: <Field title="Weekly Bias"><Chips options={BIASES} value={weekly.bias} onChange={v => setW({ bias: v })} /></Field>,
-    scenario: <Field title="Where could price go and what is the big story?"><Area value={weekly.scenario} onChange={v => setW({ scenario: v })} placeholder="Write your weekly scenario..." /></Field>,
     charts: (
       <div className="grid gap-4 sm:grid-cols-2">
         <ImageSlot title="Before" hint="Upload chart screenshot" path={weekly.before} onChange={p => setW({ before: p })} />
@@ -824,7 +823,6 @@ export default function TradePlanV2() {
         </Field>
       </div>
     ),
-    scenario: <Field title="What do I expect price to do today, and how will I react?"><Area value={daily.scenario} onChange={v => setD({ scenario: v })} placeholder="Write your daily scenario..." /></Field>,
     charts: (
       <div className="grid gap-4 sm:grid-cols-2">
         <ImageSlot title="Before" path={daily.before} onChange={p => setD({ before: p })} />
@@ -969,7 +967,6 @@ export default function TradePlanV2() {
                   weekly: <Block title={`Weekly Context · ${weekLabel}`}>
                     <div className="space-y-4">
                       <Tag v={weekly.bias} />
-                      <Text v={weekly.scenario} />
                       <div className="max-w-xl"><ImageSlot readOnly title="Weekly Chart" path={weekly.chart} /></div>
                       {(weekly.before || weekly.after) && <div className="grid gap-4 sm:grid-cols-2"><ImageSlot readOnly title="Before" path={weekly.before} /><ImageSlot readOnly title="After" path={weekly.after} /></div>}
                       <NewsView items={weekly.news} />
@@ -979,7 +976,6 @@ export default function TradePlanV2() {
                   </Block>,
                   daily: dailyExists ? <Block title="Daily Plan">
                       <div className="flex flex-wrap gap-2"><Tag v={daily.bias} /><Tag v={daily.price === 'Custom' ? daily.priceCustom || 'Custom' : daily.price} /></div>
-                      <Text v={daily.scenario} />
                     </Block> : none,
                   charts: d((daily.before || daily.after) && <Block title="Before / After Charts"><div className="grid gap-4 sm:grid-cols-2"><ImageSlot readOnly title="Before" path={daily.before} /><ImageSlot readOnly title="After" path={daily.after} /></div></Block>),
                   news: d(<Block title="News"><NewsView items={daily.news} />{daily.newsShot && <div className="mt-3 max-w-xl"><ImageSlot readOnly title="News screenshot" path={daily.newsShot} /></div>}</Block>),
