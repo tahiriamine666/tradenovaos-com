@@ -52,7 +52,7 @@ export default function Pricing() {
 
   const cta = (plan: PlanId) => {
     if (!user) return navigate('/signup');
-    if (isPro || isElite) return openCustomerPortal().catch(() => navigate('/billing'));
+    if (isPro || isElite) return navigate('/billing');
     navigate('/onboarding?step=plan');
   };
   const label = (plan: PlanId) =>

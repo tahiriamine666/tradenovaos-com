@@ -385,7 +385,7 @@ function ManageBillingButton() {
   const handleOpen = async () => {
     try {
       setOpening(true);
-      await openCustomerPortal();
+      window.location.assign('/billing');
     } catch (e: any) {
       toast({ title: 'Could not open billing portal', description: e?.message ?? 'Try again later', variant: 'destructive' });
     } finally {
