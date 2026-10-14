@@ -1,3 +1,4 @@
+/// <reference types="node" />
 // Impact colors are an owner-approved exception to the black/white/blue palette: they must
 // match ForexFactory exactly (High #EF4444, Medium #F97316, Low #EAB308, Holiday #FFFFFF)
 // and every impact surface must read them from the shared maps, never from ad-hoc classes.

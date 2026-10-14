@@ -1,3 +1,4 @@
+/// <reference lib="es2022.array" />
 import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
 import { beforeEach, afterEach, describe, it, expect, vi } from 'vitest';
 import TradePlanV2, { normalizePair, normalizeLayoutOrder, FULL_LAYOUT_DEFAULT, DAILY_LAYOUT_DEFAULT, WEEKLY_LAYOUT_DEFAULT } from './TradePlanV2';
