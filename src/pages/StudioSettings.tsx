@@ -13,6 +13,8 @@ import { Save, User, TrendingUp, Globe, Shield, AlertCircle, CheckCircle2, Credi
 import { toast } from '@/hooks/use-toast';
 import TradingAccountsSection from '@/components/settings/TradingAccountsSection';
 import ConnectionStatusSection from '@/components/settings/ConnectionStatusSection';
+import Mt5ComingSoon from '@/components/settings/Mt5ComingSoon';
+import { MT5_AUTO_SYNC_ENABLED } from '@/lib/featureFlags';
 import ProfileEditDialog, { PROFILE_UPDATED_EVENT, emitProfileUpdated } from '@/components/settings/ProfileEditDialog';
 import { Pencil } from 'lucide-react';
 import { CookieSettingsButton } from '@/components/CookieConsent';
@@ -284,8 +286,7 @@ export default function StudioSettings() {
       </Section>
 
       {/* Trading accounts */}
-      <TradingAccountsSection />
-      <ConnectionStatusSection />
+      {MT5_AUTO_SYNC_ENABLED ? (<><TradingAccountsSection /><ConnectionStatusSection /></>) : <Mt5ComingSoon />}
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Trading preferences */}
