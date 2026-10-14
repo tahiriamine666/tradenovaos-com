@@ -9,6 +9,7 @@ import { ProfileProvider } from "@/hooks/useProfile";
 import { ActiveAccountProvider } from "@/contexts/ActiveAccountContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
+import ResetPassword from "./pages/ResetPassword.tsx";
 import Index from "./pages/Index.tsx";
 import Onboarding from "./pages/Onboarding.tsx";
 import RequireAccess from "@/components/RequireAccess";
@@ -18,12 +19,19 @@ import LandingPage from "./pages/LandingPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import SupportedBrokersPage from "./pages/SupportedBrokersPage.tsx";
 import Pricing from "./pages/Pricing.tsx";
+import SeoHead from "@/components/SeoHead";
+import { monthlyPlanPrice } from "@/lib/pricing";
 import MarketingPlaceholder from "./pages/marketing/MarketingPlaceholder.tsx";
 import { FeaturePage, SolutionPage, BlogPage, HelpCenterPage } from "./pages/marketing/MarketingPages.tsx";
 import FairValueGapsGuide from "./pages/blog/FairValueGapsGuide.tsx";
+import EducationalArticle from "./pages/blog/EducationalArticle";
+import { BLOG_ARTICLES, articlePath } from "./pages/blog/articles";
 import BillingSuccess from "./pages/BillingSuccess.tsx";
 import BillingCancel from "./pages/BillingCancel.tsx";
 import Billing from "./pages/Billing.tsx";
+import CookiePolicy from "./pages/CookiePolicy";
+import CookieConsentPanel from "@/components/CookieConsent";
+import { CookieConsentProvider } from "@/contexts/CookieConsentContext";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +67,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <CookieConsentProvider>
         <AuthProvider>
           <ProfileProvider>
             <PlanProvider>
@@ -67,6 +76,7 @@ const App = () => (
                   <Route path="/" element={<PublicOnly><LandingPage /></PublicOnly>} />
                   <Route path="/login" element={<PublicOnly><Login /></PublicOnly>} />
                   <Route path="/signup" element={<PublicOnly><Signup /></PublicOnly>} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
                   <Route
                     path="/app"
                     element={
@@ -75,6 +85,7 @@ const App = () => (
                       </RequireAccess>
                     }
                   />
+                  <Route path="/app/admin" element={<Navigate to="/app?view=admin" replace />} />
                   <Route path="/onboarding" element={<ProtectedApp><Onboarding /></ProtectedApp>} />
                   <Route path="/dashboard" element={<Navigate to="/app" replace />} />
 
@@ -85,7 +96,7 @@ const App = () => (
 
 
                   {/* Public marketing routes */}
-                  <Route path="/pricing" element={<Pricing />} />
+                  <Route path="/pricing" element={<><SeoHead path="/pricing" title="Pricing — TradeNova OS plans for every trader" description={`Compare TradeNova Pro (${monthlyPlanPrice('pro')}/mo) and Elite (${monthlyPlanPrice('elite')}/mo). Start a 14-day free trial — journal, trade plans, analytics, psychology score and NOVA AI.`} /><Pricing /></>} />
                   <Route path="/supported-brokers" element={<SupportedBrokersPage />} />
                   <Route path="/features/:feature" element={<FeaturePage />} />
                   <Route path="/solutions/:solution" element={<SolutionPage />} />
@@ -97,9 +108,13 @@ const App = () => (
                   <Route path="/compare/:slug" element={<MarketingPlaceholder group="compare" />} />
                   <Route path="/blog" element={<MarketingPlaceholder group="static" staticKey="blog" />} />
                   <Route path="/blog/fair-value-gaps-guide" element={<FairValueGapsGuide />} />
+                  {BLOG_ARTICLES.filter(article => article.body).map(article => (
+                    <Route key={article.slug} path={articlePath(article)} element={<EducationalArticle slug={article.slug} />} />
+                  ))}
                   <Route path="/contact" element={<MarketingPlaceholder group="static" staticKey="contact" />} />
                   <Route path="/careers" element={<MarketingPlaceholder group="static" staticKey="careers" />} />
                   <Route path="/privacy" element={<MarketingPlaceholder group="static" staticKey="privacy" />} />
+                  <Route path="/cookies" element={<CookiePolicy />} />
                   <Route path="/terms" element={<MarketingPlaceholder group="static" staticKey="terms" />} />
                   <Route path="/help" element={<MarketingPlaceholder group="static" staticKey="help" />} />
 
@@ -109,6 +124,8 @@ const App = () => (
             </PlanProvider>
           </ProfileProvider>
         </AuthProvider>
+        <CookieConsentPanel />
+        </CookieConsentProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

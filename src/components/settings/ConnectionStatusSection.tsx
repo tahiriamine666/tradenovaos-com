@@ -12,16 +12,17 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
 import { Activity, RefreshCw, PlugZap, Loader2, CheckCircle2, XCircle, CircleDashed } from 'lucide-react';
 import type { TradingAccountRecord } from '@/lib/platforms/types';
+import { readFunctionResult, friendlyConnectError } from '@/lib/platforms/functionResult';
 import ConnectionDiagnostics, { initialSteps, mergeSteps, type DiagStep } from './ConnectionDiagnostics';
 
 type Status = TradingAccountRecord['status'];
 
 const STATUS_META: Record<Status, { label: string; cls: string; icon: React.ElementType }> = {
-  connected:    { label: 'Connected',    cls: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20', icon: CheckCircle2 },
+  connected:    { label: 'Connected',    cls: 'bg-primary/10 text-primary border-primary/20', icon: CheckCircle2 },
   connecting:   { label: 'Connecting',   cls: 'bg-primary/10 text-primary border-primary/20',             icon: RefreshCw },
   pending:      { label: 'Pending',      cls: 'bg-muted text-muted-foreground border-border',             icon: CircleDashed },
   disconnected: { label: 'Disconnected', cls: 'bg-muted text-muted-foreground border-border',             icon: CircleDashed },
-  error:        { label: 'Error',        cls: 'bg-red-500/10 text-red-500 border-red-500/20',             icon: XCircle },
+  error:        { label: 'Error',        cls: 'bg-muted/10 text-muted-foreground border-border/20',             icon: XCircle },
 };
 
 const money = (v: number | null | undefined, currency?: string | null) =>
@@ -74,13 +75,13 @@ export default function ConnectionStatusSection() {
     const fn = mode === 'reconnect' || !a.metaapi_account_id ? 'mt-connect' : 'mt-sync';
     const { data, error } = await supabase.functions.invoke(fn, { body: { account_id: a.id } });
 
-    const payload = (data ?? {}) as {
-      steps?: DiagStep[]; error?: string;
+    const payload = await readFunctionResult<{
+      steps?: DiagStep[];
       results?: { account_id: string; steps?: DiagStep[]; error?: string }[];
-    };
+    }>(data, error);
     const result = payload.results?.find(r => r.account_id === a.id);
     const serverSteps = result?.steps ?? payload.steps;
-    const failure = result?.error ?? payload.error ?? error?.message ?? null;
+    const failure = friendlyConnectError(result?.error ?? payload.error ?? (error ? 'Connection failed' : null));
 
     setSteps(mergeSteps(serverSteps, true, failure ?? undefined));
     setDiagError(failure);
@@ -148,8 +149,8 @@ export default function ConnectionStatusSection() {
                 </div>
 
                 {a.sync_error && (
-                  <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-2.5">
-                    <p className="text-[11px] text-red-500 break-words">{a.sync_error}</p>
+                  <div className="rounded-lg border border-border/30 bg-muted/5 p-2.5">
+                    <p className="text-[11px] text-muted-foreground break-words">{a.sync_error}</p>
                   </div>
                 )}
 

@@ -56,6 +56,8 @@ Deno.serve(async (req) => {
           const j = await r.json().catch(() => null);
           const pr = j?.price ?? {};
           if (r.ok) out[`${pl}_${bi}`] = {
+            // Product identifiers are public catalog data, never API credentials.
+            product_id: id,
             amount: typeof pr.price === "number" ? pr.price / 100 : null,
             currency: pr.currency ?? "USD",
             trial_days: pr.trial_period_days ?? null,
@@ -87,7 +89,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    const origin = req.headers.get("origin") ?? "";
+    const ALLOWED_ORIGINS = new Set([
+      "https://tradenovaos.com",
+      "https://www.tradenovaos.com",
+      "https://tradenovaos-com.lovable.app",
+      "https://id-preview--0ee4a120-abbf-401b-9623-1114b47e7fda.lovable.app",
+      "http://localhost:8080",
+    ]);
+    const rawOrigin = req.headers.get("origin") ?? "";
+    const origin = ALLOWED_ORIGINS.has(rawOrigin) ? rawOrigin : "https://tradenovaos.com";
     const fromOnboarding = (body as any).onboarding === true;
     const returnUrl = origin ? `${origin}${fromOnboarding ? "/onboarding?checkout=done" : "/billing/success"}` : undefined;
     const email = (body.email && body.email.trim()) || claimEmail || undefined;

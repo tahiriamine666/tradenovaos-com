@@ -5,52 +5,68 @@
 @layer base {
   :root,
   .dark {
-    --background: 225 50% 2%;
-    --foreground: 210 100% 98%;
-    --card: 222 45% 4%;
-    --card-foreground: 210 100% 98%;
-    --popover: 222 42% 5%;
-    --popover-foreground: 210 100% 98%;
-    --primary: 203 100% 65%;
-    --primary-foreground: 225 50% 2%;
-    --secondary: 218 45% 9%;
-    --secondary-foreground: 207 100% 94%;
-    --muted: 220 38% 8%;
-    --muted-foreground: 211 35% 68%;
-    --accent: 213 64% 14%;
-    --accent-foreground: 204 100% 88%;
-    --destructive: 203 100% 65%;
-    --destructive-foreground: 225 50% 2%;
-    --border: 215 50% 16%;
-    --input: 215 47% 18%;
-    --ring: 203 100% 65%;
+    --background: 0 0% 1%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 4%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 6%;
+    --popover-foreground: 0 0% 98%;
+    /* Exact reference blue: #1D7FFF / RGB 29, 127, 255. */
+    --primary: 213.98230088495575 100% 55.68627450980392%;
+    --primary-hover: 213.98230088495575 100% 57%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 0 0% 6%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 6%;
+    --muted-foreground: 0 0% 65%;
+    --accent: var(--primary) / 0.12;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 0% 65%;
+    --destructive-foreground: 0 0% 1%;
+    --border: 0 0% 14%;
+    --input: 0 0% 14%;
+    --ring: var(--primary) / 0.4;
     --radius: 0.5rem;
 
-    --sidebar-background: 225 50% 2%;
-    --sidebar-foreground: 210 100% 96%;
-    --sidebar-primary: 203 100% 65%;
-    --sidebar-primary-foreground: 225 50% 2%;
-    --sidebar-accent: 214 58% 13%;
-    --sidebar-accent-foreground: 204 100% 90%;
-    --sidebar-border: 215 50% 14%;
-    --sidebar-ring: 203 100% 65%;
+    --sidebar-background: 0 0% 1%;
+    --sidebar-foreground: 0 0% 65%;
+    --sidebar-primary: var(--primary);
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: var(--primary) / 0.1;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 12%;
+    --sidebar-ring: var(--primary) / 0.4;
 
-    --surface: 221 42% 6%;
-    --surface-foreground: 210 100% 98%;
-    --surface-1: 222 45% 4%;
-    --surface-2: 220 42% 6%;
-    --surface-3: 218 40% 9%;
-    --success: 196 100% 68%;
-    --success-foreground: 225 50% 2%;
-    --warning: 210 100% 78%;
-    --warning-foreground: 225 50% 2%;
-    --danger: 215 100% 70%;
-    --danger-foreground: 225 50% 2%;
+    --surface: 0 0% 6%;
+    --surface-foreground: 0 0% 98%;
+    --surface-1: 0 0% 4%;
+    --surface-2: 0 0% 4%;
+    --surface-3: 0 0% 6%;
+    --success: var(--primary);
+    --success-foreground: 0 0% 98%;
+    --warning: 0 0% 98%;
+    --warning-foreground: 0 0% 1%;
+    --danger: 0 0% 65%;
+    --danger-foreground: 0 0% 1%;
 
-    --blue-glow: 196 100% 70%;
-    --electric-blue: 203 100% 65%;
-    --ice-blue: 207 100% 94%;
-    --terminal-grid: 211 68% 20%;
+    /* Economic Calendar impact levels, ForexFactory-aligned (owner request 2026-10-12):
+       High #EF4444, Medium #F97316, Low #EAB308, Holiday / Non-Economic #FFFFFF.
+       These tokens are used ONLY by the Economic Calendar impact UI; the rest of the app
+      keeps the strict black / white / electric-blue palette. */
+    --impact-high: 0 84.2365% 60.1961%;
+    --impact-high-foreground: 0 0% 100%;
+    --impact-medium: 24.5815 94.9791% 53.1373%;
+    --impact-medium-foreground: 0 0% 100%;
+    --impact-low: 45.3982 93.3884% 47.451%;
+    --impact-low-foreground: 0 0% 100%;
+    --impact-holiday: 0 0% 100%;
+    --impact-holiday-foreground: 0 0% 1%;
+
+
+    --blue-glow: var(--primary);
+    --electric-blue: var(--primary);
+    --ice-blue: 0 0% 98%;
+    --terminal-grid: 0 0% 14%;
     font-family: 'Manrope', system-ui, sans-serif;
   }
 
@@ -93,8 +109,8 @@
 @layer components {
   .app-shell {
     background-image:
-      linear-gradient(hsl(var(--terminal-grid) / 0.08) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(var(--terminal-grid) / 0.08) 1px, transparent 1px);
+      linear-gradient(hsl(var(--terminal-grid) / 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--terminal-grid) / 0.035) 1px, transparent 1px);
     background-size: 44px 44px;
   }
 
@@ -107,19 +123,18 @@
   }
 
   .app-shell :is(button, a, input, select, textarea):focus-visible {
-    outline: 1px solid hsl(var(--blue-glow) / 0.75);
+    outline: 1px solid hsl(var(--blue-glow) / 0.4);
     outline-offset: 2px;
   }
 
   .blue-panel-glow {
     box-shadow:
       inset 0 1px 0 hsl(var(--ice-blue) / 0.05),
-      0 0 0 1px hsl(var(--primary) / 0.04),
-      0 18px 70px hsl(var(--primary) / 0.09);
+      0 0 0 1px hsl(var(--primary) / 0.04);
   }
 
   .blue-text-glow {
-    text-shadow: 0 0 24px hsl(var(--blue-glow) / 0.45);
+    text-shadow: none;
   }
 
   .feature-reveal {
@@ -200,8 +215,119 @@
   }
 }
 /* NOVA page */
-@keyframes nova-float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-3px) } }
-.nova-float { animation: nova-float 6s ease-in-out infinite; }
+@keyframes nova-float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(var(--nova-float-distance, -4px)) } }
+.nova-float { animation: nova-float 4.5s ease-in-out infinite; }
+.nova-robot-compact { --nova-float-distance: -2px; }
+@keyframes nova-light-pulse { 0%,100% { opacity: 0.35; } 50% { opacity: 0.7; } }
+.nova-robot-light { animation: nova-light-pulse 3.4s ease-in-out infinite; }
+.nova-robot-thinking .nova-robot-light { animation-duration: 2.8s; }
 @keyframes nova-msg { from { opacity: 0; transform: translateY(4px) } to { opacity: 1; transform: none } }
 .nova-msg { animation: nova-msg 260ms var(--ease-premium, ease-out) both; }
-@media (prefers-reduced-motion: reduce) { .nova-float, .nova-msg { animation: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .nova-float, .nova-msg, .nova-robot-light { animation: none; transform: none; }
+  .nova-robot-light { opacity: 0.35; }
+}
+
+@layer base {
+  .app-shell input::placeholder, .app-shell textarea::placeholder { color: hsl(0 0% 47%); }
+}
+
+/* Checklist robot: fixed framing, compositor-only idle and user-event reactions. */
+@keyframes checklist-robot-idle {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-4px) scale(1.008); }
+}
+@keyframes checklist-robot-pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.55; } }
+@keyframes checklist-robot-progress {
+  0%, 100% { transform: translateY(0) scale(1); }
+  35% { transform: translateY(-4px) scale(1.015); }
+  65% { transform: translateY(1px) scale(1); }
+}
+@keyframes checklist-robot-complete {
+  0%, 100% { transform: translateY(0) scale(1); }
+  30% { transform: translateY(-6px) scale(1.025); }
+  60% { transform: translateY(1px) scale(1.01); }
+}
+@keyframes checklist-robot-flash { 0%, 100% { opacity: 0.3; } 35% { opacity: 1; } }
+.checklist-robot-idle { animation: checklist-robot-idle 4.5s ease-in-out infinite; }
+.checklist-robot-glow { animation: checklist-robot-pulse 3.4s ease-in-out infinite; }
+.checklist-robot-reaction[data-reaction='progress'] { animation: checklist-robot-progress 550ms ease-in-out; }
+.checklist-robot-reaction[data-reaction='complete'] { animation: checklist-robot-complete 1s ease-in-out; }
+.checklist-robot-reaction[data-reaction] .checklist-robot-glow { animation: checklist-robot-flash 550ms ease-in-out; }
+.checklist-robot-reaction[data-reaction='complete'] .checklist-robot-glow { animation-duration: 1s; }
+.checklist-robot-frame { transition: transform 250ms ease-out; }
+.checklist-robot[data-visible='false'] .checklist-robot-idle,
+.checklist-robot[data-visible='false'] .checklist-robot-glow { animation-play-state: paused; }
+@media (hover: hover) and (pointer: fine) {
+  .checklist-robot-frame:hover { transform: scale(1.025); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .checklist-robot-idle, .checklist-robot-reaction, .checklist-robot-glow { animation: none !important; transform: none; }
+  .checklist-robot-glow { opacity: 0.3; }
+  .checklist-robot-frame, .checklist-robot-frame:hover { transition: none; transform: none; }
+}
+
+/* ─── Premium lighting (shared primary token, low opacity, static) ─── */
+:root {
+  --light-ambient: radial-gradient(ellipse 60% 50% at 50% 40%, hsl(var(--primary) / 0.10), transparent 70%);
+  --light-edge: inset 0 1px 0 hsl(var(--primary) / 0.14), 0 0 0 1px hsl(var(--primary) / 0.10);
+  --light-halo: 0 0 18px -6px hsl(var(--primary) / 0.35);
+}
+.tn-ambient { position: relative; isolation: isolate; }
+.tn-ambient::before { content: ""; position: absolute; inset: -10% -15%; z-index: -1; pointer-events: none; background: var(--light-ambient); }
+.tn-edge-light { box-shadow: var(--light-edge); }
+/* Sidebar active item + selected tabs */
+[aria-current="page"] { box-shadow: inset 2px 0 0 hsl(var(--primary) / 0.55), var(--light-halo); }
+[role="tab"][data-state="active"], [role="tab"][aria-selected="true"] { box-shadow: 0 0 0 1px hsl(var(--primary) / 0.22), var(--light-halo); }
+/* Modals / lightboxes: subtle edge light */
+[role="dialog"], [role="alertdialog"] { box-shadow: 0 0 0 1px hsl(var(--primary) / 0.12), 0 24px 60px -24px hsl(var(--primary) / 0.22), 0 20px 50px -20px hsl(0 0% 0% / 0.7); }
+/* Interactive card hover illumination */
+@media (hover: hover) and (pointer: fine) {
+  .tn-lift { transition: box-shadow 250ms ease, border-color 250ms ease; }
+  .tn-lift:hover { border-color: hsl(var(--primary) / 0.3); box-shadow: var(--light-edge), 0 12px 32px -18px hsl(var(--primary) / 0.35); }
+}
+/* Robot floor halos */
+.robot-floor { position: absolute; left: 20%; right: 20%; bottom: 2%; height: 10%; border-radius: 9999px; pointer-events: none;
+  background: radial-gradient(ellipse at center, hsl(var(--primary) / 0.32), transparent 70%); opacity: 0.7; transition: opacity 400ms ease; }
+.checklist-robot-reaction[data-reaction='complete'] .robot-floor { animation: robot-floor-bright 1s ease-in-out; }
+@keyframes robot-floor-bright { 50% { opacity: 1; transform: scaleX(1.08); } }
+@media (prefers-reduced-motion: reduce) { .robot-floor { animation: none !important; } }
+
+/* ─── App lighting system (static, low-opacity, pointer-safe) ─── */
+.tn-app-ambient { position: relative; isolation: isolate; }
+.tn-app-ambient::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 520px; z-index: -1; pointer-events: none;
+  background: radial-gradient(ellipse 55% 70% at 50% -10%, hsl(var(--primary) / 0.09), transparent 70%),
+              radial-gradient(ellipse 30% 50% at 100% 0%, hsl(var(--primary) / 0.05), transparent 70%); }
+.tn-page-light > * { position: relative; }
+.tn-card-light { transition: border-color 250ms ease, box-shadow 250ms ease; }
+@media (hover: hover) and (pointer: fine) {
+  .tn-card-light:hover, main [class*="bg-card"].rounded-lg:hover, main [class*="bg-card"].rounded-xl:hover {
+    box-shadow: 0 0 0 1px hsl(var(--primary) / 0.14), 0 14px 36px -22px hsl(var(--primary) / 0.4); }
+}
+.tn-kpi-light, .tn-kpi-light ~ div { background-image: linear-gradient(180deg, hsl(var(--primary) / 0.05), transparent 45%);
+  box-shadow: inset 0 1px 0 hsl(var(--primary) / 0.18); }
+.tn-chart-light { background-image: radial-gradient(ellipse 70% 60% at 50% 75%, hsl(var(--primary) / 0.07), transparent 70%); }
+.tn-active-light { box-shadow: 0 0 0 1px hsl(var(--primary) / 0.28), 0 0 14px -4px hsl(var(--primary) / 0.45); }
+.tn-btn-halo { box-shadow: 0 6px 18px -8px hsl(var(--primary) / 0.55); }
+/* Selected filter chips / segmented controls across the app */
+main [aria-pressed="true"], main [data-state="on"], main button.bg-primary\/15 { box-shadow: 0 0 0 1px hsl(var(--primary) / 0.22), 0 0 12px -5px hsl(var(--primary) / 0.4); }
+main button[class*="focus-visible"]:focus-visible { box-shadow: 0 0 0 3px hsl(var(--primary) / 0.25); }
+
+/* Compact consent panel, above mobile navigation; no animated backdrop. */
+.tn-cookie-banner {
+  width: min(640px, calc(100% - 2rem));
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  max-height: calc(100dvh - 2rem);
+  overflow-y: auto;
+  background-image: var(--light-ambient);
+}
+@media (max-width: 639px) {
+  .tn-cookie-banner {
+    width: 100%;
+    bottom: 0;
+    border-radius: 8px 8px 0 0;
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+}

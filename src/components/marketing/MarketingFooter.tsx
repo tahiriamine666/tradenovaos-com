@@ -2,14 +2,15 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Twitter, Instagram, ArrowRight } from 'lucide-react';
 import BrandLogo from '@/components/BrandLogo';
+import { CookieSettingsButton } from '@/components/CookieConsent';
 
 const COLS: { title: string; links: { label: string; to: string; external?: boolean }[] }[] = [
   {
     title: 'Platform',
     links: [
       { label: 'Log In', to: '/login' },
-      { label: 'Features', to: '/#features' },
-      { label: 'Solutions', to: '/solutions/forex' },
+      { label: 'Trade Journal', to: '/features/trade-journal' },
+      { label: 'Trade Plan', to: '/features/playbook-lab' },
       { label: 'Pricing', to: '/pricing' },
       { label: 'Supported Brokers', to: '/supported-brokers' },
       { label: 'Start Free', to: '/signup' },
@@ -30,16 +31,17 @@ const COLS: { title: string; links: { label: string; to: string; external?: bool
     links: [
       { label: 'Contact Us', to: '/contact' },
       { label: 'Careers', to: '/careers' },
-      { label: 'Blog', to: '/blog' },
+      { label: 'Blog', to: '/resources/blog' },
       { label: 'Privacy Policy', to: '/privacy' },
+      { label: 'Cookie Policy', to: '/cookies' },
       { label: 'Terms & Conditions', to: '/terms' },
     ],
   },
 ];
 
 const SOCIAL = [
-  { label: 'X / Twitter', Icon: Twitter, href: 'https://twitter.com' },
-  { label: 'Instagram', Icon: Instagram, href: 'https://www.instagram.com/tradenova_app/' },
+  { label: 'TradeNova on X', Icon: Twitter, href: 'https://x.com/tradenova1mw' },
+  { label: 'TradeNova on Instagram', Icon: Instagram, href: 'https://www.instagram.com/tradenovaos1/' },
 ];
 
 export default function MarketingFooter() {
@@ -48,23 +50,23 @@ export default function MarketingFooter() {
     <footer className="relative bg-background text-foreground overflow-hidden">
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary/10 rounded-full blur-[120px]" />
-        <div className="absolute bottom-0 right-0 w-[400px] h-[300px] bg-cyan-500/5 rounded-full blur-[100px]" />
+        <div className="absolute bottom-0 right-0 w-[400px] h-[300px] bg-primary/5 rounded-full blur-[100px]" />
       </div>
 
       {/* CTA banner */}
       <div className="relative max-w-7xl mx-auto px-5 sm:px-8 pt-20">
-        <div className="rounded-lg border border-border bg-gradient-to-br from-primary/15 via-white/[0.02] to-cyan-500/10 p-10 sm:p-14 flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div className="rounded-lg border border-border bg-gradient-to-br from-primary/15 via-white/[0.02] to-primary/10 p-10 sm:p-14 flex flex-col sm:flex-row items-center justify-between gap-6">
           <div>
             <h3 className="text-2xl sm:text-3xl font-black tracking-tight">
-              Start building your <span className="bg-gradient-to-r from-primary to-cyan-300 bg-clip-text text-transparent">trading edge today.</span>
+              Start documenting your <span className="text-primary">trading decisions.</span>
             </h3>
-            <p className="text-muted-foreground text-sm mt-2">Free forever plan · No credit card required</p>
+            <p className="text-muted-foreground text-sm mt-2">14-day trial · Payment method required</p>
           </div>
           <button
             onClick={() => nav('/signup')}
-            className="group inline-flex items-center gap-2.5 bg-primary hover:bg-primary text-white px-7 py-3.5 rounded-md font-black text-sm transition-all hover:shadow-2xl hover:shadow-primary/30 hover:-translate-y-0.5 whitespace-nowrap"
+            className="group inline-flex items-center gap-2.5 bg-primary hover:bg-primary text-foreground px-7 py-3.5 rounded-md font-black text-sm transition-all hover:shadow-2xl hover:shadow-primary/30 hover:-translate-y-0.5 whitespace-nowrap"
           >
-            Start Free <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            Start Trial <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
       </div>
@@ -104,7 +106,7 @@ export default function MarketingFooter() {
             <ul className="flex items-center gap-3">
               {SOCIAL.map(s => (
                 <li key={s.label}>
-                  <a href={s.href} target="_blank" rel="noreferrer noopener" aria-label={s.label}
+                  <a href={s.href} target="_blank" rel="noopener noreferrer" aria-label={s.label}
                     className="group flex items-center justify-center w-10 h-10 rounded-md bg-muted border border-border text-muted-foreground hover:bg-primary/15 hover:border-primary/30 hover:text-primary transition-colors">
                     <s.Icon className="h-4 w-4" />
                   </a>
@@ -118,6 +120,7 @@ export default function MarketingFooter() {
       <div className="relative border-t border-border">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground/80">
           <p>© {new Date().getFullYear()} TradeNova. All rights reserved.</p>
+          <CookieSettingsButton className="min-h-11 text-xs text-muted-foreground" />
           <a href="https://tradenovaos.com" target="_blank" rel="noreferrer noopener"
             className="hover:text-primary transition-colors">tradenovaos.com</a>
         </div>

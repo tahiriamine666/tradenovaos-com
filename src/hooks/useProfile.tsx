@@ -24,7 +24,6 @@ export interface UserProfile {
   default_account_type: string;
   trading_style:       string;
   bio:                 string | null;
-  stripe_customer_id:  string | null;
   is_admin:            boolean;
 }
 
@@ -51,7 +50,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const refresh = useCallback(async () => {
-    if (!user) { setLoading(false); return; }
+    if (!user) { setProfile(null); setLoading(false); return; }
     setLoading(true);
 
     // Single RPC call — returns profile + is_admin
@@ -66,12 +65,18 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         .select('*')
         .eq('id', user.id)
         .single();
-      if (p) setProfile({ ...p, is_admin: false, stripe_customer_id: null } as unknown as UserProfile);
+      if (p) setProfile({ ...p, is_admin: false } as unknown as UserProfile);
     }
     setLoading(false);
   }, [user]);
 
   useEffect(() => { refresh(); }, [refresh]);
+
+  useEffect(() => {
+    const h = (e: Event) => setProfile(p => p ? { ...p, ...(e as CustomEvent).detail } : p);
+    window.addEventListener('tradenova:profile-updated', h);
+    return () => window.removeEventListener('tradenova:profile-updated', h);
+  }, []);
 
   const updateAvatar = useCallback((url: string) => {
     setProfile(p => p ? { ...p, avatar_url: url } : p);

@@ -304,7 +304,7 @@ export function DashboardFilters({
           {activeCount > 0 && (
             <button
               onClick={reset}
-              className="w-full py-1.5 text-xs text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+              className="w-full py-1.5 text-xs text-muted-foreground hover:bg-muted/10 rounded-lg transition-colors"
             >
               Clear all filters
             </button>

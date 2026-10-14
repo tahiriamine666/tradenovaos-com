@@ -1,6 +1,8 @@
 // Economic Calendar shared types
 
 export type ImpactLevel = "low" | "medium" | "high";
+/** Filter-only bucket: holidays are stored as low impact but filtered separately. */
+export type FilterImpact = ImpactLevel | "holiday";
 
 export type EventCategory =
   | "Inflation"
@@ -51,7 +53,7 @@ export interface DateRangeSpec {
 export interface EventFilters {
   range: DateRangeSpec;
   currencies: string[];
-  impacts: ImpactLevel[];
+  impacts: FilterImpact[];
   categories: string[];
   countries: string[];
   search: string;

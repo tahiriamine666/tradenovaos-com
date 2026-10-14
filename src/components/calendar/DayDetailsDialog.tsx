@@ -21,7 +21,7 @@ async function sign(path: string | null) {
   return data?.signedUrl ?? null;
 }
 
-type DayData = { trades: any[]; journal: any | null; plan: any | null; daily: any | null; weekly: any | null; shots: Record<string, { before: string | null; after: string | null }> };
+type DayData = { trades: any[]; journal: any | null; plan: any | null; plans: any[]; daily: any | null; weekly: any | null; shots: Record<string, { before: string | null; after: string | null }> };
 
 function Rows({ items }: { items: [string, unknown][] }) {
   const shown = items.filter(([, v]) => has(v));
@@ -55,6 +55,7 @@ export default function DayDetailsDialog({ date, onClose, onDateChange }: { date
   const { activeAccountId } = useActiveAccount();
   const { openEdit } = useTradeDialog();
   const [data, setData] = useState<DayData | null>(null);
+  const [planPair, setPlanPair] = useState('EURUSD');
   const [loading, setLoading] = useState(false);
   const cache = useRef(new Map<string, DayData>());
   const reqId = useRef(0);
@@ -63,7 +64,7 @@ export default function DayDetailsDialog({ date, onClose, onDateChange }: { date
 
   const load = useCallback(async (force = false) => {
     if (!user || !date) return;
-    const ck = `${accountKey}|${key}`;
+    const ck = `${user.id}|${accountKey}|${key}`;
     const id = ++reqId.current;
     const cached = cache.current.get(ck);
     if (!force && cached) { setData(cached); setLoading(false); return; }
@@ -71,20 +72,20 @@ export default function DayDetailsDialog({ date, onClose, onDateChange }: { date
     let tq = supabase.from('trades').select('*').eq('user_id', user.id).eq('trade_date', key).order('created_at');
     if (activeAccountId) tq = tq.eq('trading_account_id', activeAccountId);
     const ckq = (type: string, period: string) => supabase.from('trade_plan_checklists').select('data,status')
-      .eq('user_id', user.id).eq('account_key', accountKey).eq('checklist_type', type).eq('period_date', period).maybeSingle();
+      .eq('user_id', user.id).eq('account_key', accountKey).eq('checklist_type', type).eq('pair', '').eq('period_date', period).maybeSingle();
     const [t, j, p, d, w] = await Promise.all([
       tq,
       supabase.from('journal_entries').select('*').eq('user_id', user.id).eq('entry_date', key).limit(1).maybeSingle(),
-      supabase.from('trade_plans').select('*').eq('user_id', user.id).eq('plan_date', key).limit(1).maybeSingle(),
+      supabase.from('trade_plans').select('*').eq('user_id', user.id).eq('account_key', accountKey).eq('plan_date', key).order('pair'),
       ckq('daily', key), ckq('weekly', weekStartKey(date)),
     ]);
     const trades = t.data ?? [];
     const shots: DayData['shots'] = {};
     await Promise.all(trades.map(async (tr: any) => { shots[tr.id] = { before: await sign(tr.before_screenshot_url), after: await sign(tr.screenshot_url) }; }));
     if (id !== reqId.current) return;
-    const result: DayData = { trades, journal: j.data, plan: p.data, daily: d.data?.data ?? null, weekly: w.data?.data ?? null, shots };
+    const result: DayData = { trades, journal: activeAccountId ? null : j.data, plan: null, plans: p.data ?? [], daily: d.data?.data ?? null, weekly: w.data?.data ?? null, shots };
     cache.current.set(ck, result);
-    setData(result); setLoading(false);
+    setData(result); setPlanPair(prev => result.plans.some(p => p.pair === prev) ? prev : result.plans[0]?.pair || 'EURUSD'); setLoading(false);
   }, [user, key, accountKey, activeAccountId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { load(); }, [load]);
@@ -101,7 +102,8 @@ export default function DayDetailsDialog({ date, onClose, onDateChange }: { date
   const longs = trades.filter(t => /long|buy/i.test(t.side ?? '')).length;
   const shorts = trades.filter(t => /short|sell/i.test(t.side ?? '')).length;
   const mainDir = !trades.length ? null : longs > shorts ? 'Long' : shorts > longs ? 'Short' : 'Mixed';
-  const j = data?.journal; const plan = data?.plan; const daily = data?.daily; const weekly = data?.weekly;
+  const j = data?.journal; const plan = data?.plans.find(p => p.pair === planPair); const daily = data?.daily; const weekly = data?.weekly;
+  const v2 = plan?.ai_analysis?.daily_v2;
   const scenario = plan?.ai_analysis?.framework?.scenario;
   const hasScenario = scenario && (scenario.enabled || ['market', 'setup', 'confirmation', 'trigger', 'invalidation'].some(k => has(scenario[k])));
   const checklist: any[] = Array.isArray(plan?.checklist) ? plan.checklist : [];
@@ -229,13 +231,19 @@ export default function DayDetailsDialog({ date, onClose, onDateChange }: { date
               </Section>
             )}
 
+            {!!data?.plans.length && <label className="flex items-center gap-3 text-xs text-muted-foreground">Daily plan pair<select aria-label="Daily plan pair" className="rounded-md border border-border bg-background px-3 py-2 text-foreground" value={planPair} onChange={e => setPlanPair(e.target.value)}>{data.plans.map(p => <option key={p.id} value={p.pair}>{p.pair || 'Legacy unassigned'}</option>)}</select></label>}
             {plan && (
-              <Section icon={Target} title="Trade Plan" action={<Button size="sm" variant="ghost" onClick={() => go('plan')}><Pencil className="h-3.5 w-3.5" />Edit Trade Plan</Button>}>
-                <Rows items={[
+              <Section icon={Target} title={`Daily Plan — ${plan.pair || "Legacy"}`} action={<Button size="sm" variant="ghost" onClick={() => go('plan')}><Pencil className="h-3.5 w-3.5" />Edit Trade Plan</Button>}>
+                {v2 ? <Rows items={[
+                  ['Market Bias', v2.bias], ['Price Location', v2.price === 'Custom' ? v2.priceCustom : v2.price],
+                  ['Scenario', v2.scenario], ['Main Idea', v2.mainIdea], ['News', (v2.news || []).map((n: any) => Object.values(n).filter(Boolean).join(' · '))],
+                  ['Risk %', v2.risk?.riskPct], ['Max Daily Loss', v2.risk?.maxLoss], ['Max Trades', v2.risk?.maxTrades], ['R:R Target', v2.risk?.rr],
+                  ['Psychology', v2.psychology], ['Psychology Notes', v2.psychNotes], ['Rules', v2.rules],
+                ]} /> : <Rows items={[
                   ['Market Bias', plan.market_bias], ['Main Setup', plan.setups_to_trade], ['Secondary Setup', plan.secondary_setup],
                   ['Session', plan.session], ['Volatility', plan.volatility], ['Confidence', plan.confidence != null ? `${plan.confidence}%` : null],
                   ['Focus', plan.focus], ['Max Daily Loss', plan.max_daily_loss], ['Max Risk / Trade', plan.max_risk_per_trade], ['Notes', plan.notes],
-                ]} />
+                ]} />}
                 {checklist.length > 0 && (
                   <div className="space-y-1 pt-1">
                     <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Execution Checklist</div>

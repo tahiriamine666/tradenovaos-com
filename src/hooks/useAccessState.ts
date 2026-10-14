@@ -19,22 +19,33 @@ export function useAccessState() {
   const { user, loading: authLoading } = useAuth();
   const [state, setState] = useState<AccessState | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
-    if (!user) { setState(null); setLoading(false); return null; }
+    if (!user) { setState(null); setLoading(false); setError(null); return null; }
+    setError(null);
+    try {
     const { data, error } = await (supabase.rpc as any)("get_access_state");
-    if (error) console.warn("get_access_state failed", error);
+    if (error) throw error;
     const s = (data ?? null) as AccessState | null;
     setState(s);
     setLoading(false);
     return s;
+    } catch {
+      setError('Access verification is temporarily unavailable.');
+      setLoading(false);
+      return null;
+    }
   }, [user]);
 
+  // Only show the blocking loader for the first check per user; background re-checks keep the page mounted.
+  const userId = user?.id;
   useEffect(() => {
     if (authLoading) return;
-    setLoading(true);
+    setState((prev) => { if (!prev) setLoading(true); return prev; });
     refresh();
-  }, [authLoading, refresh]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, userId]);
 
-  return { state, loading: loading || authLoading, refresh };
+  return { state, loading: loading || authLoading, error, refresh };
 }

@@ -32,7 +32,7 @@ export async function openCustomerPortal(): Promise<void> {
   if (error) throw new Error(error.message ?? "Could not open billing portal");
   const url = (data as any)?.url as string | undefined;
   if (!url) throw new Error("Portal URL not available yet");
-  window.open(url, "_blank", "noopener,noreferrer");
+  window.location.assign(url);
 }
 
 export async function syncSubscription(): Promise<void> {

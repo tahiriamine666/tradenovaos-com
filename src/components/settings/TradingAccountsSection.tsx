@@ -26,6 +26,7 @@ import {
   CheckCircle2, XCircle, CircleDashed, ArrowLeft, RefreshCw, Search, ShieldCheck,
 } from 'lucide-react';
 import type { TradingAccountRecord } from '@/lib/platforms/types';
+import { readFunctionResult, friendlyConnectError } from '@/lib/platforms/functionResult';
 import ConnectionDiagnostics, { initialSteps, mergeSteps, type DiagStep } from './ConnectionDiagnostics';
 import {
   providersFor, suggestServers, findProvider, formatAccountSize,
@@ -46,11 +47,11 @@ const money = (v: number | null | undefined, currency?: string | null) =>
 
 function StatusPill({ status }: { status: Status }) {
   const map: Record<Status, { label: string; icon: React.ElementType; cls: string }> = {
-    connected:    { label: 'Connected',    icon: CheckCircle2, cls: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
+    connected:    { label: 'Connected',    icon: CheckCircle2, cls: 'bg-primary/10 text-primary border-primary/20' },
     pending:      { label: 'Pending',      icon: CircleDashed, cls: 'bg-muted text-muted-foreground border-border' },
     connecting:   { label: 'Connecting',   icon: RefreshCw,    cls: 'bg-primary/10 text-primary border-primary/20' },
     disconnected: { label: 'Disconnected', icon: CircleDashed, cls: 'bg-muted text-muted-foreground border-border' },
-    error:        { label: 'Error',        icon: XCircle,      cls: 'bg-red-500/10 text-red-500 border-red-500/20' },
+    error:        { label: 'Error',        icon: XCircle,      cls: 'bg-muted/10 text-muted-foreground border-border/20' },
   };
   const { label, icon: Icon, cls } = map[status] ?? map.disconnected;
   return (
@@ -185,7 +186,7 @@ export default function TradingAccountsSection() {
       account_type: accountType,
       platform,
       firm: accountType === 'prop_firm' ? firmName : null,
-      broker: accountType === 'broker' ? firmName : firmName,
+      broker: accountType === 'broker' ? firmName : null,
       server: server.trim(),
       account_number: login.trim(),
       login: login.trim(),
@@ -197,9 +198,6 @@ export default function TradingAccountsSection() {
       payload.credentials = { password: password.trim() };
       payload.metaapi_account_id = null; // re-provision when credentials change
     }
-
-    console.log('Creating account:', { ...payload, password: payload.password ? '***' : undefined, credentials: undefined });
-    console.log('Status being inserted:', payload.status);
 
     const { data: saved, error } = editing
       ? await supabase.from('trading_accounts').update(payload as never).eq('id', editing.id).select().single()
@@ -235,8 +233,8 @@ export default function TradingAccountsSection() {
     });
     setSyncingId(null);
 
-    const diagRes = (res ?? {}) as { steps?: DiagStep[]; error?: string; status?: string };
-    const failure = diagRes.error ?? fnErr?.message ?? null;
+    const diagRes = await readFunctionResult<{ steps?: DiagStep[]; status?: string }>(res, fnErr);
+    const failure = friendlyConnectError(diagRes.error ?? (fnErr ? 'Connection failed' : null));
     setDiagSteps(mergeSteps(diagRes.steps, true, failure ?? undefined));
 
     setDiagError(failure);
@@ -397,7 +395,7 @@ export default function TradingAccountsSection() {
                       </div>
                       <div className="rounded-lg bg-muted/50 py-2">
                         <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Profit</p>
-                        <p className={`text-sm font-semibold ${(profitPct ?? 0) >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                        <p className={`text-sm font-semibold ${(profitPct ?? 0) >= 0 ? 'text-primary' : 'text-muted-foreground'}`}>
                           {profitPct == null ? '—' : `${profitPct >= 0 ? '+' : ''}${profitPct}%`}
                         </p>
                       </div>
@@ -421,7 +419,7 @@ export default function TradingAccountsSection() {
                     <div className="flex items-center justify-between gap-2">
                       <p className="text-[10px] text-muted-foreground">
                         {a.sync_error
-                          ? <span className="text-red-500">{a.sync_error}</span>
+                          ? <span className="text-muted-foreground">{a.sync_error}</span>
                           : a.last_synced_at
                             ? `Synced ${new Date(a.last_synced_at).toLocaleString()} · ${met.trades ?? 0} trades`
                             : 'Never synced'}
@@ -444,7 +442,7 @@ export default function TradingAccountsSection() {
                         <Button
                           size="icon" variant="ghost" title="Delete"
                           onClick={() => setDeleteTarget(a)}
-                          className="text-red-500 hover:text-red-500 hover:bg-red-500/10"
+                          className="text-muted-foreground hover:text-muted-foreground hover:bg-muted/10"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -458,7 +456,7 @@ export default function TradingAccountsSection() {
 
           {!isElite && accounts.length >= limit && (
             <p className="text-xs text-muted-foreground text-center pt-1">
-              You've reached your plan limit. Upgrade to {isPro ? 'Elite for unlimited accounts' : 'Pro for up to 3 accounts'}.
+              You've reached your plan limit. Upgrade to Elite for unlimited accounts.
             </p>
           )}
         </CardContent>
@@ -664,7 +662,7 @@ export default function TradingAccountsSection() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-red-500 hover:bg-red-500/90">
+            <AlertDialogAction onClick={handleDelete} className="bg-muted hover:bg-muted/90">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

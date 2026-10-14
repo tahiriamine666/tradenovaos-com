@@ -54,10 +54,10 @@ export function mergeSteps(server: DiagStep[] | undefined, done: boolean, failur
 }
 
 function Icon({ status }: { status: StepStatus }) {
-  if (status === 'ok') return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
-  if (status === 'error') return <XCircle className="h-4 w-4 text-red-500" />;
+  if (status === 'ok') return <CheckCircle2 className="h-4 w-4 text-primary" />;
+  if (status === 'error') return <XCircle className="h-4 w-4 text-muted-foreground" />;
   if (status === 'running') return <Loader2 className="h-4 w-4 text-primary animate-spin" />;
-  if (status === 'pending') return <Clock className="h-4 w-4 text-amber-500" />;
+  if (status === 'pending') return <Clock className="h-4 w-4 text-muted-foreground" />;
   return <CircleDashed className="h-4 w-4 text-muted-foreground/40" />;
 }
 
@@ -86,20 +86,20 @@ export default function ConnectionDiagnostics({
             <li key={s.id} className="flex items-start gap-2.5">
               <span className="mt-0.5"><Icon status={s.status} /></span>
               <div className="min-w-0">
-                <p className={`text-sm ${s.status === 'error' ? 'text-red-500' : s.status === 'ok' ? 'text-foreground' : 'text-muted-foreground'}`}>
+                <p className={`text-sm ${s.status === 'error' ? 'text-muted-foreground' : s.status === 'ok' ? 'text-foreground' : 'text-muted-foreground'}`}>
                   {s.label}
                 </p>
                 {s.detail && <p className="text-[11px] text-muted-foreground break-words">{s.detail}</p>}
-                {s.error && <p className="text-[11px] text-red-500 break-words">{s.error}</p>}
+                {s.error && <p className="text-[11px] text-muted-foreground break-words">{s.error}</p>}
               </div>
             </li>
           ))}
         </ul>
 
         {error && (
-          <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-3">
-            <p className="text-xs font-medium text-red-500">Connection error</p>
-            <p className="text-[11px] text-red-500/90 mt-0.5 break-words">{error}</p>
+          <div className="rounded-lg border border-border/30 bg-muted/5 p-3">
+            <p className="text-xs font-medium text-muted-foreground">Connection error</p>
+            <p className="text-[11px] text-muted-foreground/90 mt-0.5 break-words">{error}</p>
           </div>
         )}
 

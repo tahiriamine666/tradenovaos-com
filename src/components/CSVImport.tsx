@@ -376,13 +376,13 @@ export default function CSVImport({ onImportComplete }: { onImportComplete?: () 
             <Card className="border-0 shadow-sm">
               <CardContent className="p-4 text-center">
                 <p className="text-xs text-muted-foreground mb-1">Ready to Import</p>
-                <p className="text-2xl font-bold font-heading text-emerald-500">{validRows.length}</p>
+                <p className="text-2xl font-bold font-heading text-primary">{validRows.length}</p>
               </CardContent>
             </Card>
             <Card className="border-0 shadow-sm">
               <CardContent className="p-4 text-center">
                 <p className="text-xs text-muted-foreground mb-1">Errors</p>
-                <p className="text-2xl font-bold font-heading text-red-500">{invalidRows.length}</p>
+                <p className="text-2xl font-bold font-heading text-muted-foreground">{invalidRows.length}</p>
               </CardContent>
             </Card>
           </div>
@@ -392,7 +392,7 @@ export default function CSVImport({ onImportComplete }: { onImportComplete?: () 
             <Card className="border-0 shadow-sm">
               <CardHeader className="pb-3">
                 <CardTitle className="font-heading text-sm flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                  <CheckCircle2 className="h-4 w-4 text-primary" />
                   Valid rows preview (first 5)
                 </CardTitle>
               </CardHeader>
@@ -417,7 +417,7 @@ export default function CSVImport({ onImportComplete }: { onImportComplete?: () 
                               : <span className="text-muted-foreground">—</span>
                             }
                           </td>
-                          <td className={`py-2 px-3 font-semibold ${(row.mapped?.result ?? 0) >= 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                          <td className={`py-2 px-3 font-semibold ${(row.mapped?.result ?? 0) >= 0 ? 'text-primary' : 'text-muted-foreground'}`}>
                             {(row.mapped?.result ?? 0) >= 0 ? '+' : ''}${row.mapped?.result}
                           </td>
                           <td className="py-2 px-3 text-muted-foreground">{row.mapped?.trade_date}</td>
@@ -436,14 +436,14 @@ export default function CSVImport({ onImportComplete }: { onImportComplete?: () 
 
           {/* Invalid rows */}
           {invalidRows.length > 0 && (
-            <Card className="border-0 shadow-sm border-l-4 border-l-amber-500">
+            <Card className="border-0 shadow-sm border-l-4 border-l-primary">
               <CardHeader className="pb-2">
                 <button
                   onClick={() => setShowInvalid(v => !v)}
                   className="flex items-center justify-between w-full text-left"
                 >
                   <CardTitle className="font-heading text-sm flex items-center gap-2">
-                    <AlertTriangle className="h-4 w-4 text-amber-500" />
+                    <AlertTriangle className="h-4 w-4 text-muted-foreground" />
                     {invalidRows.length} rows will be skipped
                   </CardTitle>
                   {showInvalid ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
@@ -454,7 +454,7 @@ export default function CSVImport({ onImportComplete }: { onImportComplete?: () 
                   <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
                     <CardContent className="pt-0 space-y-2">
                       {invalidRows.map(row => (
-                        <div key={row.index} className="text-xs rounded-lg bg-amber-500/5 border border-amber-500/20 p-3">
+                        <div key={row.index} className="text-xs rounded-lg bg-muted/5 border border-border/20 p-3">
                           <span className="font-medium text-foreground">Row #{row.index}:</span>
                           <span className="text-muted-foreground ml-1">{row.errors.join(' · ')}</span>
                         </div>
@@ -507,8 +507,8 @@ export default function CSVImport({ onImportComplete }: { onImportComplete?: () 
         <Card className="border-0 shadow-sm">
           <CardContent className="py-10 text-center space-y-4">
             {result.imported > 0
-              ? <CheckCircle2 className="h-12 w-12 text-emerald-500 mx-auto" />
-              : <XCircle className="h-12 w-12 text-red-500 mx-auto" />
+              ? <CheckCircle2 className="h-12 w-12 text-primary mx-auto" />
+              : <XCircle className="h-12 w-12 text-muted-foreground mx-auto" />
             }
             <div>
               <p className="font-heading font-bold text-foreground text-xl">
@@ -522,7 +522,7 @@ export default function CSVImport({ onImportComplete }: { onImportComplete?: () 
             {result.errors.length > 0 && (
               <div className="text-left max-w-sm mx-auto space-y-1">
                 {result.errors.slice(0, 3).map((e, i) => (
-                  <p key={i} className="text-xs text-red-500">Row #{e.row}: {e.reason}</p>
+                  <p key={i} className="text-xs text-muted-foreground">Row #{e.row}: {e.reason}</p>
                 ))}
               </div>
             )}

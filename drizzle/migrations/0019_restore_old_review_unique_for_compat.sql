@@ -1,0 +1,2 @@
+ALTER TABLE public.trading_reviews ADD CONSTRAINT trading_reviews_user_id_account_key_period_type_period_star_key UNIQUE (user_id, account_key, period_type, period_start);
+COMMENT ON CONSTRAINT trading_reviews_user_id_account_key_period_type_period_star_key ON public.trading_reviews IS 'TEMPORARY compatibility for the published upsert; drop after the five-column identity code is published';

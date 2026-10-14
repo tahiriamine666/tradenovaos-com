@@ -2,11 +2,11 @@ import { useNavigate } from 'react-router-dom';
 import { Check, ChevronLeft, Minus } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePlan } from '@/hooks/usePlan';
-import { openCustomerPortal } from '@/lib/dodo';
 import { Button } from '@/components/ui/button';
 import BrandLogo from '@/components/BrandLogo';
 import robotAsset from '@/assets/tradenova-robot-full.jpg.asset.json';
 import { cn } from '@/lib/utils';
+import { monthlyPlanAmount, monthlyPlanPrice } from '@/lib/pricing';
 
 type PlanId = 'pro' | 'elite';
 
@@ -19,11 +19,11 @@ const CORE = [
 
 const PLANS: Record<PlanId, { name: string; tagline: string; price: number; badge?: string; summary: string[] }> = {
   pro: {
-    name: 'Pro', price: 14, tagline: 'For serious traders building consistency.',
+    name: 'Pro', price: monthlyPlanAmount('pro'), tagline: 'For serious traders building consistency.',
     summary: ['The complete core TradeNova experience', '1 connected trading account (MT4 / MT5 sync)', 'NOVA AI — 500 credits / month', ...CORE.slice(0, 6)],
   },
   elite: {
-    name: 'Elite', price: 28, badge: 'MOST POWERFUL', tagline: 'For traders managing more accounts.',
+    name: 'Elite', price: monthlyPlanAmount('elite'), badge: 'MOST POWERFUL', tagline: 'For traders managing more accounts.',
     summary: ['Everything in Pro', 'Unlimited connected trading accounts', 'NOVA AI — 1,000 credits / month', 'Priority support'],
   },
 };
@@ -51,7 +51,7 @@ export default function Pricing() {
 
   const cta = (plan: PlanId) => {
     if (!user) return navigate('/signup');
-    if (isPro || isElite) return openCustomerPortal().catch(() => navigate('/billing'));
+    if (isPro || isElite) return navigate('/billing');
     navigate('/onboarding?step=plan');
   };
   const label = (plan: PlanId) =>
@@ -92,7 +92,7 @@ export default function Pricing() {
               {p.badge && <span className="absolute -top-3 left-7 rounded-full border border-primary/40 bg-background px-3 py-0.5 text-[10px] font-semibold tracking-[0.15em] text-primary">{p.badge}</span>}
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">{p.name}</p>
               <p className="mt-1 text-sm text-muted-foreground">{p.tagline}</p>
-              <p className="mt-5 text-5xl font-bold">${p.price}<span className="text-base font-normal text-muted-foreground"> / month</span></p>
+              <p className="mt-5 text-5xl font-bold">{monthlyPlanPrice(id)}<span className="text-base font-normal text-muted-foreground"> / month</span></p>
               <p className="mt-1 text-xs text-primary">14 days free · Cancel anytime</p>
               <Button className="mt-6" variant={id === 'elite' ? 'default' : 'outline'} disabled={current} onClick={() => cta(id)}>{label(id)}</Button>
               <ul className="mt-6 space-y-2.5 text-sm">

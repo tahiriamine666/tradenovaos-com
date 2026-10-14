@@ -8,19 +8,22 @@ interface SeoHeadProps {
   path: string; // e.g. "/pricing"
   type?: "website" | "article";
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  /** Keep the page out of search results (thin or placeholder pages). */
+  noindex?: boolean;
 }
 
 /**
  * Per-route head metadata. Overrides the sitewide defaults from index.html
  * for title / description / canonical / og:* and emits optional JSON-LD.
  */
-export default function SeoHead({ title, description, path, type = "website", jsonLd }: SeoHeadProps) {
+export default function SeoHead({ title, description, path, type = "website", jsonLd, noindex = false }: SeoHeadProps) {
   const url = `${SITE}${path}`;
   const ldArray = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
   return (
     <Helmet>
       <title>{title}</title>
       <meta name="description" content={description} />
+      {noindex && <meta name="robots" content="noindex, follow" />}
       <link rel="canonical" href={url} />
       <meta property="og:type" content={type} />
       <meta property="og:title" content={title} />

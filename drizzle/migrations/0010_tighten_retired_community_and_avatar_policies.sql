@@ -1,0 +1,10 @@
+DROP POLICY IF EXISTS "community_follows_select_all" ON public.community_follows;
+CREATE POLICY "community_follows_select_own" ON public.community_follows FOR SELECT TO authenticated USING (auth.uid() = follower_id OR auth.uid() = following_id);
+DROP POLICY IF EXISTS "community_profiles_select_all_auth" ON public.community_profiles;
+CREATE POLICY "community_profiles_select_own" ON public.community_profiles FOR SELECT TO authenticated USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "community_likes_select_all" ON public.community_likes;
+CREATE POLICY "community_likes_select_own" ON public.community_likes FOR SELECT TO authenticated USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "learning_categories public read" ON public.learning_categories;
+CREATE POLICY "learning_categories admin read" ON public.learning_categories FOR SELECT TO authenticated USING (public.is_admin(auth.uid()));
+DROP POLICY IF EXISTS "Avatar images are publicly readable" ON storage.objects;
+CREATE POLICY "Users can view own avatar files" ON storage.objects FOR SELECT TO authenticated USING (bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::text);
