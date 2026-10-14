@@ -1,5 +1,23 @@
 # PR #9 release readiness — 14 October 2026
 
+## Final lint and validation follow-up
+
+This section supersedes the historical phase report below, including its old lint counts and local-fetch limitation.
+
+- All 173 remaining ESLint errors were `@typescript-eslint/no-explicit-any`. They are resolved using generated database row/insert types, explicit provider payloads, typed test doubles, generic form setters, JSON boundaries, and unknown-error narrowing. No lint rule/configuration was relaxed and no suppression was added. Local final lint: **0 errors / 60 existing warnings**.
+- TypeScript application and Node/Vite configuration checks pass locally. CI now checks both configurations.
+- [Linux validation run 38602268246](https://github.com/tahiriamine666/tradenovaos-com/actions/runs/38602268246), for code commit `7960fe4a2f5058d601f45236da8373d7444ae662`: **112 frontend tests / 18 files, 34 backend tests and production build passed** (11.34 seconds). Its one remaining lint error was a missed SupportChat catch annotation in the upload; the follow-up includes that already locally verified fix. Consult the PR's latest check run for the subsequent combined commit.
+- Added three tests for provider/Error messages, malformed thrown values and empty messages. All existing assertions are retained. The checkout pricing harness now supports CRLF as well as LF imports; all 34 backend tests also pass locally after installing their isolated dependencies (zero audit findings).
+- Local frontend tests/build remain blocked by Windows `EPERM` in Vite realpath resolution. Linux CI supplies the successful execution evidence; no production configuration was changed to evade that restriction.
+- Refreshed dependency audit: **0 critical / 5 high / 11 moderate**. No safe patched release exists for the remaining high braces chain. The audit gate remains failing; no exception or audit suppression is implemented. See the final addendum in dependency-security-review.md.
+- Fetch succeeds. Remote main remains `b093ba134f14434ccbe893bbe1d5792bea474224`; lovable-sync remains `20e060df9ccff3cbdc8cb6c33b8a503c93a43a3c`. Updates are fast-forward commits on the existing PR branch, preserving both ancestries.
+- Runtime diff review: most edits erase as types. Runtime differences are defensive error-message/message-input narrowing, equivalent numeric CSV comparison, a local AI-review alias, and Supabase's return-this `overrideTypes()` calls. Hooks, dependencies, query filters, saves, billing mutations, quotas and auth flow are retained.
+- No production schema/migration/function deployment, merge, publish or Lovable AI call occurred. A build-generated local sitemap change is excluded from the PR follow-up.
+
+**Decision remains NOT READY TO MERGE:** the dependency security gate is unresolved. Existing release-level live-auth/mobile/RLS and multi-connection quota verification limitations below also remain; unit-test success does not certify those production flows.
+
+## Historical security phase report
+
 **Decision: NOT READY TO MERGE.** No merge, publish, Edge Function deployment, production migration, live data mutation or Lovable AI credits were used.
 
 ## Verified source and history

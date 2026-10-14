@@ -1,5 +1,26 @@
 # Dependency security review — PR #9
 
+## Final recheck, 14 October 2026
+
+The refreshed full audit still reports **0 critical, 5 high, 11 moderate**. Current installed high-chain versions and registry checks are braces **3.0.3**, micromatch **4.0.8**, fast-glob **3.3.3**, chokidar **3.6.0** (latest compatible 3.x), and Tailwind **3.4.19**. Exact paths are:
+
+- tailwindcss → chokidar → braces
+- tailwindcss → micromatch → braces
+- tailwindcss → fast-glob → micromatch → braces
+- lovable-tagger → tailwindcss, plus Tailwind peer consumers @tailwindcss/typography and tailwindcss-animate.
+
+The [upstream braces advisory](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm) explicitly lists **no patched version**. The five high entries are propagation of this one recursive stack-exhaustion advisory, not five independently patched bugs. npm's proposed lovable-tagger downgrade does not eliminate the app's direct Tailwind chain. Forcing Chokidar 4 or Tailwind 4 would change APIs/build behavior and is not a compatible patch.
+
+The remaining eleven moderate package entries are @esbuild-kit/core-utils, @esbuild-kit/esm-loader, drizzle-kit, esbuild, @tailwindcss/typography, lovable-tagger, postcss-nested, postcss-selector-parser, tailwindcss-animate, react-router and react-router-dom. Installed versions, affected ranges and paths are recorded in the baseline sections below; Vite's old esbuild node has since been removed, leaving only core-utils → esbuild 0.18.20 affected. Selector parser's latest 6.x remains 6.1.4; the patch is 7.1.6+. React Router's latest 6.x remains 6.30.6; the patch is 7.18.0+. No incompatible override, router migration or Drizzle downgrade was made. The isolated backend-test dependency audit is clean.
+
+### Reviewable exception proposal — not applied
+
+If a security owner accepts temporary build-time risk, consider an exception **only** for GHSA-vfj7-8cjw-p6xm at the exact above versions/paths, expiring **28 October 2026**, with a weekly upstream recheck, trusted checked-in glob patterns, no uploaded/untrusted build inputs, no public development server, and least-privilege isolated CI. Reject the exception if these assumptions change. This is justified only by the absence of a patched release and lack of a runtime path in the static application; developer/CI denial-of-service risk remains.
+
+Do not exempt all high/moderate findings or change audit thresholds. The moderate chains require their own documented review or compatible upstream fixes. No exception has been accepted, no check has been bypassed, and the PR remains **NOT READY TO MERGE** under its current gates.
+
+## Original audit and remediation record
+
 Baseline: 4c3df6b9b8b8e1deaaecc6a5cb2aa99c8b30bbbb. Reviewed 2026-10-14. npm reports 21 affected package entries, not 21 independent CVEs; parent packages inherit findings.
 
 ## Scope and production exposure

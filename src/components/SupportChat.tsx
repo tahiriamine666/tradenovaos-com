@@ -118,7 +118,7 @@ export default function SupportChat() {
       });
       if (error) throw error;
       setView('success');
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast({
         title: 'Could not send message',
         description: 'Please try WhatsApp or email instead.',

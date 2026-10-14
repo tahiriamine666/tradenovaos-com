@@ -6,7 +6,7 @@ import vm from 'node:vm';
 // Execute the real handler with synthetic auth/provider dependencies, never network.
 const source = readFileSync(new URL('../functions/dodo-checkout/index.ts', import.meta.url), 'utf8');
 const { stripTypeScriptTypes } = await import('node:module');
-const code = stripTypeScriptTypes(source.replace(/^import .*;\n/gm, ''), { mode: 'strip' });
+const code = stripTypeScriptTypes(source.replace(/^import .*;\r?\n/gm, ''), { mode: 'strip' });
 const ids = { pro_monthly: 'pdt_0NiAkpxz9gAN0Spuarqm5', elite_monthly: 'pdt_0NiAlZAx8DbY0elDOHsMG', pro_yearly: 'pdt_0NiAmV62ykhrW7sAAVde7', elite_yearly: 'pdt_0NiAmBjsscYee7NKrWj7J' };
 const quoteCents = { [ids.pro_monthly]: 599, [ids.elite_monthly]: 999, [ids.pro_yearly]: 7188, [ids.elite_yearly]: 11988 };
 function harness() {

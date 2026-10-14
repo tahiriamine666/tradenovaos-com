@@ -17,6 +17,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx tsc --noEmit -p tsconfig.app.json
+      - run: npx tsc --noEmit -p tsconfig.node.json
       - run: npm test
       - run: npm run build
       - name: Backend regression tests (isolated, no live database)
