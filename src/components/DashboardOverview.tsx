@@ -643,7 +643,6 @@ export default function DashboardOverview({ onNavigate, onAddTrade, calendar }: 
         Could not load your saved layout.
         <Button variant="ghost" size="sm" onClick={() => dashboard.reload()}>Retry</Button>
       </div>}
-      {editingLayout && user && <DashboardLayoutEditor key={user.id} initial={dashboard.layout} onSave={dashboard.save} onClose={() => setEditingLayout(false)} />}
       {!isEmpty && dashboard.loading && <Skeleton className="h-32 w-full" />}
 
 
@@ -739,6 +738,9 @@ export default function DashboardOverview({ onNavigate, onAddTrade, calendar }: 
             }
           />
         )
+      ) : editingLayout && user ? (
+        <DashboardLayoutEditor key={user.id} initial={dashboard.layout} onSave={dashboard.save} onClose={() => setEditingLayout(false)}
+          widgets={{ ...widgets, account: activeAccount && (activeAccount.balance != null || activeAccount.equity != null) ? widgets.account : undefined }} />
       ) : (
         !dashboard.loading && <div className="grid grid-cols-2 lg:grid-cols-12 gap-4 items-start">
           {dashboard.layout.order.filter(id => !dashboard.layout.hidden.includes(id)).map(id => {
