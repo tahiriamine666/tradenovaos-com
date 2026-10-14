@@ -2,7 +2,6 @@ import { useNavigate } from 'react-router-dom';
 import { Check, ChevronLeft, Minus } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePlan } from '@/hooks/usePlan';
-import { openCustomerPortal } from '@/lib/dodo';
 import { Button } from '@/components/ui/button';
 import BrandLogo from '@/components/BrandLogo';
 import robotAsset from '@/assets/tradenova-robot-full.jpg.asset.json';

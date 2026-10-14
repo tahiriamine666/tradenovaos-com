@@ -123,7 +123,7 @@ export default function Billing() {
             <div className="rounded-2xl border border-border bg-card p-6">
               <div className="flex items-start justify-between gap-4 flex-wrap">
                 <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${effectivePlan && effectivePlan !== 'free' ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'}`}>
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${effectivePlan ? 'bg-primary/15 text-primary' : 'bg-muted text-muted-foreground'}`}>
                     <PlanIcon className="h-5 w-5" />
                   </div>
                   <div>
