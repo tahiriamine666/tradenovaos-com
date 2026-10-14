@@ -269,5 +269,6 @@ React Router is browser runtime code. Link/navigation targets inspected are lite
 
 ## Validation
 
-Pending CI on the updated PR head: clean install, TypeScript, full frontend and isolated backend suites, production build, refreshed audit. No deployment or production probing.
+Verified dependency/test code at 97505c06b60b0b0551586084b9d3b6bfb0fafc17 in [Linux CI run 38519348181](https://github.com/tahiriamine666/tradenovaos-com/actions/runs/38519348181): clean npm ci PASS; TypeScript PASS; 109 frontend tests across 17 files PASS; 28 isolated backend tests PASS; Vite production build PASS (17.82 seconds). Refreshed audit FAIL: 0 critical, 5 high, 11 moderate. Backend test dependency audit: 0 findings. Production-only npm classification: 5 high, 5 moderate (includes build-time Tailwind peer chain as explained above).
 
+Three existing test files now explicitly reference Node/ES2022 array types that Vitest 3 previously supplied transitively; assertions and production behavior are unchanged. No tests were skipped or weakened. No deployment or production probing.
