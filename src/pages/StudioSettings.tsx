@@ -11,7 +11,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Save, User, TrendingUp, Globe, Shield, AlertCircle, CheckCircle2, CreditCard, ExternalLink, Loader2, LogOut } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { openCustomerPortal } from '@/lib/dodo';
 import TradingAccountsSection from '@/components/settings/TradingAccountsSection';
 import ConnectionStatusSection from '@/components/settings/ConnectionStatusSection';
 import ProfileEditDialog, { PROFILE_UPDATED_EVENT, emitProfileUpdated } from '@/components/settings/ProfileEditDialog';
@@ -385,7 +384,7 @@ function ManageBillingButton() {
   const handleOpen = async () => {
     try {
       setOpening(true);
-      await openCustomerPortal();
+      window.location.assign('/billing');
     } catch (e: any) {
       toast({ title: 'Could not open billing portal', description: e?.message ?? 'Try again later', variant: 'destructive' });
     } finally {
@@ -400,7 +399,7 @@ function ManageBillingButton() {
       <Button onClick={handleOpen} disabled={opening} variant="outline" className="h-9 rounded-md">
         {opening
           ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Opening…</>
-          : <><CreditCard className="h-4 w-4 mr-2" /> Manage billing <ExternalLink className="h-3 w-3 ml-2 opacity-60" /></>}
+          : <><CreditCard className="h-4 w-4 mr-2" /> Manage billing</>}
       </Button>
     );
   }
