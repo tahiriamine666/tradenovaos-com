@@ -44,17 +44,17 @@ const SOCIAL = [
   { label: 'TradeNova on Instagram', Icon: Instagram, href: 'https://www.instagram.com/tradenovaos1/' },
 ];
 
-export default function MarketingFooter() {
+export default function MarketingFooter({ homepage = false }: { homepage?: boolean }) {
   const nav = useNavigate();
   return (
-    <footer className="relative bg-background text-foreground overflow-hidden">
-      <div className="absolute inset-0 pointer-events-none">
+    <footer className={`relative bg-background text-foreground overflow-hidden ${homepage ? 'home-footer' : ''}`}>
+      {!homepage && <div className="absolute inset-0 pointer-events-none">
         <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary/10 rounded-full blur-[120px]" />
         <div className="absolute bottom-0 right-0 w-[400px] h-[300px] bg-primary/5 rounded-full blur-[100px]" />
-      </div>
+      </div>}
 
       {/* CTA banner */}
-      <div className="relative max-w-7xl mx-auto px-5 sm:px-8 pt-20">
+      {!homepage && <div className="relative max-w-7xl mx-auto px-5 sm:px-8 pt-20">
         <div className="rounded-lg border border-border bg-gradient-to-br from-primary/15 via-white/[0.02] to-primary/10 p-10 sm:p-14 flex flex-col sm:flex-row items-center justify-between gap-6">
           <div>
             <h3 className="text-2xl sm:text-3xl font-black tracking-tight">
@@ -69,14 +69,14 @@ export default function MarketingFooter() {
             Start Trial <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </button>
         </div>
-      </div>
+      </div>}
 
       {/* Main footer */}
-      <div className="relative max-w-7xl mx-auto px-5 sm:px-8 py-16 grid grid-cols-1 md:grid-cols-12 gap-10">
+      <div className="home-footer-content relative max-w-7xl mx-auto px-5 sm:px-8 py-16 grid grid-cols-1 md:grid-cols-12 gap-10">
         <div className="md:col-span-4 space-y-5">
           <Link to="/" className="flex items-center gap-2.5">
-            <BrandLogo className="h-9 w-9 rounded-md object-cover ring-1 ring-primary/25 shadow-[0_0_24px_hsl(var(--primary)/0.22)]" />
-            <span className="font-black text-foreground text-xl tracking-tight">TradeNova</span>
+            {!homepage && <BrandLogo className="h-9 w-9 rounded-md object-cover ring-1 ring-primary/25 shadow-[0_0_24px_hsl(var(--primary)/0.22)]" />}
+            <span className={`font-black text-foreground text-xl ${homepage ? '' : 'tracking-tight'}`}>{homepage ? 'TradeNovaOS' : 'TradeNova'}</span>
           </Link>
           <p className="text-sm text-muted-foreground leading-relaxed max-w-sm">
             TradeNova is a Trading Operating System built to help traders plan, journal, analyze, and improve their performance.
