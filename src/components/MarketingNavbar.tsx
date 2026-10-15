@@ -6,6 +6,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import BrandLogo from '@/components/BrandLogo';
+import { Button } from '@/components/ui/button';
 import {
   BookOpen, BarChart3, PlayCircle, Sparkles, Brain, Target,
   TrendingUp, Users, Building2, Globe, HelpCircle, FileText,
@@ -93,9 +94,10 @@ function DropdownPanel({
 interface MarketingNavbarProps {
   onLogin:  () => void;
   onSignup: () => void;
+  homepage?: boolean;
 }
 
-export default function MarketingNavbar({ onLogin, onSignup }: MarketingNavbarProps) {
+export default function MarketingNavbar({ onLogin, onSignup, homepage = false }: MarketingNavbarProps) {
   const navigate = useNavigate();
   const [scrolled,     setScrolled]     = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -148,7 +150,7 @@ export default function MarketingNavbar({ onLogin, onSignup }: MarketingNavbarPr
   return (
     <nav
       ref={navRef}
-      className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 bg-background/90 backdrop-blur-xl ${
+      className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 bg-background/90 backdrop-blur-xl ${homepage ? 'home-navbar' : ''} ${
         scrolled ? 'border-b border-border shadow-[0_10px_40px_hsl(var(--background)/0.8)]' : 'border-b border-transparent'
       }`}
     >
@@ -156,10 +158,9 @@ export default function MarketingNavbar({ onLogin, onSignup }: MarketingNavbarPr
         <div className="flex items-center justify-between h-16">
 
           {/* Logo */}
-          <button onClick={() => handleNavigate('/')} className="flex items-center gap-2.5 flex-shrink-0">
-            <BrandLogo className="w-8 h-8 rounded-md object-cover" />
-            <span className="font-black text-foreground text-lg tracking-tight">TradeNova</span>
-          </button>
+          <Button variant="ghost" onClick={() => handleNavigate('/')} className="flex items-center gap-2.5 flex-shrink-0 px-0 hover:bg-transparent">
+            {homepage ? <span className="home-wordmark text-foreground">TradeOS</span> : <><BrandLogo className="w-8 h-8 rounded-md object-cover" /><span className="font-black text-foreground text-lg tracking-tight">TradeNova</span></>}
+          </Button>
 
           {/* Desktop nav */}
           <div className="hidden lg:flex items-center gap-1">
@@ -179,7 +180,7 @@ export default function MarketingNavbar({ onLogin, onSignup }: MarketingNavbarPr
                   </button>
                 ) : (
                   <button
-                    onClick={() => handleNavigate(item.path!)}
+                    onClick={() => { if (item.path) handleNavigate(item.path); }}
                     className="px-4 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-all"
                   >
                     {item.label}
@@ -205,7 +206,7 @@ export default function MarketingNavbar({ onLogin, onSignup }: MarketingNavbarPr
             </button>
             <button onClick={onSignup}
               className="text-sm bg-primary hover:bg-primary text-foreground px-5 py-2.5 rounded-md font-bold transition-all hover:shadow-lg hover:shadow-primary/25 hover:-translate-y-px">
-              Start Free
+              {homepage ? 'Get started' : 'Start Free'}
             </button>
           </div>
 
@@ -269,7 +270,7 @@ export default function MarketingNavbar({ onLogin, onSignup }: MarketingNavbarPr
                     </>
                   ) : (
                     <button
-                      onClick={() => handleNavigate(item.path!)}
+                      onClick={() => { if (item.path) handleNavigate(item.path); }}
                       className="flex w-full px-4 py-3 rounded-md text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/70 transition-all text-left"
                     >
                       {item.label}
@@ -286,7 +287,7 @@ export default function MarketingNavbar({ onLogin, onSignup }: MarketingNavbarPr
                 </button>
                 <button onClick={() => { onSignup(); setMobileOpen(false); }}
                   className="flex-1 text-sm bg-primary text-foreground py-3 rounded-md font-bold hover:bg-primary transition-colors">
-                  Start Free
+                  {homepage ? 'Get started' : 'Start Free'}
                 </button>
               </div>
             </div>
