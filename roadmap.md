@@ -1,4 +1,5 @@
 # Redesign roadmap
+- [ ] Redesign only public homepage with TradeOS wordmark, truthful features/pricing, product preview and responsive verification; no publishing
 - [x] Second-stage public content SEO: corrected FVG claims, added two educational articles, wired real links/metadata/sitemap; 88 tests and automatic build passed, desktop/mobile public routes checked; not published, Vite SPA limitations documented
 - [x] Update current annual references to Pro 71.88/Elite 119.88; exact authenticated runtime IDs/quotes verified, desktop/mobile annual UI checked, 46 tests passed, separate typecheck exit 0 and automatic build OK; no backend changes or publishing
 - [x] Update active monthly price copy, preserve annual offers/equivalents, audit stale references, run price/mapping/regression tests and desktop/mobile checks; automatic build OK; report in docs/pricing-update-verification.md
