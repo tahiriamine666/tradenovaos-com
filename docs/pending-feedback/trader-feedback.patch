@@ -1,0 +1,280 @@
+diff --git a/src/components/marketing/HomepageTraderFeedback.test.tsx b/src/components/marketing/HomepageTraderFeedback.test.tsx
+new file mode 100644
+index 0000000..a7fd442
+--- /dev/null
++++ b/src/components/marketing/HomepageTraderFeedback.test.tsx
+@@ -0,0 +1,59 @@
++import { fireEvent, render, screen, waitFor, cleanup } from '@testing-library/react';
++import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
++import HomepageTraderFeedback from './HomepageTraderFeedback';
++const { rpc } = vi.hoisted(() => ({ rpc: vi.fn() }));
++vi.mock('@/integrations/supabase/client', () => ({ supabase: { rpc } }));
++const review = { id: 'test-review', display_name: 'Test reviewer', trading_category: 'Demo', rating: 4, message: 'A test review supplied by the mocked approved endpoint.' };
++beforeEach(() => rpc.mockReset());
++afterEach(() => { cleanup(); vi.restoreAllMocks(); });
++describe('homepage feedback', () => {
++  it('shows loading then clearly labelled examples without invented ratings', async () => {
++    rpc.mockResolvedValue({ data: [], error: null });
++    render(<HomepageTraderFeedback />);
++    expect(screen.getByLabelText('Loading approved feedback')).toBeTruthy();
++    expect(await screen.findAllByText('Illustrative example · Not a review')).toHaveLength(6);
++    expect(screen.queryByRole('img', { name: /Rated/ })).toBeNull();
++  });
++  it('shows approved reviews and only their real ratings', async () => {
++    rpc.mockResolvedValue({ data: [review, { ...review, id: 'unrated', rating: null }], error: null });
++    render(<HomepageTraderFeedback />);
++    expect(await screen.findAllByText('Approved feedback')).toHaveLength(2);
++    expect(screen.getAllByRole('img', { name: /Rated/ })).toHaveLength(1);
++    expect(screen.queryByText('Illustrative example · Not a review')).toBeNull();
++    expect(rpc).toHaveBeenCalledWith('get_approved_trader_feedback');
++  });
++  it('handles errors and retries without presenting examples as reviews', async () => {
++    rpc.mockRejectedValueOnce(new Error('offline')).mockResolvedValue({ data: [review], error: null });
++    render(<HomepageTraderFeedback />);
++    expect(await screen.findByRole('alert')).toBeTruthy();
++    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
++    expect(await screen.findByText('Approved feedback')).toBeTruthy();
++    expect(screen.queryByRole('alert')).toBeNull();
++  });
++  it('replaces examples when approved feedback becomes available on focus', async () => {
++    rpc.mockResolvedValueOnce({ data: [], error: null }).mockResolvedValue({ data: [review], error: null });
++    render(<HomepageTraderFeedback />);
++    await screen.findAllByText('Illustrative example · Not a review');
++    fireEvent.focus(window);
++    expect(await screen.findByText('Approved feedback')).toBeTruthy();
++    expect(screen.queryByText('Illustrative example · Not a review')).toBeNull();
++  });
++  it('reports a failed submission and permits retry', async () => {
++    let now = 10000;
++    vi.spyOn(Date, 'now').mockImplementation(() => now);
++    rpc.mockImplementation((name: string) => name === 'get_approved_trader_feedback' ? Promise.resolve({ data: [], error: null }) : Promise.reject(new Error('offline')));
++    render(<HomepageTraderFeedback />);
++    fireEvent.click(screen.getByRole('button', { name: 'Share Your Feedback' }));
++    now += 3000;
++    fireEvent.change(screen.getByLabelText('First name or display name'), { target: { value: 'Demo' } });
++    fireEvent.change(screen.getByLabelText('Email (never shown publicly)'), { target: { value: 'demo@example.com' } });
++    fireEvent.change(screen.getByLabelText('Your feedback'), { target: { value: 'This is a test submission for the feedback form.' } });
++    fireEvent.click(screen.getByRole('button', { name: 'Submit feedback' }));
++    await waitFor(() => expect(screen.getByText('Your feedback could not be sent. Please try again.')).toBeTruthy());
++    expect(screen.queryByText('Thank you for your feedback.')).toBeNull();
++    rpc.mockResolvedValue({ data: { ok: true }, error: null });
++    fireEvent.click(screen.getByRole('button', { name: 'Submit feedback' }));
++    expect(await screen.findByText('It will be reviewed before anything is shown publicly.')).toBeTruthy();
++    expect(screen.queryByText('Approved feedback')).toBeNull();
++  });
++});
+diff --git a/src/components/marketing/HomepageTraderFeedback.tsx b/src/components/marketing/HomepageTraderFeedback.tsx
+index 6c98bae..6797351 100644
+--- a/src/components/marketing/HomepageTraderFeedback.tsx
++++ b/src/components/marketing/HomepageTraderFeedback.tsx
+@@ -1,19 +1,18 @@
+ import { useEffect, useState } from 'react';
+-import { MessageSquareQuote, Star } from 'lucide-react';
++import { Star } from 'lucide-react';
+ import { supabase } from '@/integrations/supabase/client';
+ import { Button } from '@/components/ui/button';
+ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+ import { Input } from '@/components/ui/input';
+ import { Label } from '@/components/ui/label';
+ import { Textarea } from '@/components/ui/textarea';
+-import { feedbackErrorMessages, feedbackSchema } from '@/lib/traderFeedback';
++import { approvedFeedbackSchema, feedbackErrorMessages, feedbackSchema, type ApprovedReview } from '@/lib/traderFeedback';
+ 
+-type Review = { id: string; display_name: string; trading_category: string | null; rating: number | null; message: string };
+ 
+ function Stars({ rating }: { rating: number }) {
+   return (
+-    <div className="flex gap-1 mb-5" aria-label={`Rated ${rating} out of 5`}>
+-      {[1, 2, 3, 4, 5].map(n => <Star key={n} className={`h-4 w-4 ${n <= rating ? 'fill-primary text-primary' : 'text-muted-foreground/40'}`} />)}
++    <div className="home-feedback-stars" role="img" aria-label={`Rated ${rating} out of 5`}>
++      {[1, 2, 3, 4, 5].map(n => <Star aria-hidden="true" key={n} className={`h-4 w-4 ${n <= rating ? 'fill-primary text-primary' : 'text-muted-foreground/40'}`} />)}
+     </div>
+   );
+ }
+@@ -30,8 +29,9 @@ function FeedbackForm({ onDone }: { onDone: () => void }) {
+     e.preventDefault();
+     if (status === 'sending') return;
+     setServerError('');
+-    // Honeypot / too-fast submissions are silently treated as sent.
+-    if (form.website || Date.now() - openedAt < 2500) { setStatus('sent'); return; }
++    // Keep the honeypot while allowing fast legitimate users to retry.
++    if (form.website) { setStatus('sent'); return; }
++    if (Date.now() - openedAt < 2500) { setServerError('Please take a moment to review your feedback, then submit again.'); return; }
+     const parsed = feedbackSchema.safeParse({ ...form, rating });
+     if (!parsed.success) {
+       const next: Record<string, string> = {};
+@@ -41,6 +41,7 @@ function FeedbackForm({ onDone }: { onDone: () => void }) {
+     }
+     setErrors({});
+     setStatus('sending');
++    try {
+     const { data, error } = await supabase.rpc('submit_trader_feedback', {
+       p_display_name: parsed.data.displayName,
+       p_email: parsed.data.email,
+@@ -55,6 +56,10 @@ function FeedbackForm({ onDone }: { onDone: () => void }) {
+       return;
+     }
+     setStatus('sent');
++    } catch {
++      setStatus('idle');
++      setServerError('Your feedback could not be sent. Please try again.');
++    }
+   };
+ 
+   if (status === 'sent') {
+@@ -103,49 +108,72 @@ function FeedbackForm({ onDone }: { onDone: () => void }) {
+   );
+ }
+ 
++const EXAMPLES = [
++  { title: 'The context behind a trade', topic: 'Journaling', text: 'A review could describe how a trader records their setup, charts and reasoning, then revisits those decisions after the session.' },
++  { title: 'A plan worth reviewing', topic: 'Daily planning', text: 'This space can hold specific feedback on preparing a plan and checking whether the recorded trade followed it. What felt clear? What would make the workflow easier?' },
++  { title: 'Looking beyond the outcome', topic: 'Psychology', text: 'An example of the kind of topic a trader might discuss: recording emotions and separating process quality from a winning or losing result.' },
++  { title: 'A weekly moment to reflect', topic: 'Reviews', text: 'Future feedback may explain how someone uses a weekly review to notice recurring habits. Real experiences will replace these layout examples after approval.' },
++  { title: 'Making the data easier to read', topic: 'Analytics', text: 'Useful feedback might identify a chart that is easy to understand, a confusing label, or a detail that would help a trader interpret their own records. Suggestions are welcome alongside positive experiences.' },
++  { title: 'Built around an honest process', topic: 'Your perspective', text: 'Share what works, what does not, and what you would improve. This is an illustrative card, not a customer endorsement.' },
++];
++
+ export default function HomepageTraderFeedback() {
+-  const [reviews, setReviews] = useState<Review[] | null>(null);
++  const [reviews, setReviews] = useState<ApprovedReview[]>([]);
++  const [loading, setLoading] = useState(true);
++  const [loadError, setLoadError] = useState(false);
++  const [retry, setRetry] = useState(0);
+   const [open, setOpen] = useState(false);
+ 
+   useEffect(() => {
+     let active = true;
+-    supabase.rpc('get_approved_trader_feedback').then(({ data }) => { if (active) setReviews((data as Review[] | null) ?? []); });
+-    return () => { active = false; };
+-  }, []);
++    let inFlight = false;
++    const load = async () => {
++      if (inFlight) return;
++      inFlight = true;
++      try {
++        const { data, error } = await supabase.rpc('get_approved_trader_feedback');
++        if (error) throw error;
++        const parsed = approvedFeedbackSchema.safeParse(data);
++        if (!parsed.success) throw new Error('Unexpected public feedback response');
++        if (active) { setReviews(parsed.data); setLoadError(false); }
++      } catch {
++        if (active) setLoadError(true);
++      } finally {
++        inFlight = false;
++        if (active) setLoading(false);
++      }
++    };
++    void load();
++    // Approval changes become visible without anyone changing homepage content.
++    const refresh = () => { if (document.visibilityState === 'visible') void load(); };
++    const interval = window.setInterval(refresh, 60000);
++    window.addEventListener('focus', refresh);
++    return () => { active = false; window.clearInterval(interval); window.removeEventListener('focus', refresh); };
++  }, [retry]);
+ 
+   return (
+-    <section className="home-section home-container" id="trader-feedback">
++    <section className="home-section home-container home-trader-feedback" id="trader-feedback" aria-labelledby="trader-feedback-heading">
+       <div className="home-section-heading">
+-        <div><p className="home-eyebrow">FROM OUR TRADERS</p><h2>Trader<br />feedback.</h2></div>
++        <div><p className="home-eyebrow">TRADER FEEDBACK</p><h2 id="trader-feedback-heading">Every perspective.<br />Room to be heard.</h2></div>
+         <Button variant="outline" className="home-secondary" onClick={() => setOpen(true)}>Share Your Feedback</Button>
+       </div>
+-      {reviews && reviews.length > 0 ? (
++      {loadError && <div className="home-feedback-notice" role="alert"><p>We couldn’t load the latest approved feedback. {reviews.length ? 'Previously loaded reviews remain visible.' : 'The cards below are illustrative examples, not customer reviews.'}</p><Button variant="outline" onClick={() => { setLoadError(false); setLoading(true); setRetry(value => value + 1); }}>Try again</Button></div>}
++      {loading ? <div role="status" aria-label="Loading approved feedback" className="home-feedback-loading"><p>Loading approved feedback…</p><div className="home-feedback-masonry" aria-hidden="true">{EXAMPLES.map(example => <div className="home-feedback-card home-feedback-skeleton" key={example.title}><span /><span /><span /></div>)}</div></div> : reviews.length ? (
+         <div className="home-feedback-masonry">
+-          {reviews.map(r => (
+-            <article key={r.id} className="home-feedback-card">
+-              {r.rating ? <Stars rating={r.rating} /> : null}
+-              <p className="text-[15px] leading-relaxed">“{r.message}”</p>
+-              <div className="mt-6 pt-5 border-t border-border">
+-                <p className="text-sm font-medium">{r.display_name}</p>
+-                {r.trading_category && <p className="text-xs text-muted-foreground mt-1">{r.trading_category}</p>}
+-              </div>
+-            </article>
+-          ))}
+-        </div>
+-      ) : reviews ? (
+-        <div className="home-feedback-empty">
+-          <MessageSquareQuote className="h-6 w-6 text-primary mb-6" />
+-          <h3 className="text-2xl font-medium">Be one of the first voices here.</h3>
+-          <p className="text-sm text-muted-foreground leading-relaxed mt-3 max-w-md">We only show real, approved feedback from traders using TradeOS. Tell us what works for you and what we should improve.</p>
+-          <Button className="mt-8 home-primary" onClick={() => setOpen(true)}>Share Your Feedback</Button>
++          {reviews.map(r => <article key={r.id} className="home-feedback-card">
++            {r.rating !== null && <Stars rating={r.rating} />}
++            <blockquote className="home-feedback-quote">{r.message}</blockquote>
++            <div className="home-feedback-author"><p>{r.display_name}</p>{r.trading_category && <p className="home-feedback-category">{r.trading_category}</p>}<span className="home-feedback-label">Approved feedback</span></div>
++          </article>)}
+         </div>
+-      ) : <div className="home-feedback-empty min-h-48" aria-busy="true" />}
++      ) : <>
++        <p className="home-feedback-disclosure" role="status">{loadError ? 'Previewing the layout.' : 'No approved reviews to display yet.'} <strong>Illustrative examples — not customer testimonials.</strong> No names, ratings or endorsements are invented. Approved reviews replace these examples automatically.</p>
++        <div className="home-feedback-masonry">{EXAMPLES.map(example => <article key={example.title} className="home-feedback-card home-feedback-example"><span className="home-feedback-label">Illustrative example · Not a review</span><h3>{example.title}</h3><p>{example.text}</p><div className="home-feedback-author"><span className="home-feedback-category">{example.topic} · Layout preview</span></div></article>)}</div>
++      </>}
++      <p className="home-feedback-moderation">Submissions are reviewed before publication. Optional ratings are shown only on approved reviews.</p>
+       <Dialog open={open} onOpenChange={setOpen}>
+         <DialogContent className="max-w-lg">
+-          <DialogHeader>
+-            <DialogTitle>Share your feedback</DialogTitle>
+-            <DialogDescription>Your honest experience helps other traders and helps us improve.</DialogDescription>
+-          </DialogHeader>
++          <DialogHeader><DialogTitle>Share your feedback</DialogTitle><DialogDescription>Your honest experience helps other traders and helps us improve.</DialogDescription></DialogHeader>
+           {open && <FeedbackForm onDone={() => setOpen(false)} />}
+         </DialogContent>
+       </Dialog>
+diff --git a/src/lib/traderFeedback.ts b/src/lib/traderFeedback.ts
+index 9971f0d..8675108 100644
+--- a/src/lib/traderFeedback.ts
++++ b/src/lib/traderFeedback.ts
+@@ -10,6 +10,17 @@ export const feedbackSchema = z.object({
+ 
+ export type FeedbackInput = z.infer<typeof feedbackSchema>;
+ 
++// Read only the public RPC projection: no email or moderation data enters cards.
++export const approvedFeedbackSchema = z.array(z.object({
++  id: z.string(),
++  display_name: z.string().min(1),
++  trading_category: z.string().nullable(),
++  rating: z.number().int().min(1).max(5).nullable(),
++  message: z.string().min(1),
++}));
++
++export type ApprovedReview = z.infer<typeof approvedFeedbackSchema>[number];
++
+ export const feedbackErrorMessages: Record<string, string> = {
+   duplicate: 'We already received this feedback. Thank you!',
+   rate_limited: 'You have shared feedback recently. Please try again later.',
+diff --git a/src/pages/homepage.css b/src/pages/homepage.css
+index 4bcb1f3..f27105f 100644
+--- a/src/pages/homepage.css
++++ b/src/pages/homepage.css
+@@ -152,3 +152,26 @@
+ .home-feedback-card:hover { border-color: hsl(var(--primary) / 0.35); transform: translateY(-2px); }
+ .home-feedback-empty { display: flex; flex-direction: column; align-items: center; text-align: center; padding: 4rem 1.5rem; border: 1px solid hsl(var(--border)); border-radius: 1rem; background: hsl(var(--card) / 0.3); }
+ @media (prefers-reduced-motion: reduce) { .home-feedback-card { transition: none; } .home-feedback-card:hover { transform: none; } }
++.home-trader-feedback { color:#f5f5f5; background:#000; }
++.home-trader-feedback .home-feedback-card { background:#090909; border-color:#252525; overflow-wrap:anywhere; }
++.home-feedback-stars { display:flex; gap:4px; margin-bottom:22px; color:#459bff; }
++.home-feedback-stars svg.fill-primary { fill:#459bff; color:#459bff; }
++.home-feedback-quote { margin:0; font-size:17px; line-height:1.85; white-space:pre-wrap; }
++.home-feedback-author { margin-top:28px; padding-top:20px; border-top:1px solid #242424; font-size:14px; }
++.home-feedback-author p { margin:0 0 6px; }
++.home-feedback-category { color:#aaa; font-size:12px; }
++.home-feedback-label { display:block; color:#a3b9d5; font-size:11px; line-height:1.6; letter-spacing:.04em; }
++.home-feedback-example h3 { margin:24px 0 14px; font-size:22px; line-height:1.3; letter-spacing:-.025em; }
++.home-feedback-example > p { color:#b8b8b8; font-size:15px; line-height:1.85; }
++.home-feedback-example:nth-child(3n + 2) { padding-top:2.25rem; padding-bottom:2.25rem; }
++.home-feedback-disclosure { max-width:780px; margin:0 0 32px; color:#aaa; font-size:13px; line-height:1.8; }
++.home-feedback-disclosure strong { color:#eee; font-weight:500; }
++.home-feedback-moderation { margin-top:24px; color:#aaa; font-size:12px; line-height:1.7; }
++.home-feedback-notice { display:flex; align-items:center; justify-content:space-between; gap:20px; padding:20px; margin-bottom:24px; border:1px solid #35465c; border-radius:12px; font-size:14px; }
++.home-feedback-notice button { flex-shrink:0; }
++.home-feedback-loading > p { color:#aaa; margin-bottom:24px; }
++.home-feedback-skeleton { min-height:240px; }
++.home-feedback-skeleton:nth-child(2n) { min-height:300px; }
++.home-feedback-skeleton span { display:block; height:12px; background:#222; border-radius:6px; margin:20px 0; }
++.home-feedback-skeleton span:last-child { width:60%; }
++@media(max-width:639px) { .home-feedback-notice { align-items:flex-start; flex-direction:column; } .home-trader-feedback .home-feedback-card { padding:24px; } }
+
