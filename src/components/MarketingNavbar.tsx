@@ -289,4 +289,3 @@ export default function MarketingNavbar({ onLogin, onSignup, homepage = false }:
     </nav>
   );
 }
-
