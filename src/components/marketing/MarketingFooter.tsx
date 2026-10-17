@@ -1,130 +1,53 @@
-import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Twitter, Instagram, ArrowRight } from 'lucide-react';
-import BrandLogo from '@/components/BrandLogo';
+import { Link } from 'react-router-dom';
+import { Instagram } from 'lucide-react';
+import BrandLogo from './PublicBrandLogo';
 import { CookieSettingsButton } from '@/components/CookieConsent';
 
-const COLS: { title: string; links: { label: string; to: string; external?: boolean }[] }[] = [
-  {
-    title: 'Platform',
-    links: [
-      { label: 'Log In', to: '/login' },
-      { label: 'Trade Journal', to: '/features/trade-journal' },
-      { label: 'Trade Plan', to: '/features/playbook-lab' },
-      { label: 'Pricing', to: '/pricing' },
-      { label: 'Supported Brokers', to: '/supported-brokers' },
-      { label: 'Start Free', to: '/signup' },
-    ],
-  },
-  {
-    title: 'Compare',
-    links: [
-      { label: 'vs. TradeZella', to: '/compare/tradezella' },
-      { label: 'vs. TraderSync', to: '/compare/tradersync' },
-      { label: 'vs. Edgewonk', to: '/compare/edgewonk' },
-      { label: 'vs. Tradervue', to: '/compare/tradervue' },
-      { label: 'vs. TradesViz', to: '/compare/tradesviz' },
-    ],
-  },
-  {
-    title: 'Company',
-    links: [
-      { label: 'Contact Us', to: '/contact' },
-      { label: 'Careers', to: '/careers' },
-      { label: 'Blog', to: '/resources/blog' },
-      { label: 'Privacy Policy', to: '/privacy' },
-      { label: 'Cookie Policy', to: '/cookies' },
-      { label: 'Terms & Conditions', to: '/terms' },
-    ],
-  },
-];
-
-const SOCIAL = [
-  { label: 'TradeNova on X', Icon: Twitter, href: 'https://x.com/tradenova1mw' },
-  { label: 'TradeNova on Instagram', Icon: Instagram, href: 'https://www.instagram.com/tradenovaos1/' },
-];
-
-export default function MarketingFooter({ homepage = false }: { homepage?: boolean }) {
-  const nav = useNavigate();
-  return (
-    <footer className={`relative bg-background text-foreground overflow-hidden ${homepage ? 'home-footer' : ''}`}>
-      {!homepage && <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-primary/10 rounded-full blur-[120px]" />
-        <div className="absolute bottom-0 right-0 w-[400px] h-[300px] bg-primary/5 rounded-full blur-[100px]" />
-      </div>}
-
-      {/* CTA banner */}
-      {!homepage && <div className="relative max-w-7xl mx-auto px-5 sm:px-8 pt-20">
-        <div className="rounded-lg border border-border bg-gradient-to-br from-primary/15 via-white/[0.02] to-primary/10 p-10 sm:p-14 flex flex-col sm:flex-row items-center justify-between gap-6">
+export default function MarketingFooter(props: { homepage?: boolean }) {
+    const homepageColumns = [
+      { title: 'PRODUCT', links: [{ label: 'Features', to: '/#features' }, { label: 'NOVA AI', to: '/how-nova-works' }, { label: 'Integrations', to: '/#integrations' }, { label: 'Pricing', to: '/pricing' }, { label: 'Free Psychology Audit', to: '/psychology-audit' }, { label: 'Security', to: '/security' }] },
+      { title: 'COMPANY', links: [{ label: 'About', to: '/about' }, { label: 'FAQ', to: '/faq' }, { label: 'Contact', to: '/contact' }] },
+      { title: 'LEGAL', links: [{ label: 'Privacy Policy', to: '/privacy' }, { label: 'Risk Disclaimer', to: '/risk-disclaimer' }, { label: 'Cookie Policy', to: '/cookies' }] },
+    ];
+    return (
+      <footer className="home-footer border-y border-border bg-black text-foreground" aria-label="Website footer" data-homepage={props.homepage || undefined}>
+        <div className="home-container grid grid-cols-1 gap-10 py-12 sm:grid-cols-2 lg:grid-cols-[2fr_1fr_1fr_1fr] lg:gap-16 lg:py-14">
           <div>
-            <h3 className="text-2xl sm:text-3xl font-black tracking-tight">
-              Start documenting your <span className="text-primary">trading decisions.</span>
-            </h3>
-            <p className="text-muted-foreground text-sm mt-2">14-day trial · Payment method required</p>
+            <Link to="/" className="inline-flex items-center gap-2.5" aria-label="TradeOS home">
+              <BrandLogo className="h-8 w-8" decorative />
+              <span className="home-wordmark text-foreground">TradeOS</span>
+            </Link>
+            <p className="mt-5 max-w-xs text-sm leading-7 text-muted-foreground">A workspace for journaling and planning.<br />Built around a more disciplined process.</p>
+            <a href="https://www.instagram.com/tradenovaos1/" target="_blank" rel="noopener noreferrer" aria-label="TradeOS on Instagram" className="mt-5 inline-flex min-h-11 items-center gap-2 text-xs text-muted-foreground transition-colors hover:text-foreground">
+              <Instagram className="h-3.5 w-3.5" aria-hidden="true" /> Instagram
+            </a>
           </div>
-          <button
-            onClick={() => nav('/signup')}
-            className="group inline-flex items-center gap-2.5 bg-primary hover:bg-primary text-foreground px-7 py-3.5 rounded-md font-black text-sm transition-all hover:shadow-2xl hover:shadow-primary/30 hover:-translate-y-0.5 whitespace-nowrap"
-          >
-            Start Trial <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-          </button>
-        </div>
-      </div>}
-
-      {/* Main footer */}
-      <div className="home-footer-content relative max-w-7xl mx-auto px-5 sm:px-8 py-16 grid grid-cols-1 md:grid-cols-12 gap-10">
-        <div className="md:col-span-4 space-y-5">
-          <Link to="/" className="flex items-center gap-2.5">
-            {!homepage && <BrandLogo className="h-9 w-9 rounded-md object-cover ring-1 ring-primary/25 shadow-[0_0_24px_hsl(var(--primary)/0.22)]" />}
-            <span className={`font-black text-foreground text-xl ${homepage ? '' : 'tracking-tight'}`}>{homepage ? 'TradeNovaOS' : 'TradeNova'}</span>
-          </Link>
-          <p className="text-sm text-muted-foreground leading-relaxed max-w-sm">
-            TradeNova is a Trading Operating System built to help traders plan, journal, analyze, and improve their performance.
-          </p>
-          <p className="text-[11px] text-muted-foreground/80 leading-relaxed max-w-sm border-l-2 border-border pl-3">
-            Trading involves substantial risk and is not suitable for every investor. Past performance does not guarantee future results.
-          </p>
-        </div>
-
-        <div className="md:col-span-8 grid grid-cols-2 sm:grid-cols-4 gap-8">
-          {COLS.map(col => (
-            <div key={col.title}>
-              <p className="text-xs font-bold uppercase tracking-wider text-foreground mb-4">{col.title}</p>
-              <ul className="space-y-2.5">
-                {col.links.map(l => (
-                  <li key={l.label}>
-                    <Link to={l.to} className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                      {l.label}
-                    </Link>
+          {homepageColumns.map(column => (
+            <nav key={column.title} aria-label={`Footer ${column.title.toLowerCase()}`}>
+              <h3 className="mb-5 text-[10px] font-semibold text-foreground">{column.title}</h3>
+              <ul className="space-y-3">
+                {column.links.map(link => (
+                  <li key={link.label}>
+                    {link.to.includes('#') ? (
+                      <a href={link.to} className="text-sm leading-6 text-muted-foreground transition-colors hover:text-foreground">{link.label}</a>
+                    ) : (
+                      <Link to={link.to} className="text-sm leading-6 text-muted-foreground transition-colors hover:text-foreground">{link.label}</Link>
+                    )}
                   </li>
                 ))}
               </ul>
-            </div>
+            </nav>
           ))}
-          <div>
-            <p className="text-xs font-bold uppercase tracking-wider text-foreground mb-4">Social</p>
-            <ul className="flex items-center gap-3">
-              {SOCIAL.map(s => (
-                <li key={s.label}>
-                  <a href={s.href} target="_blank" rel="noopener noreferrer" aria-label={s.label}
-                    className="group flex items-center justify-center w-10 h-10 rounded-md bg-muted border border-border text-muted-foreground hover:bg-primary/15 hover:border-primary/30 hover:text-primary transition-colors">
-                    <s.Icon className="h-4 w-4" />
-                  </a>
-                </li>
-              ))}
-            </ul>
+        </div>
+        <div className="border-t border-border">
+          <div className="home-container flex flex-col items-start gap-4 py-5 lg:flex-row lg:items-center lg:justify-between lg:gap-8">
+            <p className="max-w-xl text-[11px] leading-6 text-muted-foreground">Trading involves substantial risk and is not suitable for every investor. Past performance does not guarantee future results.</p>
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[11px] text-muted-foreground">
+              <p>© {new Date().getFullYear()} TradeNova. All rights reserved.</p>
+              <CookieSettingsButton className="min-h-11 text-[11px] text-muted-foreground" />
+            </div>
           </div>
         </div>
-      </div>
-
-      <div className="relative border-t border-border">
-        <div className="max-w-7xl mx-auto px-5 sm:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground/80">
-          <p>© {new Date().getFullYear()} TradeNova. All rights reserved.</p>
-          <CookieSettingsButton className="min-h-11 text-xs text-muted-foreground" />
-          <a href="https://tradenovaos.com" target="_blank" rel="noreferrer noopener"
-            className="hover:text-primary transition-colors">tradenovaos.com</a>
-        </div>
-      </div>
-    </footer>
-  );
+      </footer>
+    );
 }

@@ -2851,6 +2851,29 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      submit_trader_feedback: {
+        Args: {
+          p_display_name: string
+          p_email: string
+          p_message: string
+          p_rating: number
+          p_trading_category: string
+        }
+        Returns: Json
+      }
+
+      get_approved_trader_feedback: {
+        Args: never
+        Returns: {
+          created_at: string
+          display_name: string
+          id: string
+          message: string
+          rating: number
+          trading_category: string
+        }[]
+      }
+
       admin_extend_trial: {
         Args: { p_days?: number; p_email: string }
         Returns: Json

@@ -13,7 +13,7 @@ import MarketingNavbar from '@/components/MarketingNavbar';
 import SeoHead from '@/components/SeoHead';
 import { BLOG_ARTICLES, articlePath } from '@/pages/blog/articles';
 
-const ease: any = [0.22, 1, 0.36, 1];
+const ease: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 const FEATURE_DATA: Record<string, {
   icon: React.ElementType; color: string; bg: string;
@@ -25,7 +25,7 @@ const FEATURE_DATA: Record<string, {
     title: 'Trade Journal',
     subtitle: 'Log every trade with context, bias and before/after charts.',
     description: 'Record each trade with pair, direction, result, R:R, weekly context, daily bias, timeframe, notes and before/after chart screenshots. Review every trade in a clean detail view and edit it anytime.',
-    benefits: ['Weekly context and daily bias per trade', 'Before and after chart screenshots', 'Result, P/L and R:R tracking', 'Discipline and execution scores', 'Trade Logs screenshot gallery', 'Automatic MT4 / MT5 trade sync'],
+    benefits: ['Weekly context and daily bias per trade', 'Before and after chart screenshots', 'Result, P/L and R:R tracking', 'Discipline and execution scores', 'Trade Logs screenshot gallery', 'MT5 Auto Sync — Coming Soon'],
     cta: 'Start your 14-day free trial',
   },
   'edge-analytics': {
@@ -56,7 +56,7 @@ const FEATURE_DATA: Record<string, {
     icon: Sparkles, color: 'text-primary', bg: 'bg-primary/10',
     title: 'NOVA AI',
     subtitle: 'An AI assistant that answers from your own trading data.',
-    description: 'Ask NOVA about your trades, journal, plans and checklists. It answers from your real data, says when there is not enough of it, and never gives buy or sell calls. Chats are saved to your account.',
+    description: 'Ask NOVA about your trades, journal, plans and checklists. It answers from your real data, says when there is not enough of it, and is intended for reflection rather than trading signals. AI responses may be inaccurate. Chats are saved to your account.',
     benefits: ['Answers grounded in your trades', 'Saved chat history', 'Personal preferences', 'Pro: 500 credits / month', 'Elite: 1,000 credits / month', 'No buy/sell signals'],
     cta: 'Start your 14-day free trial',
   },
@@ -235,7 +235,7 @@ export function SolutionPage() {
           </div>
           <button onClick={() => navigate('/signup')}
             className="group flex items-center gap-2 bg-primary hover:bg-primary text-foreground px-8 py-4 rounded-2xl font-black text-sm transition-all hover:shadow-xl hover:shadow-primary/25 hover:-translate-y-0.5">
-            Start Free — No credit card <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            Start 14-day trial — Payment method required <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </button>
         </motion.div>
       </div>
@@ -304,12 +304,12 @@ export function BlogPage() {
 export function HelpCenterPage() {
   const navigate = useNavigate();
   const topics = [
-    { title: 'Getting Started', desc: 'Set up your account, add first trades, and configure your workspace.', icon: Sparkles },
-    { title: 'Trade Journal',   desc: 'Learn how to log trades, add screenshots, and review sessions.',       icon: BookOpen },
-    { title: 'Analytics',       desc: 'Understand win rate, profit factor, and all performance metrics.',     icon: BarChart3 },
-    { title: 'Account Sync',    desc: 'Connect an MT4 / MT5 account and sync your trades automatically.',     icon: Upload },
-    { title: 'Billing',         desc: 'Manage your plan, trial and payment method.',        icon: Check },
-    { title: 'NOVA AI',         desc: 'How NOVA answers from your data, and how credits work.',               icon: Sparkles },
+    { title: 'Getting Started', to: '/faq', desc: 'Set up your account, add first trades, and configure your workspace.', icon: Sparkles },
+    { title: 'Trade Journal',   to: '/features/trade-journal', desc: 'Learn how to log trades, add screenshots, and review sessions.',       icon: BookOpen },
+    { title: 'Analytics',       to: '/features/edge-analytics', desc: 'Understand win rate, profit factor, and all performance metrics.',     icon: BarChart3 },
+    { title: 'Account Sync',    to: '/supported-brokers', desc: 'MT5 Auto Sync is Coming Soon. Use manual logging or a compatible CSV.',     icon: Upload },
+    { title: 'Billing',         to: '/faq', desc: 'Manage your plan, trial and payment method.',        icon: Check },
+    { title: 'NOVA AI',         to: '/how-nova-works', desc: 'How NOVA answers from your data, and how credits work.',               icon: Sparkles },
   ];
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -332,7 +332,7 @@ export function HelpCenterPage() {
                   <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-3">
                     <Icon className="h-4.5 w-4.5 text-primary h-[18px] w-[18px]" />
                   </div>
-                  <p className="text-sm font-bold text-foreground mb-1 group-hover:text-primary transition-colors">{t.title}</p>
+                  <Link to={t.to} className="inline-flex min-h-11 items-center text-sm font-bold text-foreground mb-1 group-hover:text-primary transition-colors">{t.title} →</Link>
                   <p className="text-xs text-muted-foreground leading-relaxed">{t.desc}</p>
                 </motion.div>
               );
@@ -340,8 +340,8 @@ export function HelpCenterPage() {
           </div>
           <div className="mt-10 p-6 rounded-2xl border border-primary/20 bg-primary/5 text-center">
             <p className="text-sm font-semibold text-foreground mb-1">Still need help?</p>
-            <p className="text-xs text-muted-foreground mb-4">Our support team replies within a few hours.</p>
-            <button onClick={() => navigate('/signup')} className="text-sm bg-primary hover:bg-primary text-foreground px-6 py-2.5 rounded-xl font-bold transition-colors">
+            <p className="text-xs text-muted-foreground mb-4">Send your question to our support email.</p>
+            <button onClick={() => navigate('/contact')} className="text-sm bg-primary hover:bg-primary text-foreground px-6 py-2.5 rounded-xl font-bold transition-colors">
               Contact Support
             </button>
           </div>
