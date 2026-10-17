@@ -33,6 +33,9 @@ import CookiePolicy from "./pages/CookiePolicy";
 import CookieConsentPanel from "@/components/CookieConsent";
 import { CookieConsentProvider } from "@/contexts/CookieConsentContext";
 
+import AcceptInvitation from '@/pages/AcceptInvitation';
+import InvitationContinuation from '@/components/invitations/InvitationContinuation';
+
 const queryClient = new QueryClient();
 
 function PublicOnly({ children }: { children: React.ReactNode }) {
@@ -72,7 +75,8 @@ const App = () => (
           <ProfileProvider>
             <PlanProvider>
               <ActiveAccountProvider>
-                <Routes>
+                <InvitationContinuation><Routes>
+                  <Route path="/accept-invitation" element={<AcceptInvitation />} />
                   <Route path="/" element={<PublicOnly><LandingPage /></PublicOnly>} />
                   <Route path="/login" element={<PublicOnly><Login /></PublicOnly>} />
                   <Route path="/signup" element={<PublicOnly><Signup /></PublicOnly>} />
@@ -119,7 +123,7 @@ const App = () => (
                   <Route path="/help" element={<MarketingPlaceholder group="static" staticKey="help" />} />
 
                   <Route path="*" element={<NotFound />} />
-                </Routes>
+                </Routes></InvitationContinuation>
               </ActiveAccountProvider>
             </PlanProvider>
           </ProfileProvider>
