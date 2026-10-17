@@ -2,12 +2,13 @@ import { fireEvent, render, screen, within, cleanup } from '@testing-library/rea
 import { MemoryRouter } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { afterEach, describe, expect, it } from 'vitest';
+import { CookieConsentProvider } from '@/contexts/CookieConsentContext';
 import PsychologyAudit from './PsychologyAudit';
 import { FaqPage, AboutPage, HowNovaWorksPage, SecurityPage } from './InformationPages';
 import { INFORMATION_LINKS } from './informationLinks';
 
 afterEach(cleanup);
-function show(page: React.ReactNode) { return render(<HelmetProvider><MemoryRouter>{page}</MemoryRouter></HelmetProvider>); }
+function show(page: React.ReactNode) { return render(<HelmetProvider><MemoryRouter><CookieConsentProvider>{page}</CookieConsentProvider></MemoryRouter></HelmetProvider>); }
 describe('public information pages', () => {
   it('provides all five discoverable destinations without an auth context', () => {
     show(<SecurityPage />);

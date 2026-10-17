@@ -33,7 +33,7 @@ import CookiePolicy from "./pages/CookiePolicy";
 import CookieConsentPanel from "@/components/CookieConsent";
 import { CookieConsentProvider } from "@/contexts/CookieConsentContext";
 
-import { FaqPage, HowNovaWorksPage, AboutPage, SecurityPage } from './pages/information/InformationPages';
+import { ContactPage, RiskDisclaimerPage, FaqPage, HowNovaWorksPage, AboutPage, SecurityPage } from './pages/information/InformationPages';
 import PsychologyAudit from './pages/information/PsychologyAudit';
 
 const queryClient = new QueryClient();
@@ -112,20 +112,21 @@ const App = () => (
                   <Route path="/resources/blog" element={<BlogPage />} />
                   <Route path="/resources/help-center" element={<HelpCenterPage />} />
                   <Route path="/products/:slug" element={<MarketingPlaceholder group="product" />} />
-                  <Route path="/solutions/:slug" element={<MarketingPlaceholder group="solution" />} />
+                  
                   <Route path="/resources/:slug" element={<MarketingPlaceholder group="resource" />} />
                   <Route path="/compare/:slug" element={<MarketingPlaceholder group="compare" />} />
-                  <Route path="/blog" element={<MarketingPlaceholder group="static" staticKey="blog" />} />
+                  <Route path="/blog" element={<Navigate to="/resources/blog" replace />} />
                   <Route path="/blog/fair-value-gaps-guide" element={<FairValueGapsGuide />} />
                   {BLOG_ARTICLES.filter(article => article.body).map(article => (
                     <Route key={article.slug} path={articlePath(article)} element={<EducationalArticle slug={article.slug} />} />
                   ))}
-                  <Route path="/contact" element={<MarketingPlaceholder group="static" staticKey="contact" />} />
+                  <Route path="/contact" element={<ContactPage />} />
+                  <Route path="/risk-disclaimer" element={<RiskDisclaimerPage />} />
                   <Route path="/careers" element={<MarketingPlaceholder group="static" staticKey="careers" />} />
                   <Route path="/privacy" element={<MarketingPlaceholder group="static" staticKey="privacy" />} />
                   <Route path="/cookies" element={<CookiePolicy />} />
                   <Route path="/terms" element={<MarketingPlaceholder group="static" staticKey="terms" />} />
-                  <Route path="/help" element={<MarketingPlaceholder group="static" staticKey="help" />} />
+                  <Route path="/help" element={<Navigate to="/resources/help-center" replace />} />
 
                   <Route path="*" element={<NotFound />} />
                 </Routes>

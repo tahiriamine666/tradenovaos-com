@@ -1,15 +1,19 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ArrowUpRight, BarChart3, BookOpen, Brain, CalendarDays, Check, ChevronRight, FileUp, LayoutDashboard, ListChecks, LockKeyhole, Sparkles, Target } from 'lucide-react';
 import MarketingNavbar from '@/components/MarketingNavbar';
 import MarketingFooter from '@/components/marketing/MarketingFooter';
-import BrandLogo from '@/components/BrandLogo';
+import HomepageProductDemo from '@/components/marketing/HomepageProductDemo';
+import HomepageFounder from '@/components/marketing/HomepageFounder';
+import HomepageTraderFeedback from '@/components/marketing/HomepageTraderFeedback';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import novaWave from '@/assets/nova-robot-wave.png.asset.json';
 import SeoHead from '@/components/SeoHead';
 import { Button } from '@/components/ui/button';
 import { monthlyPlanPrice } from '@/lib/pricing';
 import './homepage.css';
 
 const features = [
+  { icon: Target, title: 'Define the limits first.', label: 'Risk Management', text: 'Record risk-per-trade and daily loss limits in your plan. Review adherence alongside outcomes; limits do not prevent losses automatically.', to: '/features/playbook-lab' },
   { icon: BookOpen, title: 'Every trade. The whole story.', label: 'Trade Journal', text: 'Keep execution, charts, outcomes and emotions together. Review the context, not just the result.', to: '/features/trade-journal' },
   { icon: BarChart3, title: 'See what your data says.', label: 'Analytics', text: 'Review win rate, profit factor, cumulative P&L and setup performance from your recorded trades.', to: '/features/edge-analytics' },
   { icon: ListChecks, title: 'A plan before the position.', label: 'Trade Plan', text: 'Pair-specific Daily Plans, Weekly Outlooks and reusable checklists. Your process, in one workspace.', to: '/features/playbook-lab' },
@@ -17,40 +21,6 @@ const features = [
   { icon: CalendarDays, title: 'Keep the bigger picture.', label: 'Calendars', text: 'Explore daily trading results and upcoming economic events, with filters and saved preferences.', to: '/features/trading-calendar' },
   { icon: Sparkles, title: 'Meet your trading context.', label: 'NOVA AI', text: 'Ask NOVA questions grounded in your own trading data, journal and plans.', to: '/features/ai-insights' },
 ];
-const previewViews = ['Dashboard', 'Trade Journal', 'Trade Plan'] as const;
-type PreviewView = typeof previewViews[number];
-
-function ProductPreview() {
-  const [view, setView] = useState<PreviewView>('Dashboard');
-  return (
-    <figure className="home-preview" id="product-preview">
-      <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3 text-xs text-muted-foreground">
-        <span className="flex items-center gap-2"><LockKeyhole className="h-3 w-3" /> tradenovaos.com/app</span>
-        <span>Product preview · empty workspace</span>
-      </div>
-      <div className="home-preview-body">
-        <aside className="home-preview-sidebar">
-          <div className="flex items-center gap-2 pb-7"><BrandLogo decorative className="h-7 w-7 object-contain" /><span className="text-sm font-bold">TradeNova</span></div>
-          {previewViews.map((item, index) => {
-            const Icon = [LayoutDashboard, BookOpen, ListChecks][index];
-            return <Button key={item} variant="ghost" onClick={() => setView(item)} aria-pressed={view === item} className={`mb-1 w-full justify-start text-xs ${view === item ? 'bg-primary/10 text-primary' : 'text-muted-foreground'}`}><Icon />{item}</Button>;
-          })}
-          <div className="mt-3 space-y-4 border-t border-border pt-5 text-xs text-muted-foreground"><p>Analytics</p><p>NOVA AI</p><p>Economic Calendar</p><p>Certificates</p></div>
-        </aside>
-        <div className="home-preview-content">
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-3"><div><p className="text-xs text-muted-foreground mb-1">Your trading workspace</p><h3 className="text-xl font-semibold">{view}</h3></div><span className="text-xs text-muted-foreground border border-border rounded-md px-3 py-2">All accounts</span></div>
-          <div className="sm:hidden flex gap-1 mb-5" role="group" aria-label="Product preview views">{previewViews.map(item => <Button key={item} variant="ghost" size="sm" onClick={() => setView(item)} aria-pressed={view === item} className={`text-xs px-2 ${view === item ? 'text-primary bg-primary/10' : 'text-muted-foreground'}`}>{item}</Button>)}</div>
-          {view === 'Dashboard' ? <>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">{['Net P&L', 'Win Rate', 'Average R:R', 'Total Trades'].map(label => <div key={label} className="border border-border rounded-md p-4 bg-card"><p className="text-xs text-muted-foreground">{label}</p><p className="text-2xl mt-3">—</p></div>)}</div>
-            <div className="grid lg:grid-cols-[1.7fr_1fr] gap-4"><div className="home-empty-chart"><p className="text-sm font-medium">Cumulative P&L</p><div className="home-chart-grid"><BarChart3 className="h-6 w-6 text-primary mb-3" /><p className="text-sm text-muted-foreground">No trades recorded</p></div></div><div className="border border-border rounded-md p-5"><p className="text-sm font-medium">Psychology Score</p><div className="flex flex-col justify-center items-center min-h-40"><div className="home-score">—</div><p className="text-xs text-muted-foreground mt-4">Not enough data</p></div></div></div>
-          </> : view === 'Trade Journal' ? <div className="border border-border rounded-md overflow-hidden"><div className="grid grid-cols-4 p-4 border-b border-border text-xs text-muted-foreground"><span>PAIR</span><span>RESULT</span><span>P&L</span><span>DATE</span></div><div className="flex flex-col items-center justify-center min-h-64"><BookOpen className="h-7 w-7 text-primary mb-4" /><p className="text-sm">No trades recorded</p><p className="text-xs text-muted-foreground mt-2">Your recorded executions appear here.</p></div></div> : <div className="border border-border rounded-md p-5"><div className="flex flex-wrap gap-5 text-xs border-b border-border pb-4"><span className="text-primary">Daily Plan</span><span className="text-muted-foreground">Weekly Outlook</span><span className="text-muted-foreground">Full View</span></div><div className="py-6 text-sm"><p className="mb-4 text-muted-foreground">EURUSD · Daily Plan</p><p className="font-medium mb-3">Pre-trade checklist</p>{['Review market structure', 'Mark key levels', 'Define risk before entry'].map(text => <div key={text} className="flex items-center gap-3 py-3 border-b border-border text-muted-foreground"><span className="w-4 h-4 border border-border rounded-sm" />{text}</div>)}<p className="mt-4 text-xs text-muted-foreground">Illustrative checklist · customize your own rules</p></div></div>}
-        </div>
-      </div>
-      <figcaption className="border-t border-border px-5 py-3 flex items-center justify-between text-xs text-muted-foreground"><span>Your data. Your process. One workspace.</span><span className="hidden sm:inline">TradeNovaOS</span></figcaption>
-    </figure>
-  );
-}
-
 export default function LandingPage() {
   return (
     <div className="home-page min-h-screen bg-background text-foreground">
@@ -63,7 +33,7 @@ export default function LandingPage() {
           <p className="home-hero-copy">Plan with intention. Journal with context. Review with clarity.<br className="hidden sm:block" /> Your entire trading process, brought together.</p>
           <div className="flex flex-wrap justify-center gap-3 mt-8"><Button asChild size="lg" className="home-primary"><Link to="/signup">Get started <ArrowRight /></Link></Button><Button asChild variant="outline" size="lg" className="home-secondary"><a href="#product-preview">Explore the workspace <ArrowUpRight /></a></Button></div>
           <p className="text-xs text-muted-foreground mt-5">14-day trial · Payment method required</p>
-          <div className="home-preview-wrap"><ProductPreview /></div>
+          <div className="home-preview-wrap"><HomepageProductDemo /></div>
         </section>
 
         <section className="home-section home-container" id="features">
@@ -87,7 +57,36 @@ export default function LandingPage() {
           <div className="flex flex-wrap justify-between gap-4 mt-6 text-xs text-muted-foreground"><p>14-day trial · Payment method required · MT5 Auto Sync unavailable</p><Link to="/pricing" className="inline-flex items-center gap-1 hover:text-foreground">View all billing options <ChevronRight className="h-3 w-3" /></Link></div>
         </section>
 
-        <section className="home-final home-container"><p className="home-eyebrow">MAKE ROOM FOR CLARITY</p><h2>A better place<br />for your trading process.</h2><p className="text-muted-foreground mt-6 mb-8">Your plans, your trades, your perspective. Together in TradeNovaOS.</p><Button asChild size="lg" className="home-primary"><Link to="/signup">Build your workspace <ArrowRight /></Link></Button><p className="text-xs text-muted-foreground mt-5">14-day trial · Payment method required</p></section>
+        <section className="home-section home-container" id="built-for-traders">
+          <div className="home-section-heading"><div><p className="home-eyebrow">BUILT FOR TRADERS</p><h2>What traders<br />can explore.</h2></div><p className="home-section-copy">Different ways to bring your process into focus. These are platform features, not customer testimonials or performance claims.</p></div>
+          <div className="home-benefit-grid">{[
+            { icon: Target, title: 'For the patient planner.', text: 'Keep pair-specific plans and reusable rules close to your journal.', detail: 'Daily Plans & Weekly Outlooks' },
+            { icon: BookOpen, title: 'For the detail keeper.', text: 'Give each trade its context: execution, screenshots and the decisions around it.', detail: 'Before & after charts' },
+            { icon: Brain, title: 'For the honest reviewer.', text: 'Record emotions and reflect on discipline without reducing every decision to a win or loss.', detail: 'Psychology & structured reviews' },
+            { icon: BarChart3, title: 'For the pattern seeker.', text: 'Compare recorded outcomes by pair and setup. Let the journal be your evidence.', detail: 'Trading analytics' },
+            { icon: ListChecks, title: 'For your own routine.', text: 'Arrange your Dashboard and Checklist around the way you work.', detail: 'Personalized layouts' },
+            { icon: LockKeyhole, title: 'For the manual-first trader.', text: 'Start with trade logging or compatible CSV imports. MT5 Auto Sync remains Coming Soon.', detail: 'No broker connection required' },
+          ].map(item => <article className="home-benefit" key={item.title}><item.icon className="h-5 w-5 text-primary mb-8" /><h3 className="text-xl font-medium">{item.title}</h3><p className="text-sm text-muted-foreground leading-relaxed mt-4">{item.text}</p><p className="home-benefit-detail">{item.detail}</p></article>)}</div>
+        </section>
+
+        <HomepageTraderFeedback />
+
+        <HomepageFounder />
+
+        <section className="home-section home-container home-faq" id="faq">
+          <div><p className="home-eyebrow">A LITTLE MORE CLARITY</p><h2>Good questions.<br />Straight answers.</h2><p className="text-sm text-muted-foreground leading-relaxed mt-6">Something else on your mind?</p><Link to="/contact" className="inline-flex items-center gap-2 text-sm mt-3">Get in touch <ArrowUpRight className="h-4 w-4" /></Link></div>
+          <Accordion type="single" collapsible className="min-w-0">{[
+            { q: 'Are the homepage results from a real account?', a: 'No. Every number, trade, balance, event and AI response in this preview is illustrative demo data. Nothing here represents a customer’s results or connects to a trading account.' },
+            { q: 'What can I use TradeNovaOS for?', a: 'Plan trades, log executions, store chart screenshots, review recorded results and reflect on trading psychology. The workspace also includes NOVA AI, an Economic Calendar and a place for uploaded certificates.' },
+            { q: 'Can I connect my MT5 account now?', a: 'No. MT5 Auto Sync is Coming Soon, with no announced release date. Manual trade logging and compatible CSV imports are available independently.' },
+            { q: 'What do Pro and Elite cost?', a: `Pro is ${monthlyPlanPrice('pro')} USD per month and Elite is ${monthlyPlanPrice('elite')} USD per month. Annual options are shown on the Pricing page. The checkout confirms the final billing terms before purchase.` },
+            { q: 'Is a payment method required for the trial?', a: 'The onboarding offer is a 14-day trial with a payment method required. Review the trial, renewal and cancellation terms shown at checkout before subscribing.' },
+            { q: 'Does NOVA provide trading signals or guaranteed results?', a: 'NOVA supports questions and reflection around your trading context. It does not guarantee outcomes. AI responses can be inaccurate and should be reviewed; TradeNovaOS is not a substitute for financial advice.' },
+            { q: 'Can I make the workspace my own?', a: 'You can reorder or hide Dashboard widgets, arrange Checklist sections and customize your reusable plan rules. Your trading records remain separate from the illustrative homepage demo.' },
+          ].map(({ q, a }, index) => <AccordionItem key={q} value={`faq-${index}`} className="border-border"><AccordionTrigger className="text-left text-sm py-6 gap-5 hover:no-underline">{q}</AccordionTrigger><AccordionContent className="text-muted-foreground leading-relaxed pr-6">{a}</AccordionContent></AccordionItem>)}</Accordion>
+        </section>
+
+        <section className="home-final home-container"><img src={import.meta.env.DEV ? `https://id-preview--0ee4a120-abbf-401b-9623-1114b47e7fda.lovable.app${novaWave.url}` : novaWave.url} alt="NOVA, the TradeNova robot, waving" className="home-final-mascot" loading="lazy" width="220" height="220" /><p className="home-eyebrow">MAKE ROOM FOR CLARITY</p><h2>Your trading.<br />With more perspective.</h2><p className="text-muted-foreground mt-6 mb-8">Your plans, your trades, your perspective. Together in TradeNovaOS.</p><Button asChild size="lg" className="home-primary"><Link to="/signup">Build your workspace <ArrowRight /></Link></Button><p className="text-xs text-muted-foreground mt-5">14-day trial · Payment method required</p></section>
       </main>
       <MarketingFooter homepage />
     </div>

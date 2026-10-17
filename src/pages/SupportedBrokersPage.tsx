@@ -1,80 +1,21 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Check } from 'lucide-react';
 import MarketingNav from '@/components/marketing/MarketingNav';
 import MarketingFooter from '@/components/marketing/MarketingFooter';
-import BrokersStrip from '@/components/marketing/BrokersStrip';
 import SeoHead from '@/components/SeoHead';
 
-const BROKERS = [
-  { name: 'MetaTrader 4', desc: 'Industry-standard FX & CFD platform' },
-  { name: 'MetaTrader 5', desc: 'Multi-asset trading & analytics' },
-  { name: 'NinjaTrader', desc: 'Futures & advanced charting' },
-  { name: 'Interactive Brokers', desc: 'Stocks, options, futures, forex' },
-  { name: 'TradingView', desc: 'Charts, alerts & community ideas' },
-  { name: 'Tradovate', desc: 'Cloud-based futures trading' },
-  { name: 'cTrader', desc: 'Direct-market-access FX' },
-  { name: 'Thinkorswim', desc: 'Pro tools from TD Ameritrade' },
-  { name: 'CSV Import', desc: 'Universal import from any broker' },
-];
-
 export default function SupportedBrokersPage() {
-  return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <SeoHead
-        path="/supported-brokers"
-        title="Supported Brokers & Integrations — TradeNova OS"
-        description="MT4, MT5, NinjaTrader, Interactive Brokers, TradingView, Tradovate, cTrader, Thinkorswim, and universal CSV import — connect any broker to TradeNova OS."
-      />
-      <MarketingNav />
-
-      <main className="flex-1">
-        <section className="relative overflow-hidden">
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[400px] bg-primary/10 rounded-full blur-[140px]" />
-          </div>
-          <div className="relative max-w-5xl mx-auto px-5 sm:px-8 py-20 sm:py-28 text-center">
-            <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/25 rounded-full px-4 py-1.5 mb-6">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-              <span className="text-xs font-semibold text-primary">Supported Brokers & Integrations</span>
-            </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-[-0.02em] text-foreground mb-5 leading-tight">
-              Works with your <span className="text-primary">favorite broker</span>
-            </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-              Import your trades from any platform. We support direct integrations and universal CSV import — so nothing is left behind.
-            </p>
-          </div>
-        </section>
-
-        <BrokersStrip />
-
-        <section className="py-16 sm:py-20 bg-muted/60">
-          <div className="max-w-6xl mx-auto px-5 sm:px-8">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {BROKERS.map(b => (
-                <div key={b.name} className="rounded-2xl border border-border bg-background p-6 hover:border-primary hover:shadow-lg transition-all">
-                  <div className="flex items-start justify-between gap-4 mb-2">
-                    <h3 className="font-bold text-foreground text-base">{b.name}</h3>
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary bg-primary/10 border border-primary/25 rounded-full px-2 py-0.5">
-                      <Check className="h-3 w-3" /> Supported
-                    </span>
-                  </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{b.desc}</p>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-12 text-center">
-              <Link to="/signup" className="group inline-flex items-center gap-2 bg-primary hover:bg-primary text-foreground px-7 py-3.5 rounded-2xl font-bold text-sm transition-all hover:shadow-xl hover:shadow-primary/30 hover:-translate-y-0.5">
-                Connect your broker — Start Free <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-              </Link>
-            </div>
-          </div>
-        </section>
-      </main>
-
-      <MarketingFooter />
-    </div>
-  );
+  return <div className="min-h-screen bg-black text-white">
+    <SeoHead path="/supported-brokers" title="Trade imports & broker connections — TradeOS" description="Log trades manually or import a compatible CSV. MT5 Auto Sync is Coming Soon; automatic broker connections are not currently available." />
+    <MarketingNav />
+    <main className="mx-auto max-w-6xl px-6 py-20 sm:py-28">
+      <p className="text-xs tracking-widest text-blue-300">YOUR WORKFLOW, CONNECTED</p><h1 className="mt-5 max-w-3xl text-4xl font-semibold tracking-tight sm:text-6xl">Bring your trades.<br />Keep your process.</h1>
+      <p className="mt-7 max-w-2xl text-lg leading-8 text-zinc-400">Start with manual logging or a compatible CSV export. Automatic broker connections are not available yet.</p>
+      <div className="mt-14 grid gap-6 md:grid-cols-2">
+        <section className="rounded-xl border border-zinc-800 p-8"><p className="text-xs text-blue-300">AVAILABLE</p><h2 className="mt-5 text-2xl">Manual journal & CSV import</h2><p className="mt-5 leading-7 text-zinc-400">Record trades in the journal, or use the import controls for a compatible CSV file. Check the required columns and preview before saving. Broker exports may need formatting; support for every broker or format is not guaranteed.</p><Link to="/features/trade-journal" className="mt-8 inline-flex min-h-11 items-center underline underline-offset-4">Explore the journal →</Link></section>
+        <section className="rounded-xl border border-zinc-800 p-8"><p className="text-xs text-blue-300">COMING SOON</p><h2 className="mt-5 text-2xl">MT5 Auto Sync</h2><p className="mt-5 leading-7 text-zinc-400">Automatic synchronization remains disabled. There is no release date to announce. No broker credentials are needed for manual journaling.</p><Link to="/faq" className="mt-8 inline-flex min-h-11 items-center underline underline-offset-4">Read the FAQ →</Link></section>
+      </div>
+      <Link to="/signup" className="mt-12 inline-flex min-h-12 items-center rounded-lg bg-white px-7 font-semibold text-black">Start your 14-day trial</Link><p className="mt-4 text-sm text-zinc-400">Payment method required.</p>
+    </main>
+    <MarketingFooter />
+  </div>;
 }

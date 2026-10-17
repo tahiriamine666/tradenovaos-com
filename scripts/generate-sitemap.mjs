@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 const BASE_URL = "https://tradenovaos.com";
 
 const entries = [
-  ...["/faq", "/psychology-audit", "/how-nova-works", "/about", "/security"].map(path => ({ path, changefreq: "monthly", priority: "0.6" })),
+  ...["/faq", "/psychology-audit", "/how-nova-works", "/about", "/security", "/contact", "/risk-disclaimer", "/privacy"].map(path => ({ path, changefreq: "monthly", priority: "0.6" })),
   { path: "/", changefreq: "weekly", priority: "1.0" },
   { path: "/pricing", changefreq: "weekly", priority: "0.9" },
   { path: "/supported-brokers", changefreq: "monthly", priority: "0.7" },

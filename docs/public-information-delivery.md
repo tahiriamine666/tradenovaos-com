@@ -1,22 +1,41 @@
-# Public information pages — 17 October 2026
+# Public website polish — 17 October 2026
 
-Implemented against a fresh export of Lovable project 0ee4a120-abbf-401b-9623-1114b47e7fda, not by rebuilding from GitHub main.
+## Delivery
+Reconciled completed pages against a fresh current Lovable ZIP. Latest Lovable feedback card animations, fictional sample layout, footer direction and branding were retained. This branch contains actual public application code, not only a patch. Lovable remains disconnected from GitHub; original newer Lovable commit history is not present in the ZIP. No claim of full-history synchronization, live preview synchronization or publication.
 
-## Source reconciliation
-The latest export already removes Solutions from the single navigation configuration used by desktop/mobile; underlying pages are retained. Existing psychologyAudit.ts and its tests are preserved. The new twelve-question assessment uses publicPsychologyAudit.ts independently. Current founder component, portrait descriptor and official N logo are preserved. Public-only logo component avoids changing internal app branding. Google OAuth, authentication, billing, trading code, database schemas and edge functions are unchanged.
+## Completed
+- FAQ, no-account Psychology Audit, How NOVA Works, About and Security.
+- Existing latest psychology scoring helper remains untouched; twelve-question public assessment uses publicPsychologyAudit.
+- Shared four-column black footer: official N/TradeOS, Instagram, Product, Company and Legal navigation, Cookie Settings.
+- Contact and Risk Disclaimer pages; no fabricated support response time.
+- Blog/help aliases route to actual content; duplicate Solutions route removed while real SolutionPage remains.
+- Existing Solutions dropdown removal preserved. Secondary dropdown supports keyboard activation and Escape.
+- Preserved labeled interactive dashboard demos, actual pricing/trial disclosures, founder content and assets.
+- Added a factual risk-planning feature card.
+- Feedback: latest masonry/reveal behavior retained; every sample explicitly labeled fictional; no fictional rating stars; real ratings only; loading/errors/retry/refresh; rejected submissions remain retryable. One Share button.
+- Corrected misleading automatic broker-sync, universal import and no-credit-card marketing claims. Real manual/compatible CSV workflow and MT5 Coming Soon clearly stated.
+- Help cards now navigate to real content; support goes to Contact rather than Signup.
+- Public canonical metadata and sitemap updates.
 
-## GitHub delivery
-This PR contains actual application code, not only a patch. Parent is GitHub lovable-sync d4673d60a6d4d385823aa06270d43c47634a765e, preserving its ancestry. Latest Lovable's export has no Git history and Git settings currently show no connected repository. No claim is made that this synchronizes all newer Lovable work. The current public navigation/footer source and required founder/logo assets are included; unrelated newer files are not copied. Reconcile latest Lovable original commits before merging. Do not force-push or replace the project with an old branch.
+## Database/API prerequisite
+GitHub's older base lacks the existing Lovable feedback backend definitions. This PR copies Lovable's EXISTING 0027_trader_feedback.sql unchanged and adds only its two RPC declarations to GitHub's generated client types. No database migration was executed, no production records were modified, and no approval/RLS semantics were rewritten. Before release, establish the migration's actual presence in the target backend; do not blindly reapply it.
 
-## Pages
-/faq, /psychology-audit, /how-nova-works, /about, /security.
-Public App routes, navigation descriptions, footer links, unique SeoHead metadata/canonicals and sitemap entries are included. Anonymous assessment uses component state only, no storage or network calls. FAQ accordions and score/reset behavior have regression tests. SEO remains client-rendered; hosting must retain its existing SPA fallback for direct requests.
+## Verification
+Current Lovable-source validation using available cached dependencies:
+- 142 tests / 25 files passed.
+- Production Vite build passed (existing large chunk warning).
+- Targeted ESLint: zero errors; two existing react-refresh warnings for feedback module exports.
+- Standard TypeScript retains five unrelated test configuration errors (Array.at ES2022 library and node:fs types). Supplemental ES2022/node/vitest check is reported in PR.
+- No anonymous audit storage/network calls.
+- Existing backend source inserts pending reviews and publicly selects approved rows only.
+- No production review submissions performed.
+- Browser localhost attempts time out; no visual desktop/mobile or end-to-end browser pass claimed.
+Cached dependencies differ from declared lockfile versions. Clean install/release verification remains required.
 
-## Verified content
-Current googleAuth.ts uses lovable.auth.signInWithOAuth. nova-chat selects bounded data using eq(user_id, uid) and an AI gateway; the security page explicitly distinguishes source policies from a production security audit. Existing Supabase policy definitions restrict profiles/trades/journal ownership. No certifications, guaranteed trading outcomes or founder biography are invented.
+## Remaining limitations
+Terms of Service was an empty placeholder. It is omitted from the new footer rather than inventing a binding contract; owner-approved legal content remains needed. Existing /terms is unchanged for compatibility. Unsupported Affiliates, careers and empty comparison pages are not promoted by the new footer.
+Lovable-hosted portrait/robot asset URLs are preserved; verify them on the intended deployment host.
+Source inspection is not a production security audit. Search indexing and publication are not claimed.
+The GitHub integrated tree still requires validation after source/history reconciliation; local validation was against current Lovable source.
 
-## Known limitations
-Windows dependency installation was previously blocked; validation uses the available cached Vite6/Vitest4 dependency set, not a clean lockfile install. Standard TypeScript has five pre-existing test configuration errors (Array.at library and node:fs types). Supplemental ES2022/node/vitest typecheck passes. Browser cannot reach the running localhost preview (ERR_CONNECTION_TIMED_OUT), so no desktop/mobile visual pass is claimed. Founder portrait retains its original Lovable-hosted asset URL; verify resolution on any non-Lovable deployment.
-Final test/build results are in the PR description.
-
-No merge, deployment, publication, production writes or Lovable AI credits.
+No merge, deploy, publish, credentials changes, production writes or Lovable AI credits.

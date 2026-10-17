@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BarChart3, ChevronDown, Menu, X } from 'lucide-react';
@@ -27,12 +27,13 @@ const RESOURCES: Item[] = [
 
 function Dropdown({ label, items }: { label: string; items: Item[] }) {
   const [open, setOpen] = useState(false);
-  let timer: ReturnType<typeof setTimeout>;
-  const enter = () => { clearTimeout(timer); setOpen(true); };
-  const leave = () => { timer = setTimeout(() => setOpen(false), 120); };
+  const timer = useRef<ReturnType<typeof setTimeout>>();
+  useEffect(() => () => clearTimeout(timer.current), []);
+  const enter = () => { clearTimeout(timer.current); setOpen(true); };
+  const leave = () => { timer.current = setTimeout(() => setOpen(false), 120); };
   return (
     <div className="relative" onMouseEnter={enter} onMouseLeave={leave}>
-      <button className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-primary transition-colors py-2">
+      <button aria-expanded={open} aria-haspopup="true" onClick={() => setOpen(true)} onKeyDown={event => { if (event.key === 'Escape') setOpen(false); }} className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-primary transition-colors py-2">
         {label} <ChevronDown className={`h-3.5 w-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
       </button>
       <AnimatePresence>

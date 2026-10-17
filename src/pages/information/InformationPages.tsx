@@ -59,3 +59,18 @@ export function SecurityPage() {
     <section className="info-section"><h2>If something looks wrong</h2><p>Contact <a href="mailto:tradenova111@gmail.com">tradenova111@gmail.com</a> about unexpected account activity or a suspected vulnerability. Include the affected page, approximate time and steps to reproduce when safe. Do not include passwords, tokens, private trading records, or another person’s data.</p><p>For access or deletion requests, use the same contact and identify the account email. Ownership may need to be verified. Subscription cancellation does not itself request deletion of your records.</p><div className="info-actions"><Link to="/privacy">Privacy and data requests →</Link><Link to="/faq">Account and billing questions →</Link></div></section>
   </InformationLayout>;
 }
+
+export function ContactPage() {
+  return <InformationLayout path="/contact" title="A direct line to TradeOS." eyebrow="CONTACT" description="Get help with your workspace, ask a product question, or contact us about privacy and account data.">
+    <section className="info-section"><h2>How can we help?</h2><p>Email <a href="mailto:tradenova111@gmail.com">tradenova111@gmail.com</a>. Include the page you were using, what you expected and what happened. For an account question, contact us from the email associated with your account where possible.</p><a className="info-button" href="mailto:tradenova111@gmail.com?subject=TradeOS%20support">Email support</a></section>
+    <section className="info-note"><h2>Keep sensitive information private.</h2><p>Never send passwords, access tokens, payment-card details or broker credentials. Remove private account details from screenshots before sending them.</p><p>For access, correction or deletion requests, explain what you need and identify your account email. We may need to verify ownership. See our <Link to="/privacy">Privacy Policy</Link> for the process.</p></section>
+    <div className="info-actions"><Link to="/faq">Read the FAQ →</Link><Link to="/security">Account security →</Link></div>
+  </InformationLayout>;
+}
+
+export function RiskDisclaimerPage() {
+  return <InformationLayout path="/risk-disclaimer" title="Know the limits. Own the decision." eyebrow="RISK DISCLAIMER" description="TradeOS supports planning and reflection. It does not remove the risks of trading or promise a profitable outcome.">
+    <section className="info-section"><h2>Trading involves risk.</h2><p>You can lose money when trading. Past performance, an illustrative example or a strong journal score does not guarantee future results. Consider your circumstances and understand the products you trade.</p><h2>A journal is a record, not a prediction.</h2><p>Analytics depend on the data you record or import. Missing trades, incorrect entries, fees or inconsistent units can affect results. Check source records before relying on a calculation.</p><h2>AI responses need review.</h2><p>NOVA can make mistakes or work from incomplete context. Its responses are educational support for reflection, not a guarantee, an instruction to execute a trade, or personalized investment advice. Verify facts and calculations independently.</p></section>
+    <section className="info-note"><h2>Examples are illustrative.</h2><p>Homepage dashboard balances, trades and conversations are labeled demo data. Fictional feedback examples show a layout, not customer endorsements. MT5 Auto Sync remains Coming Soon.</p><p>You remain responsible for your trading decisions. Seek qualified advice when you need guidance specific to your circumstances.</p></section>
+  </InformationLayout>;
+}
