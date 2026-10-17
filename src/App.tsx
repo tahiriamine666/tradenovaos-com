@@ -33,6 +33,9 @@ import CookiePolicy from "./pages/CookiePolicy";
 import CookieConsentPanel from "@/components/CookieConsent";
 import { CookieConsentProvider } from "@/contexts/CookieConsentContext";
 
+import { FaqPage, HowNovaWorksPage, AboutPage, SecurityPage } from './pages/information/InformationPages';
+import PsychologyAudit from './pages/information/PsychologyAudit';
+
 const queryClient = new QueryClient();
 
 function PublicOnly({ children }: { children: React.ReactNode }) {
@@ -95,6 +98,12 @@ const App = () => (
                   <Route path="/checkout" element={<Navigate to="/onboarding?step=plan" replace />} />
 
 
+                  {/* Public informational routes remain accessible without authentication. */}
+                  <Route path="/faq" element={<FaqPage />} />
+                  <Route path="/psychology-audit" element={<PsychologyAudit />} />
+                  <Route path="/how-nova-works" element={<HowNovaWorksPage />} />
+                  <Route path="/about" element={<AboutPage />} />
+                  <Route path="/security" element={<SecurityPage />} />
                   {/* Public marketing routes */}
                   <Route path="/pricing" element={<><SeoHead path="/pricing" title="Pricing — TradeNova OS plans for every trader" description={`Compare TradeNova Pro (${monthlyPlanPrice('pro')}/mo) and Elite (${monthlyPlanPrice('elite')}/mo). Start a 14-day free trial — journal, trade plans, analytics, psychology score and NOVA AI.`} /><Pricing /></>} />
                   <Route path="/supported-brokers" element={<SupportedBrokersPage />} />

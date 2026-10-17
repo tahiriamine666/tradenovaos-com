@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BarChart3, ChevronDown, Menu, X } from 'lucide-react';
-import BrandLogo from '@/components/BrandLogo';
+import BrandLogo from '@/components/marketing/PublicBrandLogo';
+
+import { INFORMATION_LINKS } from '@/pages/information/informationLinks';
 
 type Item = { label: string; to: string; desc?: string };
 
@@ -14,16 +16,8 @@ const PRODUCTS: Item[] = [
   { label: 'NOVA AI', to: '/features/ai-insights', desc: 'AI answers from your own data' },
 ];
 
-const SOLUTIONS: Item[] = [
-  { label: 'Forex Traders', to: '/solutions/forex', desc: 'Pip-perfect FX journaling' },
-  { label: 'Futures Traders', to: '/solutions/futures', desc: 'Tick-based analytics for futures' },
-  { label: 'Prop Firm Traders', to: '/solutions/prop-firms', desc: 'Pass evaluations & stay funded' },
-  { label: 'Funded Challenges', to: '/solutions/funded-challenges', desc: 'Track challenge rules & drawdown' },
-  { label: 'Day Traders', to: '/solutions/day-traders', desc: 'Intraday performance dashboards' },
-  { label: 'Swing Traders', to: '/solutions/swing-traders', desc: 'Multi-day position tracking' },
-];
-
 const RESOURCES: Item[] = [
+  ...INFORMATION_LINKS.map(item => ({ label: item.label, to: item.path, desc: item.description })),
   { label: 'Blog', to: '/resources/blog', desc: 'Articles & trading insights' },
   { label: 'Trading Psychology', to: '/blog/stop-revenge-trading-after-loss', desc: 'A post-loss process checklist' },
   { label: 'Weekly Journal Review', to: '/blog/weekly-trading-journal-review', desc: 'Review evidence and rule adherence' },
@@ -78,12 +72,11 @@ export default function MarketingNav() {
       <div className="max-w-7xl mx-auto px-5 sm:px-8 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2.5">
           <BrandLogo className="w-8 h-8 rounded-md object-cover" />
-          <span className="font-black text-foreground text-lg tracking-tight">TradeNova</span>
+          <span className="font-black text-foreground text-lg">TradeOS</span>
         </Link>
 
         <nav className="hidden lg:flex items-center gap-7">
           <Dropdown label="Products" items={PRODUCTS} />
-          <Dropdown label="Solutions" items={SOLUTIONS} />
           <Link to="/supported-brokers" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Supported Brokers</Link>
           <Link to="/pricing" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">Pricing</Link>
           <Dropdown label="Resources" items={RESOURCES} />
@@ -110,7 +103,6 @@ export default function MarketingNav() {
             <div className="px-5 py-4 space-y-4 max-h-[80vh] overflow-y-auto">
               {[
                 { label: 'Products', items: PRODUCTS },
-                { label: 'Solutions', items: SOLUTIONS },
                 { label: 'Resources', items: RESOURCES },
               ].map(group => (
                 <div key={group.label}>

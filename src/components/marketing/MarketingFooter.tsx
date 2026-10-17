@@ -1,8 +1,10 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Twitter, Instagram, ArrowRight } from 'lucide-react';
-import BrandLogo from '@/components/BrandLogo';
+import BrandLogo from '@/components/marketing/PublicBrandLogo';
 import { CookieSettingsButton } from '@/components/CookieConsent';
+
+import { INFORMATION_LINKS } from '@/pages/information/informationLinks';
 
 const COLS: { title: string; links: { label: string; to: string; external?: boolean }[] }[] = [
   {
@@ -29,6 +31,7 @@ const COLS: { title: string; links: { label: string; to: string; external?: bool
   {
     title: 'Company',
     links: [
+      ...INFORMATION_LINKS.map(item => ({ label: item.label, to: item.path })),
       { label: 'Contact Us', to: '/contact' },
       { label: 'Careers', to: '/careers' },
       { label: 'Blog', to: '/resources/blog' },
@@ -75,11 +78,11 @@ export default function MarketingFooter({ homepage = false }: { homepage?: boole
       <div className="home-footer-content relative max-w-7xl mx-auto px-5 sm:px-8 py-16 grid grid-cols-1 md:grid-cols-12 gap-10">
         <div className="md:col-span-4 space-y-5">
           <Link to="/" className="flex items-center gap-2.5">
-            {!homepage && <BrandLogo className="h-9 w-9 rounded-md object-cover ring-1 ring-primary/25 shadow-[0_0_24px_hsl(var(--primary)/0.22)]" />}
-            <span className={`font-black text-foreground text-xl ${homepage ? '' : 'tracking-tight'}`}>{homepage ? 'TradeNovaOS' : 'TradeNova'}</span>
+            <BrandLogo className="h-9 w-9 rounded-md" />
+            <span className="font-black text-foreground text-xl">TradeOS</span>
           </Link>
           <p className="text-sm text-muted-foreground leading-relaxed max-w-sm">
-            TradeNova is a Trading Operating System built to help traders plan, journal, analyze, and improve their performance.
+            {homepage ? 'A considered workspace for your plans, trades and reviews. Built around your process.' : 'TradeNova is a Trading Operating System built to help traders plan, journal, analyze, and improve their performance.'}
           </p>
           <p className="text-[11px] text-muted-foreground/80 leading-relaxed max-w-sm border-l-2 border-border pl-3">
             Trading involves substantial risk and is not suitable for every investor. Past performance does not guarantee future results.
@@ -94,7 +97,7 @@ export default function MarketingFooter({ homepage = false }: { homepage?: boole
                 {col.links.map(l => (
                   <li key={l.label}>
                     <Link to={l.to} className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                      {l.label}
+                      {homepage && l.label === 'Start Free' ? 'Get started' : l.label}
                     </Link>
                   </li>
                 ))}

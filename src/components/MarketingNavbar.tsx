@@ -5,11 +5,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import BrandLogo from '@/components/BrandLogo';
+import BrandLogo from '@/components/marketing/PublicBrandLogo';
+import { INFORMATION_LINKS } from '@/pages/information/informationLinks';
 import { Button } from '@/components/ui/button';
 import {
   BookOpen, BarChart3, PlayCircle, Sparkles, Brain, Target,
-  TrendingUp, Users, Building2, Globe, HelpCircle, FileText,
+  HelpCircle, FileText,
   ChevronDown, Menu, X, Zap, ArrowRight, Upload, Calendar,
 } from 'lucide-react';
 
@@ -27,18 +28,9 @@ const NAV_ITEMS = [
     ],
   },
   {
-    label: 'Solutions',
-    dropdown: [
-      { icon: TrendingUp,  label: 'Forex Traders',       desc: 'Optimize your forex edge with data',          path: '/solutions/forex-traders',       color: 'text-primary' },
-      { icon: BarChart3,   label: 'Futures Traders',     desc: 'Track and improve futures performance',       path: '/solutions/futures-traders',     color: 'text-primary' },
-      { icon: Building2,   label: 'Prop Firm Traders',   desc: 'Pass challenges and manage funded accounts',  path: '/solutions/prop-firm-traders',   color: 'text-muted-foreground' },
-      { icon: Globe,       label: 'Crypto Traders',      desc: 'Journal crypto trades across all exchanges',  path: '/solutions/crypto-traders',      color: 'text-primary' },
-      { icon: Users,       label: 'Trading Communities', desc: 'Tools for trading educators and groups',      path: '/solutions/trading-communities', color: 'text-primary' },
-    ],
-  },
-  {
     label: 'Resources',
     dropdown: [
+      ...INFORMATION_LINKS.map(item => ({ icon: HelpCircle, label: item.label, desc: item.description, path: item.path, color: 'text-primary' })),
       { icon: FileText,   label: 'Blog',          desc: 'Trading insights, tips, and strategies',  path: '/resources/blog',        color: 'text-primary' },
       { icon: HelpCircle, label: 'Help Center',   desc: 'Guides, tutorials, and documentation',    path: '/resources/help-center', color: 'text-primary' },
     ],
@@ -47,7 +39,7 @@ const NAV_ITEMS = [
   { label: 'Pricing',           path: '/pricing' },
 ];
 
-const ease: any = [0.22, 1, 0.36, 1];
+const ease: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
 // ─── Dropdown panel ───────────────────────────────────────────────────────────
 function DropdownPanel({
@@ -159,7 +151,7 @@ export default function MarketingNavbar({ onLogin, onSignup, homepage = false }:
 
           {/* Logo */}
           <Button variant="ghost" onClick={() => handleNavigate('/')} className="flex items-center gap-2.5 flex-shrink-0 px-0 hover:bg-transparent">
-            {homepage ? <span className="home-wordmark text-foreground">TradeOS</span> : <><BrandLogo className="w-8 h-8 rounded-md object-cover" /><span className="font-black text-foreground text-lg tracking-tight">TradeNova</span></>}
+            <BrandLogo className="w-8 h-8 rounded-md" /><span className={homepage ? 'home-wordmark text-foreground' : 'font-black text-foreground text-lg'}>{homepage ? 'TradeOS' : 'TradeNova'}</span>
           </Button>
 
           {/* Desktop nav */}
@@ -297,3 +289,4 @@ export default function MarketingNavbar({ onLogin, onSignup, homepage = false }:
     </nav>
   );
 }
+
