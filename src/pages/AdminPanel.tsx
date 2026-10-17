@@ -10,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import TraderInvitations from '@/components/admin/TraderInvitations';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const rpc = (fn: string, args?: Record<string, unknown>) => (supabase.rpc as any)(fn, args);
@@ -219,6 +220,7 @@ export default function AdminPanel() {
         </>
       )}
 
+      {tab === 'users' && <TraderInvitations />}
       {tab === 'users' && (
         <div className="rounded-xl border border-border/60 bg-card">
           <div className="flex flex-wrap items-center gap-2 border-b border-border/60 p-3">
